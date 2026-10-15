@@ -385,13 +385,15 @@
   }
 
   // герой: фон уходит медленнее страницы, текст спокойно тает
+  // на телефоне первый экран выше окна (оффер, кнопки), поэтому текст не тает: его ещё читают
+  const mm = G.matchMedia();
   const hero = $(".hero");
-  if (hero) {
-    G.to(".hero__media", { yPercent: 22, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
-    G.to(".hero__in", { y: -80, autoAlpha: 0, ease: "none", scrollTrigger: { trigger: hero, start: "40% top", end: "95% top", scrub: true } });
-  }
-  const ph = $(".page-hero");
-  if (ph) G.to($(".page-hero__in, .doc-hero__text", ph), { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
+  if (hero) G.to(".hero__media", { yPercent: 22, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
+  mm.add("(min-width: 761px)", () => {
+    if (hero) G.to(".hero__in", { y: -80, autoAlpha: 0, ease: "none", scrollTrigger: { trigger: hero, start: "40% top", end: "95% top", scrub: true } });
+    const ph = $(".page-hero");
+    if (ph) G.to($(".page-hero__in, .doc-hero__text", ph), { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
+  });
 
   // заголовки разделов: слова поднимаются из-под строки
   $$("[data-split]").forEach((el) => {
@@ -399,10 +401,17 @@
     G.from($$(".sw > span", el), { yPercent: 110, duration: 1.1, stagger: 0.04, ease: "power4.out", scrollTrigger: { trigger: el, start: "top 90%", once: true } });
   });
 
-  // появление блоков: по порядку, без наездов друг на друга
+  // появление блоков: по порядку, без наездов друг на друга.
+  // После появления снимаем data-reveal, иначе стиль из CSS (сдвиг на 24px) возвращается и блок съезжает вниз.
+  // То, что уже проскочили быстрой прокруткой, показываем сразу; лесенка не дольше 0,35 с, чтобы видимое не ждало.
+  const revealed = (el) => { el.removeAttribute("data-reveal"); G.set(el, { clearProps: "opacity,transform" }); };
   ST.batch("[data-reveal]", {
-    start: "top 92%", once: true, interval: 0.12,
-    onEnter: (els) => G.to(els, { opacity: 1, y: 0, scale: 1, duration: 1, stagger: 0.07, overwrite: true, clearProps: "transform" }),
+    start: "top 92%", once: true, interval: 0.1,
+    onEnter: (els) => {
+      const live = els.filter((el) => el.getBoundingClientRect().bottom > 0);
+      els.filter((el) => !live.includes(el)).forEach(revealed);
+      if (live.length) G.to(live, { opacity: 1, y: 0, scale: 1, duration: 0.9, stagger: Math.min(0.07, 0.35 / live.length), overwrite: true, onComplete: () => live.forEach(revealed) });
+    },
   });
 
   // картинки раскрываются шторкой
@@ -421,7 +430,8 @@
   // параллакс: элементы коллажа плывут с разной скоростью (небольшой разброс, чтобы не наезжали)
   $$("[data-speed]").forEach((el) => {
     const k = parseFloat(el.dataset.speed) || 0;
-    G.fromTo(el, { y: () => k * innerHeight * 0.12 }, { y: () => -k * innerHeight * 0.12, ease: "none", scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
+    const amp = () => k * innerHeight * (innerWidth <= 760 ? 0.05 : 0.12);
+    G.fromTo(el, { y: () => amp() }, { y: () => -amp(), ease: "none", scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
   });
 
   // «О нас»: текст проявляется по словам при прокрутке
@@ -441,13 +451,12 @@
     G.to(o, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => (el.textContent = fmt(o.v)) });
   });
 
-  const mm = G.matchMedia();
   // преимущества: горизонтальная лента с закреплением, карточки едут ровно
   mm.add("(min-width: 761px)", () => {
     const pin = $(".feat__pin"), track = $(".feat__track");
     if (!pin || !track) return;
     const dist = () => Math.max(0, track.scrollWidth - innerWidth);
-    const tw = G.to(track, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: pin, start: "top top", end: () => "+=" + dist(), pin: true, scrub: true, invalidateOnRefresh: true } });
+    const tw = G.to(track, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: pin, start: "top top", end: () => "+=" + dist(), pin: true, anticipatePin: 1, scrub: true, invalidateOnRefresh: true } });
     // вступительный текст слегка уходит, когда наезжают карточки
     const introCard = $(".fcard--intro", track);
     if (introCard) G.to(introCard, { autoAlpha: 0.25, ease: "none", scrollTrigger: { trigger: introCard, containerAnimation: tw, start: "right 60%", end: "right 10%", scrub: true } });
@@ -457,7 +466,7 @@
   const tour = $(".tour__pin");
   if (tour) {
     const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
-    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: "+=110%", pin: true, scrub: true } });
+    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: "+=110%", pin: true, anticipatePin: 1, scrub: true } });
     tl.fromTo(frame, { clipPath: "inset(16% 22% 16% 22% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 1 }, 0)
       .fromTo(fim, { scale: 1.25 }, { scale: 1, duration: 1 }, 0)
       .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
