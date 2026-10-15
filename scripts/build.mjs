@@ -489,11 +489,11 @@ function pageDoctor(d) {
       <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../index.html#team">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
       <span class="label label--light doc-hero__role">${esc(d.title)}</span>
       <h1><span data-split>${esc(last)}</span> <span data-split>${esc(given.join(" "))}</span></h1>
-      <ul class="doc-hero__facts">
+      ${d.exp || d.rating || d.courses.length ? `<ul class="doc-hero__facts">
         ${d.exp ? `<li><b data-count="${d.exp}">${d.exp}</b><span>${plural(d.exp, "год", "года", "лет")} стажа</span></li>` : ""}
         ${d.rating ? `<li><b data-count="${d.rating}">${d.rating}</b><span>рейтинг на ПроДокторов,<br>${reviewsText(d.reviews)}</span></li>` : ""}
         ${d.courses.length ? `<li><b data-count="${d.courses.length}">${d.courses.length}</b><span>${plural(d.courses.length, "курс", "курса", "курсов")} повышения<br>квалификации</span></li>` : ""}
-      </ul>
+      </ul>` : ""}
       <div class="doc-hero__cta">
         <a class="btn btn--lg" href="../zapis.html?doctor=${d.id}" data-magnet>Записаться к врачу ${icon.arrow}</a>
         ${d.pd ? `<a class="btn btn--ghost btn--lg" href="${d.pd}" target="_blank" rel="noopener">Отзывы на ПроДокторов</a>` : ""}
