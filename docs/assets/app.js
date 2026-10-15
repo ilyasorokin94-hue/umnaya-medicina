@@ -209,6 +209,143 @@
   const bk = $("#booking");
   if (bk) booking(bk);
 
+  // ---------- окна: запись, перезвон, снимок, расчёт, мессенджеры ----------
+  const docs = (() => { try { return JSON.parse($("#um-docs")?.textContent || "{}"); } catch (e) { return {}; } })();
+  let openM = null, lastFocus = null, anyModal = false;
+  const showModal = (id, from) => {
+    const m = $("#m-" + id);
+    if (!m) return false;
+    if (openM && openM !== m) hideModal(true);
+    lastFocus = from || document.activeElement;
+    if (id === "book") {
+      const doc = from?.dataset.doctor, reason = from?.dataset.reason, info = $(".modal__doc", m);
+      $('input[name="doctor"]', m).value = doc || "";
+      info.hidden = !doc;
+      info.textContent = doc ? "Врач: " + (docs[doc] || doc) : "";
+      $$('input[name="reason"]', m).forEach((r) => (r.checked = !!reason && r.value === reason));
+    }
+    m.hidden = false;
+    openM = m; anyModal = true;
+    root.classList.add("has-modal");
+    lenis?.stop();
+    if (anim) {
+      G.fromTo(m, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" });
+      G.fromTo($(".modal__box", m), { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
+    }
+    ($("input:not([type=hidden]):not([type=radio])", m) || $("h2", m))?.focus({ preventScroll: true });
+    return true;
+  };
+  function hideModal(instant) {
+    const m = openM;
+    if (!m) return;
+    openM = null;
+    const done = () => { m.hidden = true; m.style.opacity = ""; if (!openM) { root.classList.remove("has-modal"); lenis?.start(); } };
+    if (anim && !instant) G.to(m, { opacity: 0, duration: 0.25, ease: "power1.in", onComplete: done });
+    else done();
+    if (!instant) lastFocus?.focus?.({ preventScroll: true });
+  }
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-modal]");
+    if (t && showModal(t.dataset.modal, t)) { e.preventDefault(); closeMenu(); return; }
+    if (e.target.closest("[data-close]") || e.target.classList.contains("modal")) hideModal();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!openM) return;
+    if (e.key === "Escape") return hideModal();
+    if (e.key === "Tab") {
+      const f = $$("a[href], button:not([disabled]), input:not([type=hidden]), textarea", openM).filter((x) => x.offsetParent);
+      if (!f.length) return;
+      if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+    }
+  });
+  // имя выбранного файла на кнопке
+  $$(".file input").forEach((i) => i.addEventListener("change", () => { const s = i.nextElementSibling; if (s) s.textContent = i.files[0]?.name || "Выбрать файл"; }));
+
+  // отправка любой формы заявки: в демо только «спасибо»; на рабочем сайте здесь уходит заявка в amoCRM
+  const doneText = {
+    xray: ["Снимок у врача", "Врач посмотрит и ответит в течение рабочего дня. Если зуб можно спасти, скажем, как и сколько это стоит."],
+    allon: ["Спасибо!", "Администратор перезвонит за 5 минут и запишет к имплантологу на консультацию с КТ. Расчёт бесплатный."],
+  };
+  const defDone = $("#m-done [data-done-text]")?.textContent;
+  $$("form[data-lead]").forEach((f) => {
+    if (f.hasAttribute("data-quiz")) return;
+    f.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const kind = f.dataset.lead, d = doneText[kind];
+      const dm = $("#m-done");
+      if (dm) { $("h2", dm).textContent = d ? d[0] : "Спасибо!"; $("[data-done-text]", dm).textContent = d ? d[1] : defDone; }
+      f.reset();
+      showModal("done");
+    });
+  });
+
+  // окно при уходе со страницы: один раз за визит, только на компьютере
+  if (fine && $("#m-exit")) {
+    const t0 = Date.now();
+    document.addEventListener("mouseout", (e) => {
+      if (e.relatedTarget || e.clientY > 8 || openM || anyModal || Date.now() - t0 < 15000) return;
+      try { if (sessionStorage.getItem("um-exit")) return; sessionStorage.setItem("um-exit", "1"); } catch (err) { return; }
+      showModal("exit");
+    });
+  }
+
+  // расчёт All-on-4: система и число челюстей
+  $$("[data-calc]").forEach((box) => {
+    const c = JSON.parse(box.dataset.calc);
+    let sys = 0, jaws = 1;
+    const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    const set = (k, v, rub = true) => { const el = $(`[data-c="${k}"]`, box); if (el) el.textContent = fmt(v) + (rub ? " ₽" : ""); };
+    const totalEl = $('[data-c="total"]', box);
+    const upd = () => {
+      const [, surg, old] = c.systems[sys];
+      const t = (surg + c.temp + c.perm) * jaws;
+      set("surg", surg * jaws); set("temp", c.temp * jaws); set("perm", c.perm * jaws);
+      const o = $('[data-c="old"]', box);
+      if (o) { o.hidden = !old; if (old) o.textContent = fmt(old * jaws) + " ₽"; }
+      set("day", (surg + c.temp) * jaws); set("later", c.perm * jaws);
+      const from = parseFloat(totalEl.textContent.replace(/\s/g, "")) || t;
+      if (anim) { const v = { n: from }; G.to(v, { n: t, duration: 0.8, ease: "power2.out", onUpdate: () => (totalEl.textContent = fmt(v.n)) }); }
+      else totalEl.textContent = fmt(t);
+    };
+    box.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-sys], [data-jaws]");
+      if (!b) return;
+      if (b.dataset.sys) sys = +b.dataset.sys; else jaws = +b.dataset.jaws;
+      $$(b.dataset.sys ? "[data-sys]" : "[data-jaws]", box).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      upd();
+    });
+  });
+
+  // квиз: вопрос за вопросом, без номеров, полоска прогресса
+  $$("[data-quiz]").forEach((form) => {
+    const wrap = form.closest(".quiz"), steps = $$(".quiz__step", form), bar = $(".quiz__bar i", wrap);
+    let cur = 0;
+    const go = (n) => {
+      const from = steps[cur], to = steps[n];
+      cur = n;
+      if (bar) bar.style.transform = `scaleX(${n / (steps.length - 1)})`;
+      const show = () => { steps.forEach((s) => (s.hidden = s !== to)); if (anim) G.fromTo(to, { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out", clearProps: "transform" }); };
+      if (anim && from !== to) G.to(from, { opacity: 0, x: -30, duration: 0.2, ease: "power2.in", onComplete: show }); else show();
+    };
+    form.addEventListener("change", (e) => {
+      if (e.target.type === "radio") setTimeout(() => go(Math.min(cur + 1, steps.length - 1)), 220);
+    });
+    form.addEventListener("click", (e) => { if (e.target.closest("[data-qback]")) go(Math.max(0, cur - 1)); });
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const ph = $("[data-req]", form);
+      if (ph && !ph.value.trim()) { ph.setCustomValidity("Укажите телефон"); ph.reportValidity(); ph.setCustomValidity(""); return; }
+      const first = $('input[name="q0"]:checked', form);
+      const done = $(".quiz__done", wrap);
+      $("[data-qprice]", done).textContent = first?.dataset.price || "Консультация и план лечения бесплатно";
+      if (bar) bar.style.transform = "scaleX(1)";
+      form.hidden = true; done.hidden = false;
+      if (anim) G.from(done.children, { opacity: 0, y: 20, stagger: 0.08, duration: 0.6 });
+      ST?.refresh();
+    });
+  });
+
   // ---------- анимации ----------
   // Правило: прокрутку сглаживает только Lenis, поэтому все scrub = true (без второго сглаживания),
   // одно свойство одного элемента ведёт одна анимация, CSS-переходы на этих свойствах выключены.
@@ -224,7 +361,7 @@
     const tl = G.timeline();
     tl.from($(".hero__media img", h), { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0)
       .from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .from($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__actions > *, .hero__side > *, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24, duration: 1, stagger: 0.07 }, 0.4)
+      .from($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__actions > *, .hero__note, .hero__offer, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24, duration: 1, stagger: 0.07 }, 0.4)
       .from(".header__bar", { y: -24, autoAlpha: 0, duration: 0.9 }, 0.2);
   };
 
