@@ -397,21 +397,23 @@ export const pdPhotos = {
 
 // Слоты картинок: [фото клиники из 2ГИС/Яндекс Карт (src/images/clinic), запасной вариант с ПроДокторов/um-med.com]
 const C = (name) => `images/clinic/${name}.jpg`;
+// Иллюстрации из ChatGPT (src/images/gen): берутся, если файл есть, иначе фото клиники
+const GN = (name) => [`images/gen/${name}.jpg`, `images/gen/${name}.png`];
 export const pics = {
   hero: [C("yandex-02"), clinicPhoto],
   foil: [C("2gis-03"), null],
   about: [
-    [C("2gis-01"), ...pdPhotos.a], [C("2gis-07"), ...pdPhotos.b], [C("yandex-14"), ...pdPhotos.waiting],
+    [C("2gis-01"), ...pdPhotos.a], [C("2gis-07"), ...pdPhotos.b], [...GN("smile"), C("yandex-14"), ...pdPhotos.waiting],
     [C("2gis-09"), ...pdPhotos.c], [C("2gis-12"), ...pdPhotos.d], [C("2gis-06"), ...pdPhotos.e], [C("yandex-06"), ...pdPhotos.entrance2],
   ],
   slides: [[C("2gis-02"), ...pdPhotos.facade], [C("yandex-07"), ...pdPhotos.entrance], [C("2gis-05"), ...pdPhotos.waiting], [C("2gis-03"), ...pdPhotos.entrance2]],
   feat: [C("2gis-06"), C("2gis-07"), C("2gis-01"), C("2gis-08"), C("yandex-08"), C("2gis-02")].map((c, i) => [c, gallery[i + 1]]),
   team: [C("2gis-02"), gallery[0]],
   svc: {
-    diagnostika: [C("2gis-09"), ...pdPhotos.f], gigiena: [C("2gis-05"), ...pdPhotos.g], "lechenie-zubov": [C("2gis-07"), ...pdPhotos.h],
-    implantaciya: [C("2gis-04"), ...pdPhotos.i], "all-on-4": [C("yandex-04"), ...pdPhotos.j], mikroskop: [C("2gis-06"), ...pdPhotos.k],
-    protezirovanie: [C("yandex-02"), ...pdPhotos.l], hirurgiya: [C("2gis-11"), ...pdPhotos.m], ortodontiya: [C("2gis-01"), ...pdPhotos.n],
-    detskaya: [C("yandex-13"), ...pdPhotos.o],
+    diagnostika: [C("2gis-09"), ...pdPhotos.f], gigiena: [...GN("hygiene"), C("2gis-05"), ...pdPhotos.g], "lechenie-zubov": [C("2gis-07"), ...pdPhotos.h],
+    implantaciya: [C("2gis-04"), ...pdPhotos.i], "all-on-4": [...GN("allon4"), C("yandex-04"), ...pdPhotos.j], mikroskop: [...GN("microscope"), C("2gis-06"), ...pdPhotos.k],
+    protezirovanie: [...GN("crowns"), C("yandex-02"), ...pdPhotos.l], hirurgiya: [C("2gis-11"), ...pdPhotos.m], ortodontiya: [...GN("ortho"), C("2gis-01"), ...pdPhotos.n],
+    detskaya: [...GN("kids"), C("yandex-13"), ...pdPhotos.o],
   },
   // Галерея «Клиника изнутри»: [файл, подпись]
   tour: [
