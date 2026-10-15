@@ -29,12 +29,12 @@ export const clinic = {
 
 const PD = "https://prodoctorov.ru/media/photo/";
 export const doctors = [
-  { id: "hludnevskiy", name: "Хлудневский Михаил Сергеевич", short: "Михаил Хлудневский", role: "Хирург, имплантолог", exp: 8, rating: "5,0", reviews: 32, photo: PD + "moskva/doctorimage/909501/3142349-909501-hludnevskiy_square_small.jpg", tags: ["implantaciya", "all-on-4", "hirurgiya"] },
-  { id: "radzhabov", name: "Раджабов Азамат Назирович", short: "Азамат Раджабов", role: "Хирург, имплантолог", exp: 8, rating: "5,0", reviews: 18, photo: PD + "moskva/doctorimage/869089/1546726-869089-radzhabov_square_small.jpg", tags: ["implantaciya", "all-on-4", "hirurgiya"] },
-  { id: "chitaykin", name: "Читайкин Артём Сергеевич", short: "Артём Читайкин", role: "Терапевт, эндодонтист, гигиенист", exp: 9, rating: "4,9", reviews: 26, photo: PD + "saransk/doctorimage/602094/3142158-602094-chitaykin_square_small.jpg", tags: ["lechenie-zubov", "mikroskop", "gigiena"] },
-  { id: "kashtanova", name: "Каштанова Екатерина Константиновна", short: "Екатерина Каштанова", role: "Терапевт, ортодонт, гигиенист", exp: 5, rating: "5,0", reviews: 24, photo: PD + "zhukovskiy/doctorimage/982335/2690555-982335-kashtanova_square_small.jpg", tags: ["lechenie-zubov", "ortodontiya", "gigiena"] },
+  { id: "hludnevskiy", name: "Хлудневский Михаил Сергеевич", short: "Михаил Хлудневский", role: "Хирург, имплантолог", exp: 8, rating: "5,0", reviews: 32, photo: PD + "moskva/doctorimage/909501/3142349-909501-hludnevskiy_square.jpg", tags: ["implantaciya", "all-on-4", "hirurgiya"] },
+  { id: "radzhabov", name: "Раджабов Азамат Назирович", short: "Азамат Раджабов", role: "Хирург, имплантолог", exp: 8, rating: "5,0", reviews: 18, photo: PD + "moskva/doctorimage/869089/1546726-869089-radzhabov_square.jpg", tags: ["implantaciya", "all-on-4", "hirurgiya"] },
+  { id: "chitaykin", name: "Читайкин Артём Сергеевич", short: "Артём Читайкин", role: "Терапевт, эндодонтист, гигиенист", exp: 9, rating: "4,9", reviews: 26, photo: PD + "saransk/doctorimage/602094/3142158-602094-chitaykin_square.jpg", tags: ["lechenie-zubov", "mikroskop", "gigiena"] },
+  { id: "kashtanova", name: "Каштанова Екатерина Константиновна", short: "Екатерина Каштанова", role: "Терапевт, ортодонт, гигиенист", exp: 5, rating: "5,0", reviews: 24, photo: PD + "zhukovskiy/doctorimage/982335/2690555-982335-kashtanova_square.jpg", tags: ["lechenie-zubov", "ortodontiya", "gigiena"] },
   { id: "solodukhin", name: "Солодухин Евгений Викторович", short: "Евгений Солодухин", role: "Ортопед", exp: null, rating: null, reviews: null, photo: null, tags: ["protezirovanie", "all-on-4"] },
-  { id: "alikhanova", name: "Алиханова Светлана Андреевна", short: "Светлана Алиханова", role: "Ортопед", exp: 8, rating: "4,8", reviews: 10, photo: PD + "moskva/doctorimage/869179/1548345-869179-alihanova_square_small.jpg", tags: ["protezirovanie", "all-on-4"] },
+  { id: "alikhanova", name: "Алиханова Светлана Андреевна", short: "Светлана Алиханова", role: "Ортопед", exp: 8, rating: "4,8", reviews: 10, photo: PD + "moskva/doctorimage/869179/1548345-869179-alihanova_square.jpg", tags: ["protezirovanie", "all-on-4"] },
   { id: "troitskiy", name: "Троицкий Даниил Леонидович", short: "Даниил Троицкий", role: "Детский стоматолог", exp: null, rating: null, reviews: null, photo: null, tags: ["detskaya"] },
 ];
 
@@ -319,3 +319,94 @@ export const gallery = [
 ].map((h) => `https://um-med.com/assets/gallery/stomatologicheskaya-klinika/92/${h}.jpeg`);
 
 export const clinicPhoto = "https://prodoctorov.ru/media/images/jpeg/bfc194796c11e910dc2bceb96023a8d0b21df35a.jpeg";
+
+// ---------- v2: одностраничник по механике Lava Dental ----------
+
+// Логотип клиники. Пока берётся прямо с um-med.com; когда файлы появятся в src/images/brand/, сборка возьмёт их.
+export const brand = {
+  logo: ["images/brand/header-logo.svg", "https://um-med.com/assets/template/img/header-logo.svg"],
+  logoFooter: ["images/brand/header-logo.svg", "https://um-med.com/assets/template/img/header-logo.svg"],
+};
+
+// Фото клиники с ПроДокторов: _l крупное, _s запасное.
+const PDL = "https://prodoctorov.ru/media/photo/zhukovskiy/lpuimage/95133/";
+const pd = (id) => [`${PDL}${id}-stomatologiya-_umnaya-medicina_l.jpg`, `${PDL}${id}-stomatologiya-_umnaya-medicina_s.jpg`];
+export const pdPhotos = {
+  entrance: pd(718940), facade: pd(718941), entrance2: pd(987545), waiting: pd(987547),
+  a: pd(883066), b: pd(883067), c: pd(883068), d: pd(883069), e: pd(883071), f: pd(721461), g: pd(721462),
+  h: pd(721463), i: pd(721465), j: pd(721466), k: pd(883065), l: pd(883070), m: pd(883072), n: pd(883073), o: pd(883074), p: pd(883075),
+};
+
+// Слоты картинок: [локальный файл (если сгенерирован), запасной вариант с сайта/ПроДокторов]
+const G = (name) => `images/gen/${name}.jpg`;
+export const pics = {
+  hero: [G("hero"), clinicPhoto],
+  foil: [G("foil"), null],
+  about: [
+    [G("about-01"), ...pdPhotos.a], [G("about-02"), ...pdPhotos.b], [G("about-03"), ...pdPhotos.waiting],
+    [G("about-04"), ...pdPhotos.c], [G("about-05"), ...pdPhotos.d], [G("about-06"), ...pdPhotos.e], [null, ...pdPhotos.entrance2],
+  ],
+  slides: [pdPhotos.facade, pdPhotos.entrance, pdPhotos.waiting, pdPhotos.entrance2],
+  feat: [1, 2, 3, 4, 5, 6].map((n, i) => [G(`feat-0${n}`), gallery[i + 1]]),
+  team: [null, gallery[0]],
+  svc: {
+    diagnostika: [G("svc-01"), ...pdPhotos.f], gigiena: [G("svc-02"), ...pdPhotos.g], "lechenie-zubov": [G("svc-03"), ...pdPhotos.h],
+    implantaciya: [G("svc-04"), ...pdPhotos.i], "all-on-4": [G("svc-05"), ...pdPhotos.j], mikroskop: [G("svc-06"), ...pdPhotos.k],
+    protezirovanie: [G("svc-07"), ...pdPhotos.l], hirurgiya: [G("svc-08"), ...pdPhotos.m], ortodontiya: [G("svc-09"), ...pdPhotos.n],
+    detskaya: [G("svc-10"), ...pdPhotos.o],
+  },
+};
+
+// Порядок услуг на главной (номера 01–10, как у Lava)
+export const homeOrder = ["diagnostika", "gigiena", "lechenie-zubov", "implantaciya", "all-on-4", "mikroskop", "protezirovanie", "hirurgiya", "ortodontiya", "detskaya"];
+
+// Шесть преимуществ: только то, что клиника говорит о себе на um-med.com
+export const features = [
+  ["Лечение под микроскопом", "Микроскоп помогает работать в труднодоступных местах, точно и бережно убирать поражённые ткани."],
+  ["Лечим без боли", "Современная анестезия: лечение проходит спокойно, без боли и лишнего стресса."],
+  ["Все врачи в одном месте", "Терапевты, хирурги-имплантологи, ортопеды, ортодонт и детский стоматолог работают в одной клинике."],
+  ["Снимки и КТ на месте", "Прицельный и панорамный снимок, КТ челюстей делаем в клинике. За снимком никуда ехать не нужно."],
+  ["Рядом многопрофильная клиника", "Анализы, терапевт, кардиолог и другие врачи «Умной Медицины» работают по соседству, на Громова, 10."],
+  ["Понятные цены", "Врач подробно объясняет план лечения и стоимость. Цены демократичные, действует программа лояльности."],
+];
+
+// Работы «до/после»: пока шаблоны карточек, фото даст клиника
+export const works = [
+  ["implantaciya", "Имплантация", "Восстановление жевательного зуба на импланте"],
+  ["all-on-4", "All-on-4", "Несъёмные зубы на четырёх имплантах"],
+  ["protezirovanie", "Протезирование", "Коронки из диоксида циркония"],
+  ["lechenie-zubov", "Терапия", "Художественная реставрация переднего зуба"],
+  ["gigiena", "Гигиена", "Профессиональная чистка Air-Flow"],
+  ["ortodontiya", "Ортодонтия", "Исправление прикуса брекетами"],
+  ["implantaciya", "Имплантация", "Имплантация с синус-лифтингом"],
+  ["protezirovanie", "Протезирование", "Керамические виниры E.max"],
+  ["lechenie-zubov", "Терапия", "Лечение каналов под микроскопом"],
+];
+
+// Вкладки прайса на главной
+export const priceTabs = [
+  ["Консультации и снимки", ["consult", "xray"]],
+  ["Лечение и гигиена", ["therapy", "hygiene"]],
+  ["Имплантация", ["implant", "bone"]],
+  ["All-on-4", ["allon"]],
+  ["Протезирование", ["crowns", "removable"]],
+  ["Брекеты и дети", ["ortho", "kids"]],
+];
+
+// Предложения в прайсе (условия с um-med.com, сроки согласовать с клиникой)
+export const offers = [
+  { tag: "Счастливая среда", title: "Профгигиена Air-Flow", price: "4 500 ₽", old: "5 790 ₽", items: ["Снятие зубного камня и налёта", "Чистка Air-Flow", "Полировка и рекомендации по уходу", "Каждую среду, места ограничены"], service: "gigiena" },
+  { tag: "Имплантация", title: "Консультация хирурга и 3D-снимок", price: "Бесплатно", old: null, items: ["Осмотр хирурга-имплантолога", "КТ для планирования", "План лечения с ценой по этапам", "Импланты Osstem, Dentium, Straumann"], service: "implantaciya" },
+  { tag: "Первый визит", title: "Консультация с планом лечения", price: "Бесплатно", old: null, items: ["Терапевт, ортопед или хирург", "Осмотр полости рта", "План лечения и стоимость", "Без обязательств продолжать лечение"], service: "consult" },
+];
+
+// О клинике: текст по мотивам вводного блока um-med.com/stomatologicheskaya-klinika/
+export const about = {
+  statement: "Чтобы вам было спокойно и комфортно на каждом этапе лечения.",
+  text: [
+    "«Умная Медицина» — современная стоматология в Удельной, рядом с Жуковским. Команда опытных врачей и современное оборудование позволяют проводить как простые, так и сложные процедуры: от профилактики и лечения кариеса до имплантации, протезирования и исправления прикуса.",
+    "Наша задача — доступная и качественная стоматологическая помощь для жителей Жуковского, Раменского, Быково, Ильинского, Красково, Малаховки и Островцов. Мы работаем с качественными материалами, современной анестезией и диагностикой, которая помогает найти проблему на ранней стадии.",
+    "Здоровая и красивая улыбка — лучшая инвестиция в будущее и уверенность в себе.",
+  ],
+  sign: "Лечение зубов с комфортом",
+};
