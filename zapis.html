@@ -17,10 +17,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/styles.css">
 <script>
-(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um-intro"))d.classList.add("js-intro")}}catch(e){}
-setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
+(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches)d.classList.add("js-anim")}catch(e){}
+setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim")},4000)})(document.documentElement);
 window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
-window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big,.intro__logo");if(p)p.classList.add("is-fallback");i.style.display="none"};
+window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo");if(p)p.classList.add("is-fallback");i.style.display="none"};
 </script>
 <script src="assets/vendor/gsap.min.js" defer></script>
 <script src="assets/vendor/ScrollTrigger.min.js" defer></script>
@@ -42,7 +42,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
         <span class="label">Онлайн-запись</span>
         <h1 tabindex="-1">Записаться на приём</h1>
         <p>Выберите услугу, врача и удобное время, а администратор подтвердит запись. Консультация с планом лечения бесплатная.</p>
-        <button class="btn btn--lg" type="button" data-start data-magnet>Перейти к записи</button>
+        <button class="btn btn--lg" type="button" data-start>Перейти к записи</button>
       </section>
       <section class="bstep" data-step="1" hidden>
         <div class="bsteps" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
@@ -60,18 +60,18 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
         <h2 tabindex="-1">Когда удобно?</h2>
         <div class="days" id="b-days"></div>
         <div class="slots" id="b-slots"></div>
-        <p class="note" style="margin-top:14px">Пример расписания. В рабочей версии здесь живые окна врачей из МИС клиники.</p>
+        <p class="note bnote">Пример расписания. В рабочей версии здесь живые окна врачей из МИС клиники.</p>
         <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn btn--sm" type="button" data-next-time disabled>Дальше</button></div>
       </section>
       <section class="bstep" data-step="4" hidden>
         <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span></div>
         <h2 tabindex="-1">Как с вами связаться?</h2>
         <form class="form" id="b-form">
-          <label>Имя<input name="name" required autocomplete="name"></label>
-          <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
-          <label>Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
+          <label class="field">Имя<input name="name" required autocomplete="name"></label>
+          <label class="field">Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
+          <label class="field">Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
           <label class="check"><input type="checkbox" required> Согласен на обработку персональных данных</label>
-          <div class="bnav" style="margin-top:6px"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn">Записаться</button></div>
+          <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn">Записаться</button></div>
         </form>
       </section>
       <section class="bstep bdone" data-step="5" hidden>
@@ -90,9 +90,9 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
       <div><dt>Дата и время</dt><dd data-sum="date" class="is-empty">не выбрано</dd></div>
       <div><dt>Адрес</dt><dd>Удельная, ул. Громова, 10/2</dd></div>
     </dl>
-    <p class="note">Есть вопросы? Позвоните: <a href="tel:+74951503615" style="color:#fff">+7 495 150-36-15</a>, ежедневно с 9:00 до 21:00.</p>
+    <p class="note">Есть вопросы? Позвоните: <a href="tel:+74951503615">+7 495 150-36-15</a>, ежедневно с 9:00 до 21:00.</p>
   </aside>
 </div>
-<script type="application/json" id="bdata">{"services":[{"slug":"diagnostika","title":"КТ и снимки","short":"3D-снимок, ОПТГ, прицельный снимок","from":"от 500 ₽"},{"slug":"gigiena","title":"Профгигиена Air-Flow","short":"Air-Flow, ультразвук","from":"от 4 500 ₽"},{"slug":"lechenie-zubov","title":"Лечение зубов","short":"Кариес, пульпит, реставрация","from":"от 4 000 ₽"},{"slug":"implantaciya","title":"Имплантация зубов","short":"Straumann, Dentium, OSSTEM","from":"от 17 500 ₽"},{"slug":"all-on-4","title":"All-on-4 и All-on-6","short":"Вся челюсть на 4–8 имплантах","from":"от 110 000 ₽"},{"slug":"mikroskop","title":"Лечение под микроскопом","short":"Каналы, перфорации, трещины","from":"Цена после осмотра"},{"slug":"protezirovanie","title":"Протезирование","short":"Коронки, виниры, протезы","from":"от 26 400 ₽"},{"slug":"hirurgiya","title":"Удаление зубов","short":"Зубы мудрости, пьезохирургия","from":"от 2 100 ₽"},{"slug":"ortodontiya","title":"Брекеты и элайнеры","short":"Damon, 3M, элайнеры","from":"от 28 500 ₽"},{"slug":"detskaya","title":"Детская стоматология","short":"Лечение молочных зубов","from":"от 450 ₽"}],"doctors":[{"id":"hludnevskiy","short":"Михаил Хлудневский","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/hludnevskiy.jpg","initials":"МХ"},{"id":"radzhabov","short":"Азамат Раджабов","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/radzhabov.jpg","initials":"АР"},{"id":"chitaykin","short":"Артём Читайкин","role":"Терапевт, эндодонтист, гигиенист","tags":["lechenie-zubov","mikroskop","gigiena"],"photo":"images/doctors/chitaykin.jpg","initials":"АЧ"},{"id":"kashtanova","short":"Екатерина Каштанова","role":"Терапевт, ортодонт, гигиенист","tags":["lechenie-zubov","ortodontiya","gigiena","mikroskop"],"photo":"images/doctors/kashtanova.jpg","initials":"ЕК"},{"id":"solodukhin","short":"Евгений Солодухин","role":"Ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/solodukhin.jpg","initials":"ЕС"},{"id":"alikhanova","short":"Светлана Алиханова","role":"Ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/alikhanova.jpg","initials":"СА"},{"id":"sikacheva","short":"Мария Сикачева","role":"Ортодонт","tags":["ortodontiya"],"photo":"images/doctors/sikacheva.jpg","initials":"МС"},{"id":"troitskiy","short":"Даниил Троицкий","role":"Детский стоматолог","tags":["detskaya"],"photo":"images/doctors/troitskiy.jpg","initials":"ДТ"}]}</script>
+<script type="application/json" id="bdata">{"services":[{"slug":"diagnostika","title":"КТ и снимки","short":"3D-снимок, ОПТГ, прицельный снимок","from":"от 500 ₽"},{"slug":"gigiena","title":"Профгигиена Air-Flow","short":"Air-Flow, ультразвук","from":"от 4 500 ₽"},{"slug":"lechenie-zubov","title":"Лечение зубов","short":"Кариес, пульпит, реставрация","from":"от 4 000 ₽"},{"slug":"implantaciya","title":"Имплантация зубов","short":"Straumann, Dentium, OSSTEM","from":"от 17 500 ₽"},{"slug":"all-on-4","title":"All-on-4 и All-on-6","short":"Вся челюсть на 4–8 имплантах","from":"от 110 000 ₽"},{"slug":"mikroskop","title":"Лечение под микроскопом","short":"Каналы, перфорации, трещины","from":"Цена после осмотра"},{"slug":"protezirovanie","title":"Протезирование","short":"Коронки, виниры, протезы","from":"от 26 400 ₽"},{"slug":"hirurgiya","title":"Удаление зубов","short":"Зубы мудрости, пьезохирургия","from":"от 2 100 ₽"},{"slug":"ortodontiya","title":"Брекеты и элайнеры","short":"Damon, 3M, элайнеры","from":"от 28 500 ₽"},{"slug":"detskaya","title":"Детская стоматология","short":"Лечение молочных зубов","from":"от 450 ₽"}],"doctors":[{"id":"hludnevskiy","short":"Михаил Хлудневский","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/hludnevskiy.jpg","initials":"МХ"},{"id":"radzhabov","short":"Азамат Раджабов","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/radzhabov.jpg","initials":"АР"},{"id":"chitaykin","short":"Артём Читайкин","role":"Терапевт, эндодонтист, гигиенист","tags":["lechenie-zubov","mikroskop","gigiena"],"photo":"images/doctors/chitaykin.jpg","initials":"АЧ"},{"id":"kashtanova","short":"Екатерина Каштанова","role":"Терапевт, ортодонт, гигиенист","tags":["lechenie-zubov","ortodontiya","gigiena","mikroskop"],"photo":"images/doctors/kashtanova.jpg","initials":"ЕК"},{"id":"solodukhin","short":"Евгений Солодухин","role":"Ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/solodukhin.jpg","initials":"ЕС"},{"id":"alikhanova","short":"Светлана Алиханова","role":"Ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/alikhanova.jpg","initials":"СА"},{"id":"sikacheva","short":"Мария Сикачева","role":"Ортодонт","tags":["ortodontiya"],"photo":"images/doctors/sikacheva.jpg","initials":"МС"},{"id":"troitskiy","short":"Даниил Троицкий","role":"Детский стоматолог","tags":["detskaya"],"photo":"images/doctors/troitskiy.jpg","initials":"ДТ"}]}</script>
 </body>
 </html>
