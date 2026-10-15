@@ -607,3 +607,56 @@ html:not(.js-intro) .intro { display: none; }
 .place__unlock { position: absolute; left: 16px; bottom: 16px; z-index: 2; min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(12, 36, 16, .82); color: #fff; font: 500 14px/1 var(--body); cursor: pointer; }
 .place__map.is-active .place__unlock { display: none; }
 .svc--wide .svc__bg img { object-position: 50% 22%; }
+
+/* ---------- страница врача ---------- */
+.doc h3 a { color: inherit; text-decoration: none; transition: color .3s; }
+.doc h3 a:hover { color: var(--green-deep); }
+.doc__cover { position: absolute; inset: 0; z-index: 1; }
+.doc__photo .doc__book { z-index: 2; }
+.doc-hero { padding-bottom: clamp(48px, 6vw, 90px); }
+.doc-hero__in { position: relative; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: clamp(28px, 5vw, 90px); align-items: end; }
+.doc-hero h1 { max-width: none; margin-top: 22px; font-size: clamp(44px, 6.2vw, 100px); }
+.doc-hero h1 > span { display: block; }
+.doc-hero h1 > span + span { color: var(--sage); }
+.doc-hero__role { margin-top: 30px; }
+.doc-hero__facts { list-style: none; margin: 44px 0 0; padding: 28px 0 0; border-top: 1px solid var(--line-on-dark); display: flex; flex-wrap: wrap; gap: 24px clamp(28px, 4vw, 64px); }
+.doc-hero__facts li { display: grid; gap: 10px; align-content: start; }
+.doc-hero__facts b { font: 500 clamp(40px, 4vw, 64px)/1 var(--display); letter-spacing: -.04em; }
+.doc-hero__facts span { font-size: 14px; line-height: 1.4; color: var(--muted-on-dark); }
+.doc-hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
+.doc-hero__cta .btn--ghost { color: #fff; }
+.doc-hero__photo { position: relative; margin: 0; width: 100%; aspect-ratio: 4 / 5; max-height: calc(100svh - var(--header-h) - 70px); border-radius: var(--radius); overflow: hidden; background: linear-gradient(160deg, var(--sage-2), var(--sage)); }
+.doc-hero__photo img { position: absolute; left: 0; top: 0; width: 100%; height: 112%; object-fit: cover; object-position: 50% 18%; }
+.doc-hero__photo .doc__initials { font-size: clamp(64px, 8vw, 120px); }
+.doc-about { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 90px); align-items: start; }
+.doc-specs { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 8px; }
+.doc-specs li { font: 500 clamp(26px, 2.8vw, 44px)/1.1 var(--display); letter-spacing: -.03em; }
+.doc-path { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-on-dark); }
+.doc-path li { display: grid; grid-template-columns: minmax(150px, .9fr) minmax(130px, .6fr) minmax(0, 2.5fr); gap: 12px 32px; padding: 30px 0; border-bottom: 1px solid var(--line-on-dark); align-items: baseline; }
+.doc-path__y { font: 500 clamp(26px, 2.6vw, 40px)/1 var(--display); letter-spacing: -.03em; }
+.doc-path__k { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--green-hi); }
+.doc-path b { display: block; font: 500 clamp(19px, 1.6vw, 24px)/1.25 var(--display); letter-spacing: -.015em; }
+.doc-path div span { display: block; margin-top: 6px; color: var(--muted-on-dark); }
+.doc-courses { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(12px, 1.6vw, 22px); }
+.doc-course { padding: 26px 24px; border-radius: var(--radius); background: var(--white); display: grid; gap: 28px; align-content: space-between; min-height: 180px; }
+.doc-course p { font: 500 18px/1.3 var(--display); letter-spacing: -.01em; }
+.doc-empty p { margin-top: 22px; max-width: 32ch; font: 500 clamp(22px, 2.2vw, 32px)/1.25 var(--display); letter-spacing: -.02em; }
+.doc-empty a { color: var(--green-deep); white-space: nowrap; }
+@media (max-width: 1024px) {
+  .doc-hero__in, .doc-about { grid-template-columns: 1fr; }
+  .doc-hero__photo { max-width: 520px; max-height: none; }
+  .doc-courses { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) {
+  .doc-hero__facts { gap: 20px 28px; }
+  .doc-path li { grid-template-columns: auto 1fr; padding: 22px 0; }
+  .doc-path li > div { grid-column: 1 / -1; }
+  .doc-courses { grid-template-columns: 1fr; }
+  .doc-course { min-height: 0; }
+  .doc-hero__cta .btn { width: 100%; }
+}
+.team__grid--six { grid-template-columns: repeat(6, 1fr); }
+.team__grid--six .doc h3 { font-size: 18px; }
+@media (max-width: 1200px) { .team__grid--six { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1024px) { .doc-about { row-gap: 64px; } }
+@media (max-width: 760px) { .team__grid--six { grid-template-columns: repeat(2, 1fr); } }

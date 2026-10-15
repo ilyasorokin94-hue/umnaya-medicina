@@ -182,15 +182,22 @@ const faqLd = (faq) => ({ "@context": "https://schema.org", "@type": "FAQPage", 
 // ---------- блоки ----------
 const plist = (keys, limit = 99) => `<ul class="plist">${keys.flatMap((k) => prices[k].items).slice(0, limit).map(([n, v]) => `<li><span>${esc(n)}</span><b>${priceText(v)}</b></li>`).join("")}</ul>`;
 
+// портрет врача: обработанный локальный файл, если он есть, иначе фото с ПроДокторов
+const docPhoto = (d) => [`images/doctors/${d.id}.jpg`, `images/doctors/${d.id}.png`, d.photo, d.photo && d.photo.replace("_square.jpg", "_square_small.jpg")];
+const initialsOf = (d) => d.short.split(" ").map((w) => w[0]).join("");
+const plural = (n, one, few, many) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; };
+const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+const reviewsText = (n) => `${n} ${plural(n, "отзыв", "отзыва", "отзывов")}`;
+
 function doctorCard(d, depth) {
   const p = pre(depth);
-  const initials = d.short.split(" ").map((w) => w[0]).join("");
   return `<article class="doc" data-tags="${d.tags.join(" ")}" data-reveal>
-  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initials}</span>${d.photo ? img([d.photo, d.photo.replace("_square.jpg", "_square_small.jpg")], d.name, depth) : ""}
+  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth)}
+    <a class="doc__cover" href="${p}vrachi/${d.id}.html" tabindex="-1" aria-hidden="true"></a>
     <a class="btn btn--sm btn--wide doc__book" href="${p}zapis.html?doctor=${d.id}">Записаться</a></div>
-  <h3>${esc(d.name)}</h3>
+  <h3><a href="${p}vrachi/${d.id}.html">${esc(d.name)}</a></h3>
   <p class="doc__role">${esc(d.role)}</p>
-  <p class="doc__meta">${d.exp ? `<span>Стаж <b>${d.exp} лет</b></span>` : "<span>Стаж уточняется</span>"}${d.rating ? `<span>ПроДокторов <b>${d.rating}</b> · ${d.reviews} отзывов</span>` : ""}</p>
+  <p class="doc__meta">${d.exp ? `<span>Стаж <b>${d.exp} лет</b></span>` : "<span>Стаж уточняется</span>"}${d.rating ? `<span>ПроДокторов <b>${d.rating}</b> · ${reviewsText(d.reviews)}</span>` : ""}</p>
 </article>`;
 }
 
@@ -458,6 +465,75 @@ ${docs.length ? `<section class="section"><div class="wrap">
 </main>` + footer(depth) + end;
 }
 
+// ---------- страница врача ----------
+function pageDoctor(d) {
+  const depth = 1;
+  const p = pre(depth);
+  const [last, ...given] = d.name.split(" ");
+  const svcs = homeOrder.filter((k) => d.tags.includes(k));
+  const others = doctors.filter((x) => x.id !== d.id);
+  const kind = (t) => (t.startsWith("Ординатура") ? "Ординатура" : t.startsWith("Повышение") ? "Квалификация" : "Образование");
+  const timeline = [
+    ...d.edu.map(([y, place, t]) => ({ y, sort: +y, kind: kind(t), t: cap(t.replace(/^(Ординатура|Повышение квалификации): /, "")), place })),
+    ...d.work.map(([y, place, t]) => ({ y, sort: parseInt(y, 10), kind: "Работа", t, place })),
+  ].sort((a, b) => a.sort - b.sort);
+  const desc = `${d.name}, ${d.title.toLowerCase()} стоматологии «Умная Медицина» в Удельной (Жуковский).${d.exp ? ` Стаж ${d.exp} лет.` : ""} Образование, курсы, запись на приём.`;
+  const ld = { "@context": "https://schema.org", "@type": "Person", name: d.name, jobTitle: d.title, worksFor: { "@type": "Dentist", name: clinic.name }, url: `${SITE}/vrachi/${d.id}` };
+  return head({ title: `${d.name} — ${d.title.toLowerCase()} | Умная Медицина`, desc, canonical: `/vrachi/${d.id}`, depth, jsonld: [crumbsLd([["index.html#team", "Врачи"], ["vrachi/" + d.id, d.short]]), ld] })
+  + header(depth) + `
+<main id="main">
+<section class="page-hero doc-hero on-dark">
+  <div class="foil__bg"></div>
+  <div class="wrap doc-hero__in">
+    <div class="doc-hero__text">
+      <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../index.html#team">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
+      <span class="label label--light doc-hero__role">${esc(d.title)}</span>
+      <h1><span data-split>${esc(last)}</span> <span data-split>${esc(given.join(" "))}</span></h1>
+      <ul class="doc-hero__facts">
+        ${d.exp ? `<li><b data-count="${d.exp}">${d.exp}</b><span>${plural(d.exp, "год", "года", "лет")} стажа</span></li>` : ""}
+        ${d.rating ? `<li><b data-count="${d.rating}">${d.rating}</b><span>рейтинг на ПроДокторов,<br>${reviewsText(d.reviews)}</span></li>` : ""}
+        ${d.courses.length ? `<li><b data-count="${d.courses.length}">${d.courses.length}</b><span>${plural(d.courses.length, "курс", "курса", "курсов")} повышения<br>квалификации</span></li>` : ""}
+      </ul>
+      <div class="doc-hero__cta">
+        <a class="btn btn--lg" href="../zapis.html?doctor=${d.id}" data-magnet>Записаться к врачу ${icon.arrow}</a>
+        ${d.pd ? `<a class="btn btn--ghost btn--lg" href="${d.pd}" target="_blank" rel="noopener">Отзывы на ПроДокторов</a>` : ""}
+      </div>
+    </div>
+    <figure class="doc-hero__photo" data-ph data-clip data-parallax><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth, ' fetchpriority="high"').replace(' loading="lazy"', "")}</figure>
+  </div>
+</section>
+
+<section class="section"><div class="wrap doc-about">
+  <div>
+    <span class="label">Специализация</span>
+    <ul class="doc-specs">${d.specs.map((t) => `<li data-reveal>${esc(t)}</li>`).join("")}</ul>
+  </div>
+  <div>
+    <span class="label">Чем занимается в клинике</span>
+    <div style="margin-top:28px">${svcRows(svcs, depth)}</div>
+  </div>
+</div></section>
+
+${timeline.length ? `<section class="section section--dark on-dark"><div class="wrap">
+  <div class="section__head"><div><span class="label">Образование и опыт</span><h2 data-split>Путь врача</h2></div><p>По анкете врача на ПроДокторов, где документы проверены сервисом.</p></div>
+  <ol class="doc-path">${timeline.map((r) => `<li data-reveal><span class="doc-path__y">${esc(r.y)}</span><span class="doc-path__k">${esc(r.kind)}</span><div><b>${esc(r.t)}</b><span>${esc(r.place)}</span></div></li>`).join("")}</ol>
+</div></section>` : `<section class="section section--sage"><div class="wrap doc-empty" data-reveal>
+  <span class="label">Образование и опыт</span>
+  <p>Сведения об образовании и стаже врача клиника пока не опубликовала. Их можно уточнить у администратора: <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a>.</p>
+</div></section>`}
+
+${d.courses.length ? `<section class="section section--sage"><div class="wrap">
+  <div class="section__head"><div><span class="label">Повышение квалификации</span><h2 data-split>Курсы и конгрессы</h2></div></div>
+  <div class="doc-courses">${d.courses.map(([y, t]) => `<div class="doc-course" data-reveal><span class="num">${esc(y)}</span><p>${esc(t)}</p></div>`).join("")}</div>
+</div></section>` : ""}
+
+<section class="section section--sage"><div class="wrap">
+  <div class="section__head"><div><span class="label">Команда</span><h2 data-split>Другие врачи</h2></div></div>
+  <div class="team__grid team__grid--six">${others.map((x) => doctorCard(x, depth)).join("")}</div>
+</div></section>
+</main>` + footer(depth) + end;
+}
+
 // ---------- прайс ----------
 function pagePrices() {
   const depth = 0;
@@ -485,7 +561,7 @@ function pageBooking() {
   const depth = 0;
   const bdata = {
     services: homeOrder.map((k) => ({ slug: k, title: svc[k].title, short: svc[k].short, from: svc[k].from })),
-    doctors: doctors.map((d) => ({ id: d.id, short: d.short, role: d.role, tags: d.tags, photo: d.photo ? d.photo.replace("_square.jpg", "_square_small.jpg") : null, initials: d.short.split(" ").map((w) => w[0]).join("") })),
+    doctors: doctors.map((d) => ({ id: d.id, short: d.short, role: d.role, tags: d.tags, photo: pick(docPhoto(d), 0).src || null, initials: initialsOf(d) })),
   };
   return head({ title: "Записаться на приём | Умная Медицина. Стоматология", desc: "Онлайн-запись в стоматологию «Умная Медицина»: выберите услугу, врача и удобное время.", canonical: "/zapis", depth, page: "booking" }) + `
 <div class="booking" id="booking">
@@ -556,12 +632,14 @@ function pageBooking() {
 // ---------- сборка ----------
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(path.join(dist, "uslugi"), { recursive: true });
+mkdirSync(path.join(dist, "vrachi"), { recursive: true });
 mkdirSync(path.join(dist, "assets", "vendor"), { recursive: true });
 const out = (f, html) => writeFileSync(path.join(dist, f), html);
 out("index.html", pageHome());
 out("ceny.html", pagePrices());
 out("zapis.html", pageBooking());
 for (const s of services) out(`uslugi/${s.slug}.html`, pageService(s));
+for (const d of doctors) out(`vrachi/${d.id}.html`, pageDoctor(d));
 for (const f of readdirSync(path.join(root, "src", "assets"))) copyFileSync(path.join(root, "src", "assets", f), path.join(dist, "assets", f));
 const nm = (p) => path.join(root, "node_modules", p);
 copyFileSync(nm("gsap/dist/gsap.min.js"), path.join(dist, "assets/vendor/gsap.min.js"));
@@ -570,5 +648,5 @@ copyFileSync(nm("lenis/dist/lenis.min.js"), path.join(dist, "assets/vendor/lenis
 if (existsSync(path.join(root, "src", "images"))) cpSync(path.join(root, "src", "images"), path.join(dist, "images"), { recursive: true });
 out("robots.txt", "User-agent: *\nDisallow: /\n");
 out(".nojekyll", "");
-out("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["/", "/ceny", "/zapis", ...services.map((s) => `/uslugi/${s.slug}`)].map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>2026-10-15</lastmod></url>`).join("\n")}\n</urlset>\n`);
-console.log("Собрано страниц:", 3 + services.length, "→", dist);
+out("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["/", "/ceny", "/zapis", ...services.map((s) => `/uslugi/${s.slug}`), ...doctors.map((d) => `/vrachi/${d.id}`)].map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>2026-10-15</lastmod></url>`).join("\n")}\n</urlset>\n`);
+console.log("Собрано страниц:", 3 + services.length + doctors.length, "→", dist);

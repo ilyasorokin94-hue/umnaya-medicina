@@ -240,7 +240,7 @@
     const tl = G.timeline();
     tl.from($(".hero__media img", h), { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0)
       .from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .from($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__actions > *, .hero__side > *, .page-hero__aside > *", h), { autoAlpha: 0, y: 24, duration: 1, stagger: 0.07 }, 0.4)
+      .from($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__actions > *, .hero__side > *, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24, duration: 1, stagger: 0.07 }, 0.4)
       .from(".header__bar", { y: -24, autoAlpha: 0, duration: 0.9 }, 0.2);
   };
 
@@ -270,7 +270,7 @@
     G.to(".hero__in", { y: -80, autoAlpha: 0, ease: "none", scrollTrigger: { trigger: hero, start: "40% top", end: "95% top", scrub: true } });
   }
   const ph = $(".page-hero");
-  if (ph) G.to($(".page-hero__in", ph), { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
+  if (ph) G.to($(".page-hero__in, .doc-hero__text", ph), { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
 
   // заголовки разделов: слова поднимаются из-под строки
   $$("[data-split]").forEach((el) => {
