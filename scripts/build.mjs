@@ -113,8 +113,8 @@ function header(depth, home = false) {
 </div></header>
 <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Меню">
   <div class="menu__top"><a class="logo logo--white" href="${p}index.html">${logoImg(depth, false)}<span class="logo__text">Умная Медицина<small>стоматология</small></span></a><button class="menu__close" type="button" aria-label="Закрыть меню">${icon.close}</button></div>
-  <nav aria-label="Разделы">${sections.map(([id, t], i) => `<a href="${href(id)}"><span>${pad(i + 1)}</span>${t}</a>`).join("")}</nav>
-  <div class="menu__foot"><a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a><a href="${p}ceny.html">Полный прайс</a><a class="btn btn--wide" href="${p}zapis.html">Записаться на приём ${icon.arrow}</a></div>
+  <nav aria-label="Разделы">${sections.map(([id, t], i) => `<a href="${href(id)}">${t}</a>`).join("")}</nav>
+  <div class="menu__foot"><a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a><a href="${p}ceny.html">Полный прайс</a><a class="btn btn--wide" href="${p}zapis.html">Записаться на приём</a></div>
 </div>`;
 }
 
@@ -125,7 +125,7 @@ function footer(depth) {
 <footer class="footer on-dark"><div class="wrap footer__in">
   <div class="footer__cta">
     <h2 data-split>${esc(home.final[0])}</h2>
-    <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn--lg" href="${p}zapis.html" data-magnet>${esc(home.final[1])} ${icon.arrow}</a><button class="totop" type="button" data-totop aria-label="Наверх">${icon.arrow}</button></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn--lg" href="${p}zapis.html" data-magnet>${esc(home.final[1])}</a><button class="totop" type="button" data-totop aria-label="Наверх">${icon.arrow}</button></div>
   </div>
   <div class="footer__grid">
     <div class="footer__col">
@@ -206,7 +206,7 @@ function faqBlock(groups) {
   // groups: [[title, [[q, a], ...]], ...]
   const multi = groups.length > 1;
   return `<div class="faq">
-  ${multi ? `<div class="faq__groups" role="tablist" data-tabs="faq">${groups.map(([t, qs], i) => `<button type="button" role="tab" data-tab="g${i}" aria-selected="${i === 0}">${esc(t)}<span>${pad(qs.length)}</span></button>`).join("")}</div>` : `<div><h2 class="section__title" data-split>Частые вопросы</h2></div>`}
+  ${multi ? `<div class="faq__groups" role="tablist" data-tabs="faq">${groups.map(([t, qs], i) => `<button type="button" role="tab" data-tab="g${i}" aria-selected="${i === 0}">${esc(t)}</button>`).join("")}</div>` : `<div><h2 class="section__title" data-split>Частые вопросы</h2></div>`}
   <div>${groups.map(([t, qs], i) => `<div class="qa-group" data-panel="faq" data-key="g${i}"${i ? " hidden" : ""}>${qs.map(([q, a]) => `<details class="qa"><summary>${esc(q)}<i aria-hidden="true"></i></summary><div class="qa__a"><p>${esc(a)}</p></div></details>`).join("")}</div>`).join("")}</div>
 </div>`;
 }
@@ -216,7 +216,7 @@ function svcCard(k, i, depth, kind = "") {
   const p = pre(depth);
   const bg = kind ? `<span class="svc__bg" data-ph>${img(pics.svc[k], s.title, depth)}${ph(s.title)}</span>` : "";
   return `<a class="svc${kind}" href="${p}uslugi/${k}.html" data-reveal>${bg}
-  <span class="svc__top"><span class="num">${pad(i + 1)}</span><span class="svc__arrow">${icon.arrow}</span></span>
+  <span class="svc__top"><span class="svc__arrow">${icon.arrow}</span></span>
   <span><h3>${esc(s.title)}</h3>${kind.includes("wide") ? `<p class="svc__lead">${esc(s.lead)}</p>` : ""}</span>
   <span class="svc__meta"><span>${esc(s.short)}</span><span class="svc__from">${esc(s.from)}</span></span>
 </a>`;
@@ -226,8 +226,8 @@ function svcRows(keys, depth, start = 0) {
   const p = pre(depth);
   return `<div class="svc-list">${keys.map((k, i) => {
     const s = svc[k];
-    return `<a class="svc-row" href="${p}uslugi/${k}.html" data-img="${pick(pics.svc[k], depth).src}" data-reveal><span class="num">${pad(start + i + 1)}</span><h3>${esc(s.title)}</h3><span class="svc__from">${esc(s.from)}</span><span class="svc__arrow">${icon.arrow}</span></a>`;
-  }).join("")}</div><div class="hover-img" aria-hidden="true"><img alt=""></div>`;
+    return `<a class="svc-row" href="${p}uslugi/${k}.html" data-reveal><h3>${esc(s.title)}</h3><span class="svc__from">${esc(s.from)}</span><span class="svc__arrow">${icon.arrow}</span></a>`;
+  }).join("")}</div>`;
 }
 
 function marquee(text) {
@@ -261,7 +261,7 @@ function pageHome() {
   const slides = pics.slides.map((e, i) => img(e, "Стоматология «Умная Медицина»", depth, i === 0 ? ' class="is-on"' : "")).join("");
   const facts = (list) => `<ul class="facts">${list.map((t) => `<li data-reveal>${esc(t)}</li>`).join("")}</ul>`;
   const sit = ([t, d, k, pic], i) => `<a class="sit${pic ? " sit--img" : ""}" href="uslugi/${k}.html" data-reveal>${pic ? `<span class="svc__bg" data-ph>${img([pic], t, depth)}</span>` : ""}
-    <span class="svc__top"><span class="num">${pad(i + 1)}</span><span class="svc__arrow">${icon.arrow}</span></span>
+    <span class="svc__top"><span class="svc__arrow">${icon.arrow}</span></span>
     <span class="sit__body"><h3>${esc(t)}</h3><p>${esc(d)}</p></span>
     <span class="sit__svc">${esc(svc[k].title)}</span></a>`;
   const { save, restore, allon, kids } = home;
@@ -277,11 +277,7 @@ function pageHome() {
     <div>
       <h1 id="h1"><span class="kicker">${esc(home.kicker)}</span><span data-split>${esc(home.h1)}</span></h1>
       <p class="hero__sub">${esc(home.sub)}</p>
-      <div class="hero__actions"><a class="btn btn--lg" href="zapis.html" data-magnet>Записаться на консультацию ${icon.arrow}</a><a class="btn btn--ghost btn--lg" href="#pricing">Цены</a></div>
-    </div>
-    <div class="hero__side">
-      <figure class="hero__card"><div class="hero__slides" data-ph>${slides}</div><blockquote><p>«${esc(home.heroQuote[0])}»</p></blockquote><figcaption>${esc(home.heroQuote[1])}</figcaption></figure>
-      <a class="hero__rating" href="${clinic.ratings[0].url}"><b data-count="4,9">4,9</b><span>рейтинг на ПроДокторов<br>199 отзывов</span></a>
+      <div class="hero__actions"><a class="btn btn--lg" href="zapis.html" data-magnet>Записаться на консультацию</a><a class="btn btn--ghost btn--lg" href="#pricing">Цены</a></div>
     </div>
   </div>
   <span class="hero__scroll" aria-hidden="true"></span>
@@ -310,11 +306,11 @@ function pageHome() {
   <div class="feat">
     <div class="feat__pin"><div class="feat__track">
       <div class="fcard fcard--intro"><span class="label">Как это устроено</span><h2 id="ft-title" data-split>Что будет после того, как вы позвоните</h2><p>Шесть правил, по которым мы работаем с каждым пациентом.</p></div>
-      ${features.map(([t, d], i) => `<article class="fcard"><div class="fcard__img" data-ph>${img(pics.feat[i], t, depth)}${ph(t)}</div><div class="fcard__body"><span class="num">${pad(i + 1)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div></article>`).join("")}
+      ${features.map(([t, d], i) => `<article class="fcard"><div class="fcard__img" data-ph>${img(pics.feat[i], t, depth)}${ph(t)}</div><div class="fcard__body"><h3>${esc(t)}</h3><p>${esc(d)}</p></div></article>`).join("")}
     </div><div class="feat__progress" aria-hidden="true"><i></i></div></div>
   </div>
   ${marquee("Сначала думаем — <em>потом лечим</em>")}
-  <div class="wrap cta-strip"><p>Консультация с планом и ценой бесплатная. План можно забрать домой и подумать.</p><a class="btn btn--light btn--lg" href="zapis.html" data-magnet>Записаться на консультацию ${icon.arrow}</a></div>
+  <div class="wrap cta-strip"><p>Консультация с планом и ценой бесплатная. План можно забрать домой и подумать.</p><a class="btn btn--light btn--lg" href="zapis.html" data-magnet>Записаться на консультацию</a></div>
 </section>
 
 <section class="section" id="save" aria-label="Сохранить или восстановить"><div class="wrap fork">
@@ -392,7 +388,7 @@ function pageHome() {
         <h3>${esc(o.title)}</h3>
         <p class="offer__price"><b>${esc(o.price)}</b>${o.old ? `<s>${esc(o.old)}</s>` : ""}</p>
         <ul>${o.items.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
-        <a class="btn btn--light" href="zapis.html?service=${o.service}">Записаться ${icon.arrow}</a>
+        <a class="btn btn--light" href="zapis.html?service=${o.service}">Записаться</a>
       </div>`).join("")}
       <div class="offer__switch">${offers.map((o, i) => `<button type="button" aria-label="${esc(o.title)}" aria-pressed="${i === 0}"></button>`).join("")}</div>
       <p class="offer__note">Сроки акций уточняются у клиники.</p>
@@ -433,9 +429,9 @@ function pageService(s) {
       <p class="page-hero__lead">${esc(s.lead)}</p>
     </div>
     <div class="page-hero__aside">
-      <span class="label label--light">Услуга ${pad(i + 1)}</span>
+      <span class="label label--light">Стоимость</span>
       <span class="page-hero__price${/\d/.test(s.from) ? "" : " page-hero__price--text"}">${esc(s.from)}</span>
-      <a class="btn btn--lg" href="../zapis.html?service=${s.slug}" data-magnet>Записаться ${icon.arrow}</a>
+      <a class="btn btn--lg" href="../zapis.html?service=${s.slug}" data-magnet>Записаться</a>
     </div>
   </div>
 </section>
@@ -445,13 +441,13 @@ function pageService(s) {
   <div>
     <span class="label">О лечении</span>
     <div class="prose" style="margin-top:24px">${body.map((t) => `<p data-reveal>${esc(t)}</p>`).join("")}</div>
-    <div class="points" style="grid-template-columns:repeat(2,1fr);margin-top:40px">${s.points.map((t, j) => `<div class="point" data-reveal><span class="num">${pad(j + 1)}</span><p>${esc(t)}</p></div>`).join("")}</div>
+    <div class="points" style="grid-template-columns:repeat(2,1fr);margin-top:40px">${s.points.map((t, j) => `<div class="point" data-reveal><p>${esc(t)}</p></div>`).join("")}</div>
   </div>
 </div></section>
 
 <section class="section section--dark on-dark"><div class="wrap">
   <div class="section__head"><div><span class="label">Этапы</span><h2 data-split>Как проходит лечение</h2></div></div>
-  <ol class="steps">${s.steps.map((t, j) => `<li data-reveal><span class="num">${pad(j + 1)}</span><b>${esc(t)}</b></li>`).join("")}</ol>
+  <ol class="steps">${s.steps.map((t, j) => `<li data-reveal><b>${esc(t)}</b></li>`).join("")}</ol>
 </div></section>
 
 <section class="section section--sage" id="prices"><div class="wrap">
@@ -500,14 +496,12 @@ function pageDoctor(d) {
       <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../index.html#team">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
       <span class="label label--light doc-hero__role">${esc(d.title)}</span>
       <h1><span data-split>${esc(last)}</span> <span data-split>${esc(given.join(" "))}</span></h1>
-      ${d.exp || d.rating || d.courses.length ? `<ul class="doc-hero__facts">
+      ${d.exp || d.courses.length ? `<ul class="doc-hero__facts">
         ${d.exp ? `<li><b data-count="${d.exp}">${d.exp}</b><span>${plural(d.exp, "год", "года", "лет")} стажа</span></li>` : ""}
-        ${d.rating ? `<li><b data-count="${d.rating}">${d.rating}</b><span>рейтинг на ПроДокторов,<br>${reviewsText(d.reviews)}</span></li>` : ""}
         ${d.courses.length ? `<li><b data-count="${d.courses.length}">${d.courses.length}</b><span>${plural(d.courses.length, "курс", "курса", "курсов")} повышения<br>квалификации</span></li>` : ""}
       </ul>` : ""}
       <div class="doc-hero__cta">
-        <a class="btn btn--lg" href="../zapis.html?doctor=${d.id}" data-magnet>Записаться к врачу ${icon.arrow}</a>
-        ${d.pd ? `<a class="btn btn--ghost btn--lg" href="${d.pd}" target="_blank" rel="noopener">Отзывы на ПроДокторов</a>` : ""}
+        <a class="btn btn--lg" href="../zapis.html?doctor=${d.id}" data-magnet>Записаться к врачу</a>
       </div>
     </div>
     <figure class="doc-hero__photo" data-ph data-clip data-parallax><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth, ' fetchpriority="high"').replace(' loading="lazy"', "")}</figure>
@@ -535,7 +529,7 @@ ${timeline.length ? `<section class="section section--dark on-dark"><div class="
 
 ${d.courses.length ? `<section class="section section--sage"><div class="wrap">
   <div class="section__head"><div><span class="label">Повышение квалификации</span><h2 data-split>Курсы и конгрессы</h2></div></div>
-  <div class="doc-courses">${d.courses.map(([y, t]) => `<div class="doc-course" data-reveal><span class="num">${esc(y)}</span><p>${esc(t)}</p></div>`).join("")}</div>
+  <div class="doc-courses">${d.courses.map(([y, t]) => `<div class="doc-course" data-reveal><span class="doc-course__y">${esc(y)}</span><p>${esc(t)}</p></div>`).join("")}</div>
 </div></section>` : ""}
 
 <section class="section section--sage"><div class="wrap">
@@ -554,7 +548,7 @@ function pagePrices() {
 <main id="main">
 <section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
   <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span aria-current="page">Цены</span></nav><h1 data-split>Прайс-лист</h1><p class="page-hero__lead">Цены на 15.10.2026. Итоговую стоимость врач называет после осмотра и записывает в план лечения.</p></div>
-  <div class="page-hero__aside"><a class="btn btn--lg" href="zapis.html" data-magnet>Записаться ${icon.arrow}</a></div>
+  <div class="page-hero__aside"><a class="btn btn--lg" href="zapis.html" data-magnet>Записаться</a></div>
 </div></section>
 <section class="section"><div class="wrap">
   <div class="pfilter">
@@ -590,18 +584,18 @@ function pageBooking() {
       </section>
       <section class="bstep" data-step="1" hidden>
         <div class="bsteps" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <span class="label">Шаг 1 из 4</span><h2 tabindex="-1">Что нужно сделать?</h2>
+        <h2 tabindex="-1">Что нужно сделать?</h2>
         <div class="opts" id="b-services"></div>
       </section>
       <section class="bstep" data-step="2" hidden>
         <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <span class="label">Шаг 2 из 4</span><h2 tabindex="-1">К какому врачу?</h2>
+        <h2 tabindex="-1">К какому врачу?</h2>
         <div class="opts" id="b-doctors"></div>
         <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button></div>
       </section>
       <section class="bstep" data-step="3" hidden>
         <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span><span><i></i></span></div>
-        <span class="label">Шаг 3 из 4</span><h2 tabindex="-1">Когда удобно?</h2>
+        <h2 tabindex="-1">Когда удобно?</h2>
         <div class="days" id="b-days"></div>
         <div class="slots" id="b-slots"></div>
         <p class="note" style="margin-top:14px">Пример расписания. В рабочей версии здесь живые окна врачей из МИС клиники.</p>
@@ -609,13 +603,13 @@ function pageBooking() {
       </section>
       <section class="bstep" data-step="4" hidden>
         <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span></div>
-        <span class="label">Шаг 4 из 4</span><h2 tabindex="-1">Как с вами связаться?</h2>
+        <h2 tabindex="-1">Как с вами связаться?</h2>
         <form class="form" id="b-form">
           <label>Имя<input name="name" required autocomplete="name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
           <label>Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
           <label class="check"><input type="checkbox" required> Согласен на обработку персональных данных</label>
-          <div class="bnav" style="margin-top:6px"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn">Записаться ${icon.arrow}</button></div>
+          <div class="bnav" style="margin-top:6px"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn">Записаться</button></div>
         </form>
       </section>
       <section class="bstep bdone" data-step="5" hidden>

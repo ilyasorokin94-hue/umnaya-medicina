@@ -159,22 +159,6 @@
     });
   });
 
-  // картинка за курсором в списке услуг
-  const hv = $(".hover-img");
-  if (hv && fine && G) {
-    const himg = $("img", hv);
-    G.set(hv, { xPercent: -50, yPercent: -50 });
-    const xTo = G.quickTo(hv, "x", { duration: 0.55, ease: "power3.out" });
-    const yTo = G.quickTo(hv, "y", { duration: 0.55, ease: "power3.out" });
-    const rTo = G.quickTo(hv, "rotation", { duration: 0.8, ease: "power3.out" });
-    let lx = 0;
-    $$(".svc-row[data-img]").forEach((row) => {
-      row.addEventListener("mouseenter", (e) => { if (himg.getAttribute("src") !== row.dataset.img) himg.src = row.dataset.img; if (!hv.classList.contains("is-on")) G.set(hv, { x: e.clientX, y: e.clientY }); hv.classList.add("is-on"); });
-      row.addEventListener("mousemove", (e) => { xTo(e.clientX); yTo(e.clientY); rTo(Math.max(-8, Math.min(8, (e.clientX - lx) * 0.6))); lx = e.clientX; });
-      row.addEventListener("mouseleave", () => { hv.classList.remove("is-on"); rTo(0); });
-    });
-  }
-
   // «магнитные» кнопки
   if (anim && fine) {
     $$("[data-magnet]").forEach((b) => {
