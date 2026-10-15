@@ -34,6 +34,7 @@ html:not(.lenis) { scroll-behavior: smooth; }
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
 body { margin: 0; background: var(--paper); color: var(--text); font: 400 17px/1.55 var(--body); overflow-x: clip; }
 img { display: block; max-width: 100%; }
 a { color: inherit; }
@@ -95,9 +96,7 @@ html:not(.js-intro) .intro { display: none; }
 .logo--white .logo__img { filter: brightness(0) invert(1); }
 
 /* ---------- шапка ---------- */
-.header { position: fixed; z-index: 100; left: 0; right: 0; top: var(--demo-h, 0px); padding-top: 14px; transition: transform .6s var(--ease), top .4s var(--ease); }
-.header.is-scrolled { top: 0; }
-.header.is-hidden { transform: translateY(-120%); }
+.header { position: fixed; z-index: 100; left: 0; right: 0; top: var(--hdr-top, 0px); padding-top: 14px; }
 .header__bar { width: var(--wrap); margin-inline: auto; display: flex; align-items: center; gap: 24px; height: var(--header-h); padding: 0 12px 0 24px; border-radius: 999px; background: rgba(245, 244, 238, .86); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); box-shadow: 0 1px 0 rgba(12, 36, 16, .06), 0 18px 40px -24px rgba(12, 36, 16, .35); }
 .nav { display: flex; gap: 4px; margin-left: auto; }
 .nav a { position: relative; padding: 10px 14px; border-radius: 999px; font-size: 15px; text-decoration: none; transition: background .3s, color .3s; }
@@ -121,7 +120,8 @@ html:not(.js-intro) .intro { display: none; }
 /* ---------- герой ---------- */
 .hero { position: relative; min-height: max(680px, 100svh); color: #fff; display: grid; align-items: end; justify-items: center; overflow: hidden; background: var(--ink); }
 .hero .hero__media { position: absolute; inset: 0; overflow: hidden; }
-.hero__media img { width: 100%; height: 120%; object-fit: cover; transform-origin: 50% 40%; }
+.hero__media img { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 40%; }
+.hero .hero__media { will-change: transform; }
 .hero__media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12, 36, 16, .55) 0%, rgba(12, 36, 16, .28) 32%, rgba(12, 36, 16, .9) 100%), linear-gradient(90deg, rgba(12, 36, 16, .45), rgba(12, 36, 16, 0) 60%); }
 .hero__in { position: relative; width: var(--wrap); margin: 0; padding: calc(var(--header-h) + 80px) 0 56px; display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: end; }
 .hero h1 { font-size: clamp(46px, 8.2vw, 132px); font-weight: 500; letter-spacing: -.045em; line-height: .95; max-width: 11ch; }
@@ -156,7 +156,7 @@ html:not(.js-intro) .intro { display: none; }
 /* ---------- о нас ---------- */
 .about__grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: clamp(32px, 6vw, 100px); align-items: start; }
 .about__statement { font: 500 clamp(30px, 3.9vw, 58px)/1.08 var(--display); letter-spacing: -.035em; }
-.about__statement .w { opacity: .16; transition: opacity .2s; }
+.about__statement .w { opacity: .18; }
 .no-anim .about__statement .w { opacity: 1; }
 .about__text { display: grid; gap: 22px; font-size: clamp(17px, 1.3vw, 19px); color: var(--muted); padding-top: 12px; }
 .about__text p:first-child { color: var(--text); }
@@ -192,10 +192,9 @@ html:not(.js-intro) .intro { display: none; }
 .feat__pin { overflow: hidden; }
 @media (min-width: 761px) { .feat__pin { height: 100svh; display: flex; align-items: center; } .fcard__img { aspect-ratio: auto; height: clamp(200px, 38svh, 400px); } .fcard { width: clamp(280px, 25vw, 380px); } }
 .feat__track { display: flex; gap: clamp(16px, 2vw, 28px); padding-left: max(var(--gutter), (100vw - 1440px) / 2); padding-right: var(--gutter); width: max-content; }
-.fcard { width: clamp(280px, 27vw, 400px); flex: none; display: grid; grid-template-rows: auto 1fr; border-radius: var(--radius); overflow: hidden; background: rgba(245, 244, 238, .06); border: 1px solid var(--line-on-dark); backdrop-filter: blur(6px); }
+.fcard { width: clamp(280px, 27vw, 400px); flex: none; display: grid; grid-template-rows: auto 1fr; border-radius: var(--radius); overflow: hidden; background: rgba(245, 244, 238, .07); border: 1px solid var(--line-on-dark); }
 .fcard__img { aspect-ratio: 4 / 5; overflow: hidden; position: relative; background: var(--ink-3); }
-.fcard__img img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); transition: transform 1.2s var(--ease); }
-.fcard:hover .fcard__img img { transform: scale(1); }
+.fcard__img img { width: 100%; height: 100%; object-fit: cover; scale: 1.18; }
 .fcard__body { padding: 22px 24px 26px; display: grid; gap: 10px; align-content: start; }
 .fcard h3 { font-size: 24px; letter-spacing: -.02em; line-height: 1.15; }
 .fcard p { color: var(--muted-on-dark); font-size: 16px; }
@@ -408,9 +407,9 @@ html:not(.js-intro) .intro { display: none; }
 .svc-row h3 { font-size: clamp(20px, 2vw, 30px); letter-spacing: -.025em; }
 .svc-row .svc__from { font-size: 16px; }
 .svc-row .svc__arrow { width: 40px; height: 40px; }
-.hover-img { position: fixed; left: 0; top: 0; z-index: 90; width: 260px; aspect-ratio: 4 / 5; border-radius: 18px; overflow: hidden; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(.8); transition: opacity .3s, transform .4s var(--ease); }
-.hover-img.is-on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-.hover-img img { width: 100%; height: 100%; object-fit: cover; }
+.hover-img { position: fixed; left: 0; top: 0; z-index: 90; width: 280px; aspect-ratio: 4 / 5; pointer-events: none; will-change: transform; }
+.hover-img img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; opacity: 0; scale: .85; transition: opacity .35s var(--ease), scale .6s var(--ease); }
+.hover-img.is-on img { opacity: 1; scale: 1; }
 
 /* прайс-страница */
 .pfilter { display: grid; gap: 18px; margin-bottom: 30px; }
@@ -472,7 +471,7 @@ html:not(.js-intro) .intro { display: none; }
 .bdone__ok svg { width: 40px; height: 40px; fill: #fff; }
 
 /* ---------- анимации по прокрутке (включаются только когда скрипт загружен) ---------- */
-.js-anim [data-reveal] { opacity: 0; transform: translateY(40px); }
+.js-anim [data-reveal] { opacity: 0; transform: translateY(24px); }
 .js-anim [data-reveal="fade"] { transform: none; }
 .js-anim [data-reveal="scale"] { transform: scale(.94); }
 .js-anim [data-clip] { clip-path: inset(18% 0 18% 0 round var(--radius)); }
@@ -593,7 +592,7 @@ html:not(.js-intro) .intro { display: none; }
 .tour__row figure:nth-child(3n + 2) { aspect-ratio: 1 / 1; width: clamp(180px, 20vw, 320px); }
 .tour__row img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
 .tour__row figure:hover img { transform: scale(1.06); }
-.tour__row figcaption { position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 99px; background: rgba(12, 36, 16, .62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-size: 13px; line-height: 1.2; }
+.tour__row figcaption { position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 99px; background: rgba(12, 36, 16, .78); font-size: 13px; line-height: 1.2; }
 @media (max-width: 760px) {
   .tour__pin { height: 88svh; }
   .tour__title h2 { font-size: clamp(44px, 13vw, 64px); }
@@ -601,3 +600,10 @@ html:not(.js-intro) .intro { display: none; }
 .nav a { white-space: nowrap; }
 @media (min-width: 1025px) and (max-width: 1520px) { .header__phone { display: none; } }
 @media (max-width: 760px) { .hero__media::after { background: linear-gradient(180deg, rgba(12, 36, 16, .5) 0%, rgba(12, 36, 16, .55) 35%, rgba(12, 36, 16, .92) 100%); } }
+@media (min-width: 761px) { .fcard__img { aspect-ratio: auto; width: 100%; } }
+/* карта не перехватывает колесо, пока по ней не кликнули: иначе плавная прокрутка «застревает» над картой */
+.place__map iframe { pointer-events: none; }
+.place__map.is-active iframe { pointer-events: auto; }
+.place__unlock { position: absolute; left: 16px; bottom: 16px; z-index: 2; min-height: 40px; padding: 0 16px; border: 0; border-radius: 999px; background: rgba(12, 36, 16, .82); color: #fff; font: 500 14px/1 var(--body); cursor: pointer; }
+.place__map.is-active .place__unlock { display: none; }
+.svc--wide .svc__bg img { object-position: 50% 22%; }
