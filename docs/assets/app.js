@@ -312,10 +312,12 @@
 
   // счётчики
   $$("[data-count]").forEach((el) => {
-    const target = parseFloat(el.dataset.count.replace(",", "."));
-    const dec = (el.dataset.count.split(/[.,]/)[1] || "").length;
+    const raw = el.dataset.count, grp = /\s/.test(raw);
+    const target = parseFloat(raw.replace(/\s/g, "").replace(",", "."));
+    const dec = (raw.split(/[.,]/)[1] || "").length;
+    const fmt = (v) => (grp ? Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") : v.toFixed(dec).replace(".", ","));
     const o = { v: 0 };
-    G.to(o, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => (el.textContent = o.v.toFixed(dec).replace(".", ",")) });
+    G.to(o, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => (el.textContent = fmt(o.v)) });
   });
 
   const mm = G.matchMedia();

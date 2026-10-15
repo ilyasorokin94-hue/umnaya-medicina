@@ -4,7 +4,7 @@
 import { mkdirSync, writeFileSync, copyFileSync, rmSync, readdirSync, existsSync, cpSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { clinic, doctors, prices, services, brand, pics, homeOrder, features, works, priceTabs, offers, about } from "../src/data.mjs";
+import { clinic, doctors, prices, services, brand, pics, homeOrder, features, priceTabs, offers, about, home } from "../src/data.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
@@ -51,7 +51,7 @@ const icon = {
 };
 
 // ---------- общие куски ----------
-const sections = [["about", "О нас"], ["works", "Работы"], ["services", "Услуги"], ["team", "Команда"], ["pricing", "Цены"], ["faq", "FAQ"], ["contacts", "Контакты"]];
+const sections = [["services", "Услуги"], ["about", "О клинике"], ["team", "Врачи"], ["reviews", "Отзывы"], ["pricing", "Цены"], ["faq", "Вопросы"], ["contacts", "Контакты"]];
 
 function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
   const p = pre(depth);
@@ -124,8 +124,8 @@ function footer(depth) {
   return `
 <footer class="footer on-dark"><div class="wrap footer__in">
   <div class="footer__cta">
-    <h2 data-split>Запишитесь на приём и сделайте первый шаг к здоровой улыбке</h2>
-    <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn--lg" href="${p}zapis.html" data-magnet>Записаться на приём ${icon.arrow}</a><button class="totop" type="button" data-totop aria-label="Наверх">${icon.arrow}</button></div>
+    <h2 data-split>${esc(home.final[0])}</h2>
+    <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn--lg" href="${p}zapis.html" data-magnet>${esc(home.final[1])} ${icon.arrow}</a><button class="totop" type="button" data-totop aria-label="Наверх">${icon.arrow}</button></div>
   </div>
   <div class="footer__grid">
     <div class="footer__col">
@@ -197,6 +197,7 @@ function doctorCard(d, depth) {
     <a class="btn btn--sm btn--wide doc__book" href="${p}zapis.html?doctor=${d.id}">Записаться</a></div>
   <h3><a href="${p}vrachi/${d.id}.html">${esc(d.name)}</a></h3>
   <p class="doc__role">${esc(d.role)}</p>
+  ${d.focus ? `<p class="doc__focus">${esc(d.focus)}</p>` : ""}
   <p class="doc__meta">${d.exp ? `<span>Стаж <b>${d.exp} лет</b></span>` : "<span>Стаж уточняется</span>"}${d.rating ? `<span>ПроДокторов <b>${d.rating}</b> · ${reviewsText(d.reviews)}</span>` : ""}</p>
 </article>`;
 }
@@ -237,7 +238,7 @@ function marquee(text) {
 function place() {
   const { lat, lon } = clinic.geo;
   return `<section class="section" id="contacts" aria-labelledby="ct-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Мы здесь</span><h2 id="ct-title" data-split>Удобно добраться из Жуковского</h2></div><p>Стоматология на Громова, 10/2 в Удельной. По соседству, на Громова, 10, работает многопрофильная клиника «Умная Медицина».</p></div>
+  <div class="section__head"><div><span class="label">Контакты</span><h2 id="ct-title" data-split>${esc(home.contacts[0])}</h2></div><p>${esc(home.contacts[1])}</p></div>
   <div class="place">
     <div class="place__map" data-ph data-clip><iframe title="Карта: стоматология на Громова, 10/2" src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm" loading="lazy"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button>${ph("Карта")}</div>
     <div class="place__info" data-reveal>
@@ -255,41 +256,18 @@ function place() {
 }
 
 // ---------- главная ----------
-const homeFaq = [
-  ["Диагностика и лечение", [
-    ["Что входит в первую консультацию?", "Врач осматривает полость рта, при необходимости направляет на снимок прямо в клинике и составляет план лечения с ценой. Консультация терапевта, ортопеда, хирурга и имплантолога с планом лечения бесплатная."],
-    ["Какие снимки можно сделать в клинике?", "Прицельный снимок (500 ₽), панорамный снимок ОПТГ (1 700 ₽), трёхмерный снимок участка 5×5 см (2 000 ₽) и двух челюстей (4 500 ₽)."],
-    ["Лечите ли вы каналы под микроскопом?", "Да. Микроскоп с увеличением в 25–40 раз помогает найти скрытые поражения и трещины, бережно пролечить каналы и закрыть перфорацию."],
-    ["Можно ли поставить имплант, если не хватает кости?", "Да. В клинике делают закрытый и открытый синус-лифтинг и костную пластику. Нужна ли она, хирург скажет по КТ."],
-  ]],
-  ["Услуги и цены", [
-    ["Сколько стоит имплантация?", "Установка импланта стоит от 19 300 ₽, металлокерамическая коронка на имплант от 27 400 ₽, циркониевая от 35 100 ₽. Точную сумму хирург называет после КТ."],
-    ["Какие импланты вы ставите?", "Osstem, Dentium и Straumann. Систему врач подбирает по клинической ситуации и бюджету."],
-    ["Что такое All-on-4?", "Это восстановление всей челюсти несъёмным протезом на четырёх или шести имплантах. Хирургический этап All-on-4 стоит от 114 000 ₽."],
-    ["Есть ли акции?", "Каждую среду профессиональная гигиена Air-Flow стоит 4 500 ₽ вместо 5 790 ₽. Консультация хирурга-имплантолога и 3D-снимок бесплатно."],
-  ]],
-  ["Комфорт и безопасность", [
-    ["Больно ли лечить зубы?", "Лечение проходит под местной анестезией. В клинике используют препараты «Скандонест», «Ультракаин», «Убистезин» и «Артикаин»."],
-    ["Принимаете ли вы детей?", "Да. Детский стоматолог лечит и удаляет молочные зубы, делает фторирование и герметизацию фиссур."],
-    ["Как проходит профессиональная гигиена?", "Врач снимает зубной камень и налёт, чистит зубы методом Air-Flow, полирует их и даёт рекомендации по уходу."],
-  ]],
-  ["О клинике", [
-    ["Где вы находитесь?", "Пгт Удельная, ул. Громова, 10/2, рядом с Жуковским. Рядом, на Громова, 10, работает многопрофильная клиника «Умная Медицина»."],
-    ["Когда вы работаете?", "Ежедневно с 9:00 до 21:00, без выходных."],
-    ["Как записаться?", `Онлайн на сайте, выбрав услугу, врача и время, или по телефону ${clinic.phone}.`],
-  ]],
-];
-
 function pageHome() {
   const depth = 0;
   const slides = pics.slides.map((e, i) => img(e, "Стоматология «Умная Медицина»", depth, i === 0 ? ' class="is-on"' : "")).join("");
-  const cases = works.map(([cat, tag, title], i) => `<article class="case" data-cat="${cat}"${i >= 6 ? ' data-extra="1" hidden' : ""} data-reveal>
-    <div class="ba"><div class="ba__pane ba__pane--before"><div class="ba__ph">${icon.tooth}Фото «до»</div></div><div class="ba__pane ba__pane--after"><div class="ba__ph">${icon.tooth}Фото «после»</div></div><span class="ba__lbl ba__lbl--b">До</span><span class="ba__lbl ba__lbl--a">После</span><span class="ba__handle"></span><input type="range" min="0" max="100" value="50" aria-label="Сравнить до и после: ${esc(title)}"></div>
-    <span class="case__tag">${esc(tag)}</span><h3 style="font-size:20px">${esc(title)}</h3><p>Шаблон карточки. Фото работы, сроки лечения и врача предоставит клиника.</p>
-  </article>`).join("");
-  const cats = [...new Map(works.map(([c, t]) => [c, t])).entries()];
+  const facts = (list) => `<ul class="facts">${list.map((t) => `<li data-reveal>${esc(t)}</li>`).join("")}</ul>`;
+  const sit = ([t, d, k, pic], i) => `<a class="sit${pic ? " sit--img" : ""}" href="uslugi/${k}.html" data-reveal>${pic ? `<span class="svc__bg" data-ph>${img([pic], t, depth)}</span>` : ""}
+    <span class="svc__top"><span class="num">${pad(i + 1)}</span><span class="svc__arrow">${icon.arrow}</span></span>
+    <span class="sit__body"><h3>${esc(t)}</h3><p>${esc(d)}</p></span>
+    <span class="sit__svc">${esc(svc[k].title)}</span></a>`;
+  const { save, restore, allon, kids } = home;
+  const qcols = [[0, 3], ["rating", 1], [2, 4]];
 
-  return head({ title: "Стоматология в Удельной и Жуковском | Умная Медицина", desc: "Стоматология «Умная Медицина» на Громова, 10/2: лечение зубов, имплантация от 19 300 ₽, All-on-4, протезирование, брекеты, детский стоматолог. Ежедневно 9:00–21:00.", canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(homeFaq.flatMap((g) => g[1]))] })
+  return head({ title: home.seoTitle, desc: home.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(home.faq.flatMap((g) => g[1]))] })
   + intro(depth) + header(depth, true) + `
 <main id="main">
 
@@ -297,20 +275,26 @@ function pageHome() {
   <div class="hero__media" data-ph>${img(pics.hero, "Стоматология «Умная Медицина» в Удельной", depth, ' fetchpriority="high" loading="eager"')}</div>
   <div class="hero__in">
     <div>
-      <h1 id="h1"><span class="kicker">Стоматология в Удельной и Жуковском</span><span data-split>Лечение зубов с комфортом</span></h1>
-      <p class="hero__sub">Терапия, имплантация, протезирование, ортодонтия и детский приём. Ежедневно с 9:00 до 21:00 на Громова, 10/2.</p>
-      <div class="hero__actions"><a class="btn btn--lg" href="zapis.html" data-magnet>Записаться на приём ${icon.arrow}</a><a class="btn btn--ghost btn--lg" href="#services">Услуги и цены</a></div>
+      <h1 id="h1"><span class="kicker">${esc(home.kicker)}</span><span data-split>${esc(home.h1)}</span></h1>
+      <p class="hero__sub">${esc(home.sub)}</p>
+      <div class="hero__actions"><a class="btn btn--lg" href="zapis.html" data-magnet>Записаться на консультацию ${icon.arrow}</a><a class="btn btn--ghost btn--lg" href="#pricing">Цены</a></div>
     </div>
     <div class="hero__side">
-      <div class="hero__card"><div class="hero__slides" data-ph>${slides}</div><p>Мы меняем представление о походе к стоматологу: спокойно, понятно и без боли.</p></div>
+      <figure class="hero__card"><div class="hero__slides" data-ph>${slides}</div><blockquote><p>«${esc(home.heroQuote[0])}»</p></blockquote><figcaption>${esc(home.heroQuote[1])}</figcaption></figure>
       <a class="hero__rating" href="${clinic.ratings[0].url}"><b data-count="4,9">4,9</b><span>рейтинг на ПроДокторов<br>199 отзывов</span></a>
     </div>
   </div>
   <span class="hero__scroll" aria-hidden="true"></span>
 </section>
 
+<section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
+  <div class="section__head"><div><span class="label">С чего начать</span><h2 id="sv-title" data-split>С чем вы к нам придёте</h2></div><a class="link" href="ceny.html">Все цены ${icon.arrow}</a></div>
+  <div class="sit-grid">${home.situations.map(sit).join("")}</div>
+  <div class="sit-more"><span class="label">Ещё направления</span>${svcRows(["diagnostika", "protezirovanie", "hirurgiya"], depth, 7)}</div>
+</div></section>
+
 <section class="section" id="about" aria-labelledby="ab-title"><div class="wrap">
-  <span class="label">О нас</span>
+  <span class="label">О клинике</span>
   <div class="about__grid" style="margin-top:28px">
     <h2 id="ab-title" class="about__statement">${esc(about.statement)}</h2>
     <div class="about__text">${about.text.map((t) => `<p data-reveal>${esc(t)}</p>`).join("")}<p class="about__sign" data-reveal><i></i>${esc(about.sign)}</p></div>
@@ -321,32 +305,72 @@ function pageHome() {
   </div>
 </div></section>
 
-<section class="foil on-dark" aria-labelledby="ft-title">
+<section class="foil on-dark" id="rules" aria-labelledby="ft-title">
   <div class="foil__bg">${pick(pics.foil, depth).src ? `<img src="${pick(pics.foil, depth).src}" alt="" loading="lazy">` : ""}</div>
   <div class="feat">
     <div class="feat__pin"><div class="feat__track">
-      <div class="fcard fcard--intro"><span class="label">Почему мы</span><h2 id="ft-title" data-split>Ваша улыбка начинается здесь</h2><p>Шесть причин, по которым пациенты из Жуковского и Раменского выбирают «Умную Медицину».</p></div>
+      <div class="fcard fcard--intro"><span class="label">Как это устроено</span><h2 id="ft-title" data-split>Что будет после того, как вы позвоните</h2><p>Шесть правил, по которым мы работаем с каждым пациентом.</p></div>
       ${features.map(([t, d], i) => `<article class="fcard"><div class="fcard__img" data-ph>${img(pics.feat[i], t, depth)}${ph(t)}</div><div class="fcard__body"><span class="num">${pad(i + 1)}</span><h3>${esc(t)}</h3><p>${esc(d)}</p></div></article>`).join("")}
     </div><div class="feat__progress" aria-hidden="true"><i></i></div></div>
   </div>
-  ${marquee("Это мы — <em>Умная Медицина</em>")}
-  <div class="wrap cta-strip"><p>Запишитесь на приём и сделайте шаг к здоровой улыбке.</p><a class="btn btn--light btn--lg" href="zapis.html" data-magnet>Записаться на приём ${icon.arrow}</a></div>
+  ${marquee("Сначала думаем — <em>потом лечим</em>")}
+  <div class="wrap cta-strip"><p>Консультация с планом и ценой бесплатная. План можно забрать домой и подумать.</p><a class="btn btn--light btn--lg" href="zapis.html" data-magnet>Записаться на консультацию ${icon.arrow}</a></div>
 </section>
 
-<section class="section" id="works" aria-labelledby="wk-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Работы</span><h2 id="wk-title" data-split>Улыбки пациентов говорят сами за себя</h2></div><p>Передвиньте ползунок, чтобы сравнить «до» и «после». Сейчас это шаблоны: фото работ врачей добавим, когда их передаст клиника.</p></div>
-  <div class="chips" role="tablist" data-tabs="works"><button class="chip" type="button" role="tab" data-tab="" aria-selected="true">Все</button>${cats.map(([c, t]) => `<button class="chip" type="button" role="tab" data-tab="${c}" aria-selected="false">${esc(t)}</button>`).join("")}</div>
-  <div class="works__grid">${cases}</div>
-  <div class="works__more"><button class="btn btn--ghost" type="button" data-works-more>Показать ещё</button></div>
+<section class="section" id="save" aria-label="Сохранить или восстановить"><div class="wrap fork">
+  ${[save, restore].map((b, i) => `<article class="fork__col"${i ? ' data-speed="-0.25"' : ""}>
+    <figure class="fork__img" data-ph data-clip data-parallax>${img(b.img, b.title, depth)}${ph(b.label)}</figure>
+    <span class="label">${esc(b.label)}</span>
+    <h2 data-split>${esc(b.title)}</h2>
+    <p class="sr__text" data-reveal>${esc(b.text)}</p>
+    ${facts(b.facts)}
+    ${b.quote ? `<blockquote class="sr__quote" data-reveal>«${esc(b.quote)}»<cite>из отзыва пациента</cite></blockquote>` : ""}
+    <a class="link" href="uslugi/${b.link[1]}.html" data-reveal>${esc(b.link[0])} ${icon.arrow}</a>
+  </article>`).join("")}
 </div></section>
 
-<section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Услуги</span><h2 id="sv-title" data-split>Всё для здоровья зубов в одной клинике</h2></div><a class="link" href="ceny.html">Полный прайс ${icon.arrow}</a></div>
-  <div class="svc-grid">
-    ${svcCard(homeOrder[0], 0, depth, " svc--img svc--wide")}
-    ${homeOrder.slice(1, 5).map((k, i) => svcCard(k, i + 1, depth, " svc--img")).join("")}
+<section class="section section--dark on-dark allon" aria-labelledby="ao-title"><div class="wrap allon__in">
+  <div class="allon__text">
+    <span class="label">All-on-4</span>
+    <h2 id="ao-title" data-split>${esc(allon.title)}</h2>
+    <p data-reveal>${esc(allon.text)}</p>
+    <div class="allon__calc" data-reveal>
+      <span class="label label--light">Расчёт на одну челюсть</span>
+      <ul>${allon.calc.map(([t, v]) => `<li><span>${esc(t)}</span><b>${esc(v)}</b></li>`).join("")}</ul>
+      <div class="allon__total"><span>Весь путь</span><b>от <i data-count="${allon.total}">${allon.total}</i> ₽</b></div>
+    </div>
+    <a class="btn btn--light btn--lg" href="uslugi/all-on-4.html" data-reveal>Подробнее об All-on-4 ${icon.arrow}</a>
   </div>
-  <div style="margin-top:clamp(30px,4vw,56px)">${svcRows(homeOrder.slice(5), depth, 5)}</div>
+  <figure class="allon__img" data-ph data-clip data-parallax>${img(allon.img, "All-on-4", depth)}${ph("All-on-4")}</figure>
+</div></section>
+
+<section class="section section--sage" id="kids" aria-labelledby="kd-title"><div class="wrap split">
+  <div class="split__img" data-ph data-clip data-parallax>${img(kids.img, "Детская стоматология", depth)}${ph("Детям")}</div>
+  <div class="kids__text">
+    <span class="label">Детям</span>
+    <h2 id="kd-title" class="kids__title" data-split>${esc(kids.title)}</h2>
+    <p class="sr__text" data-reveal>${esc(kids.text)}</p>
+    ${facts(kids.facts)}
+    <blockquote class="sr__quote" data-reveal>«${esc(kids.quote[0])}»<cite>${esc(kids.quote[1])}</cite></blockquote>
+    <p class="kids__detail" data-reveal>${esc(kids.detail)}</p>
+    <a class="btn btn--lg" href="uslugi/detskaya.html" data-reveal>Детская стоматология ${icon.arrow}</a>
+  </div>
+</div></section>
+
+<section class="section" id="team" aria-labelledby="tm-title"><div class="wrap">
+  <div class="section__head"><div><span class="label">Врачи</span><h2 id="tm-title" data-split>Кто будет вас лечить</h2></div><p>Семь врачей. У каждого своя задача и свои отзывы на ПроДокторов.</p></div>
+  <div class="chips team__tabs" role="tablist" data-tabs="team">
+    ${[["", "Все"], ["lechenie-zubov", "Терапия"], ["implantaciya", "Хирургия и имплантация"], ["protezirovanie", "Ортопедия"], ["ortodontiya", "Ортодонтия"], ["detskaya", "Детям"]].map(([v, t], i) => `<button class="chip" type="button" role="tab" data-tab="${v}" aria-selected="${i === 0}">${t}</button>`).join("")}
+  </div>
+  <div class="team__grid">${doctors.map((d) => doctorCard(d, depth)).join("")}</div>
+  <div class="team__join" data-reveal><h3>Хотите в команду «Умной Медицины»?</h3><a class="btn btn--ghost" href="https://um-med.com/vacancies.html">Актуальные вакансии ${icon.arrow}</a></div>
+</div></section>
+
+<section class="section section--sage" id="reviews" aria-labelledby="rv-title"><div class="wrap">
+  <div class="section__head"><div><span class="label">Отзывы</span><h2 id="rv-title" data-split>Что пишут пациенты</h2></div><p>Цитаты из отзывов на ПроДокторов и в 2ГИС, без правок и без имён.</p></div>
+  <div class="quotes">${qcols.map((col, c) => `<div class="quotes__col"${c === 1 ? ' data-speed="-0.2"' : c === 2 ? ' data-speed="0.12"' : ""}>${col.map((q) => q === "rating"
+      ? `<a class="quote quote--rating" href="${home.reviewsUrl}" data-reveal><b data-count="4,9">4,9</b><span>рейтинг на ПроДокторов</span><span class="link">Все 199 отзывов ${icon.arrow}</span></a>`
+      : `<figure class="quote" data-reveal><blockquote>«${esc(home.reviews[q])}»</blockquote><figcaption>из отзыва пациента</figcaption></figure>`).join("")}</div>`).join("")}</div>
 </div></section>
 
 <section class="tour on-dark" id="clinic" aria-labelledby="tr-title">
@@ -359,21 +383,8 @@ function pageHome() {
   </div>
 </section>
 
-<section class="section" id="team" aria-labelledby="tm-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Команда</span><h2 id="tm-title" data-split>За каждой улыбкой стоит команда</h2></div></div>
-  <div class="team__intro">
-    <div class="team__photo" data-ph data-clip data-parallax>${img(pics.team, "Кабинет стоматологии «Умная Медицина»", depth)}${ph()}</div>
-    <div data-reveal><p class="team__lead">Мы верим, что улыбка — это не только эстетика, но и здоровье, и уверенность в себе.</p><p>Семь врачей: терапевты и эндодонтисты, хирурги-имплантологи, ортопеды, ортодонт и детский стоматолог. Стаж и рейтинги взяты с ПроДокторов.</p></div>
-  </div>
-  <div class="chips team__tabs" role="tablist" data-tabs="team">
-    ${[["", "Все"], ["lechenie-zubov", "Терапия"], ["implantaciya", "Хирургия и имплантация"], ["protezirovanie", "Ортопедия"], ["ortodontiya", "Ортодонтия"], ["detskaya", "Детям"]].map(([v, t], i) => `<button class="chip" type="button" role="tab" data-tab="${v}" aria-selected="${i === 0}">${t}</button>`).join("")}
-  </div>
-  <div class="team__grid">${doctors.map((d) => doctorCard(d, depth)).join("")}</div>
-  <div class="team__join" data-reveal><h3>Хотите в команду «Умной Медицины»?</h3><a class="btn btn--ghost" href="https://um-med.com/vacancies.html">Актуальные вакансии ${icon.arrow}</a></div>
-</div></section>
-
 <section class="section section--sage" id="pricing" aria-labelledby="pr-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Цены</span><h2 id="pr-title" data-split>Прозрачная стоимость лечения</h2></div><p>Цены на 15.10.2026. Точную стоимость врач называет после осмотра и записывает в план лечения.</p></div>
+  <div class="section__head"><div><span class="label">Цены</span><h2 id="pr-title" data-split>Цены до того, как вы сели в кресло</h2></div><p>Цены на 15.10.2026 из прайса клиники. Точную сумму врач запишет в план лечения, и она попадёт в договор.</p></div>
   <div class="pricing">
     <aside class="offer" data-reveal>
       ${offers.map((o, i) => `<div class="offer__item"${i ? " hidden" : ""}>
@@ -395,8 +406,8 @@ function pageHome() {
 </div></section>
 
 <section class="section" id="faq" aria-labelledby="fq-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">FAQ</span><h2 id="fq-title" data-split>Прежде чем прийти, вы, возможно, захотите узнать больше</h2></div></div>
-  ${faqBlock(homeFaq)}
+  <div class="section__head"><div><span class="label">Вопросы</span><h2 id="fq-title" data-split>Что спрашивают перед первым визитом</h2></div></div>
+  ${faqBlock(home.faq)}
 </div></section>
 
 ${place()}
@@ -574,7 +585,7 @@ function pageBooking() {
       <section class="bstep bstart" data-step="0">
         <span class="label">Онлайн-запись</span>
         <h1 tabindex="-1">Записаться на приём</h1>
-        <p>Ваша улыбка начинается здесь. Выберите услугу, врача и удобное время, а администратор подтвердит запись.</p>
+        <p>Выберите услугу, врача и удобное время, а администратор подтвердит запись. Консультация с планом лечения бесплатная.</p>
         <button class="btn btn--lg" type="button" data-start data-magnet>Перейти к записи ${icon.arrow}</button>
       </section>
       <section class="bstep" data-step="1" hidden>
