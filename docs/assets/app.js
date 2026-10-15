@@ -1,21 +1,24 @@
 // Поведение и анимации макета. GSAP + ScrollTrigger + Lenis лежат в assets/vendor.
-// Без скриптов и при «уменьшить движение» весь контент виден сразу.
+// Без скриптов и при «уменьшить движение» весь контент виден сразу, формы и окна работают.
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const root = document.documentElement;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = matchMedia("(pointer: fine)").matches;
+  const phone = () => matchMedia("(max-width: 760px)").matches;
   const G = window.gsap, ST = window.ScrollTrigger;
   const anim = !!(G && ST) && !reduce;
   window.__umReady = true;
-  if (!anim) { root.classList.remove("js-anim", "js-intro"); root.classList.add("no-anim"); }
+  if (!anim) { root.classList.remove("js-anim"); root.classList.add("no-anim"); }
 
-  // ---------- разбивка текста для анимаций ----------
+  // ---------- разбивка заголовка на слова: читалке экрана остаётся целый текст ----------
+  const escH = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const splitWords = (el, cls = "sw") => {
-    const words = el.textContent.trim().split(/\s+/);
-    el.setAttribute("aria-label", el.textContent.trim());
-    el.innerHTML = words.map((w) => (cls === "sw" ? `<span class="sw" aria-hidden="true"><span>${w}</span></span>` : `<span class="${cls}" aria-hidden="true">${w}</span>`)).join(" ");
+    const text = el.textContent.replace(/[ \t\r\n]+/g, " ").trim();
+    const words = text.split(" ").map(escH);
+    el.innerHTML = `<span class="sr">${escH(text)}</span><span aria-hidden="true">${words.map((w) => (cls === "sw" ? `<span class="sw"><span>${w}</span></span>` : `<span class="${cls}">${w}</span>`)).join(" ")}</span>`;
+    el.classList.add("is-split");
     return $$(cls === "sw" ? ".sw > span" : "." + cls, el);
   };
 
@@ -27,9 +30,9 @@
     G.ticker.add((t) => lenis.raf(t * 1000));
     G.ticker.lagSmoothing(0);
   }
-  const headerH = () => (parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 70) + 20;
+  const headerH = () => (parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 70) + 28;
   const scrollToEl = (el) => {
-    if (lenis) lenis.scrollTo(el, { offset: -headerH(), duration: 1.4 });
+    if (lenis) lenis.scrollTo(el, { offset: -headerH(), duration: 1.2 });
     else el.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
   };
   document.addEventListener("click", (e) => {
@@ -63,39 +66,45 @@
   $(".menu__close")?.addEventListener("click", () => { closeMenu(); burger?.focus(); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
 
-  // ---------- шапка: всегда на месте, уезжает вверх ровно вместе с демо-полосой ----------
+  // ---------- при прокрутке: шапка, пункт меню текущего раздела, нижняя панель на телефоне ----------
   const header = $(".header");
   const demo = $(".demo-bar");
-  let demoH = 0;
-  const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; onScrollHeader(); };
-  const onScrollHeader = () => {
-    const y = lenis ? lenis.scroll : scrollY;
+  const bar = $(".mobilebar");
+  // панель появляется, когда кнопки первого экрана ушли вверх, и прячется над формой в подвале
+  const firstCta = $(".hero__actions, .page-hero__aside, .doc-hero__cta");
+  const footCta = $(".footer__cta");
+  const navLinks = $$('.nav a[href^="#"]');
+  const navSecs = navLinks.map((a) => [a, document.getElementById(a.hash.slice(1))]).filter(([, s]) => s);
+  let demoH = demo ? demo.offsetHeight : 0, ticking = false;
+  const onScroll = () => {
+    ticking = false;
+    const y = scrollY, vh = innerHeight;
     root.style.setProperty("--hdr-top", Math.max(0, demoH - y) + "px");
     header?.classList.toggle("is-scrolled", y > demoH + 10);
+    // активен раздел, через который проходит линия на 40% высоты окна; между разделами меню не подсвечено
+    if (navSecs.length) {
+      const line = vh * 0.4;
+      let cur = null;
+      for (const [a, s] of navSecs) { const r = s.getBoundingClientRect(); if (r.top <= line && r.bottom > line) cur = a; }
+      navLinks.forEach((a) => a.classList.toggle("is-active", a === cur));
+    }
+    if (bar) {
+      const past = firstCta ? firstCta.getBoundingClientRect().bottom < 0 : y > 200;
+      const foot = footCta ? footCta.getBoundingClientRect().top < vh - 40 : false;
+      bar.classList.toggle("is-on", past && !foot);
+    }
   };
-  if (lenis) lenis.on("scroll", onScrollHeader); else addEventListener("scroll", onScrollHeader, { passive: true });
-  addEventListener("resize", setDemo);
-  setDemo();
+  const req = () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } };
+  addEventListener("scroll", req, { passive: true });
+  addEventListener("resize", () => { demoH = demo ? demo.offsetHeight : 0; req(); });
+  onScroll();
 
-  // подсветка пункта меню текущего раздела
-  const navLinks = $$('.nav a[href^="#"]');
-  if (navLinks.length && "IntersectionObserver" in window) {
-    const map = new Map(navLinks.map((a) => [a.hash.slice(1), a]));
-    const io = new IntersectionObserver((ents) => ents.forEach((en) => {
-      if (en.isIntersecting) navLinks.forEach((a) => a.classList.toggle("is-active", a === map.get(en.target.id)));
-    }), { rootMargin: "-45% 0px -50% 0px" });
-    map.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
-  }
-
-  // ---------- слайды в карточке героя ----------
-  const slides = $$(".hero__slides img");
-  if (slides.length > 1) {
-    let i = 0;
-    setInterval(() => { slides[i].classList.remove("is-on"); i = (i + 1) % slides.length; slides[i].classList.add("is-on"); }, 3600);
-  }
-
-  // ---------- вкладки (команда, прайс, FAQ) ----------
-  const fadeIn = (els) => { if (anim && els.length) G.fromTo(els, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.05, ease: "expo.out", clearProps: "transform" }); };
+  // ---------- вкладки (команда, прайс, вопросы) ----------
+  // появившееся сразу теряет data-reveal, иначе после анимации блок съезжает на исходные 24px
+  const fadeIn = (els) => {
+    els.forEach((el) => el.removeAttribute("data-reveal"));
+    if (anim && els.length) G.fromTo(els, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, stagger: Math.min(0.05, 0.4 / els.length), ease: "expo.out", overwrite: true, clearProps: "opacity,transform" });
+  };
   $$("[data-tabs]").forEach((group) => {
     const kind = group.dataset.tabs;
     const btns = $$("[data-tab]", group);
@@ -103,12 +112,10 @@
       btns.forEach((x) => x.setAttribute("aria-selected", String(x === b)));
       const val = b.dataset.tab;
       if (kind === "team") {
+        const grid = $(".team__grid");
         const shown = [];
-        $$(".team__grid .doc").forEach((d) => { const ok = !val || d.dataset.tags.split(" ").includes(val); d.hidden = !ok; if (ok) shown.push(d); });
-        fadeIn(shown);
-      } else if (kind === "works") {
-        const shown = [];
-        $$(".works__grid .case").forEach((c) => { const ok = !val || c.dataset.cat === val; c.hidden = !ok || (c.dataset.extra === "1" && !worksOpen); if (!c.hidden) shown.push(c); });
+        $$(".doc", grid).forEach((d) => { const ok = !val || (d.dataset.tags || "").split(" ").includes(val); d.hidden = !ok; if (ok) shown.push(d); });
+        if (grid) grid.scrollLeft = 0;
         fadeIn(shown);
       } else {
         $$(`[data-panel="${kind}"]`).forEach((p) => { p.hidden = p.dataset.key !== val; if (!p.hidden) fadeIn($$("li, .qa", p)); });
@@ -117,66 +124,51 @@
     }));
   });
 
-  // «Показать ещё» в работах
-  let worksOpen = false;
-  $("[data-works-more]")?.addEventListener("click", (e) => {
-    worksOpen = true;
-    const cur = $('[data-tabs="works"] [aria-selected="true"]')?.dataset.tab || "";
-    const shown = $$('.works__grid .case[data-extra="1"]').filter((c) => !cur || c.dataset.cat === cur);
-    shown.forEach((c) => (c.hidden = false));
-    fadeIn(shown);
-    e.currentTarget.hidden = true;
+  // отзывы: «Показать все» открывает остальные цитаты, фокус переходит на первую из них
+  $$("[data-rv-more]").forEach((b) => b.addEventListener("click", () => {
+    const sec = b.closest("section") || document;
+    const extra = $$(".rv[data-extra]", sec);
+    extra.forEach((r) => (r.hidden = false));
+    fadeIn(extra);
+    b.setAttribute("aria-expanded", "true");
+    const wrap = b.closest(".rv-more");
+    if (wrap) wrap.hidden = true;
+    if (extra[0]) { extra[0].tabIndex = -1; extra[0].focus({ preventScroll: true }); }
     ST?.refresh();
-  });
-
-  // слайдер «до/после»
-  $$(".ba").forEach((ba) => {
-    const r = $("input", ba);
-    r?.addEventListener("input", () => ba.style.setProperty("--pos", r.value + "%"));
-  });
-
-  // переключатель предложений в прайсе
-  const offers = $$(".offer__item");
-  const dots = $$(".offer__switch button");
-  dots.forEach((d, i) => d.addEventListener("click", () => {
-    offers.forEach((o, j) => (o.hidden = j !== i));
-    dots.forEach((x, j) => x.setAttribute("aria-pressed", String(j === i)));
-    fadeIn([offers[i]]);
   }));
 
-  // FAQ: плавное раскрытие
-  $$(".qa").forEach((d) => {
-    const s = $("summary", d), a = $(".qa__a", d);
-    s.addEventListener("click", (e) => {
+  // раскрывающиеся блоки: вопросы и акции; из акций открыта одна
+  const accordion = (d, bodySel, group) => {
+    const s = $("summary", d), body = $(bodySel, d);
+    if (!s || !body) return;
+    const close = (x) => {
+      const a = $(bodySel, x);
+      if (!anim) { x.open = false; return; }
+      G.killTweensOf(a);
+      G.fromTo(a, { height: a.offsetHeight }, { height: 0, duration: 0.45, ease: "power3.inOut", onComplete: () => { x.open = false; a.style.height = ""; ST.refresh(); } });
+    };
+    const open = (x) => {
+      const a = $(bodySel, x);
+      x.open = true;
       if (!anim) return;
+      G.killTweensOf(a);
+      G.fromTo(a, { height: 0 }, { height: a.scrollHeight, duration: 0.55, ease: "expo.out", onComplete: () => { a.style.height = ""; ST.refresh(); } });
+    };
+    s.addEventListener("click", (e) => {
       e.preventDefault();
-      if (d.open) {
-        G.to(a, { height: 0, duration: 0.45, ease: "power3.inOut", onComplete: () => { d.open = false; a.style.height = ""; ST.refresh(); } });
-      } else {
-        d.open = true;
-        G.fromTo(a, { height: 0 }, { height: a.scrollHeight, duration: 0.55, ease: "expo.out", onComplete: () => { a.style.height = ""; ST.refresh(); } });
-      }
+      if (d.open && !d.dataset.closing) { d.dataset.closing = "1"; close(d); setTimeout(() => delete d.dataset.closing, 460); return; }
+      if (group) $$("details[open]", group).forEach((x) => { if (x !== d) close(x); });
+      open(d);
     });
-  });
+  };
+  $$(".qa").forEach((d) => accordion(d, ".qa__a"));
+  $$(".offer-item").forEach((d) => accordion(d, ".offer-item__body", d.closest(".offers")));
 
-  // «магнитные» кнопки
-  if (anim && fine) {
-    $$("[data-magnet]").forEach((b) => {
-      const xTo = G.quickTo(b, "x", { duration: 0.6, ease: "elastic.out(1, .4)" });
-      const yTo = G.quickTo(b, "y", { duration: 0.6, ease: "elastic.out(1, .4)" });
-      b.addEventListener("pointermove", (e) => { const r = b.getBoundingClientRect(); xTo((e.clientX - r.left - r.width / 2) * 0.3); yTo((e.clientY - r.top - r.height / 2) * 0.4); });
-      b.addEventListener("pointerleave", () => { xTo(0); yTo(0); });
-    });
-  }
-
-  // карта: включаем взаимодействие по клику, выключаем, когда курсор ушёл
+  // карта: двигать можно после нажатия, когда курсор ушёл, снова блокируется (чтобы не мешать прокрутке)
   $$(".place__map").forEach((m) => {
     m.addEventListener("click", () => m.classList.add("is-active"));
     m.addEventListener("mouseleave", () => m.classList.remove("is-active"));
   });
-
-  // кнопка «наверх»
-  $$("[data-totop]").forEach((b) => b.addEventListener("click", () => (lenis ? lenis.scrollTo(0, { duration: 1.6 }) : scrollTo({ top: 0, behavior: "smooth" }))));
 
   // прайс-страница: поиск и разделы
   const search = $("#p-search");
@@ -209,7 +201,7 @@
   const bk = $("#booking");
   if (bk) booking(bk);
 
-  // ---------- окна: запись, перезвон, снимок, расчёт, мессенджеры ----------
+  // ---------- окна: запись, перезвон, снимок, расчёт, мессенджеры, при уходе ----------
   const docs = (() => { try { return JSON.parse($("#um-docs")?.textContent || "{}"); } catch (e) { return {}; } })();
   let openM = null, lastFocus = null, anyModal = false;
   const showModal = (id, from) => {
@@ -229,19 +221,26 @@
     root.classList.add("has-modal");
     lenis?.stop();
     if (anim) {
+      const box = $(".modal__box", m);
       G.fromTo(m, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" });
-      G.fromTo($(".modal__box", m), { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
+      // на телефоне окно выезжает снизу листом, на компьютере поднимается из глубины
+      if (phone()) G.fromTo(box, { yPercent: 100 }, { yPercent: 0, duration: 0.6, ease: "expo.out", clearProps: "transform" });
+      else G.fromTo(box, { y: 30, scale: 0.98, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
     }
-    ($("input:not([type=hidden]):not([type=radio])", m) || $("h2", m))?.focus({ preventScroll: true });
+    // на телефоне не открываем клавиатуру сразу: фокус на заголовке, поле человек выберет сам
+    const field = fine ? $("input:not([type=hidden]):not([type=radio]):not([type=file])", m) : null;
+    (field || $("h2", m))?.focus({ preventScroll: true });
     return true;
   };
   function hideModal(instant) {
     const m = openM;
     if (!m) return;
     openM = null;
-    const done = () => { m.hidden = true; m.style.opacity = ""; if (!openM) { root.classList.remove("has-modal"); lenis?.start(); } };
-    if (anim && !instant) G.to(m, { opacity: 0, duration: 0.25, ease: "power1.in", onComplete: done });
-    else done();
+    const done = () => { m.hidden = true; m.style.opacity = ""; G?.set($(".modal__box", m), { clearProps: "transform" }); if (!openM) { root.classList.remove("has-modal"); lenis?.start(); } };
+    if (anim && !instant) {
+      if (phone()) G.to($(".modal__box", m), { yPercent: 100, duration: 0.35, ease: "power2.in" });
+      G.to(m, { opacity: 0, duration: 0.3, ease: "power1.in", onComplete: done });
+    } else done();
     if (!instant) lastFocus?.focus?.({ preventScroll: true });
   }
   document.addEventListener("click", (e) => {
@@ -253,18 +252,28 @@
     if (!openM) return;
     if (e.key === "Escape") return hideModal();
     if (e.key === "Tab") {
-      const f = $$("a[href], button:not([disabled]), input:not([type=hidden]), textarea", openM).filter((x) => x.offsetParent);
+      const f = $$("a[href], button:not([disabled]), input:not([type=hidden]), textarea, select", openM).filter((x) => x.offsetParent);
       if (!f.length) return;
       if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
       else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
     }
   });
-  // имя выбранного файла на кнопке
-  $$(".file input").forEach((i) => i.addEventListener("change", () => { const s = i.nextElementSibling; if (s) s.textContent = i.files[0]?.name || "Выбрать файл"; }));
+
+  // поле файла: имя выбранного файла вместо подсказки
+  const fileInit = (i) => {
+    const em = $("em", i.parentElement);
+    if (!em) return;
+    const def = em.textContent;
+    i.addEventListener("change", () => { em.textContent = i.files[0]?.name || def; i.parentElement.classList.toggle("is-filled", !!i.files[0]); });
+    i.form?.addEventListener("reset", () => { em.textContent = def; i.parentElement.classList.remove("is-filled"); });
+  };
+  $$(".file input").forEach(fileInit);
 
   // отправка любой формы заявки: в демо только «спасибо»; на рабочем сайте здесь уходит заявка в amoCRM
+  const xrayDone = ["Снимок у врача", "Врач посмотрит и ответит в течение рабочего дня. Если зуб можно спасти, скажем, как и сколько это стоит."];
   const doneText = {
-    xray: ["Снимок у врача", "Врач посмотрит и ответит в течение рабочего дня. Если зуб можно спасти, скажем, как и сколько это стоит."],
+    xray: xrayDone,
+    exit: xrayDone,
     allon: ["Спасибо!", "Администратор перезвонит за 5 минут и запишет к имплантологу на консультацию с КТ. Расчёт бесплатный."],
   };
   const defDone = $("#m-done [data-done-text]")?.textContent;
@@ -272,7 +281,7 @@
     if (f.hasAttribute("data-quiz")) return;
     f.addEventListener("submit", (e) => {
       e.preventDefault();
-      const kind = f.dataset.lead, d = doneText[kind];
+      const d = doneText[f.dataset.lead];
       const dm = $("#m-done");
       if (dm) { $("h2", dm).textContent = d ? d[0] : "Спасибо!"; $("[data-done-text]", dm).textContent = d ? d[1] : defDone; }
       f.reset();
@@ -280,7 +289,7 @@
     });
   });
 
-  // окно при уходе со страницы: один раз за визит, только на компьютере
+  // окно при уходе со страницы: один раз за визит, только на компьютере, не раньше чем через 15 секунд
   if (fine && $("#m-exit")) {
     const t0 = Date.now();
     document.addEventListener("mouseout", (e) => {
@@ -291,21 +300,21 @@
   }
 
   // расчёт All-on-4: система и число челюстей
+  const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   $$("[data-calc]").forEach((box) => {
     const c = JSON.parse(box.dataset.calc);
     let sys = 0, jaws = 1;
-    const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    const set = (k, v, rub = true) => { const el = $(`[data-c="${k}"]`, box); if (el) el.textContent = fmt(v) + (rub ? " ₽" : ""); };
+    const set = (k, v) => { const el = $(`[data-c="${k}"]`, box); if (el) el.textContent = fmt(v) + " ₽"; };
     const totalEl = $('[data-c="total"]', box);
     const upd = () => {
       const [, surg, old] = c.systems[sys];
       const t = (surg + c.temp + c.perm) * jaws;
       set("surg", surg * jaws); set("temp", c.temp * jaws); set("perm", c.perm * jaws);
       const o = $('[data-c="old"]', box);
-      if (o) { o.hidden = !old; if (old) o.textContent = fmt(old * jaws) + " ₽"; }
+      if (o) { o.hidden = !old; if (old) o.textContent = fmt(old * jaws) + " ₽"; }
       set("day", (surg + c.temp) * jaws); set("later", c.perm * jaws);
       const from = parseFloat(totalEl.textContent.replace(/\s/g, "")) || t;
-      if (anim) { const v = { n: from }; G.to(v, { n: t, duration: 0.8, ease: "power2.out", onUpdate: () => (totalEl.textContent = fmt(v.n)) }); }
+      if (anim) { const v = { n: from }; G.to(v, { n: t, duration: 0.8, ease: "power2.out", overwrite: true, onUpdate: () => (totalEl.textContent = fmt(v.n)) }); }
       else totalEl.textContent = fmt(t);
     };
     box.addEventListener("click", (e) => {
@@ -317,21 +326,42 @@
     });
   });
 
-  // квиз: вопрос за вопросом, без номеров, полоска прогресса
+  // квиз: вопрос за вопросом, полоска прогресса.
+  // Дальше переходим по нажатию на ответ; стрелки клавиатуры только выбирают, переход по Enter или пробелу.
   $$("[data-quiz]").forEach((form) => {
     const wrap = form.closest(".quiz"), steps = $$(".quiz__step", form), bar = $(".quiz__bar i", wrap);
     let cur = 0;
+    const focusStep = (st) => {
+      if (!form.contains(document.activeElement) && document.activeElement !== document.body) return;
+      const el = $("input:checked", st) || $("input", st);
+      if (el && (el.type === "radio" || fine)) el.focus({ preventScroll: true });
+    };
     const go = (n) => {
+      if (n === cur) return;
       const from = steps[cur], to = steps[n];
       cur = n;
       if (bar) bar.style.transform = `scaleX(${n / (steps.length - 1)})`;
-      const show = () => { steps.forEach((s) => (s.hidden = s !== to)); if (anim) G.fromTo(to, { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out", clearProps: "transform" }); };
-      if (anim && from !== to) G.to(from, { opacity: 0, x: -30, duration: 0.2, ease: "power2.in", onComplete: show }); else show();
+      const show = () => {
+        steps.forEach((s) => (s.hidden = s !== to));
+        if (anim) G.fromTo(to, { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out", clearProps: "transform" });
+        focusStep(to);
+        // на телефоне шаги разной высоты: если начало квиза ушло под шапку, возвращаем его в окно
+        if (wrap.getBoundingClientRect().top < headerH() - 10) {
+          if (lenis) lenis.scrollTo(wrap, { offset: -headerH(), duration: 0.8 });
+          else wrap.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+        }
+      };
+      if (anim && from !== to) G.to(from, { opacity: 0, x: -30, duration: 0.2, ease: "power2.in", onComplete: () => { G.set(from, { clearProps: "opacity,transform" }); show(); } });
+      else show();
     };
-    form.addEventListener("change", (e) => {
-      if (e.target.type === "radio") setTimeout(() => go(Math.min(cur + 1, steps.length - 1)), 220);
+    const next = () => setTimeout(() => go(Math.min(cur + 1, steps.length - 1)), 220);
+    form.addEventListener("click", (e) => {
+      if (e.target.closest("[data-qback]")) return go(Math.max(0, cur - 1));
+      if (e.target.matches('input[type="radio"]')) next();
     });
-    form.addEventListener("click", (e) => { if (e.target.closest("[data-qback]")) go(Math.max(0, cur - 1)); });
+    form.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.target.type === "radio") { e.preventDefault(); if (e.target.checked) next(); }
+    });
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const ph = $("[data-req]", form);
@@ -354,46 +384,27 @@
   G.defaults({ ease: "power3.out" });
   ST.config({ ignoreMobileResize: true });
 
-  const heroIn = () => {
-    const h = $(".hero, .page-hero");
-    if (!h) return;
-    const words = $$("[data-split] .sw > span", h);
-    const tl = G.timeline();
-    tl.from($(".hero__media img", h), { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0)
-      .from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .from($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__actions > *, .hero__note, .hero__offer, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24, duration: 1, stagger: 0.07 }, 0.4)
-      .from(".header__bar", { y: -24, autoAlpha: 0, duration: 0.9 }, 0.2);
-  };
-
   // разбиваем заголовки до первого кадра
   $$("[data-split]").forEach((el) => splitWords(el));
 
-  const intro = $(".intro");
-  if (intro && root.classList.contains("js-intro")) {
-    lenis?.stop();
-    try { sessionStorage.setItem("um-intro", "1"); } catch (e) { /* приватный режим */ }
-    G.timeline({ onComplete: () => { intro.remove(); lenis?.start(); root.classList.remove("js-intro"); } })
-      .from(".intro__logo", { autoAlpha: 0, y: 16, duration: 0.8 })
-      .from(".intro__word", { autoAlpha: 0, duration: 0.8 }, 0.15)
-      .to(".intro__bar i", { scaleX: 1, duration: 0.9, ease: "power2.inOut" }, 0.15)
-      .to(".intro__in", { autoAlpha: 0, y: -20, duration: 0.4, ease: "power2.in" }, "+=0.05")
-      .to(intro, { yPercent: -100, duration: 1, ease: "power4.inOut" }, "-=0.1")
-      .add(heroIn, "-=0.7");
-  } else {
-    intro?.remove();
-    heroIn();
-  }
+  // появилось: снимаем атрибут начального состояния и встроенные стили
+  const settle = (attr) => (el) => { el.removeAttribute(attr); G.set(el, { clearProps: "opacity,transform" }); };
 
-  // герой: фон уходит медленнее страницы, текст спокойно тает
-  // на телефоне первый экран выше окна (оффер, кнопки), поэтому текст не тает: его ещё читают
-  const mm = G.matchMedia();
-  const hero = $(".hero");
-  if (hero) G.to(".hero__media", { yPercent: 22, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
-  mm.add("(min-width: 761px)", () => {
-    if (hero) G.to(".hero__in", { y: -80, autoAlpha: 0, ease: "none", scrollTrigger: { trigger: hero, start: "40% top", end: "95% top", scrub: true } });
-    const ph = $(".page-hero");
-    if (ph) G.to($(".page-hero__in, .doc-hero__text", ph), { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
-  });
+  // первый экран: фото раскрывается из круга, слова заголовка поднимаются, остальное проявляется по очереди
+  const top = $(".hero, .page-hero");
+  if (top) {
+    const tl = G.timeline();
+    const circle = $(".hero__circle", top);
+    if (circle) {
+      tl.fromTo(circle, { clipPath: "circle(0% at 50% 50%)" }, { clipPath: "circle(50% at 50% 50%)", duration: 1.5, ease: "expo.inOut", onComplete: () => G.set(circle, { clipPath: "none" }) }, 0);
+      const im = $("img", circle);
+      if (im) tl.fromTo(im, { scale: 1.3 }, { scale: 1, duration: 2.2, ease: "power2.out", clearProps: "transform" }, 0);
+    }
+    tl.from($$("[data-split] .sw > span", top), { yPercent: 110, duration: 1.1, stagger: 0.05, ease: "power4.out" }, 0.1);
+    const items = $$("[data-in]");
+    if (items.length) tl.to(items, { opacity: 1, y: 0, duration: 0.9, stagger: 0.07, onComplete: () => items.forEach(settle("data-in")) }, 0.35);
+    if ($(".header__bar")) tl.from(".header__bar", { y: -24, autoAlpha: 0, duration: 0.9, clearProps: "transform,opacity,visibility" }, 0.15);
+  }
 
   // заголовки разделов: слова поднимаются из-под строки
   $$("[data-split]").forEach((el) => {
@@ -402,100 +413,68 @@
   });
 
   // появление блоков: по порядку, без наездов друг на друга.
-  // После появления снимаем data-reveal, иначе стиль из CSS (сдвиг на 24px) возвращается и блок съезжает вниз.
   // То, что уже проскочили быстрой прокруткой, показываем сразу; лесенка не дольше 0,35 с, чтобы видимое не ждало.
-  const revealed = (el) => { el.removeAttribute("data-reveal"); G.set(el, { clearProps: "opacity,transform" }); };
+  const revealed = settle("data-reveal");
   ST.batch("[data-reveal]", {
     start: "top 92%", once: true, interval: 0.1,
     onEnter: (els) => {
       const live = els.filter((el) => el.getBoundingClientRect().bottom > 0);
       els.filter((el) => !live.includes(el)).forEach(revealed);
-      if (live.length) G.to(live, { opacity: 1, y: 0, scale: 1, duration: 0.9, stagger: Math.min(0.07, 0.35 / live.length), overwrite: true, onComplete: () => live.forEach(revealed) });
+      if (live.length) G.to(live, { opacity: 1, y: 0, duration: 0.9, stagger: Math.min(0.07, 0.35 / live.length), overwrite: true, onComplete: () => live.forEach(revealed) });
     },
   });
 
-  // картинки раскрываются шторкой
+  // фото раскрываются: люди из круга, кабинеты шторкой; после раскрытия обрезку снимаем совсем
   $$("[data-clip]").forEach((el) => {
+    const round = el.classList.contains("circle");
     const im = $("img", el);
-    const st = { trigger: el, start: "top 90%", once: true };
-    G.to(el, { clipPath: "inset(0% 0% 0% 0% round 22px)", duration: 1.4, ease: "power3.inOut", scrollTrigger: st });
+    const st = { trigger: el, start: "top 88%", once: true };
+    G.fromTo(el, { clipPath: round ? "circle(36% at 50% 50%)" : "inset(12% 0% 12% 0% round 22px)" }, { clipPath: round ? "circle(50% at 50% 50%)" : "inset(0% 0% 0% 0% round 22px)", duration: 1.4, ease: "power3.inOut", scrollTrigger: st, onComplete: () => G.set(el, { clipPath: "none" }) });
     if (im) G.from(im, { scale: 1.15, duration: 1.8, ease: "power2.out", scrollTrigger: st });
   });
 
-  // параллакс: картинка внутри рамки
+  // параллакс: картинка чуть медленнее рамки
   $$("[data-parallax]").forEach((fig) => {
     const im = $("img", fig);
     if (im) G.fromTo(im, { yPercent: -10 }, { yPercent: 0, ease: "none", scrollTrigger: { trigger: fig, start: "top bottom", end: "bottom top", scrub: true } });
   });
-  // параллакс: элементы коллажа плывут с разной скоростью (небольшой разброс, чтобы не наезжали)
-  $$("[data-speed]").forEach((el) => {
-    const k = parseFloat(el.dataset.speed) || 0;
-    const amp = () => k * innerHeight * (innerWidth <= 760 ? 0.05 : 0.12);
-    G.fromTo(el, { y: () => amp() }, { y: () => -amp(), ease: "none", scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
-  });
 
-  // «О нас»: текст проявляется по словам при прокрутке
-  const st = $(".about__statement");
-  if (st) {
-    const ws = splitWords(st, "w");
-    G.to(ws, { opacity: 1, stagger: 0.1, ease: "none", scrollTrigger: { trigger: st, start: "top 75%", end: "bottom 45%", scrub: true } });
+  // «О клинике»: фраза проявляется по словам при прокрутке
+  const statement = $(".about__statement");
+  if (statement) {
+    const ws = splitWords(statement, "w");
+    G.to(ws, { opacity: 1, stagger: 0.1, ease: "none", scrollTrigger: { trigger: statement, start: "top 78%", end: "bottom 50%", scrub: true } });
   }
 
-  // счётчики
+  // счётчики на страницах врачей
   $$("[data-count]").forEach((el) => {
-    const raw = el.dataset.count, grp = /\s/.test(raw);
+    const raw = el.dataset.count;
     const target = parseFloat(raw.replace(/\s/g, "").replace(",", "."));
     const dec = (raw.split(/[.,]/)[1] || "").length;
-    const fmt = (v) => (grp ? Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") : v.toFixed(dec).replace(".", ","));
     const o = { v: 0 };
-    G.to(o, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => (el.textContent = fmt(o.v)) });
+    G.to(o, { v: target, duration: 1.6, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => (el.textContent = o.v.toFixed(dec).replace(".", ",")) });
   });
 
-  // преимущества: горизонтальная лента с закреплением, карточки едут ровно
-  mm.add("(min-width: 761px)", () => {
-    const pin = $(".feat__pin"), track = $(".feat__track");
-    if (!pin || !track) return;
-    const dist = () => Math.max(0, track.scrollWidth - innerWidth);
-    const tw = G.to(track, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: pin, start: "top top", end: () => "+=" + dist(), pin: true, anticipatePin: 1, scrub: true, invalidateOnRefresh: true } });
-    // вступительный текст слегка уходит, когда наезжают карточки
-    const introCard = $(".fcard--intro", track);
-    if (introCard) G.to(introCard, { autoAlpha: 0.25, ease: "none", scrollTrigger: { trigger: introCard, containerAnimation: tw, start: "right 60%", end: "right 10%", scrub: true } });
-  });
-
-  // клиника изнутри: кадр раскрывается из карточки на весь экран, затем проявляется заголовок
+  // клиника изнутри: кадр раскрывается из карточки на весь экран, затем проявляется заголовок.
+  // На компьютере блок закреплён на время раскрытия, на телефоне раскрывается по ходу обычной прокрутки.
   const tour = $(".tour__pin");
   if (tour) {
     const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
-    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: "+=110%", pin: true, anticipatePin: 1, scrub: true } });
-    tl.fromTo(frame, { clipPath: "inset(16% 22% 16% 22% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 1 }, 0)
+    const build = (st, from) => G.timeline({ defaults: { ease: "none" }, scrollTrigger: st })
+      .fromTo(frame, { clipPath: from }, { clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 1 }, 0)
       .fromTo(fim, { scale: 1.25 }, { scale: 1, duration: 1 }, 0)
-      .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
-      .to({}, { duration: 0.25 });
+      .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.65);
+    const mm = G.matchMedia();
+    mm.add("(min-width: 761px)", () => { build({ trigger: tour, start: "top top", end: "+=80%", pin: true, anticipatePin: 1, scrub: true }, "inset(16% 22% 16% 22% round 28px)").to({}, { duration: 0.2 }); });
+    mm.add("(max-width: 760px)", () => { build({ trigger: tour, start: "top 85%", end: "top 15%", scrub: true }, "inset(10% 6% 10% 6% round 22px)"); });
   }
-  // ленты фото и отзывов едут навстречу друг другу
-  $$(".tour__row, .rv__row").forEach((row) => {
-    const d = parseFloat(row.dataset.dir) || -1;
-    G.fromTo(row, { x: () => (d < 0 ? 0 : -innerWidth * 0.2) }, { x: () => (d < 0 ? -innerWidth * 0.2 : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
-  });
 
-  // бегущая строка: скорость плавно следует за скоростью прокрутки, направление — за её направлением
-  $$(".marquee__track").forEach((tr) => {
-    const loop = G.to(tr, { xPercent: -50, duration: 30, ease: "none", repeat: -1 });
-    let dir = 1, cur = 1, target = 1;
-    ST.create({ trigger: tr, start: "top bottom", end: "bottom top", onUpdate: (self) => { dir = self.direction; target = dir * (1 + Math.min(Math.abs(self.getVelocity()) / 400, 4)); } });
-    G.ticker.add(() => { target += (dir - target) * 0.04; cur += (target - cur) * 0.12; loop.timeScale(cur); });
-  });
-
-  // подвал: логотип поднимается
-  const big = $(".footer__big");
-  if (big) G.from(big.children, { yPercent: 50, autoAlpha: 0, ease: "none", scrollTrigger: { trigger: ".footer", start: "top 85%", end: "bottom bottom", scrub: true } });
-
-  // пересчитываем позиции, когда догрузились шрифты и картинки (до того, как пользователь доскроллил)
+  // пересчитываем позиции, когда догрузились шрифты и картинки
   const refresh = () => ST.refresh();
   document.fonts?.ready.then(refresh);
   addEventListener("load", refresh);
   let rt = 0;
-  $$(".tour img, .feat img, .collage img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
+  $$(".tour img, [data-parallax] img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
 
   // ---------- запись: шаги ----------
   function booking(box) {

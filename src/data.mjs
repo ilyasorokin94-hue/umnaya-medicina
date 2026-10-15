@@ -210,13 +210,6 @@ export const prices = {
   ]},
 };
 
-export const promos = [
-  { id: "implant", tag: "Имплантация", title: "Имплантация на специальных условиях", price: 17500, old: 26500, text: "Имплант Osstem 17 500 ₽ вместо 26 500 ₽. Вся челюсть на имплантах 110 000 ₽ вместо 129 000 ₽.", service: "implantaciya" },
-  { id: "day10", tag: "В день консультации", title: "Минус 10% в день консультации", price: null, old: null, text: "Оплатите лечение в день консультации со скидкой 10%.", service: "lechenie-zubov" },
-  { id: "wednesday", tag: "Каждую среду", title: "Профгигиена Air-Flow", price: 4500, old: 5790, text: "Снятие камня и налёта, Air-Flow и полировка. Места на среду ограничены.", service: "gigiena" },
-  { id: "consult", tag: "Первый визит", title: "Бесплатная консультация с планом лечения", price: 0, old: null, text: "Осмотр, план лечения и цена. План можно забрать домой.", service: "lechenie-zubov" },
-];
-
 // Тексты услуг: только факты со страниц um-med.com/stomatologicheskaya-klinika/* (сверено 15.10.2026)
 export const services = [
   {
@@ -421,15 +414,9 @@ export const services = [
   },
 ];
 
-export const gallery = [
-  "2fb8cd72bd1f1d5d6cf3bd98c364c959", "0c4ae4df7365e72c4ec58940eb4836d3", "d0b8c6881b438a9ecc5a0f841cd35886",
-  "9cd780f6b96cb3211c7ac023c256ea57", "5fe57dcfaa84f0122f0066b07eaae024", "5c23653c5fcc0ce085ca9c9383ceaef1",
-  "1a4fd9de7df015a4dae19d00976f6dad", "bb32d77eeb1703dedc59b2f56eeb14a0", "c4b767599f8d8cd98fbae9464684b120",
-].map((h) => `https://um-med.com/assets/gallery/stomatologicheskaya-klinika/92/${h}.jpeg`);
-
 export const clinicPhoto = "https://prodoctorov.ru/media/images/jpeg/bfc194796c11e910dc2bceb96023a8d0b21df35a.jpeg";
 
-// ---------- v2: одностраничник по механике Lava Dental ----------
+// ---------- главная и общие блоки ----------
 
 // Логотип клиники. Пока берётся прямо с um-med.com; когда файлы появятся в src/images/brand/, сборка возьмёт их.
 export const brand = {
@@ -455,29 +442,27 @@ const G2 = (name) => `images/gen2/${name}.jpg`;
 // Собственные фото клиники со старого um-med.com и из её сообществ (src/images/old)
 const OLD = (name) => `images/old/${name}.jpg`;
 export const pics = {
-  hero: [OLD("doctor-xray"), C("yandex-02"), clinicPhoto],
-  // «О клинике»: фото в круглой маске под заголовком
-  aboutCircle: [OLD("surgeons"), C("2gis-09")],
-  foil: [C("2gis-03"), null],
-  about: [[C("2gis-07"), ...pdPhotos.b], [C("2gis-09"), ...pdPhotos.f], [C("2gis-02"), ...pdPhotos.facade], [C("yandex-08"), ...pdPhotos.facade]],
-  slides: [[C("2gis-02"), ...pdPhotos.facade], [C("yandex-07"), ...pdPhotos.entrance], [C("2gis-05"), ...pdPhotos.waiting], [C("2gis-03"), ...pdPhotos.entrance2]],
-  feat: [C("2gis-07"), C("2gis-08"), C("2gis-04"), C("2gis-02"), C("2gis-06"), C("2gis-01")].map((c, i) => [c, gallery[i + 1]]),
-  team: [C("2gis-02"), gallery[0]],
+  // Первый экран: врачи за работой, фото в круге (круг только для людей)
+  hero: [OLD("old-4"), C("yandex-02"), clinicPhoto],
+  // «О клинике»: администраторы встречают пациентов на ресепшене, фото в круге
+  aboutCircle: [OLD("old-9"), C("2gis-02")],
+  // окна «Прислать снимок» и «Пока не готовы прийти?»: снимок у врача
+  xray: [G2("xray"), C("2gis-09")],
   svc: {
     diagnostika: [C("2gis-09"), ...pdPhotos.f], gigiena: [G2("hygiene"), ...GN("hygiene"), C("2gis-05"), ...pdPhotos.g], "lechenie-zubov": [G2("pain"), C("2gis-07"), ...pdPhotos.h],
-    implantaciya: [G2("implant"), C("2gis-04"), ...pdPhotos.i], "all-on-4": [G2("allon4"), ...GN("allon4"), C("yandex-04"), ...pdPhotos.j], mikroskop: [OLD("microscope"), C("2gis-06"), ...pdPhotos.k],
-    protezirovanie: [G2("crowns"), ...GN("crowns"), C("yandex-02"), ...pdPhotos.l], hirurgiya: [OLD("surgeons"), C("2gis-11"), ...pdPhotos.m], ortodontiya: [G2("aligners"), ...GN("ortho"), C("2gis-01"), ...pdPhotos.n],
+    implantaciya: [G2("implant"), C("2gis-04"), ...pdPhotos.i], "all-on-4": [G2("allon4"), ...GN("allon4"), C("yandex-04"), ...pdPhotos.j], mikroskop: [C("2gis-06"), ...pdPhotos.k],
+    protezirovanie: [G2("crowns"), ...GN("crowns"), C("yandex-02"), ...pdPhotos.l], hirurgiya: [OLD("old-4"), C("2gis-11"), ...pdPhotos.m], ortodontiya: [G2("aligners"), ...GN("ortho"), C("2gis-01"), ...pdPhotos.n],
     detskaya: [G2("kids"), ...GN("kids"), C("yandex-13"), ...pdPhotos.o],
   },
-  // Галерея «Клиника изнутри»: [файл, подпись]
+  // «Клиника изнутри»: кадр, который раскрывается на весь экран, и шесть лучших фото без фасадов и коридоров
+  tourFrame: [C("2gis-04")],
   tour: [
-    ["2gis-15", "Стоматология на Громова, 10/2"], ["2gis-02", "Ресепшен"], ["2gis-04", "Лечебный кабинет"], ["2gis-09", "3D-томограф Vatech"],
-    ["2gis-07", "Кабинет терапии"], ["2gis-08", "Панорамный рентген"], ["2gis-11", "Стерилизационная"], ["2gis-06", "Лечебный кабинет"],
-    ["2gis-05", "Кабинет"], ["yandex-04", "3D-сканирование"], ["yandex-07", "Вход"],
+    [C("2gis-02"), "Ресепшен"], [OLD("old-1"), "Кабинет терапии"], [C("2gis-09"), "3D-томограф Vatech"],
+    [C("2gis-08"), "Панорамный рентген"], [C("2gis-11"), "Стерилизационная"], [C("2gis-06"), "Лечебный кабинет"],
   ],
 };
 
-// Порядок услуг на главной (номера 01–10, как у Lava)
+// Порядок услуг: меню, подвал, запись
 export const homeOrder = ["diagnostika", "gigiena", "lechenie-zubov", "implantaciya", "all-on-4", "mikroskop", "protezirovanie", "hirurgiya", "ortodontiya", "detskaya"];
 
 // Шесть принципов уверенного лечения (контент главной v2, 15.10.2026; из истории клиники «О клинике» в Яндекс Картах): [крупный факт, заголовок, текст]
@@ -488,19 +473,6 @@ export const features = [
   ["3D", "Современные методики", "Каналы лечим под микроскопом, снимки разбираем в цифровом анализе, имплантацию планируем на 3D-модели и ставим импланты по хирургическому шаблону."],
   ["Гарантия", "Проверенные материалы", "Только оригинальные материалы и импланты с сертификатами. Сроки гарантии записаны в договоре: если в этот срок что-то выпало или сломалось, переделаем бесплатно. На имплант выдаём паспорт."],
   ["−10%", "Удобная оплата", "Скидка 10% при оплате лечения в день консультации. Можно платить по этапам, в рассрочку или в кредит, а 13% вернуть налоговым вычетом. Куратор ведёт вас от первого визита до последнего."],
-];
-
-// Работы «до/после»: пока шаблоны карточек, фото даст клиника
-export const works = [
-  ["implantaciya", "Имплантация", "Восстановление жевательного зуба на импланте"],
-  ["all-on-4", "All-on-4", "Несъёмные зубы на четырёх имплантах"],
-  ["protezirovanie", "Протезирование", "Коронки из диоксида циркония"],
-  ["lechenie-zubov", "Терапия", "Художественная реставрация переднего зуба"],
-  ["gigiena", "Гигиена", "Профессиональная чистка Air-Flow"],
-  ["ortodontiya", "Ортодонтия", "Исправление прикуса брекетами"],
-  ["implantaciya", "Имплантация", "Имплантация с синус-лифтингом"],
-  ["protezirovanie", "Протезирование", "Керамические виниры E.max"],
-  ["lechenie-zubov", "Терапия", "Лечение каналов под микроскопом"],
 ];
 
 // Вкладки прайса на главной
@@ -565,7 +537,7 @@ export const home = {
     quote: "Обошла несколько стоматологий в Раменском (и не только), везде хотели удалить, только тут взялись за лечение",
     offer: "Второе мнение бесплатно. Пришлите снимок, и врач скажет, можно ли сохранить зуб.",
     btn: ["Прислать снимок", "xray", "Сказали удалить"], link: ["Лечение под микроскопом", "mikroskop"], note: "Ответим в течение рабочего дня.",
-    img: [OLD("microscope")], imgAlt: "Лечение каналов под микроскопом",
+    img: [OLD("old-8")], imgAlt: "Дентальный рентген в кабинете: снимок зуба за секунды",
   },
   restore: {
     label: "Восстановить", title: "Сказали, что кости мало? Её можно нарастить", sub: "Имплантация проще, чем кажется.",
