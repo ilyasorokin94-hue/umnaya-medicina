@@ -305,17 +305,12 @@
   });
 
   const mm = G.matchMedia();
-  // преимущества: горизонтальная лента с закреплением; карточки едут ровно, двигается только фото внутри
+  // преимущества: горизонтальная лента с закреплением, карточки едут ровно
   mm.add("(min-width: 761px)", () => {
     const pin = $(".feat__pin"), track = $(".feat__track");
     if (!pin || !track) return;
     const dist = () => Math.max(0, track.scrollWidth - innerWidth);
     const tw = G.to(track, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: pin, start: "top top", end: () => "+=" + dist(), pin: true, scrub: true, invalidateOnRefresh: true } });
-    G.to(".feat__progress i", { scaleX: 1, ease: "none", scrollTrigger: { trigger: pin, start: "top top", end: () => "+=" + dist(), scrub: true, invalidateOnRefresh: true } });
-    $$(".fcard:not(.fcard--intro)", track).forEach((c) => {
-      const im = $(".fcard__img img", c);
-      if (im) G.fromTo(im, { xPercent: -7 }, { xPercent: 7, ease: "none", scrollTrigger: { trigger: c, containerAnimation: tw, start: "left right", end: "right left", scrub: true } });
-    });
     // вступительный текст слегка уходит, когда наезжают карточки
     const introCard = $(".fcard--intro", track);
     if (introCard) G.to(introCard, { autoAlpha: 0.25, ease: "none", scrollTrigger: { trigger: introCard, containerAnimation: tw, start: "right 60%", end: "right 10%", scrub: true } });
@@ -331,8 +326,8 @@
       .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
       .to({}, { duration: 0.25 });
   }
-  // ленты фото едут навстречу друг другу
-  $$(".tour__row").forEach((row) => {
+  // ленты фото и отзывов едут навстречу друг другу
+  $$(".tour__row, .rv__row").forEach((row) => {
     const d = parseFloat(row.dataset.dir) || -1;
     G.fromTo(row, { x: () => (d < 0 ? 0 : -innerWidth * 0.2) }, { x: () => (d < 0 ? -innerWidth * 0.2 : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
   });
