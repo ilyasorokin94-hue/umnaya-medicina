@@ -120,9 +120,9 @@ html:not(.js-intro) .intro { display: none; }
 
 /* ---------- герой ---------- */
 .hero { position: relative; min-height: max(680px, 100svh); color: #fff; display: grid; align-items: end; justify-items: center; overflow: hidden; background: var(--ink); }
-.hero__media { position: absolute; inset: 0; }
+.hero .hero__media { position: absolute; inset: 0; overflow: hidden; }
 .hero__media img { width: 100%; height: 120%; object-fit: cover; transform-origin: 50% 40%; }
-.hero__media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12, 36, 16, .55) 0%, rgba(12, 36, 16, .15) 35%, rgba(12, 36, 16, .82) 100%); }
+.hero__media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12, 36, 16, .55) 0%, rgba(12, 36, 16, .28) 32%, rgba(12, 36, 16, .9) 100%), linear-gradient(90deg, rgba(12, 36, 16, .45), rgba(12, 36, 16, 0) 60%); }
 .hero__in { position: relative; width: var(--wrap); margin: 0; padding: calc(var(--header-h) + 80px) 0 56px; display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: end; }
 .hero h1 { font-size: clamp(46px, 8.2vw, 132px); font-weight: 500; letter-spacing: -.045em; line-height: .95; max-width: 11ch; }
 .hero h1 .kicker { display: block; font: 500 clamp(13px, 1.2vw, 15px)/1.2 var(--body); letter-spacing: .16em; text-transform: uppercase; color: var(--sage); margin-bottom: 26px; }
@@ -576,3 +576,28 @@ html:not(.js-intro) .intro { display: none; }
 
 .svc__bg .ph { font-size: 0; }
 .pricing > *, .faq > *, .place > *, .split > * { min-width: 0; }
+
+/* ---------- клиника изнутри: рамка раскрывается на весь экран, ленты фото едут навстречу ---------- */
+.tour { position: relative; background: var(--ink); color: var(--white); overflow: hidden; }
+.tour__pin { position: relative; height: 100svh; min-height: 560px; overflow: hidden; }
+.tour__frame { position: absolute; inset: 0; overflow: hidden; will-change: clip-path; }
+.tour__frame img { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 50%; }
+.tour__frame::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12, 36, 16, .05) 30%, rgba(12, 36, 16, .82)); }
+.tour__title { position: absolute; left: 0; right: 0; bottom: clamp(40px, 9vh, 110px); z-index: 2; margin: 0 auto; }
+.tour__title h2 { margin: 18px 0 18px; font: 500 clamp(48px, 8.4vw, 150px)/.92 var(--display); letter-spacing: -.05em; }
+.tour__title p { max-width: 560px; color: rgba(255, 255, 255, .82); font-size: clamp(16px, 1.25vw, 19px); }
+.tour__rows { display: grid; gap: clamp(12px, 1.4vw, 20px); padding: clamp(56px, 8vw, 120px) 0; }
+.tour__row { display: flex; gap: clamp(12px, 1.4vw, 20px); width: max-content; will-change: transform; }
+.tour__row[data-dir="1"] { margin-left: -30vw; }
+.tour__row figure { position: relative; flex: none; width: clamp(240px, 27vw, 430px); aspect-ratio: 4 / 3; margin: 0; border-radius: var(--radius); overflow: hidden; background: var(--ink-2); }
+.tour__row figure:nth-child(3n + 2) { aspect-ratio: 1 / 1; width: clamp(180px, 20vw, 320px); }
+.tour__row img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+.tour__row figure:hover img { transform: scale(1.06); }
+.tour__row figcaption { position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 99px; background: rgba(12, 36, 16, .62); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-size: 13px; line-height: 1.2; }
+@media (max-width: 760px) {
+  .tour__pin { height: 88svh; }
+  .tour__title h2 { font-size: clamp(44px, 13vw, 64px); }
+}
+.nav a { white-space: nowrap; }
+@media (min-width: 1025px) and (max-width: 1520px) { .header__phone { display: none; } }
+@media (max-width: 760px) { .hero__media::after { background: linear-gradient(180deg, rgba(12, 36, 16, .5) 0%, rgba(12, 36, 16, .55) 35%, rgba(12, 36, 16, .92) 100%); } }
