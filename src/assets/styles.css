@@ -963,3 +963,70 @@ html:not(.js-intro) .intro { display: none; }
   .btn, .btn--lg { font-size: 15px; padding-left: 14px; padding-right: 14px; }
   .doc__cta { font-size: 14px; padding-left: 8px; padding-right: 8px; }
 }
+
+/* ---------- визуальная система 16.10: карточки с картинками одной серии, фото в круге, ровные колонки ---------- */
+/* «С чем вы к нам придёте»: сетка 4 × 2, у каждой карточки своя картинка; восьмая карточка — перезвон */
+.sit-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.sit, .sit:nth-child(n + 6) { grid-column: auto; min-height: 0; padding: 10px; gap: 0; justify-content: flex-start; }
+.sit::before { display: none; }
+.sit:hover { color: var(--text); }
+.sit:hover .sit__body p { color: var(--muted); }
+.sit__img { position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden; border-radius: calc(var(--radius) - 8px); background: var(--paper-2); }
+.sit__img img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
+.sit:hover .sit__img img { transform: scale(1.05); }
+.sit__body { padding: 20px 12px 0; gap: 10px; }
+.sit h3 { font-size: clamp(22px, 1.75vw, 28px); }
+.sit__body p { font-size: 15px; }
+.sit__foot { margin-top: auto; padding: 22px 12px 12px; flex-direction: column; align-items: flex-start; justify-content: flex-end; gap: 12px; }
+.sit--more { background: var(--ink); color: #fff; padding: clamp(22px, 2vw, 30px); }
+.sit--more:hover { color: #fff; }
+.sit--more .sit__body { padding: 0; }
+.sit--more h3 { font-size: clamp(26px, 2.2vw, 36px); }
+.sit--more .sit__body p, .sit--more:hover .sit__body p { color: var(--muted-on-dark); font-size: 16px; }
+.sit--more .sit__foot { padding: 22px 0 0; }
+
+/* «О клинике»: под заголовком фото в круглой маске, колонки уравновешены, без коллажа */
+.about__left { display: grid; gap: clamp(32px, 4vw, 60px); align-content: start; justify-items: start; }
+.about__circle { margin: 0; width: min(100%, 440px); aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--paper-2); }
+.about__circle img { width: 100%; height: 115%; object-fit: cover; }
+.js-anim .about__circle[data-clip] { clip-path: inset(18% 0 18% 0 round 50%); }
+
+/* «Сохранить / Восстановить»: две одинаковые карточки, верх и кнопки на одной линии */
+.fork { align-items: stretch; }
+.fork__col + .fork__col { margin-top: 0; }
+.fork__col { display: flex; flex-direction: column; align-items: flex-start; padding: clamp(24px, 3vw, 44px); border-radius: var(--radius); background: var(--white); }
+.fork__col .cta-box { margin-top: auto; padding-top: 30px; }
+.fork__img { margin: 0 0 clamp(22px, 2.4vw, 32px); width: 100%; aspect-ratio: 16 / 9; border-radius: calc(var(--radius) - 8px); overflow: hidden; background: var(--paper-2); }
+.fork__img img { width: 100%; height: 115%; object-fit: cover; }
+
+/* «Детям»: портрет детского врача в круге */
+.kids__doc { margin: 0; display: grid; justify-items: center; gap: 18px; align-self: center; }
+.kids__circle { display: block; width: min(100%, 460px); aspect-ratio: 1; border-radius: 50%; overflow: hidden; background: var(--sage-2); }
+.kids__circle img { width: 100%; height: 115%; object-fit: cover; object-position: 50% 12%; }
+.js-anim .kids__circle[data-clip] { clip-path: inset(18% 0 18% 0 round 50%); }
+.kids__doc figcaption { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.kids__doc figcaption a { font: 500 20px/1.2 var(--display); letter-spacing: -.01em; color: var(--text); text-decoration: none; }
+.kids__doc figcaption span { font-size: 14px; color: var(--muted); }
+
+@media (max-width: 1200px) {
+  .sit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 1024px) {
+  .about__circle { width: min(70%, 380px); }
+}
+@media (max-width: 760px) {
+  /* компактные карточки: картинка слева, текст справа, кнопка снизу на всю ширину */
+  .sit-grid { grid-template-columns: minmax(0, 1fr); }
+  .sit { display: grid; grid-template-columns: 112px minmax(0, 1fr); column-gap: 14px; padding: 10px; }
+  .sit__img { grid-row: 1; aspect-ratio: 1; border-radius: var(--radius-sm); }
+  .sit__body { grid-row: 1; padding: 4px 4px 0 0; gap: 6px; }
+  .sit h3 { font-size: 20px; }
+  .sit__body p { font-size: 14px; line-height: 1.45; }
+  .sit__foot { grid-column: 1 / -1; padding: 14px 2px 2px; }
+  .sit--more { display: flex; padding: 22px; }
+  .about__left { justify-items: center; }
+  .about__left .about__statement { justify-self: start; }
+  .about__circle { width: min(78%, 320px); }
+  .kids__circle { width: min(78%, 320px); }
+  .fork__col { padding: 22px; }
+}

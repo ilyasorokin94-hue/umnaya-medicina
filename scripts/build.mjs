@@ -326,12 +326,17 @@ function place() {
 // ---------- главная ----------
 function pageHome() {
   const depth = 0, p = "";
+  const { save, restore, allon, kids, quiz, rating } = home;
   const facts = (list, cls = "") => `<ul class="facts${cls}">${list.map((t) => `<li data-reveal>${esc(t)}</li>`).join("")}</ul>`;
-  const sit = ([t, d, price, btn, kind, reason, k, pic]) => `<article class="sit${pic ? " sit--img" : ""}" data-reveal>${pic ? `<span class="svc__bg" data-ph>${img([pic], t, depth)}</span>` : ""}
+  // карточка ситуации: своя картинка из одной серии, текст, цена и кнопка всегда на одной линии внизу
+  const sit = ([t, d, price, btn, kind, reason, k, pic]) => `<article class="sit" data-reveal>
+        <span class="sit__img" data-ph>${img(pic || [], t, depth)}</span>
         <a class="sit__link" href="uslugi/${k}.html" aria-label="${esc(svc[k].title)}"></a>
         <span class="sit__body"><h3>${esc(t)}</h3><p>${esc(d)}</p></span>
-        <span class="sit__foot"><b class="sit__price">${esc(price)}</b>${act(btn, kind, p, { cls: `btn--sm ${pic ? "btn--light" : ""}`, reason })}</span></article>`;
-  const { save, restore, allon, kids, quiz, rating } = home;
+        <span class="sit__foot"><b class="sit__price">${esc(price)}</b>${act(btn, kind, p, { cls: "btn--sm", reason })}</span></article>`;
+  const [moreT, moreD] = home.situationsMore.split(/\?\s+/);
+  const forkImgs = [save, restore].every((b) => pick(b.img || [], depth).src);
+  const kidsDoc = doctors.find((d) => d.id === kids.doctor);
   const star = icon.star;
   const sum = (n) => rub(n);
   const sys0 = allon.systems[0];
@@ -360,22 +365,23 @@ function pageHome() {
 
 <section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
   <div class="section__head"><div><span class="label">С чего начать</span><h2 id="sv-title" data-split>С чем вы к нам придёте</h2></div><a class="link" href="ceny.html">Все цены</a></div>
-  <div class="sit-grid">${home.situations.map(sit).join("")}</div>
-  <div class="strip" data-reveal><p>${esc(home.situationsMore)}</p>${act("Перезвоните мне", "call", p, { cls: "btn--ghost" })}</div>
+  <div class="sit-grid">${home.situations.map(sit).join("")}
+    <article class="sit sit--more on-dark" data-reveal><span class="sit__body"><h3>${esc(moreT)}?</h3><p>${esc(moreD)}</p></span><span class="sit__foot">${act("Перезвоните мне", "call", p, { cls: "btn--light btn--sm" })}</span></article>
+  </div>
   <div class="sit-more"><span class="label">Ещё направления</span>${svcRows(["diagnostika", "protezirovanie", "hirurgiya"], depth)}</div>
 </div></section>
 
 <section class="section" id="about" aria-labelledby="ab-title"><div class="wrap">
   <span class="label">О клинике</span>
   <div class="about__grid" style="margin-top:28px">
-    <h2 id="ab-title" class="about__statement">${esc(about.statement)}</h2>
+    <div class="about__left">
+      <h2 id="ab-title" class="about__statement">${esc(about.statement)}</h2>
+      <figure class="about__circle" data-ph data-clip data-parallax>${img(pics.aboutCircle, "Врачи стоматологии «Умная Медицина» за работой", depth)}</figure>
+    </div>
     <div class="about__text">${about.text.map((t) => `<p data-reveal>${esc(t)}</p>`).join("")}
       ${facts(about.facts)}
       ${ctaBox("", act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg" }), "", "Перезвоним за 5 минут.")}
     </div>
-  </div>
-  <div class="collage">
-    ${pics.about.map((e, i) => `<figure class="c${i + 1}" data-ph data-parallax data-speed="${[0.25, -0.12, 0.3, -0.2][i]}">${img(e, ["Лечебный кабинет", "3D-томограф Vatech", "Ресепшен стоматологии", "Вход в клинику на Громова, 10/2"][i], depth)}${ph()}</figure>`).join("")}
   </div>
 </div></section>
 
@@ -392,7 +398,8 @@ function pageHome() {
 </section>
 
 <section class="section" id="save" aria-label="Сохранить или восстановить"><div class="wrap fork">
-  ${[save, restore].map((b, i) => `<article class="fork__col"${i ? ' data-speed="-0.25"' : ""}>
+  ${[save, restore].map((b) => `<article class="fork__col">
+    ${forkImgs ? `<figure class="fork__img" data-ph data-clip data-parallax>${img(b.img, b.imgAlt, depth)}</figure>` : ""}
     <span class="label">${esc(b.label)}</span>
     <h2 data-split>${esc(b.title)}</h2>
     ${b.sub ? `<p class="fork__sub" data-reveal>${esc(b.sub)}</p>` : ""}
@@ -455,7 +462,10 @@ function pageHome() {
 </div></section>
 
 <section class="section" id="kids" aria-labelledby="kd-title"><div class="wrap split">
-  <div class="split__img" data-ph data-clip data-parallax>${img(kids.img, "Детская стоматология", depth)}${ph("Детям")}</div>
+  <figure class="kids__doc">
+    <a class="kids__circle" href="vrachi/${kidsDoc.id}.html" data-ph data-clip data-parallax>${img(docPhoto(kidsDoc), kidsDoc.name, depth)}</a>
+    <figcaption><a href="vrachi/${kidsDoc.id}.html">${esc(kidsDoc.short)}</a><span>${esc(kidsDoc.title)}</span></figcaption>
+  </figure>
   <div class="kids__text">
     <span class="label">Детям</span>
     <h2 id="kd-title" class="kids__title" data-split>${esc(kids.title)}</h2>
