@@ -232,7 +232,7 @@ function place() {
   return `<section class="section" id="contacts" aria-labelledby="ct-title"><div class="wrap">
   <div class="section__head"><div><span class="label">Мы здесь</span><h2 id="ct-title" data-split>Удобно добраться из Жуковского</h2></div><p>Стоматология на Громова, 10/2 в Удельной. По соседству, на Громова, 10, работает многопрофильная клиника «Умная Медицина».</p></div>
   <div class="place">
-    <div class="place__map" data-ph data-clip><iframe title="Карта: стоматология на Громова, 10/2" src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm" loading="lazy"></iframe>${ph("Карта")}</div>
+    <div class="place__map" data-ph data-clip><iframe title="Карта: стоматология на Громова, 10/2" src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm" loading="lazy"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button>${ph("Карта")}</div>
     <div class="place__info" data-reveal>
       <h3>Умная Медицина. Стоматология</h3>
       <dl class="place__list">
