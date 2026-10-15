@@ -125,7 +125,7 @@ function footer(depth) {
 <footer class="footer on-dark"><div class="wrap footer__in">
   <div class="footer__cta">
     <h2 data-split>${esc(home.final[0])}</h2>
-    <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn--lg" href="${p}zapis.html" data-magnet>${esc(home.final[1])}</a><button class="totop" type="button" data-totop aria-label="Наверх">${icon.arrow}</button></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn--lg" href="${p}zapis.html" data-magnet>${esc(home.final[1])}</a></div>
   </div>
   <div class="footer__grid">
     <div class="footer__col">
@@ -151,7 +151,7 @@ function footer(depth) {
       <a href="${clinic.vk}">ВКонтакте</a>
       <a href="https://um-med.com/assets/files/dogovor-oferta.pdf">Договор-оферта</a>
       <a href="https://um-med.com/assets/files/pol.pdf">Политика обработки данных</a>
-      <a href="${clinic.mainSite}">Многопрофильная клиника ↗</a>
+      <a href="${clinic.mainSite}">Многопрофильная клиника</a>
     </div>
   </div>
   <div class="footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div>
@@ -216,8 +216,7 @@ function svcCard(k, i, depth, kind = "") {
   const p = pre(depth);
   const bg = kind ? `<span class="svc__bg" data-ph>${img(pics.svc[k], s.title, depth)}${ph(s.title)}</span>` : "";
   return `<a class="svc${kind}" href="${p}uslugi/${k}.html" data-reveal>${bg}
-  <span class="svc__top"><span class="svc__arrow">${icon.arrow}</span></span>
-  <span><h3>${esc(s.title)}</h3>${kind.includes("wide") ? `<p class="svc__lead">${esc(s.lead)}</p>` : ""}</span>
+    <span><h3>${esc(s.title)}</h3>${kind.includes("wide") ? `<p class="svc__lead">${esc(s.lead)}</p>` : ""}</span>
   <span class="svc__meta"><span>${esc(s.short)}</span><span class="svc__from">${esc(s.from)}</span></span>
 </a>`;
 }
@@ -226,12 +225,12 @@ function svcRows(keys, depth, start = 0) {
   const p = pre(depth);
   return `<div class="svc-list">${keys.map((k, i) => {
     const s = svc[k];
-    return `<a class="svc-row" href="${p}uslugi/${k}.html" data-reveal><h3>${esc(s.title)}</h3><span class="svc__from">${esc(s.from)}</span><span class="svc__arrow">${icon.arrow}</span></a>`;
+    return `<a class="svc-row" href="${p}uslugi/${k}.html" data-reveal><h3>${esc(s.title)}</h3><span class="svc__from">${esc(s.from)}</span></a>`;
   }).join("")}</div>`;
 }
 
 function marquee(text) {
-  const item = `<span class="marquee__item">${text}<span class="marquee__dot"></span></span>`;
+  const item = `<span class="marquee__item">${text}</span>`;
   return `<div class="marquee" aria-hidden="true"><div class="marquee__track">${item.repeat(4)}</div></div>`;
 }
 
@@ -261,8 +260,7 @@ function pageHome() {
   const slides = pics.slides.map((e, i) => img(e, "Стоматология «Умная Медицина»", depth, i === 0 ? ' class="is-on"' : "")).join("");
   const facts = (list) => `<ul class="facts">${list.map((t) => `<li data-reveal>${esc(t)}</li>`).join("")}</ul>`;
   const sit = ([t, d, k, pic], i) => `<a class="sit${pic ? " sit--img" : ""}" href="uslugi/${k}.html" data-reveal>${pic ? `<span class="svc__bg" data-ph>${img([pic], t, depth)}</span>` : ""}
-    <span class="svc__top"><span class="svc__arrow">${icon.arrow}</span></span>
-    <span class="sit__body"><h3>${esc(t)}</h3><p>${esc(d)}</p></span>
+        <span class="sit__body"><h3>${esc(t)}</h3><p>${esc(d)}</p></span>
     <span class="sit__svc">${esc(svc[k].title)}</span></a>`;
   const { save, restore, allon, kids } = home;
   const qcols = [[0, 3], ["rating", 1], [2, 4]];
@@ -280,11 +278,10 @@ function pageHome() {
       <div class="hero__actions"><a class="btn btn--lg" href="zapis.html" data-magnet>Записаться на консультацию</a><a class="btn btn--ghost btn--lg" href="#pricing">Цены</a></div>
     </div>
   </div>
-  <span class="hero__scroll" aria-hidden="true"></span>
 </section>
 
 <section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">С чего начать</span><h2 id="sv-title" data-split>С чем вы к нам придёте</h2></div><a class="link" href="ceny.html">Все цены ${icon.arrow}</a></div>
+  <div class="section__head"><div><span class="label">С чего начать</span><h2 id="sv-title" data-split>С чем вы к нам придёте</h2></div><a class="link" href="ceny.html">Все цены</a></div>
   <div class="sit-grid">${home.situations.map(sit).join("")}</div>
   <div class="sit-more"><span class="label">Ещё направления</span>${svcRows(["diagnostika", "protezirovanie", "hirurgiya"], depth, 7)}</div>
 </div></section>
@@ -293,11 +290,10 @@ function pageHome() {
   <span class="label">О клинике</span>
   <div class="about__grid" style="margin-top:28px">
     <h2 id="ab-title" class="about__statement">${esc(about.statement)}</h2>
-    <div class="about__text">${about.text.map((t) => `<p data-reveal>${esc(t)}</p>`).join("")}<p class="about__sign" data-reveal><i></i>${esc(about.sign)}</p></div>
+    <div class="about__text">${about.text.map((t) => `<p data-reveal>${esc(t)}</p>`).join("")}</div>
   </div>
   <div class="collage">
-    ${pics.about.map((e, i) => `<figure class="c${i + 1}" data-ph data-parallax data-speed="${[0.3, -0.15, 0.1, -0.3, 0.2, -0.1, 0.35][i]}">${img(e, "Стоматология «Умная Медицина»", depth)}${ph()}</figure>`).join("")}
-    <div class="collage__badge" data-speed="-0.4"><svg viewBox="0 0 100 100" aria-hidden="true"><defs><path id="circ" d="M50 50m-41 0a41 41 0 1 1 82 0a41 41 0 1 1-82 0"/></defs><text><textPath href="#circ">ПроДокторов · 199 отзывов · рейтинг ·</textPath></text></svg><span><b>4,9</b>из 5</span></div>
+    ${pics.about.map((e, i) => `<figure class="c${i + 1}" data-ph data-parallax data-speed="${[0.25, -0.12, 0.3, -0.2][i]}">${img(e, "Стоматология «Умная Медицина»", depth)}${ph()}</figure>`).join("")}
   </div>
 </div></section>
 
@@ -306,22 +302,21 @@ function pageHome() {
   <div class="feat">
     <div class="feat__pin"><div class="feat__track">
       <div class="fcard fcard--intro"><span class="label">Как это устроено</span><h2 id="ft-title" data-split>Что будет после того, как вы позвоните</h2><p>Шесть правил, по которым мы работаем с каждым пациентом.</p></div>
-      ${features.map(([t, d], i) => `<article class="fcard"><div class="fcard__img" data-ph>${img(pics.feat[i], t, depth)}${ph(t)}</div><div class="fcard__body"><h3>${esc(t)}</h3><p>${esc(d)}</p></div></article>`).join("")}
-    </div><div class="feat__progress" aria-hidden="true"><i></i></div></div>
+      ${features.map(([t, d], i) => `<article class="fcard"><div class="fcard__body"><h3>${esc(t)}</h3><p>${esc(d)}</p></div></article>`).join("")}
+    </div></div>
   </div>
-  ${marquee("Сначала думаем — <em>потом лечим</em>")}
+  ${marquee("Сначала думаем, <em>потом лечим</em>")}
   <div class="wrap cta-strip"><p>Консультация с планом и ценой бесплатная. План можно забрать домой и подумать.</p><a class="btn btn--light btn--lg" href="zapis.html" data-magnet>Записаться на консультацию</a></div>
 </section>
 
 <section class="section" id="save" aria-label="Сохранить или восстановить"><div class="wrap fork">
   ${[save, restore].map((b, i) => `<article class="fork__col"${i ? ' data-speed="-0.25"' : ""}>
-    <figure class="fork__img" data-ph data-clip data-parallax>${img(b.img, b.title, depth)}${ph(b.label)}</figure>
     <span class="label">${esc(b.label)}</span>
     <h2 data-split>${esc(b.title)}</h2>
     <p class="sr__text" data-reveal>${esc(b.text)}</p>
     ${facts(b.facts)}
     ${b.quote ? `<blockquote class="sr__quote" data-reveal>«${esc(b.quote)}»<cite>из отзыва пациента</cite></blockquote>` : ""}
-    <a class="link" href="uslugi/${b.link[1]}.html" data-reveal>${esc(b.link[0])} ${icon.arrow}</a>
+    <a class="link" href="uslugi/${b.link[1]}.html" data-reveal>${esc(b.link[0])}</a>
   </article>`).join("")}
 </div></section>
 
@@ -335,7 +330,7 @@ function pageHome() {
       <ul>${allon.calc.map(([t, v]) => `<li><span>${esc(t)}</span><b>${esc(v)}</b></li>`).join("")}</ul>
       <div class="allon__total"><span>Весь путь</span><b>от <i data-count="${allon.total}">${allon.total}</i> ₽</b></div>
     </div>
-    <a class="btn btn--light btn--lg" href="uslugi/all-on-4.html" data-reveal>Подробнее об All-on-4 ${icon.arrow}</a>
+    <a class="btn btn--light btn--lg" href="uslugi/all-on-4.html" data-reveal>Подробнее об All-on-4</a>
   </div>
   <figure class="allon__img" data-ph data-clip data-parallax>${img(allon.img, "All-on-4", depth)}${ph("All-on-4")}</figure>
 </div></section>
@@ -349,7 +344,7 @@ function pageHome() {
     ${facts(kids.facts)}
     <blockquote class="sr__quote" data-reveal>«${esc(kids.quote[0])}»<cite>${esc(kids.quote[1])}</cite></blockquote>
     <p class="kids__detail" data-reveal>${esc(kids.detail)}</p>
-    <a class="btn btn--lg" href="uslugi/detskaya.html" data-reveal>Детская стоматология ${icon.arrow}</a>
+    <a class="btn btn--lg" href="uslugi/detskaya.html" data-reveal>Детская стоматология</a>
   </div>
 </div></section>
 
@@ -359,15 +354,15 @@ function pageHome() {
     ${[["", "Все"], ["lechenie-zubov", "Терапия"], ["implantaciya", "Хирургия и имплантация"], ["protezirovanie", "Ортопедия"], ["ortodontiya", "Ортодонтия"], ["detskaya", "Детям"]].map(([v, t], i) => `<button class="chip" type="button" role="tab" data-tab="${v}" aria-selected="${i === 0}">${t}</button>`).join("")}
   </div>
   <div class="team__grid">${doctors.map((d) => doctorCard(d, depth)).join("")}</div>
-  <div class="team__join" data-reveal><h3>Хотите в команду «Умной Медицины»?</h3><a class="btn btn--ghost" href="https://um-med.com/vacancies.html">Актуальные вакансии ${icon.arrow}</a></div>
+  <div class="team__join" data-reveal><h3>Хотите в команду «Умной Медицины»?</h3><a class="btn btn--ghost" href="https://um-med.com/vacancies.html">Актуальные вакансии</a></div>
 </div></section>
 
-<section class="section section--sage" id="reviews" aria-labelledby="rv-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Отзывы</span><h2 id="rv-title" data-split>Что пишут пациенты</h2></div><p>Цитаты из отзывов на ПроДокторов и в 2ГИС, без правок и без имён.</p></div>
-  <div class="quotes">${qcols.map((col, c) => `<div class="quotes__col"${c === 1 ? ' data-speed="-0.2"' : c === 2 ? ' data-speed="0.12"' : ""}>${col.map((q) => q === "rating"
-      ? `<a class="quote quote--rating" href="${home.reviewsUrl}" data-reveal><b data-count="4,9">4,9</b><span>рейтинг на ПроДокторов</span><span class="link">Все 199 отзывов ${icon.arrow}</span></a>`
-      : `<figure class="quote" data-reveal><blockquote>«${esc(home.reviews[q])}»</blockquote><figcaption>из отзыва пациента</figcaption></figure>`).join("")}</div>`).join("")}</div>
-</div></section>
+<section class="section section--sage reviews" id="reviews" aria-labelledby="rv-title">
+  <div class="wrap section__head"><div><span class="label">Отзывы</span><h2 id="rv-title" data-split>Что пишут пациенты</h2></div><p>Цитаты из отзывов на ПроДокторов и в 2ГИС, без правок и без имён. На ПроДокторов у клиники 4,9 из 5 по 199 отзывам. <a class="link" href="${home.reviewsUrl}">Читать все отзывы</a></p></div>
+  <div class="rv__rows">
+    ${[home.reviews.slice(0, 8), home.reviews.slice(8)].map((row, r) => `<div class="rv__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map((q, j) => `<figure class="rv${q.length > 110 ? " rv--long" : q.length < 60 ? " rv--short" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><blockquote>«${esc(q)}»</blockquote></figure>`).join("")}</div>`).join("")}
+  </div>
+</section>
 
 <section class="tour on-dark" id="clinic" aria-labelledby="tr-title">
   <div class="tour__pin">
@@ -396,7 +391,7 @@ function pageHome() {
     <div>
       <div class="ptabs" role="tablist" data-tabs="price">${priceTabs.map(([t], i) => `<button class="chip" type="button" role="tab" data-tab="p${i}" aria-selected="${i === 0}">${esc(t)}</button>`).join("")}</div>
       ${priceTabs.map(([t, keys], i) => `<div class="ppanel" data-panel="price" data-key="p${i}"${i ? " hidden" : ""}>${plist(keys, 9)}</div>`).join("")}
-      <div class="pricing__foot"><span class="note">Цены зависят от сложности случая.</span><a class="link" href="ceny.html">Весь прайс ${icon.arrow}</a></div>
+      <div class="pricing__foot"><span class="note">Цены зависят от сложности случая.</span><a class="link" href="ceny.html">Весь прайс</a></div>
     </div>
   </div>
 </div></section>
@@ -451,7 +446,7 @@ function pageService(s) {
 </div></section>
 
 <section class="section section--sage" id="prices"><div class="wrap">
-  <div class="section__head"><div><span class="label">Цены</span><h2 data-split>Стоимость</h2></div><a class="link" href="../ceny.html">Весь прайс ${icon.arrow}</a></div>
+  <div class="section__head"><div><span class="label">Цены</span><h2 data-split>Стоимость</h2></div><a class="link" href="../ceny.html">Весь прайс</a></div>
   <div class="ptables">${s.prices.map((k) => `<div class="ptable" data-reveal><h3>${esc(prices[k].title)}</h3>${plist([k])}</div>`).join("")}</div>
   <p class="note" style="margin-top:24px">Цены на 15.10.2026. Точную стоимость врач называет после осмотра.</p>
 </div></section>
@@ -580,7 +575,7 @@ function pageBooking() {
         <span class="label">Онлайн-запись</span>
         <h1 tabindex="-1">Записаться на приём</h1>
         <p>Выберите услугу, врача и удобное время, а администратор подтвердит запись. Консультация с планом лечения бесплатная.</p>
-        <button class="btn btn--lg" type="button" data-start data-magnet>Перейти к записи ${icon.arrow}</button>
+        <button class="btn btn--lg" type="button" data-start data-magnet>Перейти к записи</button>
       </section>
       <section class="bstep" data-step="1" hidden>
         <div class="bsteps" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
@@ -599,7 +594,7 @@ function pageBooking() {
         <div class="days" id="b-days"></div>
         <div class="slots" id="b-slots"></div>
         <p class="note" style="margin-top:14px">Пример расписания. В рабочей версии здесь живые окна врачей из МИС клиники.</p>
-        <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn btn--sm" type="button" data-next-time disabled>Дальше ${icon.arrow}</button></div>
+        <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn btn--sm" type="button" data-next-time disabled>Дальше</button></div>
       </section>
       <section class="bstep" data-step="4" hidden>
         <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span></div>
