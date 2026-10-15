@@ -577,7 +577,7 @@ function pageService(s) {
   <div>
     <span class="label">О лечении</span>
     <div class="prose" style="margin-top:24px">${body.map((t) => `<p data-reveal>${esc(t)}</p>`).join("")}</div>
-    <div class="points" style="grid-template-columns:repeat(2,1fr);margin-top:40px">${s.points.map((t, j) => `<div class="point" data-reveal><p>${esc(t)}</p></div>`).join("")}</div>
+    <div class="points points--two">${s.points.map((t, j) => `<div class="point" data-reveal><p>${esc(t)}</p></div>`).join("")}</div>
   </div>
 </div></section>
 
