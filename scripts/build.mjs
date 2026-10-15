@@ -342,10 +342,20 @@ function pageHome() {
   <div style="margin-top:clamp(30px,4vw,56px)">${svcRows(homeOrder.slice(5), depth, 5)}</div>
 </div></section>
 
+<section class="tour on-dark" id="clinic" aria-labelledby="tr-title">
+  <div class="tour__pin">
+    <div class="tour__frame">${img(["images/clinic/2gis-04.jpg"], "Лечебный кабинет стоматологии «Умная Медицина»", depth)}</div>
+    <div class="tour__title wrap"><span class="label label--light">Клиника изнутри</span><h2 id="tr-title" data-split>Здесь вас ждут</h2><p>Лечебные кабинеты, 3D-томограф Vatech, панорамный рентген и стерилизационная. Фото из карточек клиники в 2ГИС и Яндекс Картах.</p></div>
+  </div>
+  <div class="tour__rows" aria-label="Фото клиники">
+    ${[pics.tour.slice(0, 6), pics.tour.slice(5)].map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap], j) => `<figure${j >= row.length ? ' aria-hidden="true"' : ""}>${img([`images/clinic/${f}.jpg`], cap, depth)}<figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
+  </div>
+</section>
+
 <section class="section" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">Команда</span><h2 id="tm-title" data-split>За каждой улыбкой стоит команда</h2></div></div>
   <div class="team__intro">
-    <div class="team__photo" data-ph data-clip data-parallax>${img(pics.team, "Команда стоматологии «Умная Медицина»", depth)}${ph()}</div>
+    <div class="team__photo" data-ph data-clip data-parallax>${img(pics.team, "Кабинет стоматологии «Умная Медицина»", depth)}${ph()}</div>
     <div data-reveal><p class="team__lead">Мы верим, что улыбка — это не только эстетика, но и здоровье, и уверенность в себе.</p><p>Семь врачей: терапевты и эндодонтисты, хирурги-имплантологи, ортопеды, ортодонт и детский стоматолог. Стаж и рейтинги взяты с ПроДокторов.</p></div>
   </div>
   <div class="chips team__tabs" role="tablist" data-tabs="team">

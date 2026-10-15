@@ -318,6 +318,21 @@
     });
   });
 
+  // клиника изнутри: кадр раскрывается из карточки на весь экран
+  const tour = $(".tour__pin");
+  if (tour) {
+    const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
+    const tl = G.timeline({ scrollTrigger: { trigger: tour, start: "top top", end: "+=120%", pin: true, scrub: 1, anticipatePin: 1 } });
+    tl.fromTo(frame, { clipPath: "inset(18% 24% 18% 24% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "none" }, 0)
+      .fromTo(fim, { scale: 1.3 }, { scale: 1, ease: "none" }, 0)
+      .fromTo(tt, { opacity: 0, y: 60 }, { opacity: 1, y: 0, ease: "power1.out", duration: 0.4 }, 0.6);
+  }
+  // ленты фото едут навстречу друг другу
+  $$(".tour__row").forEach((row) => {
+    const d = parseFloat(row.dataset.dir) || -1;
+    G.fromTo(row, { x: () => (d < 0 ? 0 : -innerWidth * 0.25) }, { x: () => (d < 0 ? -innerWidth * 0.25 : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
+  });
+
   // бегущая строка реагирует на скорость и направление прокрутки
   $$(".marquee__track").forEach((tr) => {
     const loop = G.to(tr, { xPercent: -50, duration: 28, ease: "none", repeat: -1 });

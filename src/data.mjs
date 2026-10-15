@@ -395,24 +395,30 @@ export const pdPhotos = {
   h: pd(721463), i: pd(721465), j: pd(721466), k: pd(883065), l: pd(883070), m: pd(883072), n: pd(883073), o: pd(883074), p: pd(883075),
 };
 
-// Слоты картинок: [локальный файл (если сгенерирован), запасной вариант с сайта/ПроДокторов]
-const G = (name) => `images/gen/${name}.jpg`;
+// Слоты картинок: [фото клиники из 2ГИС/Яндекс Карт (src/images/clinic), запасной вариант с ПроДокторов/um-med.com]
+const C = (name) => `images/clinic/${name}.jpg`;
 export const pics = {
-  hero: [G("hero"), clinicPhoto],
-  foil: [G("foil"), null],
+  hero: [C("yandex-02"), clinicPhoto],
+  foil: [C("2gis-03"), null],
   about: [
-    [G("about-01"), ...pdPhotos.a], [G("about-02"), ...pdPhotos.b], [G("about-03"), ...pdPhotos.waiting],
-    [G("about-04"), ...pdPhotos.c], [G("about-05"), ...pdPhotos.d], [G("about-06"), ...pdPhotos.e], [null, ...pdPhotos.entrance2],
+    [C("2gis-01"), ...pdPhotos.a], [C("2gis-07"), ...pdPhotos.b], [C("yandex-14"), ...pdPhotos.waiting],
+    [C("2gis-09"), ...pdPhotos.c], [C("2gis-12"), ...pdPhotos.d], [C("2gis-06"), ...pdPhotos.e], [C("yandex-06"), ...pdPhotos.entrance2],
   ],
-  slides: [pdPhotos.facade, pdPhotos.entrance, pdPhotos.waiting, pdPhotos.entrance2],
-  feat: [1, 2, 3, 4, 5, 6].map((n, i) => [G(`feat-0${n}`), gallery[i + 1]]),
-  team: [null, gallery[0]],
+  slides: [[C("2gis-02"), ...pdPhotos.facade], [C("yandex-07"), ...pdPhotos.entrance], [C("2gis-05"), ...pdPhotos.waiting], [C("2gis-03"), ...pdPhotos.entrance2]],
+  feat: [C("2gis-06"), C("2gis-07"), C("2gis-01"), C("2gis-08"), C("yandex-08"), C("2gis-02")].map((c, i) => [c, gallery[i + 1]]),
+  team: [C("2gis-02"), gallery[0]],
   svc: {
-    diagnostika: [G("svc-01"), ...pdPhotos.f], gigiena: [G("svc-02"), ...pdPhotos.g], "lechenie-zubov": [G("svc-03"), ...pdPhotos.h],
-    implantaciya: [G("svc-04"), ...pdPhotos.i], "all-on-4": [G("svc-05"), ...pdPhotos.j], mikroskop: [G("svc-06"), ...pdPhotos.k],
-    protezirovanie: [G("svc-07"), ...pdPhotos.l], hirurgiya: [G("svc-08"), ...pdPhotos.m], ortodontiya: [G("svc-09"), ...pdPhotos.n],
-    detskaya: [G("svc-10"), ...pdPhotos.o],
+    diagnostika: [C("2gis-09"), ...pdPhotos.f], gigiena: [C("2gis-05"), ...pdPhotos.g], "lechenie-zubov": [C("2gis-07"), ...pdPhotos.h],
+    implantaciya: [C("2gis-04"), ...pdPhotos.i], "all-on-4": [C("yandex-04"), ...pdPhotos.j], mikroskop: [C("2gis-06"), ...pdPhotos.k],
+    protezirovanie: [C("yandex-02"), ...pdPhotos.l], hirurgiya: [C("2gis-11"), ...pdPhotos.m], ortodontiya: [C("2gis-01"), ...pdPhotos.n],
+    detskaya: [C("yandex-13"), ...pdPhotos.o],
   },
+  // Галерея «Клиника изнутри»: [файл, подпись]
+  tour: [
+    ["2gis-15", "Стоматология на Громова, 10/2"], ["2gis-02", "Ресепшен"], ["2gis-04", "Лечебный кабинет"], ["2gis-09", "3D-томограф Vatech"],
+    ["2gis-07", "Кабинет терапии"], ["2gis-08", "Панорамный рентген"], ["2gis-11", "Стерилизационная"], ["yandex-11", "Коридор"],
+    ["2gis-05", "Кабинет"], ["yandex-04", "3D-сканирование"], ["yandex-07", "Вход"],
+  ],
 };
 
 // Порядок услуг на главной (номера 01–10, как у Lava)
