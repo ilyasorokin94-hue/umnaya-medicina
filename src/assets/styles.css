@@ -98,6 +98,7 @@ html:not(.js-intro) .intro { display: none; }
 /* в шапке логотип в <picture>: на телефоне светлая надпись; сама обёртка в раскладке не участвует */
 .logo picture { display: contents; }
 .logo source { display: none; }
+.menu .logo__unit { display: none; }
 
 /* ---------- шапка ---------- */
 .header { position: fixed; z-index: 100; left: 0; right: 0; top: var(--hdr-top, 0px); padding-top: 14px; }
@@ -1674,10 +1675,23 @@ html:not(.js-intro) .intro { display: none; }
    под шапкой всё размыто, как под матовым стеклом; логотип и бургер светлые, бургер без круга */
 @media (max-width: 760px) {
   .header { padding-top: 0; color: #fff; }
-  .header__bar, .header.is-scrolled .header__bar { width: 100%; height: calc(var(--header-h) + 22px); padding: 0 calc(var(--gutter) - 9px) 8px var(--gutter); border-radius: 0; background: linear-gradient(180deg, rgba(12, 36, 16, .86), rgba(12, 36, 16, .56) 48%, rgba(12, 36, 16, 0)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: none; }
+  .header__bar, .header.is-scrolled .header__bar { width: 100%; height: calc(var(--header-h) + 22px); padding: 0 calc(var(--gutter) - 9px) 8px var(--gutter); border-radius: 0; background: linear-gradient(180deg, rgba(12, 36, 16, .88), rgba(12, 36, 16, .66) 60%, rgba(12, 36, 16, 0)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: none; }
+  .header .logo__unit, .menu .logo__unit { display: block; opacity: .92; text-shadow: 0 1px 3px rgba(12, 36, 16, .6); }
   .burger { position: relative; width: 44px; height: 44px; background: none; }
   .burger svg { display: none; }
   .burger::before, .burger::after { content: ""; position: absolute; left: 9px; right: 9px; height: 1.5px; border-radius: 1px; background: currentColor; }
   .burger::before { top: 17px; }
   .burger::after { bottom: 17px; }
+  /* меню открывается, а логотип и кнопка стоят там же, где были в шапке, как у Лава Дент */
+  .menu { padding-top: calc(var(--hdr-top, 0px) + 14px); }
+  .menu__top { height: 44px; }
+  .menu__close { width: 44px; height: 44px; margin-right: -9px; border: 0; border-radius: 0; }
+  .menu__close svg { width: 26px; height: 26px; }
+}
+@media (max-width: 760px) and (forced-colors: none) {
+  .menu .logo--white .logo__img { filter: none; }
+}
+/* в режиме высокой контрастности фон псевдоэлементов убирается, линии бургера рисуем системным цветом */
+@media (max-width: 760px) and (forced-colors: active) {
+  .burger::before, .burger::after { forced-color-adjust: none; background: ButtonText; }
 }

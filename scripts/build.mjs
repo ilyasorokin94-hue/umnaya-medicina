@@ -45,6 +45,9 @@ const logoImg = (depth, eager = true) => {
   return `<img class="logo__img" src="${src}"${fb ? ` data-fb="${fb}"` : ""} alt=""${eager ? "" : ' loading="lazy"'} referrerpolicy="no-referrer" onerror="umLogo(this)">`;
 };
 
+// в шапке и меню телефона светлая надпись логотипа (шапка там тёмная и полупрозрачная, как у Лава Дент)
+const phoneLogo = (depth, eager = true) => `<picture><source media="(max-width: 760px) and (forced-colors: none)" srcset="${pre(depth)}images/brand/header-logo-light.svg">${logoImg(depth, eager)}</picture>`;
+
 // ---------- иконки ----------
 const icon = {
   phone: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>',
@@ -122,7 +125,7 @@ function header(depth, home = false) {
   const items = menuItems(p, href);
   return `
 <header class="header"><div class="header__bar">
-  <a class="logo" href="${p}index.html" aria-label="Умная Медицина. Стоматология, на главную"><picture><source media="(max-width: 760px)" srcset="${p}images/brand/header-logo-light.svg">${logoImg(depth)}</picture><span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
+  <a class="logo" href="${p}index.html" aria-label="Умная Медицина. Стоматология, на главную">${phoneLogo(depth)}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
   <nav class="nav" aria-label="Разделы">
     <div class="nav__drop"><a href="${href("services")}">Услуги</a><div class="nav__panel">${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html"><span>${esc(svc[k].menu)}</span><small>${esc(svc[k].from)}</small></a>`).join("")}</div></div>
     ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}
@@ -134,7 +137,7 @@ function header(depth, home = false) {
   </div>
 </div></header>
 <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Меню" data-lenis-prevent>
-  <div class="menu__top"><a class="logo logo--white" href="${p}index.html">${logoImg(depth, false)}<span class="logo__text">Умная Медицина<small>стоматология</small></span></a><button class="menu__close" type="button" aria-label="Закрыть меню">${icon.close}</button></div>
+  <div class="menu__top"><a class="logo logo--white" href="${p}index.html">${phoneLogo(depth, false)}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a><button class="menu__close" type="button" aria-label="Закрыть меню">${icon.close}</button></div>
   <nav aria-label="Разделы">
     <details class="menu__svc"><summary>Услуги</summary><div class="menu__list">${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html">${esc(svc[k].menu)}</a>`).join("")}</div></details>
     ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}
