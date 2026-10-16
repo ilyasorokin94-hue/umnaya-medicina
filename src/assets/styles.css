@@ -1225,6 +1225,11 @@ html:not(.js-intro) .intro { display: none; }
   .fcard__big { font-size: 54px; }
   .fcard h3 { font-size: 26px; }
   .fcard p { font-size: 16px; }
+  /* путь: карточки по очереди тёмно-зелёная и светлая; механика стопки та же */
+  .feat__track > .fcard:nth-child(odd):not(.fcard--intro) { background: linear-gradient(165deg, #f7f6f0, #dfe8dc); border-color: rgba(12, 36, 16, .1); color: var(--ink); }
+  .feat__track > .fcard:nth-child(odd):not(.fcard--intro) .fcard__big { color: var(--green-deep); }
+  .feat__track > .fcard:nth-child(odd):not(.fcard--intro) h3 { color: var(--ink); }
+  .feat__track > .fcard:nth-child(odd):not(.fcard--intro) p { color: var(--muted); }
   .cta-strip { padding-top: 40px; }
 
   /* врачи: лента начинается с отступом, врач в фокусе крупнее, соседи тише */
