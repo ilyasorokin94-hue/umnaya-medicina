@@ -1743,7 +1743,7 @@ html:not(.js-intro) .intro { display: none; }
 /* меню телефона как у Лава Дент (Ilya 16.10): шалфейный фон #779e91 проявляется целиком за .5s,
    логотип и кнопка стоят на месте шапки; бургер сразу становится крестиком, а цвет плавно темнеет;
    разделы крупным гротеском (Inter Tight ближе всех к их PP Neue Montreal по ширине и весу), светлые наполовину, текущий раздел тёмный с точкой; языков и телефона внизу нет (Ilya убрал телефон) */
-.mnav { display: none; }
+.menu .mnav { display: none; }
 @media (max-width: 760px) {
   .menu {
     --mn-ease: cubic-bezier(.1, .75, .25, 1);
@@ -1755,7 +1755,9 @@ html:not(.js-intro) .intro { display: none; }
     padding-bottom: 0;
   }
   .menu.is-open { background: #779e91; color: var(--mn-ink); }
-  .menu, .menu.is-open { clip-path: none; transition: background-color .5s var(--mn-ease), color .5s var(--mn-ease-c), visibility .5s var(--mn-ease); }
+  /* открывается сразу (иначе первый кадр пустой и фокус не попадает на крестик), гаснет за .5s и не ловит касания */
+  .menu { clip-path: none; pointer-events: none; transition: background-color .5s var(--mn-ease), color .5s var(--mn-ease-c), visibility .5s var(--mn-ease); }
+  .menu.is-open { clip-path: none; pointer-events: auto; transition: background-color .5s var(--mn-ease), color .5s var(--mn-ease-c), visibility 0s; }
   .menu > nav:not(.mnav), .menu__foot { display: none; }
   .menu .logo { color: var(--mn-ink); opacity: 0; transition: opacity .5s var(--mn-ease-c); }
   .menu.is-open .logo { opacity: 1; }
@@ -1781,6 +1783,7 @@ html:not(.js-intro) .intro { display: none; }
 }
 @media (max-width: 760px) and (forced-colors: active) {
   .menu__close::before, .menu__close::after { forced-color-adjust: none; background: ButtonText; }
+  .mnav__link.is-current::before { forced-color-adjust: none; background: CanvasText; }
 }
 
 /* тур на телефоне как вторая секция Лава Дент (Ilya 16.10, их .about-process-carousel и .about-process-gallery):

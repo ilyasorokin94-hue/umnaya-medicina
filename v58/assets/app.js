@@ -79,6 +79,7 @@
     const r = burger.getBoundingClientRect();
     menu.style.setProperty("--mo", `${r.left + r.width / 2}px ${r.top + r.height / 2}px`);
     markMenu();
+    menu.scrollTop = 0;
     menu.classList.add("is-open");
     root.classList.add("menu-open");
     if (anim && !phoneMQ.matches) G.fromTo($$(".menu nav > a, .menu__svc > summary, .menu__foot > *", menu), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.05, delay: 0.15, ease: "expo.out", overwrite: true });
