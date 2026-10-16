@@ -441,7 +441,7 @@ function pageHome() {
 </div>
 
 <section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><p>${esc(D.services.text)}</p><a class="link" href="ceny.html">Весь прайс</a></div></div>
+  <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><a class="link" href="ceny.html">Весь прайс</a></div></div>
   <div class="ptabs dirs__tabs" role="tablist" aria-label="Направления" data-tabs="dir">${D.dirs.map((d, i) => `<button class="chip" type="button" role="tab" data-tab="d${i}" aria-selected="${i === 0}">${esc(d.tab)}</button>`).join("")}</div>
   ${D.dirs.map((d, i) => `<div class="dir" data-panel="dir" data-key="d${i}"${i ? " hidden" : ""}>
     <aside class="offer dir__card">
