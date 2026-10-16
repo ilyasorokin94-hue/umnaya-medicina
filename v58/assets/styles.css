@@ -1742,7 +1742,7 @@ html:not(.js-intro) .intro { display: none; }
 
 /* меню телефона как у Лава Дент (Ilya 16.10): шалфейный фон #779e91 проявляется целиком за .5s,
    логотип и кнопка стоят на месте шапки; бургер сразу становится крестиком, а цвет плавно темнеет;
-   разделы крупным гротеском (Inter Tight ближе всех к их PP Neue Montreal по ширине и весу), светлые наполовину, текущий раздел тёмный с точкой; внизу телефон вместо языков */
+   разделы крупным гротеском (Inter Tight ближе всех к их PP Neue Montreal по ширине и весу), светлые наполовину, текущий раздел тёмный с точкой; языков и телефона внизу нет (Ilya убрал телефон) */
 .mnav { display: none; }
 @media (max-width: 760px) {
   .menu {
@@ -1775,9 +1775,8 @@ html:not(.js-intro) .intro { display: none; }
   .menu .mnav { display: block; margin: 0 calc(-1 * var(--gutter)); padding: calc(clamp(128px, 116.364px + 3.2323vw, 160px) - 58px) var(--mn-pad) clamp(64px, 58.182px + 1.6162vw, 80px) calc(var(--mn-pad) + clamp(32px, 29.091px + .8081vw, 40px)); opacity: 0; transition: opacity .5s var(--mn-ease); }
   .menu.is-open .mnav { opacity: 1; }
   .mnav__list { display: flex; flex-direction: column; gap: clamp(24px, 18.182px + 1.6162vw, 40px); margin: 0; padding: 0; list-style: none; }
-  .mnav__row { display: flex; gap: clamp(24px, 18.182px + 1.6162vw, 40px); margin: clamp(48px, 36.364px + 3.2323vw, 80px) 0 0; }
   .menu .mnav .mnav__link { display: inline-block; position: relative; font: 450 clamp(31.25px, 25.387px + 1.6285vw, 47.371px)/1.4 "Inter Tight", var(--body); letter-spacing: 0; color: rgba(3, 28, 20, .5); text-decoration: none; white-space: nowrap; transition: color .5s var(--mn-ease); }
-  .menu .mnav .mnav__link:hover, .menu .mnav .mnav__link.is-current, .menu .mnav .mnav__link--on { color: var(--mn-ink); }
+  .menu .mnav .mnav__link:hover, .menu .mnav .mnav__link.is-current { color: var(--mn-ink); }
   .mnav__link.is-current::before { content: ""; position: absolute; top: 50%; left: calc(-1 * var(--mn-pad)); width: clamp(8px, 7.273px + .202vw, 10px); aspect-ratio: 1; border-radius: 50%; background: currentColor; transform: translateY(-50%); }
 }
 @media (max-width: 760px) and (forced-colors: active) {
