@@ -69,7 +69,7 @@ function frames(phone, changed) {
 }
 
 // слои одной картинки: {fw, fh, items: [{src, x, y, w, h, da, from, to, clip: [y0, y1]}]}
-// x, y: положение в разобранном виде; da: сдвиг вниз до собранного положения; from/to: когда слой едет (доли t)
+// x, y: положение в разобранном виде; da, dxa: сдвиг вниз и вбок до собранного положения; from/to: когда слой едет (доли t)
 function layers(spec, changed) {
   const S = JSON.parse(spec);
   const imgs = [];
@@ -84,14 +84,15 @@ function layers(spec, changed) {
       const k = Math.min(W / S.fw, H / S.fh);
       const ox = (W - S.fw * k) / 2, oy = (H - S.fh * k) / 2;
       S.items.forEach((it, n) => {
-        const y = it.y + (it.da || 0) * (1 - span(t, it.from, it.to));
+        const e = 1 - span(t, it.from, it.to);
+        const x = it.x + (it.dxa || 0) * e, y = it.y + (it.da || 0) * e;
         if (it.clip) {
           ctx.save();
           ctx.beginPath();
           ctx.rect(0, oy + it.clip[0] * k, W, (it.clip[1] - it.clip[0]) * k);
           ctx.clip();
         }
-        ctx.drawImage(imgs[n], ox + it.x * k, oy + y * k, it.w * k, it.h * k);
+        ctx.drawImage(imgs[n], ox + x * k, oy + y * k, it.w * k, it.h * k);
         if (it.clip) ctx.restore();
       });
     },

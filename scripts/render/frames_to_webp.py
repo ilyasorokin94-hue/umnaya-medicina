@@ -33,4 +33,7 @@ for j in range(NS):
     tot_s += os.path.getsize(p)
 print("crop-l", f"{FW},{FH},{x0},{y0},{x1 - x0},{y1 - y0}")
 print("crop-s = crop-l (те же кадры, реже)")
+# то же для сборки превью (scripts/hero_lab.mjs)
+import json
+json.dump({"frames": N, "framesS": NS, "crop": f"{FW},{FH},{x0},{y0},{x1 - x0},{y1 - y0}"}, open(os.path.join(dst, "meta.json"), "w"))
 print("l: %d frames %.0f KB (avg %.1f KB); s: %d frames %.0f KB" % (N, tot_l / 1024, tot_l / 1024 / N, NS, tot_s / 1024))
