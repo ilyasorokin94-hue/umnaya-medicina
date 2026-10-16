@@ -8,7 +8,7 @@
 # Сайт: python3 scripts/render/tooth_seq.py /tmp/tooth 0 64 1000 1200 96
 #       python3 scripts/render/frames_to_webp.py /tmp/tooth src/images/tooth 96  (печатает data-crop для build.mjs)
 # Отладка через переменные окружения: TOOTH_CLAY=1 (только форма), TOOTH_H (шаг сетки, мм, по умолчанию 0.065),
-# TOOTH_ELEV (наклон камеры, °), TOOTH_VS/VA/VE/FROST/BACK/BACKD/VD/PULP — параметры вида КТ (см. «материалы»).
+# TOOTH_ELEV (наклон камеры, °), TOOTH_VS/VA/VE/FROST/FROSTE/BACK/BACKE/BACKD/VD/PULP — параметры вида КТ (см. «материалы»).
 # Один процесс рендерит все кадры: сетки строятся один раз (~50 с), Cycles на 2 потоках.
 import bpy, math, sys, os, time
 import numpy as np
@@ -104,7 +104,7 @@ def side_field(X, Y, Z, fine=True):
     z1 = Z[0, 0, :]
     xm = prof(z1, [-4, -2, -0.6, 0.6, 1.8, 3.2, 4.6, 5.4, 6.4, 7.6], [4.40, 4.25, 4.18, 4.50, 5.00, 5.35, 5.50, 5.48, 5.15, 4.50])
     xd = prof(z1, [-4, -2, -0.6, 0.6, 1.8, 3.2, 4.4, 5.2, 6.4, 7.6], [4.40, 4.25, 4.18, 4.45, 4.95, 5.30, 5.45, 5.40, 4.95, 4.20])
-    yb = prof(z1, [-4, -2, -0.5, 0.4, 1.2, 2.0, 3.0, 4.2, 5.4, 6.4, 7.6], [4.05, 4.05, 4.15, 4.55, 5.10, 5.30, 5.22, 4.92, 4.45, 3.95, 3.30])
+    yb = prof(z1, [-4, -2, -0.5, 0.4, 1.2, 2.0, 3.0, 4.2, 5.4, 6.4, 7.6], [4.05, 4.05, 4.15, 4.45, 4.80, 4.98, 5.00, 4.85, 4.45, 3.95, 3.30])
     yl = prof(z1, [-4, -2, -0.5, 0.6, 1.8, 3.0, 3.8, 4.8, 5.8, 6.6, 7.6], [4.10, 4.10, 4.20, 4.55, 5.00, 5.25, 5.30, 5.20, 4.90, 4.50, 3.80])
     ax = ((xm + xd) / 2)[None, None, :]; cx = ((xm - xd) / 2)[None, None, :]
     ay = ((yb + yl) / 2)[None, None, :]; cy = ((yl - yb) / 2)[None, None, :]
@@ -144,14 +144,14 @@ def ellipse_tube(X, Y, Z, cx, cy, ax, ay, zc, Lc, zt):
 
 # корни: ось и полуширины по высоте; ниже zc сечение дополнительно сходится эллипсоидом длиной Lc к апексу
 # (ширины продолжают плавно уменьшаться, поэтому перехода к верхушке не видно)
-MR = dict(cx=lambda z: prof(z, [-1, -3, -5.5, -8.5, -11, -14], [2.20, 2.60, 2.85, 2.82, 2.58, 2.25]),
+MR = dict(cx=lambda z: prof(z, [-1, -3, -5.5, -8.5, -11, -14], [2.05, 2.50, 2.90, 2.85, 2.45, 1.95]),   # верхушка загнута дистально
           cy=lambda z: 0.10 + 0 * z,
-          ax=lambda z: prof(z, [-1, -4, -7, -10, -12, -14.1], [2.05, 1.95, 1.68, 1.42, 1.25, 1.08]),
+          ax=lambda z: prof(z, [-1, -4, -7, -10, -12, -14.1], [1.92, 1.92, 1.68, 1.42, 1.25, 1.08]),
           ay=lambda z: prof(z, [-1, -3, -5, -7.5, -10, -12, -14.1], [4.00, 3.98, 3.55, 2.70, 2.08, 1.78, 1.52]),
           zc=-10.0, Lc=4.05)
-DR = dict(cx=lambda z: prof(z, [-1, -4, -8, -11, -13.3], [-2.40, -2.80, -3.12, -3.32, -3.42]),
+DR = dict(cx=lambda z: prof(z, [-1, -4, -8, -11, -13.3], [-2.25, -2.65, -3.25, -3.50, -3.65]),
           cy=lambda z: 0.05 + 0 * z,
-          ax=lambda z: prof(z, [-1, -4, -7, -9.4, -11.3, -13.3], [2.12, 2.02, 1.74, 1.53, 1.38, 1.22]),
+          ax=lambda z: prof(z, [-1, -4, -7, -9.4, -11.3, -13.3], [1.98, 1.98, 1.74, 1.53, 1.38, 1.22]),
           ay=lambda z: prof(z, [-1, -3, -5, -7.5, -9.4, -11.3, -13.3], [3.85, 3.78, 3.30, 2.45, 1.95, 1.68, 1.45]),
           zc=-9.4, Lc=3.85)
 
@@ -176,10 +176,13 @@ def cej_z(X, Y):
 def enamel_thickness(X, Y, Z):
     zc = cej_z(X, Y)
     e = 1.30 * smoothstep(zc, zc + 3.4, Z) ** 0.75
-    return e + 0.85 * smoothstep(5.0, 7.3, Z)
+    return e + 0.80 * smoothstep(3.8, 5.8, Z)          # оценивается на высоте границы эмаль-дентин, не бугра
 
 def dentin_field(X, Y, Z):
-    return outer_field(X, Y, Z, fine=False) + 0.18 + enamel_thickness(X, Y, Z)
+    # слой цемента 0.18 мм; у верхушек поле корня «растянуто» по высоте (оценка расстояния занижена),
+    # поэтому сдвиг там меньше — дентин и каналы доходят почти до апекса
+    cem = 0.18 * (1 - 0.55 * np.where(X > 0, smoothstep(-12.0, -13.9, Z), smoothstep(-11.2, -13.1, Z)))
+    return outer_field(X, Y, Z, fine=False) + cem + enamel_thickness(X, Y, Z)
 
 def capsule(X, Y, Z, a, b, r0, r1):
     ax_, ay_, az_ = a; bx, by, bz = b
@@ -200,29 +203,33 @@ def ellipsoid(X, Y, Z, c, r):
     return k0 * (k0 - 1.0) / np.maximum(k1, 1e-6)
 
 def pulp_field(X, Y, Z):
-    # камера пульпы: шире мезиодистально, свод с невысокими рогами под буграми, дно над фуркацией
-    ch = rbox(X, Y, Z, (0.25, 0.0, 0.80), (2.65, 1.75, 1.15), 1.12)
-    ch = ch + 0.30 * np.exp(-((X - 0.1) / 1.3) ** 2) * smoothstep(0.9, -0.4, Z)      # выпуклое дно камеры
-    horns = [((1.75, -1.10, 2.25), (0.62, 0.55, 1.20)),    # мезиощёчный
-             ((-0.25, -1.20, 2.15), (0.58, 0.52, 1.00)),   # дистощёчный
-             ((-2.05, -0.80, 1.95), (0.52, 0.50, 0.85)),   # дистальный
-             ((1.65, 1.10, 2.30), (0.62, 0.55, 1.30)),     # мезиоязычный
-             ((-1.05, 1.15, 2.20), (0.58, 0.52, 1.10))]    # дистоязычный
+    # камера пульпы взрослого зуба: шире, чем высота, свод чуть выше эмалево-цементной границы, выпуклое дно
+    # над фуркацией; рога короткие и широкие (мезиальные выше), сливаются в один мезиальный пик и дистальное плечо
+    ch = rbox(X, Y, Z, (0.25, 0.0, 0.45), (2.55, 1.70, 0.85), 0.80)
+    ch = ch + 0.30 * np.exp(-((X - 0.1) / 1.3) ** 2) * smoothstep(0.5, -0.8, Z)      # выпуклое дно камеры
+    horns = [((1.70, -1.05, 1.55), (0.80, 0.70, 0.95)),    # мезиощёчный
+             ((1.60, 1.05, 1.60), (0.80, 0.70, 1.00)),     # мезиоязычный
+             ((-0.30, -1.10, 1.40), (0.75, 0.65, 0.70)),   # дистощёчный
+             ((-1.20, 1.10, 1.45), (0.75, 0.65, 0.75)),    # дистоязычный
+             ((-2.00, -0.70, 1.25), (0.70, 0.60, 0.55))]   # дистальный
     f = ch
     for c, r in horns:
-        f = smin(f, ellipsoid(X, Y, Z, c, r), 0.7)
-    # каналы: два в мезиальном корне (щёчный и язычный), один лентовидный в дистальном
+        f = smin(f, ellipsoid(X, Y, Z, c, r), 1.0)
+    # каналы: два узких в мезиальном корне (щёчный и язычный), один широкий лентовидный в дистальном;
+    # доходят почти до верхушки (~0.35 мм не доходя), не выходя из дентина
+    dm = []
     for side in (-1, 1):
-        cyf = lambda z, s=side: s * prof(z, [0.0, -2.5, -7, -11, -13.2], [1.20, 1.25, 0.95, 0.55, 0.32])
+        cyf = lambda z, s=side: s * prof(z, [0.0, -2.5, -7, -11, -13.4], [1.20, 1.25, 0.95, 0.55, 0.24])
         d, _, _ = ellipse_tube(X, Y, Z, MR["cx"], cyf,
-                               lambda z: prof(z, [0.0, -2.0, -6, -10, -13.0], [0.50, 0.32, 0.25, 0.18, 0.13]),
-                               lambda z: prof(z, [0.0, -2.0, -6, -10, -13.0], [0.60, 0.38, 0.28, 0.19, 0.13]),
-                               -13.0, 0.3, 0.6)
-        f = smin(f, d, 0.6)
+                               lambda z: prof(z, [0.0, -2.0, -6, -10, -13.0], [0.40, 0.24, 0.19, 0.14, 0.11]),
+                               lambda z: prof(z, [0.0, -2.0, -6, -10, -13.0], [0.51, 0.32, 0.24, 0.16, 0.11]),
+                               -13.35, 0.25, 0.6)
+        dm.append(d)
+    f = smin(f, smin(dm[0], dm[1], 0.12), 0.6)       # каналы между собой почти без слияния, чтобы не росли у апекса
     d, _, _ = ellipse_tube(X, Y, Z, DR["cx"], lambda z: 0.05 + 0 * z,
-                           lambda z: prof(z, [0.0, -2.0, -6, -10, -12.3], [0.55, 0.36, 0.28, 0.20, 0.14]),
+                           lambda z: prof(z, [0.0, -2.0, -6, -10, -12.3], [0.60, 0.42, 0.33, 0.24, 0.16]),
                            lambda z: prof(z, [0.0, -2.0, -5, -8, -10.5, -12.3], [1.15, 0.95, 0.72, 0.48, 0.28, 0.15]),
-                           -12.3, 0.3, 0.6)
+                           -12.65, 0.25, 0.6)
     return smin(f, d, 0.6)
 
 # ---------- поле -> сетка (surface nets), сглаживание с проекцией на поверхность ----------
@@ -398,11 +405,13 @@ SCAN_NODES = []      # узлы Map Range, куда на каждом кадре
 VOL_SCATTER = float(os.environ.get("TOOTH_VS", "0.04"))   # рассеяние в толще, 1/мм
 VOL_ABS = float(os.environ.get("TOOTH_VA", "0.06"))       # поглощение в толще, 1/мм
 VOL_EMIT = float(os.environ.get("TOOTH_VE", "0.04"))      # «свечение плотности», на 1 мм пути
-CT_FROST = float(os.environ.get("TOOTH_FROST", "0.08"))   # матовость наружной стенки
-CT_BACK = float(os.environ.get("TOOTH_BACK", "0.65"))      # молочность дальней стенки на просвет
-CT_BACK_D = float(os.environ.get("TOOTH_BACKD", "0.3"))   # то же у дентина
-VOL_DENTIN = float(os.environ.get("TOOTH_VD", "0.035"))   # поглощение в дентине, 1/мм
-PULP_COL = tuple(float(x) for x in os.environ.get("TOOTH_PULP", "0.15,0.06,0.055").split(","))
+CT_FROST = float(os.environ.get("TOOTH_FROST", "0.08"))   # матовость наружной стенки корня (у эмали — CT_FROST_E)
+CT_FROST_E = float(os.environ.get("TOOTH_FROSTE", "0.22"))  # матовость эмали: эмаль на КТ самая плотная и светлая
+CT_BACK = float(os.environ.get("TOOTH_BACK", "0.85"))      # молочность дальней стенки на просвет
+CT_BACK_E = float(os.environ.get("TOOTH_BACKE", "0.3"))    # яркость дальней стенки (свечение, не зависит от ламп)
+CT_BACK_D = float(os.environ.get("TOOTH_BACKD", "0.45"))   # молочность дальней стенки дентина
+VOL_DENTIN = float(os.environ.get("TOOTH_VD", "0.07"))    # поглощение в дентине, 1/мм
+PULP_COL = tuple(float(x) for x in os.environ.get("TOOTH_PULP", "0.07,0.028,0.028").split(","))
 
 def ct_factor(nt):
     """1 там, где плоскость уже прошла (z объекта выше плоскости), и для лучей, прошедших сквозь «стекло»."""
@@ -431,7 +440,8 @@ def mix_rgb(nt, fac, a, b):
 
 def mix_f(nt, fac, a, b):
     m = nt.nodes.new("ShaderNodeMix"); m.data_type = "FLOAT"
-    nt.links.new(fac, m.inputs["Factor"])
+    if isinstance(fac, float): m.inputs["Factor"].default_value = fac
+    else: nt.links.new(fac, m.inputs["Factor"])
     for k, v in ((2, a), (3, b)):
         if isinstance(v, float): m.inputs[k].default_value = v
         else: nt.links.new(v, m.inputs[k])
@@ -467,23 +477,34 @@ def principled(nt, **kw):
         else: nt.links.new(v, b.inputs[k])
     return b
 
-def ct_surface(nt, frost, back_milk, milk_col, gloss_rough=0.16, ior=1.45):
+def _fac(nt, sock, v):
+    """Вход-коэффициент: число или выход другого узла."""
+    if isinstance(v, (int, float)): sock.default_value = v
+    else: nt.links.new(v, sock)
+
+def ct_surface(nt, frost, back_milk, milk_col, gloss_rough=0.16, ior=1.45, gloss=True, back_emit=None,
+               gloss_col=(0.92, 0.92, 0.90)):
     """Поверхность в виде КТ — матовое стекло без преломления.
-    Снаружи: прозрачность, френелевский блик и лёгкая матовость. Изнутри (дальняя стенка): прозрачность и
-    просвечивающий молочный слой — дальняя стенка светится на просвет, пульпа перед ней читается тёмной."""
+    Снаружи: прозрачность, френелевский блик (gloss=False — без блика) и матовость frost.
+    Изнутри (дальняя стенка): прозрачность и молочный слой со своим ровным свечением — как негатоскоп за снимком;
+    он не зависит от ламп (иначе через стенку просвечивает зелёный и холодный свет сзади), пульпа перед ним тёмная.
+    frost и back_milk — число или выход узла."""
     tr = nt.nodes.new("ShaderNodeBsdfTransparent")
-    gl = nt.nodes.new("ShaderNodeBsdfGlossy"); gl.inputs["Roughness"].default_value = gloss_rough
-    gl.inputs["Color"].default_value = (0.92, 0.92, 0.90, 1)
-    fr = nt.nodes.new("ShaderNodeFresnel"); fr.inputs["IOR"].default_value = ior
-    front = nt.nodes.new("ShaderNodeMixShader")
-    nt.links.new(fr.outputs[0], front.inputs[0]); nt.links.new(tr.outputs[0], front.inputs[1]); nt.links.new(gl.outputs[0], front.inputs[2])
+    front = tr
+    if gloss:
+        gl = nt.nodes.new("ShaderNodeBsdfGlossy"); gl.inputs["Roughness"].default_value = gloss_rough
+        gl.inputs["Color"].default_value = (*gloss_col, 1)
+        fr = nt.nodes.new("ShaderNodeFresnel"); fr.inputs["IOR"].default_value = ior
+        front = nt.nodes.new("ShaderNodeMixShader")
+        nt.links.new(fr.outputs[0], front.inputs[0]); nt.links.new(tr.outputs[0], front.inputs[1]); nt.links.new(gl.outputs[0], front.inputs[2])
     if frost:
         df = nt.nodes.new("ShaderNodeBsdfDiffuse"); df.inputs["Color"].default_value = (*milk_col, 1)
-        m2 = nt.nodes.new("ShaderNodeMixShader"); m2.inputs[0].default_value = frost
+        m2 = nt.nodes.new("ShaderNodeMixShader"); _fac(nt, m2.inputs[0], frost)
         nt.links.new(front.outputs[0], m2.inputs[1]); nt.links.new(df.outputs[0], m2.inputs[2])
         front = m2
-    tl = nt.nodes.new("ShaderNodeBsdfTranslucent"); tl.inputs["Color"].default_value = (*milk_col, 1)
-    back = nt.nodes.new("ShaderNodeMixShader"); back.inputs[0].default_value = back_milk
+    tl = nt.nodes.new("ShaderNodeEmission"); tl.inputs["Color"].default_value = (*milk_col, 1)
+    tl.inputs["Strength"].default_value = CT_BACK_E if back_emit is None else back_emit
+    back = nt.nodes.new("ShaderNodeMixShader"); _fac(nt, back.inputs[0], back_milk)
     nt.links.new(tr.outputs[0], back.inputs[1]); nt.links.new(tl.outputs[0], back.inputs[2])
     geo = nt.nodes.new("ShaderNodeNewGeometry")
     mx = nt.nodes.new("ShaderNodeMixShader")
@@ -543,12 +564,15 @@ def mat_outer():
     root_col = mix_rgb(nt, nz.outputs["Fac"], (0.72, 0.56, 0.37), (0.66, 0.51, 0.34))
     col = mix_rgb(nt, en, root_col, enamel_col)
     nat = principled(nt, Base_Color=col,
-                     Roughness=mix_f(nt, en, 0.40, 0.30),
+                     Roughness=mix_f(nt, en, 0.60, 0.30),
                      Subsurface_Weight=mix_f(nt, en, 0.25, mix_f(nt, tip.outputs["Result"], 0.35, 0.65)),
                      Subsurface_Radius=(1.0, 0.72, 0.48), Subsurface_Scale=0.45,
-                     Coat_Weight=mix_f(nt, en, 0.10, 0.22), Coat_Roughness=mix_f(nt, en, 0.32, 0.18))
+                     Coat_Weight=mix_f(nt, en, 0.0, 0.35), Coat_Roughness=mix_f(nt, en, 0.32, 0.08))   # цемент матовый
     nat.subsurface_method = "RANDOM_WALK"
-    finish(nt, nat.outputs[0], ct_surface(nt, CT_FROST, CT_BACK, (0.87, 0.83, 0.75)), fac)
+    # в виде КТ эмаль (выше эмалево-цементной границы) плотнее и светлее: больше матовости, плотнее дальняя стенка
+    ct = ct_surface(nt, mix_f(nt, en, CT_FROST, CT_FROST_E), mix_f(nt, en, CT_BACK, min(1.0, CT_BACK + 0.08)), (0.90, 0.86, 0.80),
+                    gloss_rough=0.28, ior=1.33, gloss_col=(0.62, 0.62, 0.60))
+    finish(nt, nat.outputs[0], ct, fac)
     # толща зуба в виде КТ: мягкое молочное рассеяние (до плоскости сюда смотрят только сквозь «стекло»)
     volume(nt, VOL_SCATTER, (0.88, 0.85, 0.78), (VOL_ABS * 0.92, VOL_ABS, VOL_ABS * 1.15), VOL_EMIT, (1.0, 0.94, 0.85))
     return m
@@ -557,13 +581,13 @@ def mat_dentin():
     # дентин виден только сквозь «стекло»: поверхность прозрачная, толща чуть темнее и теплее эмали
     m, nt = new_mat("dentin")
     out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
-    nt.links.new(ct_surface(nt, 0.03, CT_BACK_D, (0.78, 0.74, 0.68), 0.3, 1.08), out.inputs["Surface"])
+    nt.links.new(ct_surface(nt, 0.03, CT_BACK_D, (0.62, 0.60, 0.57), gloss=False), out.inputs["Surface"])
     volume(nt, 0.0, (1, 1, 1), (VOL_DENTIN * 0.8, VOL_DENTIN, VOL_DENTIN * 1.3))
     return m
 
 def mat_pulp():
     m, nt = new_mat("pulp")
-    b = principled(nt, Base_Color=PULP_COL, Roughness=0.55)
+    b = principled(nt, Base_Color=PULP_COL, Roughness=0.85, Specular_IOR_Level=0.2)   # без блика «стеклянной трубки»
     out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
     nt.links.new(b.outputs[0], out.inputs["Surface"])
     return m
