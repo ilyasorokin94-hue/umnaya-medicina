@@ -1336,7 +1336,7 @@ html:not(.js-intro) .intro { display: none; }
 .hero__3d::before { content: ""; position: absolute; left: 18%; right: 18%; bottom: 6%; height: 16%; border-radius: 50%; background: radial-gradient(closest-side, rgba(76, 193, 72, .3), transparent); }
 .js-anim .hero__3d canvas { opacity: 0; }
 .hero__3d.is-live canvas { opacity: 1; transition: opacity 1s var(--ease); }
-.hero__3d.is-static { background: url("../images/hero-implant.webp") 50% 50% / contain no-repeat; }
+.hero__3d.is-static, html:not(.js) .hero__3d { background: url("../images/implant/l/f000.webp") 50% 50% / 100% auto no-repeat; }
 .hero--3d + .slogan .marquee { box-shadow: inset 0 1px 0 var(--line-on-dark); }
 @media (max-width: 760px) {
   .hero--3d .hero__3d { order: 1; min-height: 0; height: clamp(250px, 36svh, 340px); margin: 6px -16px 0; }

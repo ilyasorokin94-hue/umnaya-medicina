@@ -463,6 +463,9 @@
   ST.config({ ignoreMobileResize: true });
 
   const heroIn = () => {
+    // сигнал первому экрану с имплантом: шторка ушла, можно собирать
+    window.__umHeroIn = true;
+    document.dispatchEvent(new Event("um:hero-in"));
     const h = $(".hero, .page-hero");
     if (!h) return;
     const words = $$("[data-split] .sw > span", h);
