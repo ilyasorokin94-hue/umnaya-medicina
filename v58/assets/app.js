@@ -30,7 +30,9 @@
   }
   const headerH = () => (parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 70) + 20;
   const scrollToEl = (el) => {
-    if (lenis) lenis.scrollTo(el, { offset: -headerH(), duration: 1.4 });
+    // тур на телефоне встаёт ровно туда, где лента закрепилась, как при обычной прокрутке
+    const pinned = el.id === "clinic" && $(".ptour", el)?.offsetParent;
+    if (lenis) lenis.scrollTo(el, { offset: pinned ? 0 : -headerH(), duration: 1.4 });
     else el.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
   };
   document.addEventListener("click", (e) => {
@@ -755,9 +757,18 @@
     const img = $(".ptour__item--main .ptour__img", pt), shade = $(".ptour__item--main .ptour__shade", pt);
     const sides = [[$(".ptour__item--left", pt), -0.2], [$(".ptour__item--right", pt), 0.2]];
     const pars = $$(".ptour__fig[data-par]", pt);
+    // карточка как в CSS: окно 80% видимой высоты (--pt-s) от её 10%, считаем в пикселях
+    const card = () => {
+      const pr = document.createElement("div");
+      pr.style.cssText = "position:absolute;top:0;left:0;width:0;visibility:hidden;height:var(--pt-s)";
+      pt.append(pr);
+      const s = pr.offsetHeight; pr.style.height = "100vh"; const l = pr.offsetHeight; pr.remove();
+      const v = s || l;
+      return `inset(${0.1 * v}px 0px ${l - 0.9 * v}px 0px round 24px)`;
+    };
     G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
     const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
-    zoom.fromTo(img, { clipPath: "inset(10% 0% 10% 0% round 24px)", scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0% round 0px)", scale: 1.1 }, 0)
+    zoom.fromTo(img, { clipPath: card, scale: 0.725 }, { clipPath: "inset(0px 0px 0px 0px round 0px)", scale: 1.1 }, 0)
       .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
     sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
     pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
