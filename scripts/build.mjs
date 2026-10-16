@@ -79,7 +79,7 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <meta name="theme-color" content="#0c2410">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Golos+Text:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
@@ -470,7 +470,6 @@ function pageHome() {
 
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>
-  ${teamTabs()}
   <div class="team__grid team__grid--lava">${doctors.map((d, i) => doctorCard(d, depth, { lava: true, i })).join("")}</div>
   <div class="team__more"><a class="btn btn--ghost" href="vrachi.html">Все врачи: опыт, образование, курсы</a></div>
 </div></section>
@@ -491,13 +490,12 @@ function pageHome() {
       </a>`).join("")}
     </div>
     <div class="rt-pd">
-      <a class="rt-seal" href="${home.reviewsUrl}"${ext} data-goal="reviews_prodoctorov" aria-label="Рейтинг 4,9 на ПроДокторов, 199 отзывов">
-        <svg class="rt-seal__ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="rt-seal__track" cx="60" cy="60" r="57"/><circle class="rt-seal__fill" cx="60" cy="60" r="57" pathLength="100"/></svg>
-        <span class="rt-seal__in"><span class="rt-seal__num" data-count="4,9">4,9</span><span class="rt-seal__stars">${star.repeat(5)}</span><span class="rt-seal__cap">199 отзывов</span>${brandImg("prodoctorov.svg", "ПроДокторов").replace("<img ", '<img class="rt-seal__logo" ')}</span>
+      <a class="rt-seal" href="${home.reviewsUrl}"${ext} data-goal="reviews_prodoctorov" aria-label="Нас рекомендуют на ПроДокторов: рейтинг 4,9, 199 отзывов">
+        <span class="rt-badge"><span class="rt-badge__t"><b>нас рекомендуют</b> на сайте</span><span class="rt-badge__logo">${brandImg("prodoctorov.svg", "ПроДокторов")}</span></span>
       </a>
       <div class="rt-pd__text">
         <p class="rt-pd__quote">${esc(rating.pdText)}</p>
-        <a class="btn btn--ghost rt-btn" href="${home.reviewsUrl}"${ext} data-goal="reviews_prodoctorov">Читать отзывы на ПроДокторов</a>
+        <a class="link rt-pd__link" href="${home.reviewsUrl}"${ext} data-goal="reviews_prodoctorov">Рейтинг 4,9 и 199 отзывов на ПроДокторов</a>
       </div>
     </div>
   </div></div>
