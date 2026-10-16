@@ -121,9 +121,25 @@
         fadeIn(shown);
       } else {
         $$(`[data-panel="${kind}"]`).forEach((p) => { p.hidden = p.dataset.key !== val; if (!p.hidden) fadeIn($$(".dir__card, li, .qa", p)); });
+        // телефон: плитки направлений стоят над панелью; если её начало ушло в нижнюю треть экрана, подвозим к ней
+        const pn = kind === "dir" && b.isConnected && !b.dataset.silent && phoneMQ.matches && $(`[data-panel="dir"]:not([hidden])`);
+        if (pn && pn.getBoundingClientRect().top > innerHeight * 0.66) {
+          if (lenis) lenis.scrollTo(pn, { offset: -headerH(), duration: 0.9 }); else pn.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+        }
       }
       ST?.refresh();
     }));
+  });
+  const mfirst = $("[data-mfirst]");
+  if (mfirst && phoneMQ.matches && mfirst.getAttribute("aria-selected") !== "true") { mfirst.dataset.silent = "1"; mfirst.click(); delete mfirst.dataset.silent; }
+
+  // отзывы на телефоне: списком по пять, кнопка показывает следующие
+  $("[data-rv-more]")?.addEventListener("click", (e) => {
+    const next = $$(".rvm[hidden]").slice(0, 5);
+    next.forEach((x) => (x.hidden = false));
+    fadeIn(next);
+    if (!$(".rvm[hidden]")) e.currentTarget.hidden = true;
+    ST?.refresh();
   });
 
   // «Показать ещё» в работах
@@ -452,8 +468,15 @@
       if (anim) G.to(mapWrap, { height: 0, duration: 0.5, ease: "power2.in", onComplete: fin }); else fin();
     }
   });
-  $(".way__map")?.addEventListener("click", (e) => e.currentTarget.classList.add("is-active"));
-  $(".way__map")?.addEventListener("mouseleave", (e) => e.currentTarget.classList.remove("is-active"));
+  $$(".way__map").forEach((m) => {
+    m.addEventListener("click", () => m.classList.add("is-active"));
+    m.addEventListener("mouseleave", () => m.classList.remove("is-active"));
+  });
+  const sideMap = $(".way__map--side iframe");
+  if (sideMap && "IntersectionObserver" in window) {
+    const io = new IntersectionObserver(([en]) => { if (en.isIntersecting && sideMap.offsetParent) { sideMap.src = sideMap.dataset.src; io.disconnect(); } }, { rootMargin: "600px 0px" });
+    io.observe(sideMap.parentElement);
+  }
   // отправить адрес себе или тому, кто повезёт
   const shareBtn = $("[data-share]");
   shareBtn?.addEventListener("click", async () => {
@@ -650,7 +673,7 @@
 
   // клиника изнутри: кадр раскрывается из карточки на весь экран, затем проявляется заголовок
   const tour = $(".tour__pin");
-  if (tour) {
+  if (tour) mm.add("(min-width: 761px)", () => {
     const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
     // на телефоне кадр стартует широкой карточкой, как фото в лентах, и закрепление короче
     const narrow = () => innerWidth <= 760;
@@ -660,7 +683,17 @@
       .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
       .fromTo($$(".sw > span", tt), { yPercent: 110 }, { yPercent: 0, duration: 0.3, stagger: 0.04, ease: "power3.out" }, 0.72)
       .to({}, { duration: 0.25 });
-  }
+  });
+  // телефон: палец ведёт прокрутку сам, поэтому ничего не закрепляем и не трогаем clip-path (он перерисовывает весь кадр).
+  // Кадр подрастает из карточки трансформом, фото внутри чуть уменьшается, заголовок поднимается; фото сетки появляются по очереди
+  if (tour) mm.add("(max-width: 760px)", () => {
+    const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
+    const st = { trigger: frame, start: "top bottom", end: "top 20%", scrub: true };
+    G.fromTo(frame, { scale: 0.86 }, { scale: 1, ease: "none", scrollTrigger: st });
+    G.fromTo(fim, { scale: 1.16 }, { scale: 1, ease: "none", scrollTrigger: st });
+    G.fromTo(tt, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.9, ease: "power3.out", scrollTrigger: { trigger: frame, start: "top 45%", once: true } });
+    G.fromTo($$(".sw > span", tt), { yPercent: 110 }, { yPercent: 0, duration: 1, stagger: 0.05, ease: "power4.out", scrollTrigger: { trigger: frame, start: "top 45%", once: true } });
+  });
   mm.add("(max-width: 760px)", () => {
     const track = $(".feat__track");
     if (!track) return;
@@ -677,16 +710,11 @@
     return () => { t.kill(); cards.forEach((c) => { c.style.transform = ""; c.firstElementChild.style.opacity = ""; }); };
   });
 
-  // телефон: подвал раскрывается из карточки на всю ширину, как кадр «Здесь вас ждут»
-  mm.add("(max-width: 760px)", () => {
-    const f = $(".footer");
-    if (f) G.fromTo(f, { clipPath: "inset(0% 4% 0% 4% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "top 30%", scrub: true } });
-  });
 
   // ленты фото и отзывов едут навстречу друг другу и быстрее прокрутки: пока лента проходит экран,
   // она сдвигается на 1,2 этого пути, поэтому за оборот колеса проезжает больше фото и отзывов.
   // Ленту дополняем копиями (для чтения с экрана скрыты), чтобы её хватило на весь сдвиг.
-  $$(".tour__row, .rv__row").forEach((row) => {
+  mm.add("(min-width: 761px)", () => $$(".tour__row, .rv__row").forEach((row) => {
     const d = parseFloat(row.dataset.dir) || -1;
     const base = [...row.children];
     const setW = () => base[base.length / 2].offsetLeft - base[0].offsetLeft;
@@ -697,6 +725,27 @@
     fill();
     ST.addEventListener("refreshInit", fill);
     G.fromTo(row, { x: () => (d < 0 ? 0 : -dist()) }, { x: () => (d < 0 ? -dist() : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
+  }));
+
+  // телефон: фото клиники, врачи и отзывы появляются лесенкой, когда доходят до экрана
+  mm.add("(max-width: 760px)", () => {
+    // по рядам: фото клиники по два, врачи по три, отзывы по одному
+    const pop = (els, n) => { for (let i = 0; i < els.length; i += n) G.fromTo(els.slice(i, i + n), { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.08, ease: "power3.out", clearProps: "transform,opacity,visibility", scrollTrigger: { trigger: els[i], start: "top 92%", once: true } }); };
+    pop($$(".tgrid"), 2);
+    pop($$(".team__grid--lava .doc"), 3);
+    pop($$(".rvm:not([hidden])"), 1);
+  });
+
+  // телефон: слоган в две строки целиком; при прокрутке строки немного расходятся в разные стороны.
+  // Посередине экрана обе фразы стоят ровно по центру, так что прочитать их можно в любой момент
+  mm.add("(max-width: 760px)", () => {
+    const ls = $$(".slogan__l");
+    ls.forEach((l, i) => {
+      const base = () => (innerWidth - l.offsetWidth) / 2;
+      const amp = () => Math.max(innerWidth * 0.08, (l.offsetWidth - innerWidth) / 2 + innerWidth * 0.04);
+      const s = i ? -1 : 1;
+      G.fromTo(l, { x: () => base() + s * amp() }, { x: () => base() - s * amp(), ease: "none", scrollTrigger: { trigger: ".slogan", start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
+    });
   });
 
   // бегущая строка: скорость плавно следует за скоростью прокрутки, направление — за её направлением
@@ -704,7 +753,7 @@
     const setX = G.quickSetter(tr, "xPercent");
     let x = 0, dir = 1, cur = 1, target = 1;
     ST.create({ trigger: tr, start: "top bottom", end: "bottom top", onUpdate: (self) => { dir = self.direction; target = dir * (1 + Math.min(Math.abs(self.getVelocity()) / 400, 4)); } });
-    G.ticker.add((time, dt) => { target += (dir - target) * 0.04; cur += (target - cur) * 0.12; x = (x - (cur * dt) / 600) % 50; if (x > 0) x -= 50; setX(x); });
+    G.ticker.add((time, dt) => { if (phoneMQ.matches) return; target += (dir - target) * 0.04; cur += (target - cur) * 0.12; x = (x - (cur * dt) / 600) % 50; if (x > 0) x -= 50; setX(x); });
   });
 
   // контакты: сцена закрепляется, прокрутка ведёт от улицы к двери, каждое фото поднимается шторкой.
@@ -732,15 +781,17 @@
   if (fst) {
     const pin = $(".fstage__pin", fst), logo = $(".fstage__logo", fst);
     const vmin = () => Math.min(innerWidth, innerHeight);
-    const reveal = (big) => {
+    const mlogo = $(".fstage__mlogo", fst);
+    const reveal = (big, logo) => {
       const st = { trigger: fst, start: "top bottom", end: () => "+=" + Math.round(vmin() * 1.5), scrub: true, invalidateOnRefresh: true };
       const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: st })
         .fromTo(logo, { y: () => -Math.round(vmin() * 1.5) }, { y: 0, duration: 1 }, 0);
       if (big) tl.fromTo(logo, { scale: () => fst.clientWidth / pin.clientWidth }, { scale: 1, duration: 0.4, ease: "power1.out", immediateRender: true }, 0.6);
       return () => { tl.scrollTrigger?.kill(); tl.kill(); G.set(logo, { clearProps: "transform" }); };
     };
-    mm.add("(min-width: 1025px)", () => reveal(true));
-    mm.add("(max-width: 1024px)", () => reveal(false));
+    mm.add("(min-width: 1025px)", () => reveal(true, logo));
+    mm.add("(min-width: 761px) and (max-width: 1024px)", () => reveal(false, logo));
+    if (mlogo) mm.add("(max-width: 760px)", () => reveal(false, mlogo));
   }
 
   // пересчитываем позиции, когда догрузились шрифты и картинки (до того, как пользователь доскроллил)

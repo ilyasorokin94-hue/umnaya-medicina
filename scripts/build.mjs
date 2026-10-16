@@ -240,7 +240,7 @@ function footer(depth) {
     </div>
   </div>
   <div class="fstage">
-    <div class="fstage__pin" aria-hidden="true"><div class="fstage__logo footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div></div>
+    <div class="fstage__pin" aria-hidden="true"><div class="fstage__logo footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div><div class="fstage__mlogo"><img class="fstage__mark" src="${p}images/brand/favicon.svg" alt="" loading="lazy"><img class="fstage__word" src="${p}images/brand/footer-word.svg" alt="" loading="lazy"><span>Стоматология</span></div></div>
     <div class="fstage__info">
       <div class="fstage__group">
         <h3>Контакты</h3>
@@ -321,7 +321,7 @@ function doctorCard(d, depth, o = {}) {
   <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth)}
     <a class="doc__cover" href="${p}vrachi/${d.id}.html" tabindex="-1" aria-hidden="true"></a>${o.lava ? `
     <a class="doc__go" href="${p}vrachi/${d.id}.html" aria-label="Страница врача: ${esc(d.short)}"><svg viewBox="0 0 60 60" aria-hidden="true"><path d="M24 36 36 24M27 24h9v9"/></svg></a>` : ""}</div>
-  <h3><a href="${p}vrachi/${d.id}.html">${esc(d.name)}</a></h3>
+  <h3><a href="${p}vrachi/${d.id}.html">${o.lava ? `<span class="doc__nfull">${esc(d.name)}</span><span class="doc__nshort">${d.name.split(" ").slice(0, 2).map(esc).join("<br>")}</span>` : esc(d.name)}</a></h3>
   <p class="doc__role${d.chief ? " doc__role--chief" : ""}">${esc(d.role)}</p>
   ${d.focus ? `<p class="doc__focus">${esc(d.focus)}</p>` : ""}
   ${act("Записаться к врачу", "book", p, { cls: "btn--ghost btn--sm doc__cta", doctor: d.id })}
@@ -364,8 +364,8 @@ function marquee(text) {
   return `<div class="marquee" aria-hidden="true"><div class="marquee__track">${item.repeat(4)}</div></div>`;
 }
 
-// контакты «дорога до двери»: слева адрес и что важно знать, справа фото пути от улицы до входа.
-// На компьютере сцена закрепляется, и прокрутка ведёт от точки к точке; на телефоне фото листаются свайпом. Карта по кнопке
+// контакты: слева адрес и что важно знать, на компьютере справа карта. Фото пути убраны по просьбе Ilya 16.10
+// (атмосфера улицы пугает). На телефоне и планшете карта по кнопке
 function place() {
   const { lat, lon } = clinic.geo;
   const W = v2.way;
@@ -384,10 +384,7 @@ function place() {
       </div>
       <div class="way__more"><button class="way__link" type="button" data-share data-share-text="${esc(W.share)}" data-share-url="${clinic.yandex}">Отправить адрес</button><button class="way__link" type="button" data-map-toggle aria-expanded="false" aria-controls="way-map">Показать карту</button></div>
     </div>
-    <div class="way__walk">
-      <div class="way__frame" aria-label="Как пройти от улицы до входа">${W.stops.map((x) => `<figure class="way__shot" style="--op:${x.pos}"><span class="way__img">${img([x.img], x.alt, 0)}</span><figcaption><b>${esc(x.title)}</b><span>${esc(x.text)}</span></figcaption></figure>`).join("")}</div>
-      <div class="way__cap"><div class="chips way__stops">${W.stops.map((x, i) => `<button class="chip${i ? "" : " is-on"}" type="button" aria-pressed="${!i}">${esc(x.title)}</button>`).join("")}</div><p class="way__text" aria-live="polite">${esc(W.stops[0].text)}</p></div>
-    </div>
+    <div class="way__side"><div class="way__map way__map--side"><iframe title="Карта: стоматология на Громова, 10/2" data-src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button></div></div>
   </div>
   <div class="wrap way__mapwrap" id="way-map" hidden>
     <div class="way__map"><iframe title="Карта: стоматология на Громова, 10/2" data-src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button></div>
@@ -397,6 +394,9 @@ function place() {
 
 // ---------- главная: порядок блоков Тридента ----------
 // первый экран, услуги и цены вкладками, клиника и оборудование, путь пациента, врачи, отзывы, три вопроса, контакты
+// телефон: порядок плиток направлений (просьба Ilya 16.10: имплантация первой) и стартовая цена на плитке
+const mobileDirOrder = ["Имплантация", "Протезирование", "Удаление", "Лечение", "Гигиена", "Детям", "Брекеты и элайнеры", "Диагностика"];
+const dirFrom = (d) => "от " + rub(Math.min(...d.rows.map(([, v]) => (typeof v === "number" ? v : +String(v).replace(/\D/g, ""))).filter((n) => n > 0)));
 const rowPrice = ([, v, old]) => (v === 0 ? "Бесплатно" : typeof v === "number" ? rub(v) : priceText(v)) + (old ? ` <s>${rub(old)}</s>` : "");
 
 function pageHome() {
@@ -425,11 +425,13 @@ function pageHome() {
 
 <section class="slogan on-dark" aria-label="Сначала думаем. Потом лечим.">
   ${marquee("Сначала думаем. <em>Потом лечим.</em>")}
+  <p class="slogan__m" aria-hidden="true"><span class="slogan__l">Сначала думаем.</span><span class="slogan__l"><em>Потом лечим.</em></span></p>
 </section>
 
 <section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><p>${esc(D.services.text)}</p><a class="link" href="ceny.html">Весь прайс</a></div></div>
-  <div class="ptabs dirs__tabs" role="tablist" aria-label="Направления" data-tabs="dir">${D.dirs.map((d, i) => `<button class="chip" type="button" role="tab" data-tab="d${i}" aria-selected="${i === 0}">${esc(d.tab)}</button>`).join("")}</div>
+  <p class="dirs__hint">Выберите направление, чтобы увидеть цены</p>
+  <div class="ptabs dirs__tabs" role="tablist" aria-label="Направления" data-tabs="dir">${D.dirs.map((d, i) => `<button class="chip dtab" type="button" role="tab" data-tab="d${i}" aria-selected="${i === 0}" style="--mo:${mobileDirOrder.indexOf(d.tab) + 1}"${d.tab === mobileDirOrder[0] ? " data-mfirst" : ""}><span class="dtab__t">${esc(d.tab)}</span><span class="dtab__from">${esc(dirFrom(d))}</span></button>`).join("")}</div>
   ${D.dirs.map((d, i) => `<div class="dir" data-panel="dir" data-key="d${i}"${i ? " hidden" : ""}>
     <aside class="offer dir__card">
       <span class="label label--light">${esc(d.promo.tag)}</span>
@@ -456,6 +458,7 @@ function pageHome() {
   <div class="tour__rows" aria-label="Фото клиники">
     ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
   </div>
+  <div class="tour__grid wrap">${D.clinic.mobile.map(([f, cap]) => `<figure class="tgrid"><span class="tgrid__img">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>
 </section>
 
 <section class="foil on-dark" id="path" aria-labelledby="ph-title">
@@ -470,7 +473,6 @@ function pageHome() {
 
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>
-  ${teamTabs()}
   <div class="team__grid team__grid--lava">${doctors.map((d, i) => doctorCard(d, depth, { lava: true, i })).join("")}</div>
   <div class="team__more"><a class="btn btn--ghost" href="vrachi.html">Все врачи: опыт, образование, курсы</a></div>
 </div></section>
@@ -501,6 +503,7 @@ function pageHome() {
       </div>
     </div>
   </div></div>
+  <div class="rv__list wrap">${home.reviews.map((q, j) => `<figure class="rvm${j >= 5 ? " rvm--more" : ""}"${j >= 5 ? " hidden" : ""}><blockquote>«${esc(q)}»</blockquote></figure>`).join("")}<button class="btn btn--ghost rv__more" type="button" data-rv-more>Ещё отзывы</button></div>
   <div class="rv__rows">
     ${[home.reviews.slice(0, 9), home.reviews.slice(9)].map((row, r) => `<div class="rv__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map((q, j) => `<figure class="rv${q.length > 110 ? " rv--long" : q.length < 60 ? " rv--short" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><blockquote>«${esc(q)}»</blockquote></figure>`).join("")}</div>`).join("")}
   </div>
@@ -658,7 +661,6 @@ function pageDoctors() {
   <div class="page-hero__aside">${act("Записаться на консультацию", "book", "", { cls: "btn--lg", magnet: true })}</div>
 </div></section>
 <section class="section section--sage team--page" id="team" aria-label="Врачи"><div class="wrap">
-  ${teamTabs()}
   <div class="team__grid team__grid--lava">${doctors.map((d, i) => doctorCard(d, depth, { lava: true, i })).join("")}</div>
 </div></section>
 </main>` + footer(depth) + end;
