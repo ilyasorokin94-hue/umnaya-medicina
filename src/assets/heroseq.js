@@ -82,7 +82,7 @@ function start() {
   }
   tryIntro();
 
-  // прокрутка: имплант разбирается за первые 55% высоты первого экрана, пока он ещё на виду
+  // прокрутка: имплант разбирается за первую треть высоты первого экрана, пока он ещё на виду
   const hero = box.closest(".hero");
   let lag = 0;
   const scrollP = () => {
@@ -90,7 +90,7 @@ function start() {
     const r = hero.getBoundingClientRect();
     // на компьютере имплант отстаёт от прокрутки, чтобы разобранные детали оставались на виду, пока уходит текст
     lag = phone ? 0 : Math.min(Math.max(0, -r.top), r.height) * 0.62;
-    return Math.min(1, Math.max(0, -r.top / (r.height * 0.55)));
+    return Math.min(1, Math.max(0, -r.top / (r.height * 0.32)));
   };
   // курсор чуть сдвигает картинку целиком, без поворота; на телефоне и при «уменьшить движение» нет
   const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
@@ -106,7 +106,8 @@ function start() {
     const t = Math.max(intro.t, scrollP());
     const i = nearest(t * (N - 1));
     if (i >= 0 && (i !== shown || dirty)) {
-      const k = Math.min(W / FW, H / FH);
+      // разобранный имплант выше собранного, поэтому к концу разбора кадр чуть уменьшается
+      const k = Math.min(W / FW, H / FH) * (1 - 0.14 * (i / (N - 1)));
       const ox = (W - FW * k) / 2 + CX * k, oy = (H - FH * k) / 2 + CY * k;
       ctx.clearRect(0, 0, W, H);
       ctx.drawImage(imgs[i], ox, oy, CW * k, CH * k);

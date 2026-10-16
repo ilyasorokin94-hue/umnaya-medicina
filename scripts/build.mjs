@@ -235,35 +235,41 @@ function footer(depth) {
       </div>
     </div>
   </div>
-  <div class="footer__grid">
-    <div class="footer__col">
-      <h3>Стоматология</h3>
-      <a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a>
-      <a href="mailto:${clinic.email}">${esc(clinic.email)}</a>
-      <span>${esc(clinic.hours)}</span>
-    </div>
-    <div class="footer__col">
-      <h3>Адрес</h3>
-      <span>${esc(clinic.address)}</span>
-      <a href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}>Маршрут в Яндекс Картах</a>
-      <a href="${clinic.gis}"${ext}>Открыть в 2ГИС</a>
-    </div>
-    <nav class="footer__col" aria-label="Услуги">
-      <h3>Услуги</h3>
-      ${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html">${esc(svc[k].menu)}</a>`).join("")}
-    </nav>
-    <div class="footer__col">
-      <h3>Пациентам</h3>
-      <a href="${p}ceny.html">Полный прайс</a>
-      <a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a>
-      <a href="${clinic.vk}"${ext}>ВКонтакте</a>
-      <a href="https://um-med.com/assets/files/dogovor-oferta.pdf"${ext}>Договор-оферта</a>
-      <a href="https://um-med.com/assets/files/pol.pdf"${ext}>Политика обработки данных</a>
-      <a href="${clinic.mainSite}"${ext}>Многопрофильная клиника</a>
-      <a href="https://um-med.com/vacancies.html"${ext}>Вакансии</a>
+  <div class="fstage">
+    <div class="fstage__pin" aria-hidden="true"><div class="fstage__logo footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div></div>
+    <div class="fstage__info">
+      <div class="fstage__group">
+        <h3>Контакты</h3>
+        <a class="fstage__big" href="${clinic.phoneHref}">${esc(clinic.phone)}</a>
+        <a class="fstage__big fstage__big--mail" href="mailto:${clinic.email}">${esc(clinic.email)}</a>
+      </div>
+      <div class="fstage__group">
+        <h3>Адрес</h3>
+        <p class="fstage__addr">${esc(clinic.address)}</p>
+        <p class="fstage__links"><a href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}>Маршрут в Яндекс Картах</a><a href="${clinic.gis}"${ext}>Открыть в 2ГИС</a></p>
+      </div>
+      <div class="fstage__group">
+        <h3>Часы работы</h3>
+        <p class="fstage__text">${esc(clinic.hours)}</p>
+      </div>
+      <nav class="fstage__group" aria-label="Услуги">
+        <h3>Услуги</h3>
+        <p class="fstage__list fstage__list--2">${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html">${esc(svc[k].menu)}</a>`).join("")}</p>
+      </nav>
+      <div class="fstage__group">
+        <h3>Пациентам</h3>
+        <p class="fstage__list fstage__list--2">
+          <a href="${p}ceny.html">Полный прайс</a>
+          <a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a>
+          <a href="${clinic.vk}"${ext}>ВКонтакте</a>
+          <a href="https://um-med.com/assets/files/dogovor-oferta.pdf"${ext}>Договор-оферта</a>
+          <a href="https://um-med.com/assets/files/pol.pdf"${ext}>Политика обработки данных</a>
+          <a href="${clinic.mainSite}"${ext}>Многопрофильная клиника</a>
+          <a href="https://um-med.com/vacancies.html"${ext}>Вакансии</a>
+        </p>
+      </div>
     </div>
   </div>
-  <div class="footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div>
   <div class="footer__legal">
     <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. Лицензия на медицинскую деятельность.</span>
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
@@ -410,7 +416,7 @@ function pageHome() {
     <p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>
     <ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>
   </div>
-  <div class="hero__3d" aria-hidden="true" data-seq="images/implant/l/" data-frames="96" data-crop="1000,1200,288,156,426,842" data-seq-s="images/implant/s/" data-frames-s="24" data-crop-s="500,600,144,78,213,421"><canvas></canvas></div>
+  <div class="hero__3d" aria-hidden="true" data-seq="images/implant/l/" data-frames="96" data-crop="1000,1200,288,118,426,926" data-seq-s="images/implant/s/" data-frames-s="24" data-crop-s="1000,1200,288,118,426,926"><canvas></canvas></div>
 </div></section>
 
 <section class="slogan on-dark" aria-label="Сначала думаем. Потом лечим.">
