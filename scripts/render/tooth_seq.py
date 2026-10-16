@@ -126,12 +126,11 @@ def side_field(X, Y, Z, fine=True):
     return d
 
 def ellipse_tube(X, Y, Z, cx, cy, ax, ay, zc, Lc, zt):
-    """Трубка с эллиптическим сечением вдоль кривой оси, внизу эллипсоидная верхушка, вверху обрезана на zt.
-    cx, cy, ax, ay — массивы по z (1d), для z < zc замораживаются на значении в zc."""
+    """Трубка с эллиптическим сечением вдоль кривой оси, вверху обрезана на zt; ниже zc сечение сжимается как
+    sqrt(1 - s^2), s = (zc - z) / Lc, — скруглённая верхушка без излома. cx, cy, ax, ay — функции высоты."""
     z1 = Z[0, 0, :]
-    zcl = np.maximum(z1, zc)
     cxz = cx(z1)[None, None, :]; cyz = cy(z1)[None, None, :]
-    axz = ax(zcl)[None, None, :]; ayz = ay(zcl)[None, None, :]
+    axz = ax(z1)[None, None, :]; ayz = ay(z1)[None, None, :]
     s = (np.maximum(zc - z1, 0) / Lc)[None, None, :]
     Xr = X - cxz; Yr = Y - cyz
     n = np.sqrt((Xr / axz) ** 2 + (Yr / ayz) ** 2 + s * s)
@@ -140,16 +139,17 @@ def ellipse_tube(X, Y, Z, cx, cy, ax, ay, zc, Lc, zt):
     d = (n - 1) / g
     return smax(d, Z - zt, 0.4), Xr, Yr
 
-# корни: ось и полуширины по высоте; ниже zc ширины замораживаются и корень сходится эллипсоидом длиной Lc к апексу
+# корни: ось и полуширины по высоте; ниже zc сечение дополнительно сходится эллипсоидом длиной Lc к апексу
+# (ширины продолжают плавно уменьшаться, поэтому перехода к верхушке не видно)
 MR = dict(cx=lambda z: prof(z, [-1, -3, -5.5, -8.5, -11, -14], [2.20, 2.60, 2.85, 2.82, 2.58, 2.25]),
           cy=lambda z: 0.10 + 0 * z,
-          ax=lambda z: prof(z, [-1, -4, -7, -9.4, -10.0], [2.05, 1.95, 1.68, 1.46, 1.44]),
-          ay=lambda z: prof(z, [-1, -3, -5, -7.5, -9.4, -10.0], [4.00, 3.98, 3.55, 2.70, 2.16, 2.12]),
+          ax=lambda z: prof(z, [-1, -4, -7, -10, -12, -14.1], [2.05, 1.95, 1.68, 1.42, 1.25, 1.08]),
+          ay=lambda z: prof(z, [-1, -3, -5, -7.5, -10, -12, -14.1], [4.00, 3.98, 3.55, 2.70, 2.08, 1.78, 1.52]),
           zc=-10.0, Lc=4.05)
 DR = dict(cx=lambda z: prof(z, [-1, -4, -8, -11, -13.3], [-2.40, -2.80, -3.12, -3.32, -3.42]),
           cy=lambda z: 0.05 + 0 * z,
-          ax=lambda z: prof(z, [-1, -4, -7, -8.9, -9.4], [2.12, 2.02, 1.74, 1.55, 1.53]),
-          ay=lambda z: prof(z, [-1, -3, -5, -7.5, -8.9, -9.4], [3.85, 3.78, 3.30, 2.45, 1.95, 1.92]),
+          ax=lambda z: prof(z, [-1, -4, -7, -9.4, -11.3, -13.3], [2.12, 2.02, 1.74, 1.53, 1.38, 1.22]),
+          ay=lambda z: prof(z, [-1, -3, -5, -7.5, -9.4, -11.3, -13.3], [3.85, 3.78, 3.30, 2.45, 1.95, 1.68, 1.45]),
           zc=-9.4, Lc=3.85)
 
 def outer_field(X, Y, Z, fine=True):
@@ -535,7 +535,7 @@ def mat_outer():
     # живой зуб: эмаль цвета слоновой кости, к вершинам бугров светлее, серее и прозрачнее; корень тёплый бежевый
     tip = nt.nodes.new("ShaderNodeMapRange"); tip.inputs["From Min"].default_value = 5.6; tip.inputs["From Max"].default_value = 7.6
     nt.links.new(sep.outputs["Z"], tip.inputs["Value"])
-    enamel_col = mix_rgb(nt, tip.outputs["Result"], (0.80, 0.74, 0.62), (0.76, 0.75, 0.71))
+    enamel_col = mix_rgb(nt, tip.outputs["Result"], (0.80, 0.72, 0.57), (0.71, 0.71, 0.69))
     ao = nt.nodes.new("ShaderNodeAmbientOcclusion"); ao.inputs["Distance"].default_value = 0.7; ao.samples = 12
     enamel_col = mix_rgb(nt, ao.outputs["AO"], (0.50, 0.42, 0.31), enamel_col)
     # корень: тёплый бежевый, чуть неравномерный по тону
@@ -549,7 +549,7 @@ def mat_outer():
                      Subsurface_Radius=(1.0, 0.72, 0.48), Subsurface_Scale=0.45,
                      Coat_Weight=mix_f(nt, en, 0.10, 0.22), Coat_Roughness=mix_f(nt, en, 0.32, 0.18))
     nat.subsurface_method = "RANDOM_WALK"
-    finish(nt, nat.outputs[0], ct_surface(nt, CT_FROST, CT_BACK, (0.86, 0.83, 0.77)), fac)
+    finish(nt, nat.outputs[0], ct_surface(nt, CT_FROST, CT_BACK, (0.87, 0.83, 0.75)), fac)
     # толща зуба в виде КТ: мягкое молочное рассеяние (до плоскости сюда смотрят только сквозь «стекло»)
     volume(nt, VOL_SCATTER, (0.88, 0.85, 0.78), (VOL_ABS * 0.92, VOL_ABS, VOL_ABS * 1.15), VOL_EMIT, (1.0, 0.94, 0.85))
     return m
