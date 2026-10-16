@@ -304,9 +304,10 @@ const reviewsText = (n) => `${n} ${plural(n, "отзыв", "отзыва", "от
 
 const docById = Object.fromEntries(doctors.map((d) => [d.id, d]));
 
-function doctorCard(d, depth) {
+// o.lava: сетка как у Лава Дент, карточка стоит в левой (l) или правой (r) колонке и не проявляется отдельно
+function doctorCard(d, depth, o = {}) {
   const p = pre(depth);
-  return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}" data-reveal>
+  return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}"${o.lava ? ` data-col="${o.i % 2 ? "r" : "l"}"` : " data-reveal"}>
   <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth)}
     <a class="doc__cover" href="${p}vrachi/${d.id}.html" tabindex="-1" aria-hidden="true"></a></div>
   <h3><a href="${p}vrachi/${d.id}.html">${esc(d.name)}</a></h3>
@@ -459,7 +460,7 @@ function pageHome() {
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>
   ${teamTabs()}
-  <div class="team__grid">${doctors.map((d) => doctorCard(d, depth)).join("")}</div>
+  <div class="team__grid team__grid--lava">${doctors.map((d, i) => doctorCard(d, depth, { lava: true, i })).join("")}</div>
   <div class="team__more"><a class="btn btn--ghost" href="vrachi.html">Все врачи: опыт, образование, курсы</a></div>
 </div></section>
 
@@ -651,7 +652,7 @@ function pageDoctors() {
 </div></section>
 <section class="section section--sage team--page" id="team" aria-label="Врачи"><div class="wrap">
   ${teamTabs()}
-  <div class="team__grid">${doctors.map((d) => doctorCard(d, depth)).join("")}</div>
+  <div class="team__grid team__grid--lava">${doctors.map((d, i) => doctorCard(d, depth, { lava: true, i })).join("")}</div>
 </div></section>
 </main>` + footer(depth) + end;
 }
