@@ -122,7 +122,7 @@ function header(depth, home = false) {
   const items = menuItems(p, href);
   return `
 <header class="header"><div class="header__bar">
-  <a class="logo" href="${p}index.html" aria-label="Умная Медицина. Стоматология, на главную">${logoImg(depth)}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
+  <a class="logo" href="${p}index.html" aria-label="Умная Медицина. Стоматология, на главную"><picture><source media="(max-width: 760px)" srcset="${p}images/brand/header-logo-light.svg">${logoImg(depth)}</picture><span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
   <nav class="nav" aria-label="Разделы">
     <div class="nav__drop"><a href="${href("services")}">Услуги</a><div class="nav__panel">${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html"><span>${esc(svc[k].menu)}</span><small>${esc(svc[k].from)}</small></a>`).join("")}</div></div>
     ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}

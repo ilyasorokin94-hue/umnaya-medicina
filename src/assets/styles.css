@@ -95,6 +95,9 @@ html:not(.js-intro) .intro { display: none; }
 /* подпись стоит под словами «Умная Медицина»: слева отступ на ширину эмблемы, по высоте ниже надписи (замерено по header-logo.svg) */
 .logo__unit { position: absolute; left: calc(var(--lh) * 1.285); top: calc(var(--lh) * .72); font: 600 max(9px, calc(var(--lh) * .21))/1 var(--body); letter-spacing: .32em; text-transform: uppercase; white-space: nowrap; opacity: .72; pointer-events: none; }
 .logo--white .logo__img { filter: brightness(0) invert(1); }
+/* в шапке логотип в <picture>: на телефоне светлая надпись; сама обёртка в раскладке не участвует */
+.logo picture { display: contents; }
+.logo source { display: none; }
 
 /* ---------- шапка ---------- */
 .header { position: fixed; z-index: 100; left: 0; right: 0; top: var(--hdr-top, 0px); padding-top: 14px; }
@@ -1666,3 +1669,15 @@ html:not(.js-intro) .intro { display: none; }
 @keyframes tour-open { from { transform: scale(.86); } to { transform: none; } }
 @keyframes tour-zoom { from { transform: scale(1.14); } to { transform: none; } }
 @keyframes tour-title { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+
+/* шапка на телефоне как у Лава Дент (Ilya 16.10): на всю ширину, сверху тёмная дымка сходит на нет,
+   под шапкой всё размыто, как под матовым стеклом; логотип и бургер светлые, бургер без круга */
+@media (max-width: 760px) {
+  .header { padding-top: 0; color: #fff; }
+  .header__bar, .header.is-scrolled .header__bar { width: 100%; height: calc(var(--header-h) + 22px); padding: 0 calc(var(--gutter) - 9px) 8px var(--gutter); border-radius: 0; background: linear-gradient(180deg, rgba(12, 36, 16, .86), rgba(12, 36, 16, .56) 48%, rgba(12, 36, 16, 0)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: none; }
+  .burger { position: relative; width: 44px; height: 44px; background: none; }
+  .burger svg { display: none; }
+  .burger::before, .burger::after { content: ""; position: absolute; left: 9px; right: 9px; height: 1.5px; border-radius: 1px; background: currentColor; }
+  .burger::before { top: 17px; }
+  .burger::after { bottom: 17px; }
+}
