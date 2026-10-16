@@ -459,7 +459,7 @@ export const pics = {
   team: [C("2gis-02"), gallery[0]],
   svc: {
     diagnostika: [C("2gis-09"), ...pdPhotos.f], gigiena: [...GN("hygiene"), C("2gis-05"), ...pdPhotos.g], "lechenie-zubov": [C("2gis-07"), ...pdPhotos.h],
-    implantaciya: [C("2gis-04"), ...pdPhotos.i], "all-on-4": [...GN("allon4"), C("yandex-04"), ...pdPhotos.j], mikroskop: [C("2gis-06"), ...pdPhotos.k],
+    implantaciya: [C("2gis-04"), ...pdPhotos.i], "all-on-4": [...GN("allon4"), ...pdPhotos.j], mikroskop: [C("2gis-06"), ...pdPhotos.k],
     protezirovanie: [...GN("crowns"), C("yandex-02"), ...pdPhotos.l], hirurgiya: [C("2gis-11"), ...pdPhotos.m], ortodontiya: [...GN("ortho"), C("2gis-01"), ...pdPhotos.n],
     detskaya: [...GN("kids"), C("yandex-13"), ...pdPhotos.o],
   },
@@ -467,7 +467,7 @@ export const pics = {
   tour: [
     ["2gis-15", "Стоматология на Громова, 10/2"], ["2gis-02", "Ресепшен"], ["2gis-04", "Лечебный кабинет"], ["2gis-09", "3D-томограф Vatech"],
     ["2gis-07", "Кабинет терапии"], ["2gis-08", "Панорамный рентген"], ["2gis-11", "Стерилизационная"], ["2gis-06", "Лечебный кабинет"],
-    ["2gis-05", "Кабинет"], ["yandex-04", "3D-сканирование"], ["yandex-07", "Вход"],
+    ["2gis-05", "Кабинет"], ["yandex-07", "Вход"],
   ],
 };
 
