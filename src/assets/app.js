@@ -704,7 +704,34 @@
     const setX = G.quickSetter(tr, "xPercent");
     let x = 0, dir = 1, cur = 1, target = 1;
     ST.create({ trigger: tr, start: "top bottom", end: "bottom top", onUpdate: (self) => { dir = self.direction; target = dir * (1 + Math.min(Math.abs(self.getVelocity()) / 400, 4)); } });
-    G.ticker.add((time, dt) => { target += (dir - target) * 0.04; cur += (target - cur) * 0.12; x = (x - (cur * dt) / 600) % 50; if (x > 0) x -= 50; setX(x); });
+    G.ticker.add((time, dt) => { if (phoneMQ.matches) return; target += (dir - target) * 0.04; cur += (target - cur) * 0.12; x = (x - (cur * dt) / 600) % 50; if (x > 0) x -= 50; setX(x); });
+  });
+
+  // телефон: слоган всегда читается по порядку. Пока строка поднимается снизу, «Сначала думаем.» стоит целиком;
+  // с четверти экрана строка бежит влево, 120 px в секунду, при прокрутке до пяти раз быстрее.
+  // Ушла с экрана — встаёт обратно на «Сначала думаем.», поэтому каждый показ начинается с начала фразы
+  mm.add("(max-width: 760px)", () => {
+    const stop = $$(".marquee__track").map((tr) => {
+      const item = tr.firstElementChild, em = $("em", item), box = tr.parentElement, setX = G.quickSetter(tr, "x", "px");
+      let x0 = 0, w = 0, x = 0, run = false, cur = 1, target = 1;
+      const home = () => {
+        const ir = item.getBoundingClientRect(), a = em.getBoundingClientRect().left - ir.left - (parseFloat(getComputedStyle(item).columnGap) || 0);
+        w = ir.width; x0 = Math.max(0, Math.min(($(".wrap")?.getBoundingClientRect().left || 0), (innerWidth - a) / 2));
+        x = x0; run = false; cur = target = 1; setX(x);
+      };
+      G.set(tr, { xPercent: 0 }); home();
+      const seen = ST.create({ trigger: box, start: "top bottom", end: "bottom top", onToggle: (self) => { if (!self.isActive) home(); }, onRefresh: (self) => { if (!self.isActive) home(); } });
+      const go = ST.create({ trigger: box, start: "top 75%", end: "bottom top", onToggle: (self) => { run = self.isActive; },
+        onUpdate: (self) => { target = 1 + Math.min(Math.abs(self.getVelocity()) / 400, 4); } });
+      const tick = (time, dt) => {
+        if (!run || !w) return;
+        target += (1 - target) * 0.04; cur += (target - cur) * 0.12;
+        x -= cur * dt * 0.12; if (x < x0 - w) x += w; setX(x);
+      };
+      G.ticker.add(tick);
+      return () => { seen.kill(); go.kill(); G.ticker.remove(tick); G.set(tr, { x: 0 }); };
+    });
+    return () => stop.forEach((f) => f());
   });
 
   // контакты: сцена закрепляется, прокрутка ведёт от улицы к двери, каждое фото поднимается шторкой.
