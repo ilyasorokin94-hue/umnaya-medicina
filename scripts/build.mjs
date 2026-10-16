@@ -500,7 +500,7 @@ function pageHome() {
     <p class="faqv__intro">${esc(D.faqIntro)}</p>
     <div class="faqv__ask"><b>Не нашли ответ?</b><p>Позвоните <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a> или оставьте номер, перезвоним за 5 минут.</p>${act("Перезвоните мне", "call", p, { cls: "btn--sm" })}</div>
   </div>
-  <div class="faqv__main" data-acc>${D.faq.map(([t, qs]) => `<details class="faqt"><summary><h3>${nobr(esc(t))}</h3><i aria-hidden="true"></i></summary><div class="faqt__body"><div class="faqt__list" data-acc>${qs.map(([q, a]) => `<details class="faqq"><summary><span>${nobr(esc(q))}</span><i aria-hidden="true"></i></summary><div class="faqq__a"><p>${nobr(faqA(a, p))}</p></div></details>`).join("")}</div></div></details>`).join("")}</div>
+  <div class="faqv__main">${D.faq.map(([t, qs], i) => `<details class="faqt"${i ? "" : " open"} data-reveal><summary><h3>${nobr(esc(t))}</h3><i aria-hidden="true"></i></summary><div class="faqt__body"><div class="faqt__list">${qs.map(([q, a], k) => `<details class="faqq"${i || k ? "" : " open"}><summary><span>${nobr(esc(q))}</span><i aria-hidden="true"></i></summary><div class="faqq__a"><p>${nobr(faqA(a, p))}</p></div></details>`).join("")}</div></div></details>`).join("")}</div>
 </div></section>
 
 ${place()}
