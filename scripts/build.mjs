@@ -3,11 +3,15 @@
 // Каждая страница отдаётся готовым HTML (важно для SEO). Запуск: npm run build → dist/
 import { mkdirSync, writeFileSync, readFileSync, copyFileSync, rmSync, readdirSync, existsSync, cpSync } from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
+// метка версии у стилей и скриптов: после выкладки браузер берёт новые файлы, а не старые из кэша
+const ver = (f) => createHash("md5").update(readFileSync(path.join(root, "src/assets", f))).digest("hex").slice(0, 8);
+const V = { css: ver("styles.css"), app: ver("app.js"), heroseq: ver("heroseq.js") };
 const SITE = process.env.SITE_URL || "https://umnaya-stomatologiya.ru"; // домен-пример для canonical и разметки
 
 // неразрывные пробелы в ценах и номерах: «КТ от 2 000 ₽» не переносится по частям
@@ -76,7 +80,7 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="${p}assets/styles.css">
+<link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
@@ -86,7 +90,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <script src="${p}assets/vendor/gsap.min.js" defer></script>
 <script src="${p}assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="${p}assets/vendor/lenis.min.js" defer></script>
-<script src="${p}assets/app.js" defer></script>
+<script src="${p}assets/app.js?v=${V.app}" defer></script>
 ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</script>`).join("\n")}
 </head>
 <body${page === "booking" ? ' class="booking-page"' : ""}>
@@ -509,7 +513,7 @@ function pageHome() {
 </div></section>
 
 ${place()}
-</main>` + footer(depth) + `\n<script type="module" src="assets/heroseq.js"></script>` + end;
+</main>` + footer(depth) + `\n<script type="module" src="assets/heroseq.js?v=${V.heroseq}"></script>` + end;
 }
 
 // ---------- страница услуги ----------
