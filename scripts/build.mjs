@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Сборка макета, вариант 2: главная по логике trydentspb.ru (9 блоков) в дизайне и механике Lava Dental + страницы услуг, прайс и онлайн-запись.
 // Каждая страница отдаётся готовым HTML (важно для SEO). Запуск: npm run build → dist/
-import { mkdirSync, writeFileSync, copyFileSync, rmSync, readdirSync, existsSync, cpSync } from "node:fs";
+import { mkdirSync, writeFileSync, readFileSync, copyFileSync, rmSync, readdirSync, existsSync, cpSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
@@ -54,7 +54,7 @@ const icon = {
 
 // ---------- общие куски ----------
 // меню сайта, как у Тридента: «Услуги» раскрываются списком направлений, остальное разделы и страницы
-const menuItems = (p, href) => [["Цены", `${p}ceny.html`], ["Врачи", href("team")], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
+const menuItems = (p, href) => [["Цены", `${p}ceny.html`], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
 
 function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
   const p = pre(depth);
@@ -67,6 +67,7 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <meta name="description" content="${esc(desc)}">
 <meta name="robots" content="noindex, nofollow">
 <link rel="canonical" href="${SITE}${canonical}">
+<link rel="icon" type="image/svg+xml" href="${p}images/brand/favicon.svg">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
@@ -181,10 +182,34 @@ ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">
   </form>`)}
 ${box("write", "Напишите нам", `<p class="modal__sub">Ответим за 5 минут, ежедневно с 9:00 до 21:00. Можно сразу прислать снимок, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn btn--lg" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--lg btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>`)}
+${offer(depth, consent)}
 ${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}. Пока ждёте, можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>`)}
 </div>`;
+}
+
+// окно с предложением: всплывает само через время на сайте. Одно поле, три врача крупно, крестик виден сразу
+function offer(depth, consent) {
+  const o = home.offer;
+  return `<div class="modal modal--offer" id="m-offer" role="dialog" aria-modal="true" aria-labelledby="m-offer-t" hidden><div class="modal__box invite" data-lenis-prevent>
+  <div class="invite__team">
+    <p class="invite__cap">${esc(o.team)}</p>
+    <ul class="invite__docs">${o.who.map(([id, role]) => `<li><span class="invite__pic">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${esc(role)}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></li>`).join("")}</ul>
+  </div>
+  <div class="invite__body">
+    <button class="invite__x" type="button" data-close>Закрыть ${icon.close}</button>
+    <p class="label">${esc(o.label)}</p>
+    <h2 id="m-offer-t" tabindex="-1">${esc(o.title)}</h2>
+    <p class="invite__sub">${esc(o.sub)}</p>
+    <p class="invite__perk">${esc(o.perk)}</p>
+    <form class="lead invite__form" data-lead="offer">
+      <label class="invite__field"><span>Телефон</span><input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>
+      <button class="btn">${esc(o.btn)}</button>
+    </form>
+    <p class="modal__note">${esc(o.note)} ${consent}</p>
+  </div>
+</div></div>`;
 }
 
 function footer(depth) {
@@ -239,25 +264,7 @@ function footer(depth) {
   </div>
 </div></footer>
 <div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${clinic.telegram}" data-modal="write">Написать</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
-${modals(depth)}${popCard(depth)}`;
-}
-// карточка-заявка: появляется через время на сайте или при попытке уйти; страницу не блокирует, листать можно дальше
-function popCard(depth) {
-  const p = pre(depth);
-  const pp = home.popup;
-  const chips = ["Болит зуб", "Сказали удалить", "Нужен имплант", "Чистка", "Другое"];
-  return `
-<aside class="pop" id="pop" role="dialog" aria-modal="false" aria-labelledby="pop-t" hidden>
-  <div class="pop__top">${avatars(pp.who, depth)}<button class="pop__x" type="button" data-pop-close>Закрыть ${icon.close}</button></div>
-  <h2 id="pop-t">${esc(pp.title)}</h2>
-  <p class="pop__sub">${esc(pp.sub)}</p>
-  <form class="form lead pop__form" data-lead="popup">
-    <div class="pop__row"><label>Имя<input name="name" autocomplete="given-name"></label><label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label></div>
-    <fieldset class="reasons"><legend>Что беспокоит <span>необязательно</span></legend><div class="chips">${chips.map((r) => `<label class="chip chip--pick"><input type="radio" name="reason" value="${esc(r)}"><span>${esc(r)}</span></label>`).join("")}</div></fieldset>
-    <button class="btn btn--wide">${esc(pp.btn)}</button>
-    <p class="modal__note">Консультация и план лечения бесплатно. Отправляя заявку, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
-  </form>
-</aside>`;
+${modals(depth)}`;
 }
 const end = `\n</body>\n</html>\n`;
 
@@ -287,7 +294,6 @@ const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 const reviewsText = (n) => `${n} ${plural(n, "отзыв", "отзыва", "отзывов")}`;
 
 const docById = Object.fromEntries(doctors.map((d) => [d.id, d]));
-const avatars = (ids, depth) => `<span class="who" aria-hidden="true">${ids.map((id) => `<span class="who__pic">${img(docPhoto(docById[id]), "", depth)}</span>`).join("")}</span>`;
 
 function doctorCard(d, depth) {
   const p = pre(depth);
@@ -300,6 +306,10 @@ function doctorCard(d, depth) {
   ${act("Записаться к врачу", "book", p, { cls: "btn--ghost btn--sm doc__cta", doctor: d.id })}
 </article>`;
 }
+
+const teamTabs = () => `<div class="chips team__tabs" role="tablist" data-tabs="team">
+    ${[["", "Все"], ["lechenie-zubov", "Терапия"], ["implantaciya", "Хирургия и имплантация"], ["protezirovanie", "Ортопедия"], ["ortodontiya", "Ортодонтия"], ["detskaya", "Детям"]].map(([v, t], i) => `<button class="chip" type="button" role="tab" data-tab="${v}" aria-selected="${i === 0}">${t}</button>`).join("")}
+  </div>`;
 
 function faqBlock(groups) {
   // groups: [[title, [[q, a], ...]], ...]
@@ -370,13 +380,12 @@ function pageHome() {
   const star = icon.star;
   const D = v2;
   const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
-  const heroImg = img(D.hero, "Врачи стоматологии «Умная Медицина» за работой", depth, ' fetchpriority="high"').replace(' loading="lazy"', ' loading="eager"');
 
   return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq)] })
   + intro(depth) + header(depth, true) + `
 <main id="main">
 
-<section class="hero" aria-labelledby="h1"><div class="wrap hero__in">
+<section class="hero hero--3d on-dark" aria-labelledby="h1"><div class="wrap hero__in">
   <div class="hero__text">
     <h1 id="h1"><span class="kicker">${esc(D.kicker)}</span><span data-split>${esc(D.h1)}</span></h1>
     <p class="hero__sub">${esc(D.sub)}</p>
@@ -384,9 +393,9 @@ function pageHome() {
     <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
     <ul class="hero__facts">${D.facts.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
     <p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>
-    <ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short)}</span></a></li>`).join("")}</ul>
+    <ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>
   </div>
-  <figure class="hero__media" data-ph>${heroImg}${ph()}</figure>
+  <div class="hero__3d" aria-hidden="true"><canvas></canvas></div>
 </div></section>
 
 <section class="slogan on-dark" aria-label="Сначала думаем. Потом лечим.">
@@ -400,7 +409,7 @@ function pageHome() {
     <aside class="offer dir__card">
       <span class="label label--light">${esc(d.promo.tag)}</span>
       <h3>${esc(d.promo.title)}</h3>
-      ${d.promo.price ? `<p class="offer__price"><b>${esc(d.promo.price)}</b>${d.promo.old ? `<s>${esc(d.promo.old)}</s>` : ""}</p>` : ""}
+      ${d.promo.price ? `<p class="invite__price"><b>${esc(d.promo.price)}</b>${d.promo.old ? `<s>${esc(d.promo.old)}</s>` : ""}</p>` : ""}
       <p class="dir__promo">${esc(d.promo.text)}</p>
       ${act(d.btn[0], d.btn[1], p, { cls: "btn--light", reason: d.btn[2] })}
     </aside>
@@ -418,7 +427,7 @@ function pageHome() {
     <div class="tour__frame">${img(D.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»", depth)}</div>
     <div class="tour__title wrap"><span class="label label--light">${esc(D.clinic.label)}</span><h2 id="tr-title" data-split>${esc(D.clinic.title)}</h2><p>${esc(D.clinic.text)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>
   </div>
-  <p class="tour__lead wrap" aria-hidden="true">${esc(D.clinic.text)}</p>
+  <p class="tour__lead wrap">${esc(D.clinic.text)}</p>
   <div class="tour__rows" aria-label="Фото клиники">
     ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
   </div>
@@ -430,17 +439,15 @@ function pageHome() {
     <div class="feat__pin"><div class="feat__track">
       <div class="fcard fcard--intro"><span class="label">${esc(D.path.label)}</span><h2 id="ph-title" data-split>${esc(D.path.title)}</h2><p>${esc(D.path.intro)}</p></div>
       ${D.path.steps.map(([big, t, d]) => `<article class="fcard"><div class="fcard__body"><b class="fcard__big">${esc(big)}</b><h3>${esc(t)}</h3><p>${esc(d)}</p></div></article>`).join("")}
-    </div></div>
+    </div><div class="wrap cta-strip"><p>${esc(D.path.note)}</p>${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true })}</div></div>
   </div>
-  <div class="wrap cta-strip"><p>${esc(D.path.note)}</p>${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true })}</div>
 </section>
 
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>
-  <div class="chips team__tabs" role="tablist" data-tabs="team">
-    ${[["", "Все"], ["lechenie-zubov", "Терапия"], ["implantaciya", "Хирургия и имплантация"], ["protezirovanie", "Ортопедия"], ["ortodontiya", "Ортодонтия"], ["detskaya", "Детям"]].map(([v, t], i) => `<button class="chip" type="button" role="tab" data-tab="${v}" aria-selected="${i === 0}">${t}</button>`).join("")}
-  </div>
+  ${teamTabs()}
   <div class="team__grid">${doctors.map((d) => doctorCard(d, depth)).join("")}</div>
+  <div class="team__more"><a class="btn btn--ghost" href="vrachi.html">Все врачи: опыт, образование, курсы</a></div>
 </div></section>
 
 <section class="section reviews" id="reviews" aria-labelledby="rv-title">
@@ -480,7 +487,7 @@ function pageHome() {
 </div></section>
 
 ${place()}
-</main>` + footer(depth) + end;
+</main>` + footer(depth) + `\n<script type="module" src="assets/hero3d.js"></script>` + end;
 }
 
 // ---------- страница услуги ----------
@@ -559,14 +566,14 @@ function pageDoctor(d) {
   ].sort((a, b) => a.sort - b.sort);
   const desc = `${d.name}, ${d.title.toLowerCase()} стоматологии «Умная Медицина» в Удельной (Жуковский).${d.exp ? ` Стаж ${d.exp} лет.` : ""} Образование, курсы, запись на приём.`;
   const ld = { "@context": "https://schema.org", "@type": "Person", name: d.name, jobTitle: d.title, worksFor: { "@type": "Dentist", name: clinic.name }, url: `${SITE}/vrachi/${d.id}` };
-  return head({ title: `${d.name} — ${d.title.toLowerCase()} | Умная Медицина`, desc, canonical: `/vrachi/${d.id}`, depth, jsonld: [crumbsLd([["index.html#team", "Врачи"], ["vrachi/" + d.id, d.short]]), ld] })
+  return head({ title: `${d.name} — ${d.title.toLowerCase()} | Умная Медицина`, desc, canonical: `/vrachi/${d.id}`, depth, jsonld: [crumbsLd([["vrachi", "Врачи"], ["vrachi/" + d.id, d.short]]), ld] })
   + header(depth) + `
 <main id="main">
 <section class="page-hero doc-hero on-dark">
   <div class="foil__bg"></div>
   <div class="wrap doc-hero__in">
     <div class="doc-hero__text">
-      <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../index.html#team">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
+      <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../vrachi.html">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
       <span class="label label--light doc-hero__role">${esc(d.title)}</span>
       <h1><span data-split>${esc(last)}</span> <span data-split>${esc(given.join(" "))}</span></h1>
       ${d.claims ? `<ul class="doc-hero__facts">${d.claims.map(([n, t]) => `<li><b>${esc(n)}</b><span>${esc(t)}</span></li>`).join("")}</ul>` : d.exp || d.courses.length ? `<ul class="doc-hero__facts">
@@ -613,6 +620,24 @@ ${d.courses.length ? `<section class="section section--sage"><div class="wrap">
 }
 
 // ---------- прайс ----------
+// ---------- все врачи ----------
+function pageDoctors() {
+  const depth = 0;
+  const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: doctors.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/vrachi/${d.id}`, name: d.name })) };
+  return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты | Умная Медицина", desc: "Врачи стоматологии «Умная Медицина» в Удельной: имплантологи, ортопеды, терапевты, ортодонты и детский стоматолог. Опыт, образование, запись к врачу.", canonical: "/vrachi", depth, jsonld: [crumbsLd([["vrachi", "Врачи"]]), ld] })
+  + header(depth) + `
+<main id="main">
+<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
+  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span aria-current="page">Врачи</span></nav><h1 data-split>Врачи стоматологии</h1><p class="page-hero__lead">${esc(v2.team.text)}</p></div>
+  <div class="page-hero__aside">${act("Записаться на консультацию", "book", "", { cls: "btn--lg", magnet: true })}</div>
+</div></section>
+<section class="section section--sage team--page" id="team" aria-label="Врачи"><div class="wrap">
+  ${teamTabs()}
+  <div class="team__grid">${doctors.map((d) => doctorCard(d, depth)).join("")}</div>
+</div></section>
+</main>` + footer(depth) + end;
+}
+
 function pagePrices() {
   const depth = 0;
   const order = ["consult", "xray", "therapy", "hygiene", "implant", "bone", "allon", "crowns", "removable", "surgery", "ortho", "kidsOrtho", "kids"];
@@ -712,9 +737,13 @@ rmSync(dist, { recursive: true, force: true });
 mkdirSync(path.join(dist, "uslugi"), { recursive: true });
 mkdirSync(path.join(dist, "vrachi"), { recursive: true });
 mkdirSync(path.join(dist, "assets", "vendor"), { recursive: true });
-const out = (f, html) => writeFileSync(path.join(dist, f), html);
+// типографика: после коротких слов (в, к, на, от, до…) неразрывный пробел, чтобы они не висели в конце строки.
+// Только в тексте между тегами, без скриптов и стилей.
+const typo = (html) => html.replace(/(<(script|style)\b[\s\S]*?<\/\2>)|>([^<]+)</g, (m, block, _t, text) => block || ">" + text.replace(/(?<=^|[\s(«])([А-Яа-яЁё]{1,2}) (?=\S|$)/g, "$1\u00a0") + "<");
+const out = (f, html) => writeFileSync(path.join(dist, f), f.endsWith(".html") ? typo(html) : html);
 out("index.html", pageHome());
 out("ceny.html", pagePrices());
+out("vrachi.html", pageDoctors());
 out("zapis.html", pageBooking());
 for (const s of services) out(`uslugi/${s.slug}.html`, pageService(s));
 for (const d of doctors) out(`vrachi/${d.id}.html`, pageDoctor(d));
@@ -723,8 +752,10 @@ const nm = (p) => path.join(root, "node_modules", p);
 copyFileSync(nm("gsap/dist/gsap.min.js"), path.join(dist, "assets/vendor/gsap.min.js"));
 copyFileSync(nm("gsap/dist/ScrollTrigger.min.js"), path.join(dist, "assets/vendor/ScrollTrigger.min.js"));
 copyFileSync(nm("lenis/dist/lenis.min.js"), path.join(dist, "assets/vendor/lenis.min.js"));
+copyFileSync(nm("three/build/three.module.min.js"), path.join(dist, "assets/vendor/three.module.min.js"));
+writeFileSync(path.join(dist, "assets/vendor/RoomEnvironment.js"), readFileSync(nm("three/examples/jsm/environments/RoomEnvironment.js"), "utf8").replace("from 'three'", "from './three.module.min.js'"));
 if (existsSync(path.join(root, "src", "images"))) cpSync(path.join(root, "src", "images"), path.join(dist, "images"), { recursive: true });
 out("robots.txt", "User-agent: *\nDisallow: /\n");
 out(".nojekyll", "");
-out("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["/", "/ceny", "/zapis", ...services.map((s) => `/uslugi/${s.slug}`), ...doctors.map((d) => `/vrachi/${d.id}`)].map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>2026-10-15</lastmod></url>`).join("\n")}\n</urlset>\n`);
+out("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["/", "/ceny", "/vrachi", "/zapis", ...services.map((s) => `/uslugi/${s.slug}`), ...doctors.map((d) => `/vrachi/${d.id}`)].map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>2026-10-15</lastmod></url>`).join("\n")}\n</urlset>\n`);
 console.log("Собрано страниц:", 3 + services.length + doctors.length, "→", dist);
