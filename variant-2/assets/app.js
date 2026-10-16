@@ -109,7 +109,9 @@
       if (kind === "team") {
         const shown = [];
         $$(".team__grid .doc").forEach((d) => { const ok = !val || d.dataset.tags.split(" ").includes(val); d.hidden = !ok; if (ok) shown.push(d); });
+        shown.filter((d) => d.dataset.col).forEach((d, i) => { d.dataset.col = i % 2 ? "r" : "l"; });
         fadeIn(shown);
+        requestAnimationFrame(lavaTeam);
         const tg = $(".team__grid");
         if (tg && tg.scrollWidth > tg.clientWidth) tg.scrollTo({ left: 0, behavior: reduce ? "auto" : "smooth" });
         requestAnimationFrame(teamDeck);
@@ -189,7 +191,7 @@
   document.addEventListener("focusout", () => root.classList.remove("bar-kb"));
 
   // телефон: врач в центре ленты крупнее, соседние чуть меньше и тише, портрет слегка сдвигается внутри рамки
-  const tgrid = $(".team__grid");
+  const tgrid = $(".team__grid:not(.team__grid--lava)");
   function teamDeck() {
     if (!tgrid || reduce) return;
     if (!phoneMQ.matches) { $$(".doc", tgrid).forEach((c) => { c.style.removeProperty("--p"); c.style.removeProperty("--a"); }); return; }
@@ -205,6 +207,28 @@
   tgrid?.addEventListener("scroll", () => { cancelAnimationFrame(tdr); tdr = requestAnimationFrame(teamDeck); }, { passive: true });
   addEventListener("resize", teamDeck);
   teamDeck();
+
+  // врачи как у Лава Дент: от 961px левая колонка едет от +20vmin к −20vmin, пока карточка проходит экран
+  // снизу вверх, правая стоит, фото плывёт внутри рамки от +10% к −10%. Прогресс --k от 1 до −1.
+  const lavaDocs = $$(".team__grid--lava .doc");
+  const lavaMQ = matchMedia("(min-width: 961px)");
+  function lavaTeam() {
+    if (!lavaDocs.length || !anim) return;
+    if (!lavaMQ.matches) { lavaDocs.forEach((c) => c.style.removeProperty("--k")); return; }
+    const vh = innerHeight;
+    lavaDocs.forEach((c) => {
+      if (c.hidden) return;
+      const r = c.getBoundingClientRect();
+      const t = Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height)));
+      c.style.setProperty("--k", (1 - 2 * t).toFixed(4));
+    });
+  }
+  if (lavaDocs.length && anim) {
+    if (lenis) lenis.on("scroll", lavaTeam); else addEventListener("scroll", lavaTeam, { passive: true });
+    addEventListener("resize", lavaTeam);
+    lavaMQ.addEventListener?.("change", lavaTeam);
+    lavaTeam();
+  }
 
   // кнопка «наверх»
   $$("[data-totop]").forEach((b) => b.addEventListener("click", () => (lenis ? lenis.scrollTo(0, { duration: 1.6 }) : scrollTo({ top: 0, behavior: "smooth" }))));
