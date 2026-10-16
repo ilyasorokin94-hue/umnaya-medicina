@@ -1627,3 +1627,8 @@ html:not(.js-intro) .intro { display: none; }
   .fstage__links, .fstage__list { font-size: 14px; gap: 2px 16px; }
   .fstage__list--2 { gap: 0 16px; }
 }
+/* «Все врачи» под сеткой: текстовая ссылка без рамки */
+.team__more .btn--ghost { box-shadow: none; min-height: 44px; padding: 0 6px; font-size: 17px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 6px; transition: color .3s; }
+.team__more .btn--ghost::before { display: none; }
+.team__more .btn--ghost:hover { color: var(--green-deep); }
+@media (max-width: 760px) { .team__more .btn--ghost { width: auto; } }
