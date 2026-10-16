@@ -126,6 +126,43 @@
     }));
   });
 
+  // услуги на телефоне: первыми имплантация, протезирование и удаление (порядок задаёт CSS), с имплантации и открываемся.
+  // Края ленты направлений гаснут с той стороны, где есть ещё вкладки. Панель с ценами листается пальцем вбок
+  // к соседнему направлению, лента идёт следом
+  const dirTabs = $('[data-tabs="dir"]');
+  const dirSeq = () => $$("[data-tab]", dirTabs).sort((a, b) => (parseFloat(getComputedStyle(a).order) || 0) - (parseFloat(getComputedStyle(b).order) || 0));
+  let dirRollStop = () => {};
+  if (dirTabs) {
+    if (phoneMQ.matches) {
+      const b = dirSeq()[0];
+      $$("[data-tab]", dirTabs).forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+      $$('[data-panel="dir"]').forEach((p) => { p.hidden = p.dataset.key !== b.dataset.tab; });
+    }
+    const start = () => dirTabs.classList.toggle("is-start", dirTabs.scrollLeft <= 4);
+    dirTabs.addEventListener("scroll", start, { passive: true });
+    start();
+    let sx = 0, sy = 0, lock = 0, cur = null;
+    $$('[data-panel="dir"]').forEach((p) => {
+      p.addEventListener("touchstart", (e) => { if (!phoneMQ.matches || e.touches.length > 1) return; sx = e.touches[0].clientX; sy = e.touches[0].clientY; lock = 0; cur = p; }, { passive: true });
+      p.addEventListener("touchmove", (e) => {
+        if (cur !== p) return;
+        const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
+        if (!lock && Math.hypot(dx, dy) > 8) lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 1 : -1;
+        if (lock === 1 && anim) G.set(p, { x: dx * 0.35 });
+      }, { passive: true });
+      const end = (e) => {
+        if (cur !== p) return;
+        cur = null;
+        if (lock !== 1) return;
+        const dx = (e.changedTouches[0]?.clientX ?? sx) - sx, seq = dirSeq(), i = seq.findIndex((b) => b.dataset.tab === p.dataset.key);
+        const next = Math.abs(dx) > 50 ? seq[i + (dx < 0 ? 1 : -1)] : null;
+        if (next) { dirRollStop(); next.click(); } else if (anim) G.to(p, { x: 0, duration: 0.4, ease: "expo.out" });
+      };
+      p.addEventListener("touchend", end, { passive: true });
+      p.addEventListener("touchcancel", end, { passive: true });
+    });
+  }
+
   // «Показать ещё» в работах
   let worksOpen = false;
   $("[data-works-more]")?.addEventListener("click", (e) => {
@@ -732,6 +769,47 @@
       return () => { seen.kill(); go.kill(); G.ticker.remove(tick); G.set(tr, { x: 0 }); };
     });
     return () => stop.forEach((f) => f());
+  });
+
+  // услуги на телефоне: лента направлений сама показывает, что она листается. Пока блок поднимается снизу,
+  // лента прокатывается справа налево к первой вкладке; тронули её пальцем, дальше листает только человек.
+  // Тёмная подложка выбранной вкладки переезжает к новой, новая панель въезжает с той стороны, куда листали
+  if (dirTabs) mm.add("(max-width: 760px)", () => {
+    const glider = document.createElement("span");
+    glider.className = "dirs__glider"; glider.setAttribute("aria-hidden", "true");
+    dirTabs.appendChild(glider); dirTabs.classList.add("has-glider", "is-rolling");
+    const sel = () => $('[aria-selected="true"]', dirTabs);
+    const glide = (now) => { const b = sel(); if (!b) return; const v = { x: b.offsetLeft, y: b.offsetTop, width: b.offsetWidth, height: b.offsetHeight }; if (now) G.set(glider, v); else G.to(glider, { ...v, duration: 0.5, ease: "expo.out", overwrite: true }); };
+    glide(true);
+    const roll = { v: 0 };
+    const far = () => Math.max(0, Math.min(dirTabs.scrollWidth - dirTabs.clientWidth, dirTabs.clientWidth * 0.7));
+    const tw = G.fromTo(roll, { v: far }, { v: 0, ease: "none", onUpdate: () => { dirTabs.scrollLeft = roll.v; }, scrollTrigger: { trigger: dirTabs, start: "top bottom", end: "top 55%", scrub: 0.5, invalidateOnRefresh: true } });
+    dirTabs.scrollLeft = roll.v;
+    const stop = () => { if (!tw.scrollTrigger) return; tw.scrollTrigger.kill(); tw.kill(); dirTabs.classList.remove("is-rolling"); };
+    dirRollStop = stop;
+    dirTabs.addEventListener("pointerdown", stop);
+    dirTabs.addEventListener("touchstart", stop, { passive: true });
+    let last = dirSeq().indexOf(sel());
+    const onPick = (e) => {
+      const b = e.currentTarget, seq = dirSeq(), i = seq.indexOf(b), p = $(`[data-panel="dir"][data-key="${b.dataset.tab}"]`);
+      stop(); glide(false);
+      if (p && i !== last) {
+        const kids = $$(".dir__card, li", p);
+        G.killTweensOf(kids); G.set(kids, { clearProps: "opacity,transform" });
+        G.fromTo(p, { x: i > last ? 70 : -70, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
+      }
+      last = i;
+    };
+    const btns = $$("[data-tab]", dirTabs);
+    btns.forEach((b) => b.addEventListener("click", onPick));
+    const reglide = () => requestAnimationFrame(() => { if (!G.isTweening(glider)) glide(true); });
+    ST.addEventListener("refresh", reglide);
+    return () => {
+      stop(); btns.forEach((b) => b.removeEventListener("click", onPick));
+      dirTabs.removeEventListener("pointerdown", stop); dirTabs.removeEventListener("touchstart", stop);
+      ST.removeEventListener("refresh", reglide);
+      glider.remove(); dirTabs.classList.remove("has-glider"); dirRollStop = () => {};
+    };
   });
 
   // контакты: сцена закрепляется, прокрутка ведёт от улицы к двери, каждое фото поднимается шторкой.
