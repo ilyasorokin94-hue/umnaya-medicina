@@ -45,8 +45,9 @@ const logoImg = (depth, eager = true) => {
   return `<img class="logo__img" src="${src}"${fb ? ` data-fb="${fb}"` : ""} alt=""${eager ? "" : ' loading="lazy"'} referrerpolicy="no-referrer" onerror="umLogo(this)">`;
 };
 
-// в шапке и меню телефона светлая надпись логотипа (шапка там тёмная и полупрозрачная, как у Лава Дент)
-const phoneLogo = (depth, eager = true) => `<picture><source media="(max-width: 760px) and (forced-colors: none)" srcset="${pre(depth)}images/brand/header-logo-light.svg">${logoImg(depth, eager)}</picture>`;
+// в шапке телефона светлая надпись логотипа (шапка там тёмная и полупрозрачная, как у Лава Дент);
+// в меню телефона логотип одним тёмным цветом на шалфейном фоне, как у Лава Дент
+const phoneLogo = (depth, eager = true, file = "header-logo-light.svg") => `<picture><source media="(max-width: 760px) and (forced-colors: none)" srcset="${pre(depth)}images/brand/${file}">${logoImg(depth, eager)}</picture>`;
 
 // ---------- иконки ----------
 const icon = {
@@ -62,6 +63,8 @@ const icon = {
 // ---------- общие куски ----------
 // меню сайта, как у Тридента: «Услуги» раскрываются списком направлений, остальное разделы и страницы
 const menuItems = (p, href) => [["Цены", `${p}ceny.html`], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
+// меню телефона как у Лава Дент: разделы в порядке страницы, «Цены» рядом с услугами
+const phoneMenuItems = (p, href) => [["Услуги", href("services"), "uslugi"], ["Цены", `${p}ceny.html`], ["О клинике", href("clinic")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
 function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
   const p = pre(depth);
@@ -82,7 +85,7 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <meta name="theme-color" content="#0c2410">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Golos+Text:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Golos+Text:wght@400;500;600&family=Inter+Tight:wght@450&family=Manrope:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
@@ -137,12 +140,16 @@ function header(depth, home = false) {
   </div>
 </div></header>
 <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Меню" data-lenis-prevent>
-  <div class="menu__top"><a class="logo logo--white" href="${p}index.html">${phoneLogo(depth, false)}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a><button class="menu__close" type="button" aria-label="Закрыть меню">${icon.close}</button></div>
+  <div class="menu__top"><a class="logo logo--white" href="${p}index.html">${phoneLogo(depth, true, "header-logo-ink.svg")}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a><button class="menu__close" type="button" aria-label="Закрыть меню">${icon.close}</button></div>
   <nav aria-label="Разделы">
     <details class="menu__svc"><summary>Услуги</summary><div class="menu__list">${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html">${esc(svc[k].menu)}</a>`).join("")}</div></details>
     ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}
   </nav>
   <div class="menu__foot"><a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a><span class="note">${esc(clinic.hours)}. Перезвоним за 5 минут.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
+  <nav class="mnav" aria-label="Разделы">
+    <ul class="mnav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li><a class="mnav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a></li>`).join("")}</ul>
+    <p class="mnav__row"><a class="mnav__link mnav__link--on" href="${clinic.phoneHref}">${esc(clinic.phone)}</a></p>
+  </nav>
 </div>`;
 }
 

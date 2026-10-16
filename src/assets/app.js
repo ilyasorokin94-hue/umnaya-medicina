@@ -52,14 +52,36 @@
   function closeMenu() {
     if (!menu?.classList.contains("is-open")) return;
     menu.classList.remove("is-open");
+    root.classList.remove("menu-open");
     burger?.setAttribute("aria-expanded", "false");
     lenis?.start();
   }
+  // меню телефона как у Лава Дент: тёмный с точкой текущий раздел; на главной тот, что сейчас на экране
+  // (выше всех разделов первый), на других страницах сама страница или её раздел (услуги, врачи)
+  const markMenu = () => {
+    const links = $$(".mnav__list a", menu);
+    if (!links.length) return;
+    const secs = links.map((a) => [a, a.hash && a.pathname === location.pathname && document.getElementById(decodeURIComponent(a.hash.slice(1)))]).filter(([, el]) => el);
+    let cur = null;
+    if (secs.length) {
+      const tops = secs.map(([a, el]) => [a, el.getBoundingClientRect().top]);
+      const above = tops.filter(([, y]) => y <= innerHeight / 2);
+      cur = (above.length ? above.reduce((m, t) => (t[1] > m[1] ? t : m)) : tops.reduce((m, t) => (t[1] < m[1] ? t : m)))[0];
+    } else {
+      cur = links.find((a) => !a.hash && a.pathname === location.pathname) || links.find((a) => a.dataset.dir && location.pathname.includes(`/${a.dataset.dir}/`));
+    }
+    links.forEach((a) => {
+      a.classList.toggle("is-current", a === cur);
+      if (a === cur) a.setAttribute("aria-current", a.hash ? "location" : "page"); else a.removeAttribute("aria-current");
+    });
+  };
   burger?.addEventListener("click", () => {
     const r = burger.getBoundingClientRect();
     menu.style.setProperty("--mo", `${r.left + r.width / 2}px ${r.top + r.height / 2}px`);
+    markMenu();
     menu.classList.add("is-open");
-    if (anim) G.fromTo($$(".menu nav > a, .menu__svc > summary, .menu__foot > *", menu), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.05, delay: 0.15, ease: "expo.out", overwrite: true });
+    root.classList.add("menu-open");
+    if (anim && !phoneMQ.matches) G.fromTo($$(".menu nav > a, .menu__svc > summary, .menu__foot > *", menu), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.05, delay: 0.15, ease: "expo.out", overwrite: true });
     burger.setAttribute("aria-expanded", "true");
     lenis?.stop();
     $(".menu__close", menu)?.focus();
