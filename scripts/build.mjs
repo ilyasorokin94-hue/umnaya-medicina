@@ -10,8 +10,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
 const SITE = process.env.SITE_URL || "https://umnaya-stomatologiya.ru"; // домен-пример для canonical и разметки
 
-// неразрывные пробелы в числах и перед ₽: «3 000» и «17 500 ₽» не разрываются переносом строки
-const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/(\d) (?=\d{3}\b)/g, "$1\u00a0").replace(/ ₽/g, "\u00a0₽");
+// неразрывные пробелы в ценах и номерах: «КТ от 2 000 ₽» не переносится по частям
+const nb = (t) => t.replace(/(\d) (?=\d{3}(?!\d))/g, "$1\u00a0").replace(/ ₽/g, "\u00a0₽").replace(/(^|\s)(от|до) (?=\d)/g, "$1$2\u00a0");
+const esc = (s) => nb(String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"));
 const rub = (n) => n.toLocaleString("ru-RU").replace(/\s/g, " ") + " ₽";
 const priceText = (p) => {
   if (p === 0) return "Бесплатно";
@@ -171,21 +172,15 @@ ${box("xray", "Пришлите снимок, и врач скажет, можн
     <button class="btn btn--lg btn--wide">Отправить снимок</button>
     <p class="modal__note">Если зуб можно спасти, скажем, как и сколько это стоит. ${consent}</p>
   </form>`)}
-${box("allon", "Расчёт All-on-4 для вашего случая", `<p class="modal__sub">Имплантолог посмотрит ответы, и мы перезвоним: скажем, подходит ли вам All-on-4, и запишем на бесплатную консультацию с планом и ценой.</p>
+${box("allon", "Консультация по All-on-4", `<p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная, стоимость лечения врач назовёт после осмотра.</p>
   <form class="form lead" data-lead="allon">${name}${phone}
     <fieldset class="reasons"><legend>Одна или обе челюсти</legend><div class="chips">${["Одна челюсть", "Обе челюсти"].map((r, i) => `<label class="chip chip--pick"><input type="radio" name="jaws" value="${r}"${i ? "" : " checked"}><span>${r}</span></label>`).join("")}</div></fieldset>
     <fieldset class="reasons"><legend>Носите ли съёмный протез</legend><div class="chips">${["Да, ношу", "Нет"].map((r) => `<label class="chip chip--pick"><input type="radio" name="denture" value="${r}"><span>${r}</span></label>`).join("")}</div></fieldset>
-    <button class="btn btn--lg btn--wide">Получить расчёт</button>
-    <p class="modal__note">Перезвоним за 5 минут. Расчёт бесплатный. ${consent}</p>
+    <button class="btn btn--lg btn--wide">Записаться на консультацию</button>
+    <p class="modal__note">Перезвоним за 5 минут. ${consent}</p>
   </form>`)}
 ${box("write", "Напишите нам", `<p class="modal__sub">Ответим за 5 минут, ежедневно с 9:00 до 21:00. Можно сразу прислать снимок, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn btn--lg" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--lg btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>`)}
-${box("exit", esc(v2.exit[0]), `<p class="modal__sub">${esc(v2.exit[1])}</p>
-  <form class="form lead" data-lead="exit">${phone}
-    <button class="btn btn--lg btn--wide">Жду звонка</button>
-    <p class="modal__note">${consent}</p>
-  </form>
-  <button class="btn btn--ghost btn--wide modal__later" type="button" data-close>Продолжить смотреть сайт</button>`)}
 ${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}. Пока ждёте, можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>`)}
@@ -198,10 +193,15 @@ function footer(depth) {
   return `
 <footer class="footer on-dark"><div class="wrap footer__in">
   <div class="footer__cta">
-    <div><h2 data-split>${esc(v2.final[0])}</h2><p class="footer__lead">${esc(v2.final[1])}</p></div>
+    <div><h2 data-split>${esc(home.final[0])}</h2><p class="footer__lead">${esc(home.final[1])}</p></div>
     <div class="footer__form">
-      <form class="lead lead--inline" data-lead="final"><label class="sr" for="f-phone-${depth}">Телефон</label><input id="f-phone-${depth}" name="phone" type="tel" required placeholder="Телефон" autocomplete="tel" inputmode="tel"><button class="btn btn--lg">Жду звонка</button></form>
-      <p class="cta-box__note">Отправляя номер, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
+      <form class="fform lead" data-lead="final">
+        <h3 class="fform__title">${esc(home.footForm.title)}</h3>
+        <div class="fform__row"><label>Имя<input name="name" autocomplete="given-name" placeholder="Как к вам обращаться"></label><label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label></div>
+        <button class="btn btn--lg btn--wide">${esc(home.footForm.btn)}</button>
+        <p class="fform__note">${esc(home.footForm.note)} Отправляя заявку, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
+        <p class="fform__alt">Есть снимок или план из другой клиники? <a href="${fallbackHref("xray", p)}" data-modal="xray" data-reason="Сказали удалить">Прислать на второе мнение</a></p>
+      </form>
     </div>
   </div>
   <div class="footer__grid">
@@ -238,8 +238,26 @@ function footer(depth) {
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
   </div>
 </div></footer>
-<div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
-${modals(depth)}`;
+<div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${clinic.telegram}" data-modal="write">Написать</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
+${modals(depth)}${popCard(depth)}`;
+}
+// карточка-заявка: появляется через время на сайте или при попытке уйти; страницу не блокирует, листать можно дальше
+function popCard(depth) {
+  const p = pre(depth);
+  const pp = home.popup;
+  const chips = ["Болит зуб", "Сказали удалить", "Нужен имплант", "Чистка", "Другое"];
+  return `
+<aside class="pop" id="pop" role="dialog" aria-modal="false" aria-labelledby="pop-t" hidden>
+  <div class="pop__top">${avatars(pp.who, depth)}<button class="pop__x" type="button" data-pop-close>Закрыть ${icon.close}</button></div>
+  <h2 id="pop-t">${esc(pp.title)}</h2>
+  <p class="pop__sub">${esc(pp.sub)}</p>
+  <form class="form lead pop__form" data-lead="popup">
+    <div class="pop__row"><label>Имя<input name="name" autocomplete="given-name"></label><label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label></div>
+    <fieldset class="reasons"><legend>Что беспокоит <span>необязательно</span></legend><div class="chips">${chips.map((r) => `<label class="chip chip--pick"><input type="radio" name="reason" value="${esc(r)}"><span>${esc(r)}</span></label>`).join("")}</div></fieldset>
+    <button class="btn btn--wide">${esc(pp.btn)}</button>
+    <p class="modal__note">Консультация и план лечения бесплатно. Отправляя заявку, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
+  </form>
+</aside>`;
 }
 const end = `\n</body>\n</html>\n`;
 
@@ -268,6 +286,9 @@ const plural = (n, one, few, many) => { const a = n % 10, b = n % 100; return a 
 const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 const reviewsText = (n) => `${n} ${plural(n, "отзыв", "отзыва", "отзывов")}`;
 
+const docById = Object.fromEntries(doctors.map((d) => [d.id, d]));
+const avatars = (ids, depth) => `<span class="who" aria-hidden="true">${ids.map((id) => `<span class="who__pic">${img(docPhoto(docById[id]), "", depth)}</span>`).join("")}</span>`;
+
 function doctorCard(d, depth) {
   const p = pre(depth);
   return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}" data-reveal>
@@ -276,7 +297,6 @@ function doctorCard(d, depth) {
   <h3><a href="${p}vrachi/${d.id}.html">${esc(d.name)}</a></h3>
   <p class="doc__role${d.chief ? " doc__role--chief" : ""}">${esc(d.role)}</p>
   ${d.focus ? `<p class="doc__focus">${esc(d.focus)}</p>` : ""}
-  <p class="doc__meta">${d.claims ? d.claims.map(([n, t]) => `<span><b>${esc(n)}</b> ${esc(t)}</span>`).join("") : d.exp ? `<span>Стаж <b>${d.exp} ${plural(d.exp, "год", "года", "лет")}</b></span>` : ""}</p>
   ${act("Записаться к врачу", "book", p, { cls: "btn--ghost btn--sm doc__cta", doctor: d.id })}
 </article>`;
 }
@@ -342,24 +362,24 @@ function pageHome() {
   const { rating } = home;
   const star = icon.star;
   const D = v2;
+  const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
+  const heroImg = img(D.hero, "Врачи стоматологии «Умная Медицина» за работой", depth, ' fetchpriority="high"').replace(' loading="lazy"', ' loading="eager"');
 
   return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq)] })
   + intro(depth) + header(depth, true) + `
 <main id="main">
 
-<section class="hero" aria-labelledby="h1">
-  <div class="hero__media" data-ph>${img(D.hero, "Лечебный кабинет стоматологии «Умная Медицина» в Удельной", depth, ' fetchpriority="high" loading="eager"')}</div>
-  <div class="hero__in">
-    <div class="hero__main">
-      <h1 id="h1"><span class="kicker">${esc(D.kicker)}</span><span data-split>${esc(D.h1)}</span></h1>
-      <p class="hero__sub">${esc(D.sub)}</p>
-      <ul class="hero__facts">${D.facts.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
-      <p class="hero__promo"><span class="hero__promo-tag">Акция</span><span>${esc(D.promo[0])} <b>${esc(D.promo[1])}</b> <s>${esc(D.promo[2])}</s></span></p>
-      <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
-      <p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>
-    </div>
+<section class="hero" aria-labelledby="h1"><div class="wrap hero__in">
+  <div class="hero__text">
+    <h1 id="h1"><span class="kicker">${esc(D.kicker)}</span><span data-split>${esc(D.h1)}</span></h1>
+    <p class="hero__sub">${esc(D.sub)}</p>
+    <p class="hero__promo"><span class="hero__promo-tag">Акция</span><span>${esc(D.promo[0])} <b>${esc(D.promo[1])}</b> <s>${esc(D.promo[2])}</s></span></p>
+    <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
+    <ul class="hero__facts">${D.facts.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+    <p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>
   </div>
-</section>
+  <figure class="hero__media" data-ph>${heroImg}${ph()}</figure>
+</div></section>
 
 <section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><p>${esc(D.services.text)}</p><a class="link" href="ceny.html">Весь прайс</a></div></div>
@@ -387,7 +407,7 @@ function pageHome() {
     <div class="tour__title wrap"><span class="label label--light">${esc(D.clinic.label)}</span><h2 id="tr-title" data-split>${esc(D.clinic.title)}</h2><p>${esc(D.clinic.text)}</p></div>
   </div>
   <div class="tour__rows" aria-label="Фото клиники">
-    ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap], j) => `<figure${j >= row.length ? ' aria-hidden="true"' : ""}>${img([f], cap, depth)}<figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
+    ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
   </div>
 </section>
 
@@ -413,24 +433,27 @@ function pageHome() {
 
 <section class="section reviews" id="reviews" aria-labelledby="rv-title">
   <div class="wrap section__head"><div><span class="label">Отзывы</span><h2 id="rv-title" data-split>Что пишут пациенты</h2></div></div>
-  <div class="wrap"><div class="rt rt--two" aria-label="Оценки клиники на площадках" data-reveal>
+  <div class="wrap"><div class="rt" aria-label="Оценки клиники на площадках" data-reveal>
     <div class="rt-avg">
       <div class="rt-avg__num">${rating.avg}</div>
       <div class="rt-stars" role="img" aria-label="5 из 5">${star.repeat(5)}</div>
       <p class="rt-avg__cap">${esc(rating.avgCap)}</p>
     </div>
     <div class="rt-sites">
-      ${[["ya", "images/brand/yandex-maps.svg", clinic.ratings[2], "reviews_yandex"], ["2gis", "images/brand/2gis.png", clinic.ratings[1], "reviews_2gis"]].map(([k, logo, r, goal]) => `<a class="rt-site" href="${r.url}"${ext} data-goal="${goal}">
-        <span class="rt-site__top"><span class="rt-mark rt-mark--${k}"><img src="${logo}" alt="" loading="lazy"></span><span class="rt-site__val">${r.value}${star}</span></span>
+      ${[["ya", brandImg("yandex-maps.svg"), clinic.ratings[2], "reviews_yandex"], ["2gis", brandImg("2gis.png"), clinic.ratings[1], "reviews_2gis"]].map(([k, mark, r, goal]) => `<a class="rt-site" href="${r.url}"${ext} data-goal="${goal}">
+        <span class="rt-site__top"><span class="rt-mark rt-mark--${k}">${mark}</span><span class="rt-site__val">${r.value}${star}</span></span>
         <span><span class="rt-site__name">${esc(r.site)}</span><span class="rt-site__count">${esc(r.count)}</span></span>
         <span class="rt-site__link">Смотреть отзывы</span>
       </a>`).join("")}
     </div>
     <div class="rt-pd">
-      <a class="rt-seal" href="${clinic.prodoctorov}"${ext} data-goal="reviews_prodoctorov" aria-label="Рейтинг 4,9 на ПроДокторов"><span class="rt-seal__in"><span class="rt-seal__num">4,9</span><span class="rt-seal__cap">199 отзывов</span><img class="rt-seal__logo" src="images/brand/prodoctorov.svg" alt="ПроДокторов" loading="lazy"></span></a>
+      <a class="rt-seal" href="${home.reviewsUrl}"${ext} data-goal="reviews_prodoctorov" aria-label="Рейтинг 4,9 на ПроДокторов, 199 отзывов">
+        <svg class="rt-seal__ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="rt-seal__track" cx="60" cy="60" r="57"/><circle class="rt-seal__fill" cx="60" cy="60" r="57" pathLength="100"/></svg>
+        <span class="rt-seal__in"><span class="rt-seal__num" data-count="4,9">4,9</span><span class="rt-seal__stars">${star.repeat(5)}</span><span class="rt-seal__cap">199 отзывов</span>${brandImg("prodoctorov.svg", "ПроДокторов").replace("<img ", '<img class="rt-seal__logo" ')}</span>
+      </a>
       <div class="rt-pd__text">
         <p class="rt-pd__quote">${esc(rating.pdText)}</p>
-        <a class="btn btn--ghost rt-btn" href="${home.reviewsUrl || clinic.prodoctorov}"${ext} data-goal="reviews_prodoctorov">Читать отзывы на ПроДокторов</a>
+        <a class="btn btn--ghost rt-btn" href="${home.reviewsUrl}"${ext} data-goal="reviews_prodoctorov">Читать отзывы на ПроДокторов</a>
       </div>
     </div>
   </div></div>
@@ -562,7 +585,7 @@ ${timeline.length ? `<section class="section section--dark on-dark"><div class="
   <ol class="doc-path">${timeline.map((r) => `<li data-reveal><span class="doc-path__y">${esc(r.y)}</span><span class="doc-path__k">${esc(r.kind)}</span><div><b>${esc(r.t)}</b><span>${esc(r.place)}</span></div></li>`).join("")}</ol>
 </div></section>` : `<section class="section section--sage"><div class="wrap doc-empty" data-reveal>
   <span class="label">Образование и опыт</span>
-  <p>Сведения об образовании и стаже врача клиника пока не опубликовала. Их можно уточнить у администратора: <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a>.</p>
+  <p>Сведения об образовании${d.exp ? "" : " и стаже"} врача клиника пока не опубликовала. Их можно уточнить у администратора: <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a>.</p>
 </div></section>`}
 
 ${d.courses.length ? `<section class="section section--sage"><div class="wrap">
