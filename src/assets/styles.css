@@ -1333,7 +1333,6 @@ html:not(.js-intro) .intro { display: none; }
 .hero__3d { position: relative; align-self: stretch; min-height: 460px; height: min(calc(100svh - var(--header-h) - 80px), 780px); }
 .hero__3d canvas { position: absolute; left: 0; top: -10%; width: 100%; height: 120%; display: block; pointer-events: none; }
 /* мягкое свечение под моделью, как от лампы */
-.hero__3d::before { content: ""; position: absolute; left: 18%; right: 18%; bottom: 6%; height: 16%; border-radius: 50%; background: radial-gradient(closest-side, rgba(76, 193, 72, .3), transparent); }
 .js-anim .hero__3d canvas { opacity: 0; }
 .hero__3d.is-live canvas { opacity: 1; transition: opacity 1s var(--ease); }
 .hero__3d.is-static, html:not(.js) .hero__3d { background: url("../images/implant/l/f000.webp") 50% 50% / 100% auto no-repeat; }
