@@ -236,7 +236,7 @@ function footer(depth) {
     </div>
   </div>
   <div class="fstage">
-    <div class="fstage__pin" aria-hidden="true"><i class="fstage__bg"></i><div class="fstage__logo footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div></div>
+    <div class="fstage__pin" aria-hidden="true"><div class="fstage__logo footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div></div>
     <div class="fstage__info">
       <div class="fstage__group">
         <h3>Контакты</h3>

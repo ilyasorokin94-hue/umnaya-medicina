@@ -1573,11 +1573,14 @@ html:not(.js-intro) .intro { display: none; }
   .cb__alt .btn { width: 100%; }
 }
 
-/* ---------- подвал по механике Лава Дент: большой логотип во всю ширину, при прокрутке
-   он уменьшается и закрепляется слева, а справа проезжает колонка контактов ---------- */
-.fstage { --fpin: calc(var(--header-h) + 14px + 34px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; padding: clamp(44px, 5vw, 72px) 0 clamp(48px, 5vw, 80px); }
-.fstage__pin { min-width: 0; }
-.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 0; will-change: transform; }
+/* ---------- подвал по механике Лава Дент: большой логотип стоит на месте, пока форма уезжает вверх и открывает его,
+   потом уменьшается до левой колонки и липнет под шапкой, а справа проезжают контакты. Сдвиг и масштаб задаёт app.js ---------- */
+.footer__in { padding-top: 0; }
+.footer__cta { position: relative; z-index: 2; background: var(--ink); padding-top: clamp(70px, 9vw, 120px); }
+.fstage { --fpin: calc(var(--header-h) + 14px + 40px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; padding: clamp(44px, 5vw, 72px) 0 clamp(48px, 5vw, 80px); }
+.js-anim .fstage { padding-top: 75vmin; }
+.fstage__pin { position: relative; z-index: 1; min-width: 0; }
+.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 50%; will-change: transform; }
 .fstage__logo img { display: block; width: 100%; max-width: none; height: auto; max-height: none; aspect-ratio: 106548 / 19978; object-fit: contain; filter: brightness(0) invert(1); opacity: .96; }
 .fstage__logo .footer__word { text-align: left; font-size: clamp(44px, 10vw, 180px); }
 .fstage__info { display: grid; gap: clamp(36px, 4vw, 56px); align-content: start; }
@@ -1598,22 +1601,13 @@ html:not(.js-intro) .intro { display: none; }
   .fstage__info { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 30px; }
   .fstage__info > :nth-child(-n+2) { grid-column: 1 / -1; }
 }
-/* компьютер: две колонки, логотип липнет под шапкой; его ширину и уменьшение задаёт app.js */
+/* компьютер: логотип в левой колонке, контакты справа; логотип липнет под шапкой, пока колонка контактов не кончится */
 @media (min-width: 1025px) {
-  .fstage { grid-template-columns: minmax(0, 1fr) minmax(0, 470px); column-gap: clamp(48px, 6vw, 120px); }
+  .fstage { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); column-gap: clamp(64px, 8vw, 150px); }
   .fstage__pin { position: sticky; top: var(--fpin); align-self: start; }
-  .fstage__logo { width: var(--fstage-w, 100%); }
-  .fstage__info { padding-top: max(0px, calc(100svh - var(--fpin) - 190px)); }
 }
-.fstage__bg { display: none; }
-/* телефон: логотип во всю ширину, при прокрутке уменьшается и едет плашкой под шапкой, контакты уходят под неё */
 @media (max-width: 760px) {
-  .fstage { --fpin: calc(var(--header-h) + 18px); gap: 36px; padding: 36px 0 40px; }
-  .js-anim .fstage__pin { position: sticky; top: var(--fpin); z-index: 2; }
-  .js-anim .fstage__info { padding-bottom: 96px; }
-  .fstage__bg { display: block; position: absolute; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); top: calc(-1 * var(--fpin)); height: 100%; background: linear-gradient(180deg, var(--ink) calc(100% - 22px), rgba(12, 36, 16, 0)); opacity: 0; transition: opacity .25s; pointer-events: none; }
-  .fstage.is-stuck .fstage__bg { opacity: 1; }
-  .fstage__logo { position: relative; }
+  .fstage { gap: 36px; padding: 36px 0 40px; }
   .fstage__big { font-size: 28px; }
   .fstage__big--mail { font-size: 22px; }
   .fstage__addr { font-size: 22px; }
