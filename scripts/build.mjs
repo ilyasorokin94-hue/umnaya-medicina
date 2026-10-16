@@ -309,7 +309,8 @@ function doctorCard(d, depth, o = {}) {
   const p = pre(depth);
   return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}"${o.lava ? ` data-col="${o.i % 2 ? "r" : "l"}"` : " data-reveal"}>
   <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth)}
-    <a class="doc__cover" href="${p}vrachi/${d.id}.html" tabindex="-1" aria-hidden="true"></a></div>
+    <a class="doc__cover" href="${p}vrachi/${d.id}.html" tabindex="-1" aria-hidden="true"></a>${o.lava ? `
+    <a class="doc__go" href="${p}vrachi/${d.id}.html" aria-label="Страница врача: ${esc(d.short)}"><svg viewBox="0 0 60 60" aria-hidden="true"><path d="M24 36 36 24M27 24h9v9"/></svg></a>` : ""}</div>
   <h3><a href="${p}vrachi/${d.id}.html">${esc(d.name)}</a></h3>
   <p class="doc__role${d.chief ? " doc__role--chief" : ""}">${esc(d.role)}</p>
   ${d.focus ? `<p class="doc__focus">${esc(d.focus)}</p>` : ""}
