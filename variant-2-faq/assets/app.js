@@ -109,7 +109,9 @@
       if (kind === "team") {
         const shown = [];
         $$(".team__grid .doc").forEach((d) => { const ok = !val || d.dataset.tags.split(" ").includes(val); d.hidden = !ok; if (ok) shown.push(d); });
+        shown.filter((d) => d.dataset.col).forEach((d, i) => { d.dataset.col = i % 2 ? "r" : "l"; });
         fadeIn(shown);
+        requestAnimationFrame(lavaTeam);
         const tg = $(".team__grid");
         if (tg && tg.scrollWidth > tg.clientWidth) tg.scrollTo({ left: 0, behavior: reduce ? "auto" : "smooth" });
         requestAnimationFrame(teamDeck);
@@ -211,7 +213,7 @@
   document.addEventListener("focusout", () => root.classList.remove("bar-kb"));
 
   // телефон: врач в центре ленты крупнее, соседние чуть меньше и тише, портрет слегка сдвигается внутри рамки
-  const tgrid = $(".team__grid");
+  const tgrid = $(".team__grid:not(.team__grid--lava)");
   function teamDeck() {
     if (!tgrid || reduce) return;
     if (!phoneMQ.matches) { $$(".doc", tgrid).forEach((c) => { c.style.removeProperty("--p"); c.style.removeProperty("--a"); }); return; }
@@ -227,6 +229,28 @@
   tgrid?.addEventListener("scroll", () => { cancelAnimationFrame(tdr); tdr = requestAnimationFrame(teamDeck); }, { passive: true });
   addEventListener("resize", teamDeck);
   teamDeck();
+
+  // врачи как у Лава Дент: от 961px левая колонка едет от +20vmin к −20vmin, пока карточка проходит экран
+  // снизу вверх, правая стоит, фото плывёт внутри рамки от +10% к −10%. Прогресс --k от 1 до −1.
+  const lavaDocs = $$(".team__grid--lava .doc");
+  const lavaMQ = matchMedia("(min-width: 961px)");
+  function lavaTeam() {
+    if (!lavaDocs.length || !anim) return;
+    if (!lavaMQ.matches) { lavaDocs.forEach((c) => c.style.removeProperty("--k")); return; }
+    const vh = innerHeight;
+    lavaDocs.forEach((c) => {
+      if (c.hidden) return;
+      const r = c.getBoundingClientRect();
+      const t = Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height)));
+      c.style.setProperty("--k", (1 - 2 * t).toFixed(4));
+    });
+  }
+  if (lavaDocs.length && anim) {
+    if (lenis) lenis.on("scroll", lavaTeam); else addEventListener("scroll", lavaTeam, { passive: true });
+    addEventListener("resize", lavaTeam);
+    lavaMQ.addEventListener?.("change", lavaTeam);
+    lavaTeam();
+  }
 
   // кнопка «наверх»
   $$("[data-totop]").forEach((b) => b.addEventListener("click", () => (lenis ? lenis.scrollTo(0, { duration: 1.6 }) : scrollTo({ top: 0, behavior: "smooth" }))));
@@ -485,6 +509,9 @@
   ST.config({ ignoreMobileResize: true });
 
   const heroIn = () => {
+    // сигнал первому экрану с имплантом: шторка ушла, можно собирать
+    window.__umHeroIn = true;
+    document.dispatchEvent(new Event("um:hero-in"));
     const h = $(".hero, .page-hero");
     if (!h) return;
     const words = $$("[data-split] .sw > span", h);
@@ -698,9 +725,23 @@
     return () => { wayTrig = null; way.classList.remove("is-pinned"); G.set(wayShots, { clearProps: "clipPath" }); G.set(imgs, { clearProps: "transform" }); };
   });
 
-  // подвал: логотип поднимается
-  const big = $(".footer__big");
-  if (big) G.from(big.children, { yPercent: 50, autoAlpha: 0, ease: "none", scrollTrigger: { trigger: ".footer", start: "top 85%", end: "bottom bottom", scrub: true } });
+  // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте (сдвиг вверх
+  // ровно гасит прокрутку) и открывается из-под неё. На компьютере он сначала во всю ширину, в конце этого
+  // отрезка уменьшается до левой колонки и дальше липнет под шапкой, а справа проезжают контакты
+  const fst = $(".fstage");
+  if (fst) {
+    const pin = $(".fstage__pin", fst), logo = $(".fstage__logo", fst);
+    const vmin = () => Math.min(innerWidth, innerHeight);
+    const reveal = (big) => {
+      const st = { trigger: fst, start: "top bottom", end: () => "+=" + Math.round(vmin() * 1.5), scrub: true, invalidateOnRefresh: true };
+      const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: st })
+        .fromTo(logo, { y: () => -Math.round(vmin() * 1.5) }, { y: 0, duration: 1 }, 0);
+      if (big) tl.fromTo(logo, { scale: () => fst.clientWidth / pin.clientWidth }, { scale: 1, duration: 0.4, ease: "power1.out", immediateRender: true }, 0.6);
+      return () => { tl.scrollTrigger?.kill(); tl.kill(); G.set(logo, { clearProps: "transform" }); };
+    };
+    mm.add("(min-width: 1025px)", () => reveal(true));
+    mm.add("(max-width: 1024px)", () => reveal(false));
+  }
 
   // пересчитываем позиции, когда догрузились шрифты и картинки (до того, как пользователь доскроллил)
   const refresh = () => ST.refresh();

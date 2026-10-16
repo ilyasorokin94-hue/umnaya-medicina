@@ -292,7 +292,7 @@ html:not(.js-intro) .intro { display: none; }
 .place__btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; }
 
 /* ---------- подвал ---------- */
-.footer { position: relative; background: var(--ink); color: #fff; overflow: hidden; }
+.footer { position: relative; background: var(--ink); color: #fff; overflow: hidden; overflow: clip; }
 .footer__in { padding: clamp(70px, 9vw, 120px) 0 28px; }
 .footer__cta { display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: end; padding-bottom: clamp(50px, 6vw, 80px); border-bottom: 1px solid var(--line-on-dark); }
 .footer__cta h2 { font-size: clamp(38px, 5.4vw, 86px); letter-spacing: -.045em; max-width: 14ch; }
@@ -1333,10 +1333,9 @@ html:not(.js-intro) .intro { display: none; }
 .hero__3d { position: relative; align-self: stretch; min-height: 460px; height: min(calc(100svh - var(--header-h) - 80px), 780px); }
 .hero__3d canvas { position: absolute; left: 0; top: -10%; width: 100%; height: 120%; display: block; pointer-events: none; }
 /* мягкое свечение под моделью, как от лампы */
-.hero__3d::before { content: ""; position: absolute; left: 18%; right: 18%; bottom: 6%; height: 16%; border-radius: 50%; background: radial-gradient(closest-side, rgba(76, 193, 72, .3), transparent); }
 .js-anim .hero__3d canvas { opacity: 0; }
 .hero__3d.is-live canvas { opacity: 1; transition: opacity 1s var(--ease); }
-.hero__3d.is-static { background: url("../images/hero-implant.webp") 50% 50% / contain no-repeat; }
+.hero__3d.is-static, html:not(.js) .hero__3d { background: url("../images/implant/l/f000.webp") 50% 50% / 100% auto no-repeat; }
 .hero--3d + .slogan .marquee { box-shadow: inset 0 1px 0 var(--line-on-dark); }
 @media (max-width: 760px) {
   .hero--3d .hero__3d { order: 1; min-height: 0; height: clamp(250px, 36svh, 340px); margin: 6px -16px 0; }
@@ -1413,49 +1412,36 @@ html:not(.js-intro) .intro { display: none; }
 .team__more { display: flex; justify-content: center; margin-top: clamp(28px, 3vw, 44px); }
 @media (max-width: 760px) { .team__more .btn { width: 100%; } }
 
-/* ---------- вопросы (16.10, 13:30): принцип Lava Dental, темы раскрываются плюсом, внутри свои вопросы со своим плюсом ---------- */
-.faqv__in { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: clamp(28px, 5vw, 90px); align-items: start; }
-.faqv__side { position: sticky; top: calc(var(--header-h) + 34px); display: grid; justify-items: start; }
-.faqv__side .section__title { margin-top: 18px; }
-.faqv__intro { max-width: 40ch; margin-top: 16px; color: var(--muted); text-wrap: pretty; }
-.faqv__ask { display: grid; gap: 10px; justify-items: start; width: 100%; margin-top: clamp(28px, 3.4vw, 44px); padding: clamp(20px, 2.2vw, 28px); border-radius: var(--radius); background: var(--sage-2); }
-.faqv__ask b { font: 500 clamp(19px, 1.5vw, 22px)/1.2 var(--display); letter-spacing: -.02em; }
-.faqv__ask p { color: var(--muted); }
-.faqv__ask a:not(.btn) { color: var(--text); font-weight: 500; text-decoration: none; white-space: nowrap; }
-.faqv__ask .btn { margin-top: 6px; }
-.faqv__main { margin-top: calc(-1 * clamp(14px, 1.6vw, 24px)); }
+/* ---------- вопросы (16.10, 14:00): раскладка и механика Lava Dental. Заголовок сверху, темы на всю ширину,
+   тема раскрывается плюсом, внутри свои вопросы со своим плюсом; пункты открываются независимо ---------- */
+.faqv__title { max-width: 15.5em; font-size: clamp(34px, 4.1vw, 60px); line-height: 1.12; letter-spacing: -.035em; text-wrap: balance; }
+.faqv__main { display: grid; gap: clamp(40px, 4.6vw, 80px); margin-top: clamp(56px, 6.6vw, 96px); }
 .faqt > summary, .faqq > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 24px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .faqt > summary::-webkit-details-marker, .faqq > summary::-webkit-details-marker { display: none; }
-.faqt > summary { padding: clamp(14px, 1.6vw, 24px) 0; }
-.faqt h3 { margin: 0; font: 500 clamp(22px, 2.05vw, 31px)/1.2 var(--display); letter-spacing: -.025em; color: var(--muted); transition: color .35s; }
-.faqt > summary:hover h3, .faqt[open]:not(.is-off) h3 { color: var(--text); }
-.faqt > summary > i, .faqq > summary > i { flex: none; position: relative; width: 22px; height: 22px; color: var(--text); }
-.faqq > summary > i { width: 14px; height: 14px; color: var(--muted); transition: color .3s; }
-.faqt > summary > i::before, .faqt > summary > i::after, .faqq > summary > i::before, .faqq > summary > i::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1.5px; margin-top: -.75px; border-radius: 1px; background: currentColor; transition: transform .55s var(--ease); }
-.faqq > summary > i::before, .faqq > summary > i::after { height: 1.25px; margin-top: -.625px; }
+.faqt h3 { margin: 0; font: 500 clamp(25px, 2.5vw, 36px)/1.4 var(--display); letter-spacing: -.025em; color: var(--muted); transition: color .5s cubic-bezier(.33, 0, .11, 1); }
+.faqt[open]:not(.is-off) h3 { color: var(--text); }
+.faqt > summary > i, .faqq > summary > i { flex: none; position: relative; width: clamp(28px, 2.8vw, 40px); height: clamp(28px, 2.8vw, 40px); color: var(--text); }
+.faqq > summary > i { width: clamp(22px, 2.1vw, 30px); height: clamp(22px, 2.1vw, 30px); }
+.faqt > summary > i::before, .faqt > summary > i::after, .faqq > summary > i::before, .faqq > summary > i::after { content: ""; position: absolute; left: 17%; right: 17%; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; background: currentColor; transition: transform .5s cubic-bezier(.1, .75, .25, 1); }
+.faqq > summary > i::before, .faqq > summary > i::after { height: 1.6px; margin-top: -.8px; }
 .faqt > summary > i::after, .faqq > summary > i::after { transform: rotate(90deg); }
 .faqt[open]:not(.is-off) > summary > i::after, .faqq[open]:not(.is-off) > summary > i::after { transform: rotate(180deg); }
 .faqt__body, .faqq__a { overflow: hidden; }
-.faqt__list { padding: 2px 0 clamp(18px, 2.4vw, 34px); }
+.faqt__list { padding-top: clamp(14px, 1.6vw, 22px); }
 .faqq { border-bottom: 1px solid var(--line); }
-.faqq > summary { padding: clamp(16px, 1.4vw, 20px) 0; font: 400 clamp(16px, 1.2vw, 18px)/1.4 var(--body); color: var(--muted); transition: color .3s; }
-.faqq > summary:hover, .faqq[open]:not(.is-off) > summary { color: var(--text); }
-.faqq > summary:hover > i, .faqq[open]:not(.is-off) > summary > i { color: var(--text); }
-.faqq__a p { max-width: 64ch; padding: 0 48px 22px 0; font-size: 16px; line-height: 1.6; color: var(--muted); text-wrap: pretty; }
+.faqq > summary { padding: clamp(16px, 2.1vw, 30px) 0; font: 400 clamp(19px, 1.85vw, 26px)/1.4 var(--body); letter-spacing: -.01em; color: var(--muted); transition: color .5s cubic-bezier(.33, 0, .11, 1); }
+.faqq[open]:not(.is-off) > summary { color: var(--text); }
+.faqq__a p { padding: 0 0 clamp(18px, 2.1vw, 30px); font-size: clamp(16px, 1.25vw, 18px); line-height: 1.65; color: var(--muted); text-wrap: pretty; }
 .faqq__a a { color: var(--green-deep); font-weight: 500; text-underline-offset: 3px; }
 .faqt > summary:focus-visible, .faqq > summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; border-radius: 6px; }
-@media (max-width: 1024px) {
-  .faqv__in { grid-template-columns: minmax(0, 1fr); gap: 0; }
-  .faqv__in > .faqv__side { display: contents; }
-  .faqv__main { order: 2; margin-top: clamp(14px, 3vw, 26px); }
-  .faqv__ask { order: 3; margin-top: 22px; }
-}
+.faqv__ask { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; margin-top: clamp(48px, 5.5vw, 80px); padding: clamp(20px, 2.2vw, 28px) clamp(20px, 2.6vw, 36px); border-radius: var(--radius); background: var(--sage-2); }
+.faqv__ask b { font: 500 clamp(19px, 1.5vw, 22px)/1.2 var(--display); letter-spacing: -.02em; }
+.faqv__ask p { margin-top: 6px; color: var(--muted); }
+.faqv__ask a:not(.btn) { color: var(--text); font-weight: 500; text-decoration: none; white-space: nowrap; }
+.faqv__ask .btn { flex: none; }
 @media (max-width: 760px) {
-  .faqt > summary { gap: 16px; padding: 16px 0; }
-  .faqt h3 { font-size: 21px; }
-  .faqt > summary > i { width: 18px; height: 18px; }
-  .faqq > summary { gap: 16px; padding: 15px 0; font-size: 16px; }
-  .faqq__a p { padding: 0 0 18px; font-size: 15px; }
+  .faqt > summary, .faqq > summary { gap: 18px; }
+  .faqv__ask { flex-direction: column; align-items: flex-start; }
 }
 
 /* ---------- контакты «дорога до двери» и заявка одной строкой (16.10, 11:21) ---------- */
@@ -1568,4 +1554,76 @@ html:not(.js-intro) .intro { display: none; }
   .cb__btn { height: 44px; padding: 0 18px; font-size: 15px; }
   .cb__alt { margin-top: 14px; }
   .cb__alt .btn { width: 100%; }
+}
+
+/* ---------- врачи как у Лава Дент ----------
+   Две колонки вразбежку по 12-колоночной сетке: левая ниже на отступ, правая выше.
+   От 961px левая колонка едет при прокрутке (--k из app.js), фото плывёт внутри рамки. На телефоне без движения. */
+.team__grid.team__grid--lava { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2.2vw, 32px); row-gap: 0; margin-inline: 0; padding: 0; overflow: visible; scroll-snap-type: none; }
+.team__grid--lava .doc { grid-column-end: span 6; min-width: 0; align-self: start; }
+.team__grid--lava .doc[data-col="l"] { grid-column-start: 1; padding-top: clamp(48px, 2.73rem + 1.21vw, 60px); }
+.team__grid--lava .doc[data-col="r"] { grid-column-start: 7; }
+.team__grid.team__grid--lava .doc > * { opacity: 1; translate: 0 calc(var(--k, 0) * var(--shift, 0vmin)); }
+.team__grid--lava .doc[data-col="l"] { --shift: 20vmin; }
+.team__grid.team__grid--lava .doc__photo { scale: none; margin-bottom: 14px; }
+.team__grid.team__grid--lava .doc__photo img { scale: 1.1; translate: 0 calc(var(--k, 0) * 10%); transition: transform .5s cubic-bezier(.33, 0, .11, 1); }
+.team__grid.team__grid--lava .doc:hover .doc__photo img { transform: scale(1.05); }
+.team__grid--lava + .team__more { margin-top: clamp(48px, 6vw, 96px); }
+@media (min-width: 721px) {
+  .team__grid--lava .doc { grid-column-end: span 4; }
+  .team__grid--lava .doc[data-col="l"] { grid-column-start: 2; padding-top: clamp(64px, 2.73rem + 5.66vw, 120px); }
+  .team__grid--lava .doc[data-col="r"] { grid-column-start: 7; }
+  .team__grid--lava .doc h3 { font-size: clamp(21px, 1.75vw, 26px); }
+}
+@media (min-width: 961px) {
+  .team__grid--lava .doc { grid-column-end: span 3; }
+  .team__grid--lava .doc[data-col="l"] { grid-column-start: 3; }
+  .team__grid--lava .doc[data-col="r"] { grid-column-start: 8; }
+}
+/* круглая стрелка на фото, как у Лава Дент: ведёт на страницу врача, при наведении на карточку поворачивается вправо */
+.doc__go { position: absolute; z-index: 3; top: clamp(8px, 5.45px + .71vw, 15px); right: clamp(8px, 5.45px + .71vw, 15px); width: clamp(32px, 22.7px + 2.59vw, 60px); aspect-ratio: 1; border-radius: 50%; background: var(--sage-2); color: var(--ink); display: grid; place-items: center; transition: scale .5s cubic-bezier(.33, 0, .11, 1), rotate .5s cubic-bezier(.1, .75, .25, 1); }
+.doc__go svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.doc:hover .doc__go, .doc__go:focus-visible { rotate: 45deg; scale: 1.1; }
+.doc__go:focus-visible { outline: 2px solid var(--green-deep); outline-offset: 3px; }
+
+/* ---------- подвал по механике Лава Дент: большой логотип стоит на месте, пока форма уезжает вверх и открывает его,
+   потом уменьшается до левой колонки и липнет под шапкой, а справа проезжают контакты. Сдвиг и масштаб задаёт app.js ---------- */
+.footer__in { padding-top: 0; }
+.footer__cta { position: relative; z-index: 2; background: var(--ink); padding-top: clamp(70px, 9vw, 120px); }
+.fstage { --fpin: calc(var(--header-h) + 14px + 40px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; padding: clamp(44px, 5vw, 72px) 0 clamp(48px, 5vw, 80px); }
+.js-anim .fstage { padding-top: 75vmin; }
+.fstage__pin { position: relative; z-index: 1; min-width: 0; }
+.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 50%; will-change: transform; }
+.fstage__logo img { display: block; width: 100%; max-width: none; height: auto; max-height: none; aspect-ratio: 106548 / 19978; object-fit: contain; filter: brightness(0) invert(1); opacity: .96; }
+.fstage__logo .footer__word { text-align: left; font-size: clamp(44px, 10vw, 180px); }
+.fstage__info { display: grid; gap: clamp(36px, 4vw, 56px); align-content: start; }
+.fstage__group { display: grid; gap: 14px; align-content: start; }
+.fstage__group h3 { font: 500 13px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted-on-dark); margin-bottom: 4px; }
+.fstage__big { justify-self: start; font: 500 clamp(28px, 2.4vw, 38px)/1.15 var(--display); letter-spacing: -.02em; color: #fff; text-decoration: none; padding-bottom: 10px; background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat; transition: color .3s; }
+.fstage__big--mail { font-size: clamp(22px, 1.9vw, 30px); }
+.fstage__big:hover { color: var(--green-hi); }
+.fstage__addr { font: 500 clamp(22px, 1.9vw, 30px)/1.25 var(--display); letter-spacing: -.02em; max-width: 20ch; text-wrap: balance; }
+.fstage__text { font-size: 17px; color: rgba(255, 255, 255, .86); }
+.fstage__links, .fstage__list { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 15px; }
+.fstage__list--2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; }
+.fstage a:not(.fstage__big) { color: rgba(255, 255, 255, .86); text-decoration: none; transition: color .3s; }
+.fstage a:not(.fstage__big):hover { color: var(--green-hi); }
+.fstage__links a { text-decoration: underline !important; text-underline-offset: 5px; text-decoration-color: rgba(255, 255, 255, .35) !important; }
+
+@media (min-width: 761px) and (max-width: 1024px) {
+  .fstage__info { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 30px; }
+  .fstage__info > :nth-child(-n+2) { grid-column: 1 / -1; }
+}
+/* компьютер: логотип в левой колонке, контакты справа; логотип липнет под шапкой, пока колонка контактов не кончится */
+@media (min-width: 1025px) {
+  .fstage { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); column-gap: clamp(64px, 8vw, 150px); }
+  .fstage__pin { position: sticky; top: var(--fpin); align-self: start; }
+}
+@media (max-width: 760px) {
+  .fstage { gap: 36px; padding: 36px 0 40px; }
+  .fstage__big { font-size: 28px; }
+  .fstage__big--mail { font-size: 22px; }
+  .fstage__addr { font-size: 22px; }
+  .fstage__links, .fstage__list { font-size: 14px; gap: 2px 16px; }
+  .fstage__list--2 { gap: 0 16px; }
 }
