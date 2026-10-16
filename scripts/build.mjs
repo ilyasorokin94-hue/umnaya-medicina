@@ -118,6 +118,30 @@ const fallbackHref = (kind, p, o = {}) => kind === "call" ? clinic.phoneHref
   : kind === "allon" ? `${p}zapis.html?service=all-on-4`
   : `${p}zapis.html${o.service ? `?service=${o.service}` : o.doctor ? `?doctor=${o.doctor}` : ""}`;
 const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""}" href="${fallbackHref(kind, p, o)}" data-modal="${kind}"${o.reason ? ` data-reason="${esc(o.reason)}"` : ""}${o.doctor ? ` data-doctor="${o.doctor}"` : ""}${o.magnet ? " data-magnet" : ""}>${esc(label)}</a>`;
+// тур на телефоне как вторая секция Лава Дент: лента карточек стоит на месте и едет вбок от прокрутки,
+// кабинет раскрывается на весь экран, заголовок проявляется по словам, поверх проходят остальные фото, потом текст
+function phoneTour(depth) {
+  const P = v2.clinic.phone;
+  // фото ленты декодируем сразу: иначе Chrome рисует пустую карточку, когда лента сама (без JS) довозит её до экрана
+  const pic = (entry, alt) => img(entry, alt, depth, ' class="ptour__img"').replace('decoding="async"', 'decoding="sync"');
+  const card = ([f, cap], cls = "") => `<div class="ptour__item${cls}">${pic([f], cap)}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
+  const words = (t, from) => t.split(" ").map((w, i) => `<span class="w" style="--i:${from + i}">${esc(w)}</span>`).join(" ");
+  return `<div class="ptour">
+    <div class="ptour__car"><div class="ptour__items">
+      <div class="ptour__item ptour__item--empty"></div>
+      ${P.car.map((c, i) => card(c, i === P.car.length - 1 ? " ptour__item--left" : "")).join("")}
+      <div class="ptour__item ptour__item--main">${pic(v2.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»")}<span class="ptour__shade"></span>
+        <div class="ptour__slogan"><span class="label label--light"><span class="w" style="--i:0">${esc(v2.clinic.label)}</span></span><h2 class="ptour__title">${words(v2.clinic.title, 1)}</h2></div></div>
+      ${card(P.right, " ptour__item--right")}
+    </div></div>
+    <div class="ptour__spacer"></div>
+    <div class="ptour__after">
+      <div class="ptour__grid">${P.gallery.map(([f, cap, r], i) => `<figure class="ptour__fig"${i % 2 ? " data-par" : ""} style="--r:${r}"><span class="ptour__pic">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>
+      <div class="ptour__text"><p>${esc(v2.clinic.text)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>
+    </div>
+  </div>`;
+}
+
 // единый хвост блока: оффер, кнопка (и ссылка), строка под кнопкой
 const ctaBox = (offer, btn, link, note) => `<div class="cta-box" data-reveal>${offer ? `<p class="cta-box__offer">${esc(offer)}</p>` : ""}<div class="cta-box__row">${btn}${link || ""}</div>${note ? `<p class="cta-box__note">${esc(note)}</p>` : ""}</div>`;
 const ext = ' target="_blank" rel="noopener"';
@@ -475,6 +499,7 @@ function pageHome() {
   <div class="tour__rows" aria-label="Фото клиники">
     ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
   </div>
+  ${phoneTour(depth)}
 </section>
 
 <section class="foil on-dark" id="path" aria-labelledby="ph-title">

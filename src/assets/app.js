@@ -567,6 +567,17 @@
     $("[data-again]", cbDone)?.addEventListener("click", () => { cbDone.hidden = true; cb.hidden = false; cbIn.focus(); });
   }
 
+  // ---------- тур на телефоне как вторая секция Лава Дент ----------
+  const pt = $(".ptour");
+  if (pt) {
+    // фото ленты стоят за краем экрана и обрезаны лентой, сами они загрузились бы, только въехав в кадр: грузим заранее
+    const near = new IntersectionObserver(([en]) => { if (!en.isIntersecting) return; $$("img", pt).forEach((im) => { im.loading = "eager"; }); near.disconnect(); }, { rootMargin: "150% 0px" });
+    near.observe(pt);
+    // заголовок над раскрытым кабинетом проявляется по словам, когда снизу подходят фото, и гаснет, когда они ушли (как у Лава Дент)
+    const grid = $(".ptour__grid", pt);
+    if (grid) new IntersectionObserver(([en]) => pt.classList.toggle("is-on", en.isIntersecting), { rootMargin: "0px 0px 25% 0px" }).observe(grid);
+  }
+
   // ---------- анимации ----------
   // Правило: прокрутку сглаживает только Lenis, поэтому все scrub = true (без второго сглаживания),
   // одно свойство одного элемента ведёт одна анимация, CSS-переходы на этих свойствах выключены.
@@ -737,6 +748,20 @@
     G.fromTo($(".tour__frame img", tour), { scale: 1.14 }, { scale: 1, ease: "none", scrollTrigger: st });
     G.fromTo($(".tour__title", tour), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, ease: "none", scrollTrigger: { trigger: tour, start: "top 30%", end: "top top", scrub: true } });
   });
+  // тур на телефоне как у Лава Дент: всё делает CSS от прокрутки (animation-timeline), ниже то же самое для браузеров без неё
+  if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
+    const items = $(".ptour__items", pt), spacer = $(".ptour__spacer", pt), after = $(".ptour__after", pt);
+    const img = $(".ptour__item--main .ptour__img", pt), shade = $(".ptour__item--main .ptour__shade", pt);
+    const sides = [[$(".ptour__item--left", pt), -0.2], [$(".ptour__item--right", pt), 0.2]];
+    const pars = $$(".ptour__fig[data-par]", pt);
+    G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
+    const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
+    zoom.fromTo(img, { clipPath: "inset(10% 0% 10% 0% round 24px)", scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0% round 0px)", scale: 1.1 }, 0)
+      .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
+    sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
+    pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
+    return () => G.set([items, img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" });
+  });
   mm.add("(max-width: 760px)", () => {
     const track = $(".feat__track");
     if (!track) return;
@@ -783,7 +808,7 @@
   // они сами проезжают немного быстрее, чтобы было видно, что их листают
   mm.add("(max-width: 760px)", () => {
     const box = $(".tour__rows");
-    if (!box) return;
+    if (!box || !box.offsetParent) return;   // на телефоне вместо лент тур как у Лава Дент (.ptour)
     const rows = $$(".tour__row", box).map((r) => ({ r, k: $$(":scope > figure:not([aria-hidden])", r).length, dir: parseFloat(r.dataset.dir) || -1, w: 0, set: G.quickSetter(r, "x", "px") }));
     const st = { pos: 0 };
     const wrap = (v, w) => ((v % w) + w) % w;
