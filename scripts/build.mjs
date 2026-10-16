@@ -148,7 +148,6 @@ function header(depth, home = false) {
   <div class="menu__foot"><a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a><span class="note">${esc(clinic.hours)}. Перезвоним за 5 минут.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
   <nav class="mnav" aria-label="Разделы">
     <ul class="mnav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li><a class="mnav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a></li>`).join("")}</ul>
-    <p class="mnav__row"><a class="mnav__link mnav__link--on" href="${clinic.phoneHref}">${esc(clinic.phone)}</a></p>
   </nav>
 </div>`;
 }
