@@ -146,13 +146,19 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   <div class="footer__cta">
     <div><h2 data-split>Не уверены, что зуб нужно удалять? Покажите его нам</h2><p class="footer__lead">Консультация и план лечения бесплатно. Перезвоним за 5 минут.</p></div>
     <div class="footer__form">
-      <form class="fform lead" data-lead="final">
-        <h3 class="fform__title">Запишитесь на бесплатную консультацию</h3>
-        <div class="fform__row"><label>Имя<input name="name" autocomplete="given-name" placeholder="Как к вам обращаться"></label><label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label></div>
-        <button class="btn btn--lg btn--wide">Жду звонка</button>
-        <p class="fform__note">Перезвоним за 5 минут, ежедневно с 9:00 до 21:00. Отправляя заявку, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf" target="_blank" rel="noopener">обработку персональных данных</a>.</p>
-        <p class="fform__alt">Есть снимок или план из другой клиники? <a href="https://t.me/" data-modal="xray" data-reason="Сказали удалить">Прислать на второе мнение</a></p>
+      <form class="cb" data-lead="final" novalidate>
+        <label class="cb__label" for="cb-phone">Ваш телефон</label>
+        <div class="cb__field"><input id="cb-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 ___ ___-__-__" required aria-describedby="cb-hint"><button class="cb__btn" type="submit">Жду звонка</button></div>
+        <p class="cb__hint" id="cb-hint">Перезвоним ежедневно с 9:00 до 21:00. Оставите номер вечером, позвоним утром.</p>
+        <p class="cb__consent">Отправляя номер, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf" target="_blank" rel="noopener">обработку персональных данных</a>.</p>
+        <div class="cb__alt"><p>Есть снимок или план из другой клиники?</p><a class="btn btn--ghost btn--sm" href="https://t.me/" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
       </form>
+      <div class="cb__done" role="status" tabindex="-1" hidden>
+        <p class="cb__done-t">Спасибо, номер у нас</p>
+        <p class="cb__done-s" data-done-s>Администратор перезвонит за 5 минут с номера +7 495 150-36-15.</p>
+        <div class="cb__alt"><p>Пока ждёте, можно прислать снимок.</p><a class="btn btn--ghost btn--sm" href="https://t.me/" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
+        <button class="way__link cb__again" type="button" data-again>Указать другой номер</button>
+      </div>
     </div>
   </div>
   <div class="footer__grid">
