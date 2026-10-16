@@ -1169,6 +1169,8 @@ html:not(.js-intro) .intro { display: none; }
   .dirs__tabs::-webkit-scrollbar, .team__tabs::-webkit-scrollbar { display: none; }
   .dirs__tabs.is-end, .team__tabs.is-end { -webkit-mask-image: none; mask-image: none; }
   .dirs__tabs .chip, .team__tabs .chip { flex: none; white-space: nowrap; scroll-snap-align: center; }
+  /* врачи на главной: без вкладок по профессиям, видны все (Ilya 16.10) */
+  #team:not(.team--page) .team__tabs { display: none; }
   /* направления: первыми имплантация, протезирование, удаление; края гаснут там, где есть ещё вкладки;
      выбранную вкладку подсвечивает подложка, которая переезжает от вкладки к вкладке */
   .dirs__tabs .chip:nth-child(2) { order: -3; }
