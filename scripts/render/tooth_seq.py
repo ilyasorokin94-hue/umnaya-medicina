@@ -1,6 +1,8 @@
 # Кадры первого экрана: натуральный нижний первый моляр (Blender Cycles), сверху вниз проходит плоскость «снимка КТ»:
 # всё, что выше плоскости, показано как на КТ (матовое полупрозрачное «стекло», внутри видны пульпа и каналы),
 # ниже — живой зуб. За ролик зуб поворачивается вокруг вертикальной оси примерно на 30°.
+# Вид КТ: стенки без преломления, дальние стенки ровно светятся «на просвет» (как негатоскоп, не зависят от ламп),
+# эмаль светлее дентина, пульпа — непрозрачная тёмная тёпло-розово-коричневая; без линий и свечения на границе.
 # Геометрия: поля расстояний на сетке numpy -> поверхность (surface nets) -> сглаживание с возвратом на поверхность.
 # Три замкнутые сетки: наружная поверхность зуба, дентин (под эмалью и под тонким слоем цемента корней), пульпа с каналами.
 # Единицы: 1 = 1 мм. Нужен Blender как модуль Python: python3 -m pip install bpy (5.2, Python 3.13).
@@ -9,7 +11,7 @@
 #       python3 scripts/render/frames_to_webp.py /tmp/tooth src/images/tooth 96  (печатает data-crop для build.mjs)
 # Отладка через переменные окружения: TOOTH_CLAY=1 (только форма), TOOTH_H (шаг сетки, мм, по умолчанию 0.065),
 # TOOTH_ELEV (наклон камеры, °), TOOTH_VS/VA/VE/FROST/FROSTE/BACK/BACKE/BACKD/VD/PULP — параметры вида КТ (см. «материалы»).
-# Один процесс рендерит все кадры: сетки строятся один раз (~50 с), Cycles на 2 потоках.
+# Один процесс рендерит все кадры: сетки строятся один раз (~45 с), Cycles на 2 потоках.
 import bpy, math, sys, os, time
 import numpy as np
 from mathutils import Vector, Euler
@@ -402,16 +404,16 @@ pulp = build("pulp", pulp_field, (-4.3, -2.9, -13.6), (4.6, 2.9, 4.2), HG * 0.75
 
 # ---------- материалы ----------
 SCAN_NODES = []      # узлы Map Range, куда на каждом кадре пишется высота плоскости
-VOL_SCATTER = float(os.environ.get("TOOTH_VS", "0.04"))   # рассеяние в толще, 1/мм
-VOL_ABS = float(os.environ.get("TOOTH_VA", "0.06"))       # поглощение в толще, 1/мм
-VOL_EMIT = float(os.environ.get("TOOTH_VE", "0.04"))      # «свечение плотности», на 1 мм пути
-CT_FROST = float(os.environ.get("TOOTH_FROST", "0.08"))   # матовость наружной стенки корня (у эмали — CT_FROST_E)
-CT_FROST_E = float(os.environ.get("TOOTH_FROSTE", "0.22"))  # матовость эмали: эмаль на КТ самая плотная и светлая
+VOL_SCATTER = float(os.environ.get("TOOTH_VS", "0.0"))   # рассеяние в толще, 1/мм
+VOL_ABS = float(os.environ.get("TOOTH_VA", "0.045"))       # поглощение в толще, 1/мм
+VOL_EMIT = float(os.environ.get("TOOTH_VE", "0.0"))      # «свечение плотности», на 1 мм пути
+CT_FROST = float(os.environ.get("TOOTH_FROST", "0.04"))   # матовость наружной стенки корня (у эмали — CT_FROST_E)
+CT_FROST_E = float(os.environ.get("TOOTH_FROSTE", "0.08"))  # матовость эмали: эмаль на КТ самая плотная и светлая
 CT_BACK = float(os.environ.get("TOOTH_BACK", "0.85"))      # молочность дальней стенки на просвет
-CT_BACK_E = float(os.environ.get("TOOTH_BACKE", "0.3"))    # яркость дальней стенки (свечение, не зависит от ламп)
+CT_BACK_E = float(os.environ.get("TOOTH_BACKE", "2.0"))    # яркость дальней стенки (свечение, не зависит от ламп)
 CT_BACK_D = float(os.environ.get("TOOTH_BACKD", "0.45"))   # молочность дальней стенки дентина
-VOL_DENTIN = float(os.environ.get("TOOTH_VD", "0.07"))    # поглощение в дентине, 1/мм
-PULP_COL = tuple(float(x) for x in os.environ.get("TOOTH_PULP", "0.07,0.028,0.028").split(","))
+VOL_DENTIN = float(os.environ.get("TOOTH_VD", "0.06"))    # поглощение в дентине, 1/мм
+PULP_COL = tuple(float(x) for x in os.environ.get("TOOTH_PULP", "0.10,0.03,0.026").split(","))
 
 def ct_factor(nt):
     """1 там, где плоскость уже прошла (z объекта выше плоскости), и для лучей, прошедших сквозь «стекло»."""
@@ -570,10 +572,10 @@ def mat_outer():
                      Coat_Weight=mix_f(nt, en, 0.0, 0.35), Coat_Roughness=mix_f(nt, en, 0.32, 0.08))   # цемент матовый
     nat.subsurface_method = "RANDOM_WALK"
     # в виде КТ эмаль (выше эмалево-цементной границы) плотнее и светлее: больше матовости, плотнее дальняя стенка
-    ct = ct_surface(nt, mix_f(nt, en, CT_FROST, CT_FROST_E), mix_f(nt, en, CT_BACK, min(1.0, CT_BACK + 0.08)), (0.90, 0.86, 0.80),
+    ct = ct_surface(nt, mix_f(nt, en, CT_FROST, CT_FROST_E), mix_f(nt, en, CT_BACK, min(1.0, CT_BACK + 0.08)), (0.90, 0.87, 0.82),
                     gloss_rough=0.28, ior=1.33, gloss_col=(0.62, 0.62, 0.60))
     finish(nt, nat.outputs[0], ct, fac)
-    # толща зуба в виде КТ: мягкое молочное рассеяние (до плоскости сюда смотрят только сквозь «стекло»)
+    # толща зуба в виде КТ: по умолчанию только лёгкое поглощение (рассеяние и свечение — TOOTH_VS / TOOTH_VE)
     volume(nt, VOL_SCATTER, (0.88, 0.85, 0.78), (VOL_ABS * 0.92, VOL_ABS, VOL_ABS * 1.15), VOL_EMIT, (1.0, 0.94, 0.85))
     return m
 
@@ -581,7 +583,7 @@ def mat_dentin():
     # дентин виден только сквозь «стекло»: поверхность прозрачная, толща чуть темнее и теплее эмали
     m, nt = new_mat("dentin")
     out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
-    nt.links.new(ct_surface(nt, 0.03, CT_BACK_D, (0.62, 0.60, 0.57), gloss=False), out.inputs["Surface"])
+    nt.links.new(ct_surface(nt, 0.03, CT_BACK_D, (0.62, 0.605, 0.58), gloss=False), out.inputs["Surface"])
     volume(nt, 0.0, (1, 1, 1), (VOL_DENTIN * 0.8, VOL_DENTIN, VOL_DENTIN * 1.3))
     return m
 
@@ -628,6 +630,9 @@ s2 = area("stripR", (55, 55, 12), 5, 2.4e5, (0.92, 0.97, 1.0), sy=100); aim(s2, 
 sf = area("stripF", (-40, -50, 0), 4, 0.6e5, (1.0, 1.0, 1.0), sy=90); aim(sf, (0, 0, 2))
 tp = area("top", (10, 10, 80), 30, 2.2e4); aim(tp, (0, 0, 8))
 gb = area("green", (10, 70, -10), 50, 3.5e4, (0.3, 0.9, 0.35)); aim(gb, (0, 0, 0))
+# у зуба зелёный подсвет слабее, чем у импланта: сквозь прозрачную часть он подсвечивал край живой части
+# у фуркации — мятная искра на границе
+gb.data.energy = 1.2e4
 fill = area("fill", (70, -60, 20), 50, 0.8e4, (0.85, 0.95, 0.9)); aim(fill)
 
 # зуб: середина по высоте примерно там же, где была середина импланта с коронкой
