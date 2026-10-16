@@ -78,8 +78,8 @@ def fixture():
     h = 0.46 * smoothstep(0.25, 2.2, Z) * (1 - smoothstep(9.6, 10.45, Z))
     r = core + h * f
     # три режущие канавки у апекса
-    g = np.maximum(0, np.cos(3 * (TH - 0.4))) ** 10
-    depth = 0.55 * (1 - smoothstep(0.4, 3.6, Z))
+    g = np.maximum(0, np.cos(3 * (TH - 0.4))) ** 6
+    depth = 0.38 * (1 - smoothstep(0.5, 3.4, Z))
     r = r - depth * g * (h + 0.35)
     # гладкая шейка
     collar_r = 2.18 - 0.08 * smoothstep(L - 0.25, L, Z)
@@ -106,7 +106,8 @@ def fixture():
     for poly in me.polygons:
         poly.use_smooth = True
         zc = poly.center.z
-        poly.material_index = 1 if zc > COLLAR - 0.02 else 0
+        rc = math.hypot(poly.center.x, poly.center.y)
+        poly.material_index = 2 if (zc > COLLAR - 0.02 and rc < 1.4) or zc < L - 0.05 and rc < 1.35 and zc > L - 2.7 else (1 if zc > COLLAR - 0.02 else 0)
     return ob
 
 # ---------- абатмент ----------
@@ -184,7 +185,10 @@ def crown():
     bump = np.zeros_like(X)
     for cx, cy, amp in cusps:
         bump += amp * np.exp(-(((X - cx) / 1.75) ** 2 + ((Y - cy) / 1.6) ** 2))
-    groove = np.exp(-(Y / 0.42) ** 2) * smoothstep(4.4, 1.0, np.abs(X)) + 0.8 * np.exp(-(X / 0.38) ** 2) * smoothstep(4.0, 0.8, np.abs(Y))
+    groove = np.exp(-(Y / 0.36) ** 2) * smoothstep(4.4, 1.0, np.abs(X)) + 0.8 * np.exp(-(X / 0.32) ** 2) * smoothstep(4.0, 0.8, np.abs(Y))
+    # краевые валики по мезиальному и дистальному краю жевательной поверхности
+    ridge = np.exp(-((np.abs(X) - 3.35) / 0.45) ** 2) * np.exp(-(Y / 2.2) ** 2)
+    bump = bump + 0.35 * ridge
     pit = np.exp(-((X / 0.9) ** 2 + (Y / 0.9) ** 2))
     Z = Z + top * (1.35 * bump - 0.9 * groove - 0.35 * pit) - 0.6 * top
     # лёгкая неидеальность формы
@@ -226,23 +230,23 @@ def mat_ti(name, base, rough, bump=0.0, aniso=0.0):
 def mat_zirconia():
     m = bpy.data.materials.new("zirconia"); m.use_nodes = True
     nt = m.node_tree; b = nt.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (0.80, 0.765, 0.68, 1)
-    b.inputs["Subsurface Weight"].default_value = 0.22
+    b.inputs["Base Color"].default_value = (0.70, 0.66, 0.57, 1)
+    b.inputs["Subsurface Weight"].default_value = 0.3
     b.inputs["Subsurface Radius"].default_value = (1.0, 0.55, 0.35)
     b.inputs["Subsurface Scale"].default_value = 0.6
     b.inputs["Roughness"].default_value = 0.3
-    b.inputs["Coat Weight"].default_value = 0.55
+    b.inputs["Coat Weight"].default_value = 0.4
     b.inputs["Coat Roughness"].default_value = 0.06
     # к вершинам бугров эмаль чуть прозрачнее и холоднее
     geo = nt.nodes.new("ShaderNodeNewGeometry")
     sep = nt.nodes.new("ShaderNodeSeparateXYZ")
     nt.links.new(geo.outputs["Position"], sep.inputs["Vector"])
     mr = nt.nodes.new("ShaderNodeMapRange")
-    mr.inputs["From Min"].default_value = 4.5; mr.inputs["From Max"].default_value = 7.6
+    mr.inputs["From Min"].default_value = 0.3; mr.inputs["From Max"].default_value = 7.6
     nt.links.new(sep.outputs["Z"], mr.inputs["Value"])
     mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"
-    mix.inputs[6].default_value = (0.80, 0.765, 0.68, 1)
-    mix.inputs[7].default_value = (0.76, 0.76, 0.74, 1)
+    mix.inputs[6].default_value = (0.72, 0.62, 0.46, 1)
+    mix.inputs[7].default_value = (0.74, 0.73, 0.70, 1)
     nt.links.new(mr.outputs["Result"], mix.inputs["Factor"])
     ao = nt.nodes.new("ShaderNodeAmbientOcclusion"); ao.inputs["Distance"].default_value = 0.8; ao.samples = 16
     mix2 = nt.nodes.new("ShaderNodeMix"); mix2.data_type = "RGBA"
@@ -257,10 +261,11 @@ def mat_zirconia():
 
 ti_sla = mat_ti("ti_sla", (0.50, 0.51, 0.52), 0.46, bump=0.35)
 ti_pol = mat_ti("ti_polished", (0.78, 0.77, 0.75), 0.10)
+ti_dark = mat_ti("ti_socket", (0.22, 0.22, 0.23), 0.35)
 ti_abut = mat_ti("ti_abutment", (0.80, 0.79, 0.77), 0.14, aniso=0.35)
 zr = mat_zirconia()
 
-fx = fixture(); fx.data.materials.append(ti_sla); fx.data.materials.append(ti_pol)
+fx = fixture(); fx.data.materials.append(ti_sla); fx.data.materials.append(ti_pol); fx.data.materials.append(ti_dark)
 ab = abutment(); ab.data.materials.append(ti_abut)
 sc = screw(); sc.data.materials.append(ti_pol)
 cr = crown(); cr.data.materials.append(zr)
@@ -285,7 +290,7 @@ k = area("key", (-70, -60, 50), (0, 0, 0), 55, 2.4e5, (1.0, 0.98, 0.95)); aim(k)
 s1 = area("stripL", (-50, 60, 8), (0, 0, 0), 5, 2.2e5, (0.92, 0.97, 1.0), sy=100); aim(s1, (0, 0, 2))
 s2 = area("stripR", (55, 55, 12), (0, 0, 0), 5, 2.4e5, (0.92, 0.97, 1.0), sy=100); aim(s2, (0, 0, 2))
 sf = area("stripF", (-40, -50, 0), (0, 0, 0), 4, 0.6e5, (1.0, 1.0, 1.0), sy=90); aim(sf, (0, 0, 2))
-tp = area("top", (10, 10, 80), (0, 0, 0), 30, 4.0e4, (1, 1, 1)); aim(tp, (0, 0, 8))
+tp = area("top", (10, 10, 80), (0, 0, 0), 30, 2.2e4, (1, 1, 1)); aim(tp, (0, 0, 8))
 gb = area("green", (10, 70, -10), (0, 0, 0), 50, 3.5e4, (0.3, 0.9, 0.35)); aim(gb, (0, 0, 0))
 fill = area("fill", (70, -60, 20), (0, 0, 0), 50, 0.8e4, (0.85, 0.95, 0.9)); aim(fill)
 
@@ -328,6 +333,7 @@ scene.cycles.max_bounces = 8; scene.cycles.glossy_bounces = 6
 scene.render.film_transparent = True
 scene.render.resolution_x = W; scene.render.resolution_y = H; scene.render.resolution_percentage = 100
 scene.view_settings.view_transform = "AgX"
+scene.view_settings.exposure = -0.35
 try: scene.view_settings.look = "AgX - Medium High Contrast"
 except Exception as ex: print("look", ex)
 scene.render.image_settings.file_format = "PNG"; scene.render.image_settings.color_mode = "RGBA"
