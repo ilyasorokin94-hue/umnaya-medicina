@@ -1211,6 +1211,9 @@ html:not(.js-intro) .intro { display: none; }
   .tour__frame::after { background: linear-gradient(180deg, rgba(12, 36, 16, 0) 50%, rgba(12, 36, 16, .78)); }
   .tour__lead { display: block; padding-top: 36px; color: rgba(255, 255, 255, .82); font-size: 16px; line-height: 1.5; }
   .tour__rows { padding: 32px 0 44px; }
+  /* тур: кадр раскрывается без закрепления экрана (см. app.js); ленты фото листаются пальцем вбок, страница при этом прокручивается как обычно */
+  .tour__frame { border-radius: 22px; will-change: transform; }
+  .tour__row { touch-action: pan-y pinch-zoom; }
 
   /* путь пациента: колода, каждая следующая карточка накрывает предыдущую */
   .foil { overflow: clip; }
@@ -1653,3 +1656,18 @@ html:not(.js-intro) .intro { display: none; }
 .team__more .btn--ghost::before { display: none; }
 .team__more .btn--ghost:hover { color: var(--green-deep); }
 @media (max-width: 760px) { .team__more .btn--ghost { width: auto; } }
+
+/* телефон: раскрытие кадра «Здесь вас ждут» анимацией от прокрутки, без JS: идёт ровно вместе с пальцем, только transform */
+@supports (animation-timeline: view()) {
+  @media (max-width: 760px) {
+    /* overflow: hidden у секции делает её контейнером прокрутки, и шкала прокрутки замирает; clip так же обрезает, но не мешает */
+    .tour { overflow: clip; }
+    .tour__pin { view-timeline: --tour block; }
+    .tour__frame { animation: tour-open linear both; animation-timeline: --tour; animation-range: entry 5% entry 95%; }
+    .tour__frame img { animation: tour-zoom linear both; animation-timeline: --tour; animation-range: entry 5% entry 95%; }
+    .tour__title { animation: tour-title linear both; animation-timeline: --tour; animation-range: entry 70% entry 100%; }
+  }
+}
+@keyframes tour-open { from { transform: scale(.86); } to { transform: none; } }
+@keyframes tour-zoom { from { transform: scale(1.14); } to { transform: none; } }
+@keyframes tour-title { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }

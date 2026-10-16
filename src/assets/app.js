@@ -687,7 +687,7 @@
 
   // клиника изнутри: кадр раскрывается из карточки на весь экран, затем проявляется заголовок
   const tour = $(".tour__pin");
-  if (tour) {
+  if (tour) mm.add("(min-width: 761px)", () => {
     const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
     // на телефоне кадр стартует широкой карточкой, как фото в лентах, и закрепление короче
     const narrow = () => innerWidth <= 760;
@@ -697,7 +697,16 @@
       .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
       .fromTo($$(".sw > span", tt), { yPercent: 110 }, { yPercent: 0, duration: 0.3, stagger: 0.04, ease: "power3.out" }, 0.72)
       .to({}, { duration: 0.25 });
-  }
+  });
+  // телефон: экран не закрепляем (на iPhone закрепление дёргается). Кадр раскрывается из карточки, пока поднимается
+  // снизу, двигаем только transform. Где браузер умеет анимации от прокрутки (animation-timeline), это делает CSS
+  // без JS, как у Лава Дент, и кадр идёт ровно вместе с пальцем; ниже запасной вариант для остальных браузеров
+  if (tour && !(window.CSS && CSS.supports("animation-timeline: view()"))) mm.add("(max-width: 760px)", () => {
+    const st = { trigger: tour, start: "top 95%", end: "top 5%", scrub: true };
+    G.fromTo($(".tour__frame", tour), { scale: 0.86 }, { scale: 1, ease: "none", scrollTrigger: st });
+    G.fromTo($(".tour__frame img", tour), { scale: 1.14 }, { scale: 1, ease: "none", scrollTrigger: st });
+    G.fromTo($(".tour__title", tour), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, ease: "none", scrollTrigger: { trigger: tour, start: "top 30%", end: "top top", scrub: true } });
+  });
   mm.add("(max-width: 760px)", () => {
     const track = $(".feat__track");
     if (!track) return;
@@ -723,7 +732,7 @@
   // ленты фото и отзывов едут навстречу друг другу и быстрее прокрутки: пока лента проходит экран,
   // она сдвигается на 1,2 этого пути, поэтому за оборот колеса проезжает больше фото и отзывов.
   // Ленту дополняем копиями (для чтения с экрана скрыты), чтобы её хватило на весь сдвиг.
-  $$(".tour__row, .rv__row").forEach((row) => {
+  const ribbon = (row) => {
     const d = parseFloat(row.dataset.dir) || -1;
     const base = [...row.children];
     const setW = () => base[base.length / 2].offsetLeft - base[0].offsetLeft;
@@ -734,6 +743,59 @@
     fill();
     ST.addEventListener("refreshInit", fill);
     G.fromTo(row, { x: () => (d < 0 ? 0 : -dist()) }, { x: () => (d < 0 ? -dist() : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
+  };
+  $$(".rv__row").forEach(ribbon);
+  mm.add("(min-width: 761px)", () => $$(".tour__row").forEach(ribbon));
+
+  // телефон: фото клиники двумя лентами. Ленты сами медленно плывут навстречу друг другу по времени, а не от прокрутки,
+  // поэтому при прокрутке страницы не дрожат. Любую ленту можно листать пальцем вбок, вторая при этом крутится
+  // в обратную сторону; отпустили — ленты докатываются по инерции. Когда ленты впервые доходят до экрана,
+  // они сами проезжают немного быстрее, чтобы было видно, что их листают
+  mm.add("(max-width: 760px)", () => {
+    const box = $(".tour__rows");
+    if (!box) return;
+    const rows = $$(".tour__row", box).map((r) => ({ r, k: $$(":scope > figure:not([aria-hidden])", r).length, dir: parseFloat(r.dataset.dir) || -1, w: 0, set: G.quickSetter(r, "x", "px") }));
+    const st = { pos: 0 };
+    const wrap = (v, w) => ((v % w) + w) % w;
+    const render = () => rows.forEach((o) => { if (o.w) o.set(o.dir < 0 ? -wrap(st.pos, o.w) : wrap(st.pos, o.w) - o.w); });
+    const measure = () => { rows.forEach((o) => { const c = o.r.children; o.w = c[o.k] ? c[o.k].offsetLeft - c[0].offsetLeft : 0; }); render(); };
+    measure();
+    let on = false, drag = false, glide = null;
+    const vis = ST.create({ trigger: box, start: "top bottom", end: "bottom top", onToggle: (self) => { on = self.isActive; } });
+    const hint = ST.create({ trigger: box, start: "top 80%", once: true, onEnter: () => { if (!drag) glide = G.to(st, { pos: st.pos + Math.min(innerWidth * 0.5, 220), duration: 1.6, ease: "power2.inOut", onUpdate: render }); } });
+    const tick = (time, dt) => { if (!on || drag || glide?.isActive()) return; st.pos += 0.024 * Math.min(dt, 50); render(); };
+    G.ticker.add(tick);
+    let sx = 0, sy = 0, lock = 0, p0 = 0, lx = 0, lt = 0, vel = 0, sign = 1;
+    const down = (o) => (e) => {
+      if (e.touches.length > 1) return;
+      const t = e.touches[0];
+      sx = lx = t.clientX; sy = t.clientY; lt = e.timeStamp; lock = 0; vel = 0; p0 = st.pos; sign = o.dir < 0 ? -1 : 1;
+    };
+    const move = (e) => {
+      const t = e.touches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+      if (!lock && Math.hypot(dx, dy) > 6) { lock = Math.abs(dx) > Math.abs(dy) ? 1 : -1; if (lock === 1) { drag = true; glide?.kill(); p0 = st.pos - sign * dx; } }
+      if (lock !== 1) return;
+      const dt = Math.max(1, e.timeStamp - lt);
+      vel = Math.max(-2.5, Math.min(2.5, 0.7 * ((t.clientX - lx) / dt) + 0.3 * vel)); lx = t.clientX; lt = e.timeStamp;
+      st.pos = p0 + sign * dx; render();
+    };
+    const up = (e) => {
+      if (!drag) { lock = 0; return; }
+      drag = false; lock = 0;
+      if (e.timeStamp - lt > 90) vel = 0;   // палец остановился перед тем, как отпустить: без инерции
+      if (Math.abs(vel) > 0.05) glide = G.to(st, { pos: st.pos + sign * vel * 340, duration: Math.min(1.8, 0.6 + Math.abs(vel) * 0.5), ease: "power3.out", onUpdate: render });
+    };
+    const offs = rows.map((o) => {
+      const d = down(o);
+      o.r.addEventListener("touchstart", d, { passive: true });
+      o.r.addEventListener("touchmove", move, { passive: true });
+      o.r.addEventListener("touchend", up, { passive: true });
+      o.r.addEventListener("touchcancel", up, { passive: true });
+      return () => { o.r.removeEventListener("touchstart", d); o.r.removeEventListener("touchmove", move); o.r.removeEventListener("touchend", up); o.r.removeEventListener("touchcancel", up); };
+    });
+    ST.addEventListener("refresh", measure);
+    $$("img", box).forEach((im) => { if (!im.complete) im.addEventListener("load", measure, { once: true }); });
+    return () => { G.ticker.remove(tick); vis.kill(); hint.kill(); glide?.kill(); ST.removeEventListener("refresh", measure); offs.forEach((f) => f()); rows.forEach((o) => G.set(o.r, { x: 0 })); };
   });
 
   // бегущая строка: скорость плавно следует за скоростью прокрутки, направление — за её направлением
