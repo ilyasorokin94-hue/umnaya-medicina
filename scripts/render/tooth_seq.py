@@ -1,0 +1,558 @@
+# Кадры первого экрана: натуральный нижний первый моляр (Blender Cycles), сверху вниз проходит плоскость «снимка КТ»:
+# всё, что выше плоскости, показано как на КТ (матовое полупрозрачное «стекло», внутри видны пульпа и каналы),
+# ниже — живой зуб. За ролик зуб поворачивается вокруг вертикальной оси примерно на 30°.
+# Геометрия: поля расстояний на сетке numpy -> поверхность (surface nets) -> сглаживание с возвратом на поверхность.
+# Три замкнутые сетки: наружная поверхность зуба, дентин (под эмалью и под тонким слоем цемента корней), пульпа с каналами.
+# Единицы: 1 = 1 мм. Нужен Blender как модуль Python: python3 -m pip install bpy (5.2, Python 3.13).
+# Запуск: python3 scripts/render/tooth_seq.py <папка_кадров> 0 <samples> <w> <h> <число_кадров> [номера,через,запятую]
+# Сайт: python3 scripts/render/tooth_seq.py /tmp/tooth 0 64 1000 1200 96
+#       python3 scripts/render/frames_to_webp.py /tmp/tooth src/images/tooth 96  (печатает data-crop для build.mjs)
+import bpy, math, sys, os, time
+import numpy as np
+from mathutils import Vector, Euler
+
+args = sys.argv[1:]
+OUT = args[0] if len(args) > 0 else "/tmp/tooth"
+SAMPLES = int(args[2]) if len(args) > 2 else 64
+W = int(args[3]) if len(args) > 3 else 1000
+H = int(args[4]) if len(args) > 4 else 1200
+N = int(args[5]) if len(args) > 5 else 96
+ONLY = [int(x) for x in args[6].split(",")] if len(args) > 6 and args[6] else None
+CLAY = os.environ.get("TOOTH_CLAY") == "1"          # отладка формы: серый пластилин, без КТ
+
+bpy.ops.wm.read_factory_settings(use_empty=True)
+scene = bpy.context.scene
+
+# ---------- поля ----------
+def smoothstep(a, b, x):
+    t = np.clip((x - a) / (b - a), 0.0, 1.0)
+    return t * t * (3 - 2 * t)
+
+def smin(a, b, k):
+    h = np.clip(0.5 + 0.5 * (b - a) / k, 0.0, 1.0)
+    return b * (1 - h) + a * h - k * h * (1 - h)
+
+def smax(a, b, k):
+    return -smin(-a, -b, k)
+
+def prof(z, zs, vs):
+    """Гладкий профиль по высоте: кусочно-линейный по узлам, сглаженный кубическим сплайном Катмулла-Рома."""
+    zs = np.asarray(zs, float); vs = np.asarray(vs, float)
+    o = np.argsort(zs); zs = zs[o]; vs = vs[o]
+    zz = np.clip(z, zs[0], zs[-1])
+    i = np.clip(np.searchsorted(zs, zz) - 1, 0, len(zs) - 2)
+    t = (zz - zs[i]) / (zs[i + 1] - zs[i])
+    p1 = vs[i]; p2 = vs[i + 1]
+    p0 = vs[np.maximum(i - 1, 0)]; p3 = vs[np.minimum(i + 2, len(vs) - 1)]
+    h0 = zs[i + 1] - zs[i]
+    m1 = (p2 - p0) / (zs[np.minimum(i + 1, len(zs) - 1)] - zs[np.maximum(i - 1, 0)]) * h0
+    m2 = (p3 - p1) / (zs[np.minimum(i + 2, len(zs) - 1)] - zs[i]) * h0
+    t2 = t * t; t3 = t2 * t
+    return (2 * t3 - 3 * t2 + 1) * p1 + (t3 - 2 * t2 + t) * m1 + (-2 * t3 + 3 * t2) * p2 + (t3 - t2) * m2
+
+# Оси: x — мезиодистально (+x мезиально), y — вестибулооральной (−y щёчная сторона, +y язычная), z — вверх.
+# z = 0 — эмалево-цементная граница на щёчной и язычной поверхностях.
+
+# бугры: x, y, высота вершины, крутизна, скругление вершины
+CUSPS = [
+    (3.00, -2.45, 7.25, 0.74, 1.25),   # мезиощёчный
+    (-0.45, -2.80, 7.05, 0.74, 1.25),  # дистощёчный
+    (-3.55, -1.60, 6.55, 0.80, 1.05),  # дистальный
+    (2.75, 2.35, 7.70, 0.84, 0.95),    # мезиоязычный
+    (-1.75, 2.55, 7.45, 0.84, 0.95),   # дистоязычный
+]
+# краевые валики: отрезок, высота
+RIDGES = [((4.30, -1.85), (4.15, 1.90), 6.15), ((-4.15, -0.55), (-3.45, 2.15), 5.85)]
+
+def seg_dist(X, Y, a, b):
+    ax, ay = a; bx, by = b
+    dx, dy = bx - ax, by - ay
+    t = np.clip(((X - ax) * dx + (Y - ay) * dy) / (dx * dx + dy * dy), 0, 1)
+    return np.hypot(X - ax - t * dx, Y - ay - t * dy)
+
+def occlusal(X, Y, fine=True):
+    """Жевательная поверхность как высота T(x, y): бугры-купола, гладкий максимум, фиссуры по границам бугров."""
+    cs = []
+    for cx, cy, hgt, k, r0 in CUSPS:
+        rho = np.hypot(X - cx, (Y - cy) * 1.05)
+        cs.append(hgt - k * (np.sqrt(rho * rho + r0 * r0) - r0))
+    cs = np.array(cs)
+    rs = []
+    for a, b, hgt in RIDGES:
+        d = seg_dist(X, Y, a, b)
+        rs.append(hgt - 0.95 * (np.sqrt(d * d + 0.5 ** 2) - 0.5))
+    rs = np.array(rs)
+    beta = 6.0 if fine else 2.6
+    allv = np.concatenate([cs, rs], 0)
+    mx = allv.max(0)
+    T = mx + np.log(np.exp(beta * (allv - mx)).sum(0)) / beta
+    if fine:
+        srt = np.sort(cs, axis=0)
+        c1, c2 = srt[-1], srt[-2]
+        rmax = rs.max(0)
+        fiss = np.exp(-((c1 - c2) / 0.20) ** 2) * smoothstep(-0.05, 0.35, c1 - rmax)
+        T = T - 0.42 * fiss
+        for px, py, dep in ((0.55, 0.05, 0.30), (3.35, 0.05, 0.25), (-2.75, 0.45, 0.22)):
+            T = T - dep * np.exp(-((X - px) ** 2 + (Y - py) ** 2) / 0.35 ** 2)
+    return T
+
+def side_field(X, Y, Z, fine=True):
+    """Стенки коронки и корневого ствола: суперэллипс с размерами, зависящими от высоты."""
+    z1 = Z[0, 0, :]
+    xm = prof(z1, [-4, -2, -0.6, 0.6, 1.8, 3.2, 4.6, 5.4, 6.4, 7.6], [4.40, 4.30, 4.30, 4.55, 5.00, 5.35, 5.50, 5.48, 5.15, 4.50])
+    xd = prof(z1, [-4, -2, -0.6, 0.6, 1.8, 3.2, 4.4, 5.2, 6.4, 7.6], [4.40, 4.30, 4.30, 4.50, 4.95, 5.30, 5.45, 5.40, 4.95, 4.20])
+    yb = prof(z1, [-4, -2, -0.5, 0.4, 1.2, 2.0, 3.0, 4.2, 5.4, 6.4, 7.6], [4.05, 4.05, 4.15, 4.55, 5.10, 5.30, 5.22, 4.92, 4.45, 3.95, 3.30])
+    yl = prof(z1, [-4, -2, -0.5, 0.6, 1.8, 3.0, 3.8, 4.8, 5.8, 6.6, 7.6], [4.10, 4.10, 4.20, 4.55, 5.00, 5.25, 5.30, 5.20, 4.90, 4.50, 3.80])
+    ax = ((xm + xd) / 2)[None, None, :]; cx = ((xm - xd) / 2)[None, None, :]
+    ay = ((yb + yl) / 2)[None, None, :]; cy = ((yl - yb) / 2)[None, None, :]
+    m = prof(z1, [-4, -1, 1, 4, 7.6], [2.7, 2.6, 2.45, 2.4, 2.3])[None, None, :]
+    Xr = X - cx; Yr = Y - cy
+    yn = np.clip(Yr / ay, -1, 1)
+    axe = ax * (1 - 0.045 * yn)                       # коронка сужается к язычной стороне
+    u = np.abs(Xr) / axe + 1e-6; v = np.abs(Yr) / ay + 1e-6
+    n = (u ** m + v ** m) ** (1 / m)
+    gu = n ** (1 - m) * u ** (m - 1) / axe; gv = n ** (1 - m) * v ** (m - 1) / ay
+    g = np.maximum(np.sqrt(gu * gu + gv * gv), 0.12)
+    d = (n - 1) / g
+    wb = smoothstep(0.35, 0.85, -yn); wl = smoothstep(0.35, 0.85, yn)
+    if fine:
+        # щёчные борозды между буграми и язычная борозда, сходят на нет к середине коронки
+        d = d + 0.24 * np.exp(-((X - 1.25) / 0.42) ** 2) * smoothstep(3.6, 6.0, Z) * wb
+        d = d + 0.18 * np.exp(-((X + 2.15) / 0.40) ** 2) * smoothstep(4.4, 6.2, Z) * wb
+        d = d + 0.20 * np.exp(-((X - 0.45) / 0.42) ** 2) * smoothstep(4.2, 6.4, Z) * wl
+    # углубление над фуркацией на щёчной и язычной стороне ствола
+    d = d + 0.38 * np.exp(-((X + 0.05) / 1.0) ** 2) * (1 - smoothstep(-2.2, -0.2, Z)) * (wb + wl)
+    return d
+
+def ellipse_tube(X, Y, Z, cx, cy, ax, ay, zc, Lc, zt):
+    """Трубка с эллиптическим сечением вдоль кривой оси, внизу эллипсоидная верхушка, вверху обрезана на zt.
+    cx, cy, ax, ay — массивы по z (1d), для z < zc замораживаются на значении в zc."""
+    z1 = Z[0, 0, :]
+    zcl = np.maximum(z1, zc)
+    cxz = cx(zcl)[None, None, :]; cyz = cy(zcl)[None, None, :]
+    axz = ax(zcl)[None, None, :]; ayz = ay(zcl)[None, None, :]
+    s = (np.maximum(zc - z1, 0) / Lc)[None, None, :]
+    Xr = X - cxz; Yr = Y - cyz
+    n = np.sqrt((Xr / axz) ** 2 + (Yr / ayz) ** 2 + s * s)
+    g = np.sqrt((Xr / axz ** 2) ** 2 + (Yr / ayz ** 2) ** 2 + (s / Lc) ** 2) / np.maximum(n, 1e-6)
+    g = np.maximum(g, 1.0 / np.maximum(axz, ayz))
+    d = (n - 1) / g
+    return smax(d, Z - zt, 0.4), Xr, Yr
+
+# корни
+MR = dict(cx=lambda z: prof(z, [-1, -4, -7, -10, -12.6], [2.30, 2.55, 2.60, 2.38, 2.02]),
+          cy=lambda z: 0.10 + 0 * z,
+          ax=lambda z: prof(z, [-1, -4, -8, -11, -12.6], [2.02, 1.95, 1.65, 1.30, 1.02]),
+          ay=lambda z: prof(z, [-1, -3, -5, -8, -11, -12.6], [4.00, 3.98, 3.60, 2.80, 1.85, 1.25]),
+          zc=-12.6, Lc=1.45)
+DR = dict(cx=lambda z: prof(z, [-1, -4, -8, -11, -11.9], [-2.45, -2.70, -2.92, -3.02, -3.05]),
+          cy=lambda z: 0.05 + 0 * z,
+          ax=lambda z: prof(z, [-1, -4, -8, -11, -11.9], [2.10, 2.02, 1.70, 1.28, 1.05]),
+          ay=lambda z: prof(z, [-1, -3, -5, -8, -10.5, -11.9], [3.85, 3.78, 3.35, 2.55, 1.65, 1.25]),
+          zc=-11.9, Lc=1.35)
+
+def outer_field(X, Y, Z, fine=True):
+    T = occlusal(X[:, :, 0], Y[:, :, 0], fine)
+    gx, gy = np.gradient(T, X[1, 0, 0] - X[0, 0, 0], Y[0, 1, 0] - Y[0, 0, 0])
+    dtop = (Z - T[:, :, None]) / np.sqrt(1 + gx * gx + gy * gy)[:, :, None]
+    body = smax(side_field(X, Y, Z, fine), dtop, 0.9)
+    body = smax(body, -3.0 - Z, 1.6)                                    # низ корневого ствола
+    dm, Xm, Ym = ellipse_tube(X, Y, Z, MR["cx"], MR["cy"], MR["ax"], MR["ay"], MR["zc"], MR["Lc"], -0.6)
+    # продольные вдавления на мезиальной и дистальной поверхности мезиального корня
+    dm = dm + 0.42 * np.exp(-(Ym / 1.35) ** 2) * smoothstep(-2.6, -4.6, Z) * (1 - smoothstep(-10.0, -12.4, Z))
+    dd, Xd, Yd = ellipse_tube(X, Y, Z, DR["cx"], DR["cy"], DR["ax"], DR["ay"], DR["zc"], DR["Lc"], -0.6)
+    dd = dd + 0.18 * np.exp(-(Yd / 1.4) ** 2) * smoothstep(-3.0, -5.0, Z) * (1 - smoothstep(-9.0, -11.0, Z))
+    roots = np.minimum(dm, dd)
+    return smin(body, roots, 1.3)
+
+def cej_z(X, Y):
+    w = X * X / (X * X + Y * Y + 0.5)
+    return w * np.where(X > 0, 0.75, 0.45)
+
+def enamel_thickness(X, Y, Z):
+    zc = cej_z(X, Y)
+    e = 1.30 * smoothstep(zc, zc + 3.4, Z) ** 0.75
+    return e + 0.85 * smoothstep(5.0, 7.3, Z)
+
+def dentin_field(X, Y, Z):
+    return outer_field(X, Y, Z, fine=False) + 0.18 + enamel_thickness(X, Y, Z)
+
+def capsule(X, Y, Z, a, b, r0, r1):
+    ax_, ay_, az_ = a; bx, by, bz = b
+    dx, dy, dz = bx - ax_, by - ay_, bz - az_
+    L2 = dx * dx + dy * dy + dz * dz
+    t = np.clip(((X - ax_) * dx + (Y - ay_) * dy + (Z - az_) * dz) / L2, 0, 1)
+    d = np.sqrt((X - ax_ - t * dx) ** 2 + (Y - ay_ - t * dy) ** 2 + (Z - az_ - t * dz) ** 2)
+    return d - (r0 + (r1 - r0) * t)
+
+def rbox(X, Y, Z, c, h, r):
+    qx = np.abs(X - c[0]) - (h[0] - r); qy = np.abs(Y - c[1]) - (h[1] - r); qz = np.abs(Z - c[2]) - (h[2] - r)
+    out = np.sqrt(np.maximum(qx, 0) ** 2 + np.maximum(qy, 0) ** 2 + np.maximum(qz, 0) ** 2)
+    return out + np.minimum(np.maximum(np.maximum(qx, qy), qz), 0) - r
+
+def pulp_field(X, Y, Z):
+    ch = rbox(X, Y, Z, (0.25, 0.0, 0.45), (2.55, 1.65, 1.25), 0.95)
+    horns = [((1.85, -1.15, 1.2), (2.45, -1.70, 3.45), 0.55, 0.22),
+             ((-0.30, -1.25, 1.2), (-0.45, -1.85, 3.05), 0.52, 0.22),
+             ((-1.85, -0.95, 1.1), (-2.55, -1.15, 2.55), 0.48, 0.22),
+             ((1.85, 1.10, 1.2), (2.30, 1.60, 3.70), 0.55, 0.22),
+             ((-1.00, 1.20, 1.2), (-1.30, 1.75, 3.30), 0.52, 0.22)]
+    f = ch
+    for a, b, r0, r1 in horns:
+        f = smin(f, capsule(X, Y, Z, a, b, r0, r1), 0.55)
+    # каналы: два в мезиальном корне (щёчный и язычный), один лентовидный в дистальном
+    for side in (-1, 1):
+        cyf = lambda z, s=side: s * prof(z, [-0.2, -3, -7, -11, -13.2], [1.25, 1.35, 1.05, 0.60, 0.35])
+        d, _, _ = ellipse_tube(X, Y, Z, MR["cx"], cyf,
+                               lambda z: prof(z, [-0.2, -3, -7, -11, -13.0], [0.62, 0.42, 0.30, 0.20, 0.14]),
+                               lambda z: prof(z, [-0.2, -3, -7, -11, -13.0], [0.75, 0.50, 0.34, 0.22, 0.14]),
+                               -13.0, 0.35, 0.4)
+        f = smin(f, d, 0.5)
+    d, _, _ = ellipse_tube(X, Y, Z, DR["cx"], lambda z: 0.05 + 0 * z,
+                           lambda z: prof(z, [-0.2, -3, -7, -10, -12.3], [0.70, 0.46, 0.34, 0.24, 0.15]),
+                           lambda z: prof(z, [-0.2, -3, -6, -9, -11.0, -12.3], [1.40, 1.15, 0.85, 0.55, 0.30, 0.16]),
+                           -12.3, 0.3, 0.4)
+    return smin(f, d, 0.5)
+
+# ---------- поле -> сетка (surface nets), сглаживание с проекцией на поверхность ----------
+def sample(fn, lo, hi, h, chunk=24):
+    xs = np.arange(lo[0], hi[0] + h * 0.5, h); ys = np.arange(lo[1], hi[1] + h * 0.5, h); zs = np.arange(lo[2], hi[2] + h * 0.5, h)
+    F = np.empty((len(xs), len(ys), len(zs)), np.float32)
+    for k0 in range(0, len(zs), chunk):
+        X, Y, Z = np.meshgrid(xs, ys, zs[k0:k0 + chunk], indexing="ij")
+        F[:, :, k0:k0 + chunk] = fn(X, Y, Z)
+    return F, np.array([xs[0], ys[0], zs[0]]), h
+
+def surface_nets(F, org, h):
+    s = F < 0
+    nx, ny, nz = F.shape
+    acc = np.zeros((nx - 1, ny - 1, nz - 1, 3), np.float64)
+    cnt = np.zeros((nx - 1, ny - 1, nz - 1), np.int32)
+    for ax in range(3):
+        sl0 = [slice(None)] * 3; sl1 = [slice(None)] * 3
+        sl0[ax] = slice(0, -1); sl1[ax] = slice(1, None)
+        f0 = F[tuple(sl0)].astype(np.float64); f1 = F[tuple(sl1)].astype(np.float64)
+        e = s[tuple(sl0)] != s[tuple(sl1)]
+        t = np.where(e, f0 / np.where(e, f0 - f1, 1.0), 0.0)
+        idx = np.indices(e.shape).astype(np.float64)
+        pos = np.stack([idx[0], idx[1], idx[2]], -1)
+        pos[..., ax] += t
+        pos *= e[..., None]
+        others = [a for a in range(3) if a != ax]
+        for d1 in (0, 1):
+            for d2 in (0, 1):
+                sl = [slice(None)] * 3
+                sl[others[0]] = slice(d1, d1 + (F.shape[others[0]] - 1))
+                sl[others[1]] = slice(d2, d2 + (F.shape[others[1]] - 1))
+                acc += pos[tuple(sl)]
+                cnt += e[tuple(sl)]
+    act = cnt > 0
+    vid = -np.ones(cnt.shape, np.int64)
+    vid[act] = np.arange(act.sum())
+    V = acc[act] / cnt[act][:, None] * h + org
+    quads = []
+    for ax in range(3):
+        b, c = (ax + 1) % 3, (ax + 2) % 3
+        sl0 = [slice(None)] * 3; sl1 = [slice(None)] * 3
+        sl0[ax] = slice(0, -1); sl1[ax] = slice(1, None)
+        e = s[tuple(sl0)] != s[tuple(sl1)]
+        inside0 = s[tuple(sl0)]
+        # только рёбра, у которых есть все четыре соседние ячейки
+        msk = np.zeros_like(e)
+        sl = [slice(None)] * 3; sl[b] = slice(1, -1); sl[c] = slice(1, -1)
+        msk[tuple(sl)] = e[tuple(sl)]
+        I = np.argwhere(msk)
+        flip = inside0[msk]
+        def cell(db, dc):
+            J = I.copy(); J[:, b] -= db; J[:, c] -= dc
+            return vid[J[:, 0], J[:, 1], J[:, 2]]
+        q = np.stack([cell(1, 1), cell(0, 1), cell(0, 0), cell(1, 0)], 1)
+        q[~flip] = q[~flip][:, ::-1]
+        quads.append(q)
+    return V, np.concatenate(quads, 0)
+
+def trilinear(F, org, h, P):
+    g = (P - org) / h
+    i = np.clip(np.floor(g).astype(np.int64), 0, np.array(F.shape) - 2)
+    t = g - i
+    x, y, z = i[:, 0], i[:, 1], i[:, 2]
+    tx, ty, tz = t[:, 0], t[:, 1], t[:, 2]
+    c = 0.0
+    for dx in (0, 1):
+        for dy in (0, 1):
+            for dz in (0, 1):
+                w = (tx if dx else 1 - tx) * (ty if dy else 1 - ty) * (tz if dz else 1 - tz)
+                c = c + w * F[x + dx, y + dy, z + dz]
+    return c
+
+def relax(V, Q, F, org, h, iters=8):
+    E = np.concatenate([Q[:, [0, 1]], Q[:, [1, 2]], Q[:, [2, 3]], Q[:, [3, 0]]], 0)
+    E = np.sort(E, 1); E = np.unique(E, axis=0)
+    deg = np.bincount(E.ravel(), minlength=len(V)).astype(np.float64)
+    for it in range(iters):
+        nb = np.zeros_like(V)
+        for k in range(3):
+            nb[:, k] = np.bincount(E[:, 0], V[E[:, 1], k], len(V)) + np.bincount(E[:, 1], V[E[:, 0], k], len(V))
+        V = V + 0.55 * (nb / deg[:, None] - V)
+        for _ in range(2):
+            f = trilinear(F, org, h, V)
+            gr = np.stack([(trilinear(F, org, h, V + dv) - trilinear(F, org, h, V - dv)) / h
+                           for dv in (np.array([h / 2, 0, 0]), np.array([0, h / 2, 0]), np.array([0, 0, h / 2]))], 1)
+            g2 = np.maximum((gr * gr).sum(1), 1e-6)
+            step = (f / g2)[:, None] * gr
+            nrm = np.linalg.norm(step, axis=1, keepdims=True)
+            step = step * np.minimum(1.0, h / np.maximum(nrm, 1e-9))
+            V = V - step
+    return V, E
+
+def build(name, fn, lo, hi, h):
+    t0 = time.time()
+    F, org, h = sample(fn, lo, hi, h)
+    V, Q = surface_nets(F, org, h)
+    V, E = relax(V, Q, F, org, h)
+    # проверка замкнутости: каждое ребро ровно у двух граней
+    Ed = np.concatenate([Q[:, [0, 1]], Q[:, [1, 2]], Q[:, [2, 3]], Q[:, [3, 0]]], 0)
+    _, c = np.unique(np.sort(Ed, 1), axis=0, return_counts=True)
+    print("mesh", name, len(V), "verts", len(Q), "quads", "non-manifold edges", int((c != 2).sum()),
+          "%.1fs" % (time.time() - t0), flush=True)
+    me = bpy.data.meshes.new(name)
+    me.vertices.add(len(V)); me.vertices.foreach_set("co", V.astype(np.float32).ravel())
+    me.loops.add(len(Q) * 4); me.loops.foreach_set("vertex_index", Q.astype(np.int32).ravel())
+    me.polygons.add(len(Q))
+    me.polygons.foreach_set("loop_start", (np.arange(len(Q)) * 4).astype(np.int32))
+    me.update(); me.validate()
+    me.shade_smooth()
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.collection.objects.link(ob)
+    return ob
+
+HG = float(os.environ.get("TOOTH_H", "0.065"))
+tooth = build("tooth", outer_field, (-6.3, -6.0, -14.4), (6.3, 6.0, 8.3), HG)
+dentin = build("dentin", dentin_field, (-6.0, -5.7, -14.1), (6.0, 5.7, 7.6), HG)
+pulp = build("pulp", pulp_field, (-4.3, -2.9, -13.6), (4.6, 2.9, 4.2), HG * 0.75)
+
+# ---------- материалы ----------
+SCAN_NODES = []      # узлы Map Range, куда на каждом кадре пишется высота плоскости
+
+def nodes_of(m):
+    nt = m.node_tree
+    return nt, nt.nodes, nt.links
+
+def ct_factor(nt):
+    """1 там, где плоскость уже прошла (z объекта выше плоскости), и для лучей, прошедших сквозь «стекло»."""
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(tc.outputs["Object"], sep.inputs["Vector"])
+    mr = nt.nodes.new("ShaderNodeMapRange"); mr.interpolation_type = "SMOOTHSTEP"
+    nt.links.new(sep.outputs["Z"], mr.inputs["Value"])
+    mr.inputs["From Min"].default_value = 100; mr.inputs["From Max"].default_value = 100.3
+    SCAN_NODES.append(mr)
+    lp = nt.nodes.new("ShaderNodeLightPath")
+    gt = nt.nodes.new("ShaderNodeMath"); gt.operation = "GREATER_THAN"; gt.inputs[1].default_value = 0.5
+    nt.links.new(lp.outputs["Transmission Depth"], gt.inputs[0])
+    mx = nt.nodes.new("ShaderNodeMath"); mx.operation = "MAXIMUM"
+    nt.links.new(mr.outputs["Result"], mx.inputs[0]); nt.links.new(gt.outputs[0], mx.inputs[1])
+    return mx.outputs[0], sep
+
+def mix_rgb(nt, fac, a, b):
+    m = nt.nodes.new("ShaderNodeMix"); m.data_type = "RGBA"
+    if isinstance(fac, float): m.inputs["Factor"].default_value = fac
+    else: nt.links.new(fac, m.inputs["Factor"])
+    for k, v in ((6, a), (7, b)):
+        if isinstance(v, tuple): m.inputs[k].default_value = (*v, 1) if len(v) == 3 else v
+        else: nt.links.new(v, m.inputs[k])
+    return m.outputs[2]
+
+def mix_f(nt, fac, a, b):
+    m = nt.nodes.new("ShaderNodeMix"); m.data_type = "FLOAT"
+    nt.links.new(fac, m.inputs["Factor"])
+    for k, v in ((2, a), (3, b)):
+        if isinstance(v, float): m.inputs[k].default_value = v
+        else: nt.links.new(v, m.inputs[k])
+    return m.outputs[0]
+
+def cej_fac(nt, sep, lo=-0.05, hi=0.30):
+    """Доля эмали: выше линии эмалево-цементной границы (как cej_z в геометрии, но в узлах)."""
+    m = lambda op, a, b=None: _math(nt, op, a, b)
+    x2 = m("MULTIPLY", sep.outputs["X"], sep.outputs["X"]); y2 = m("MULTIPLY", sep.outputs["Y"], sep.outputs["Y"])
+    w = m("DIVIDE", x2, m("ADD", m("ADD", x2, y2), 0.5))
+    amp = m("ADD", m("MULTIPLY", m("GREATER_THAN", sep.outputs["X"], 0.0), 0.30), 0.45)
+    zc = m("MULTIPLY", w, amp)
+    dz = m("SUBTRACT", sep.outputs["Z"], zc)
+    mr = nt.nodes.new("ShaderNodeMapRange"); mr.interpolation_type = "SMOOTHSTEP"
+    mr.inputs["From Min"].default_value = lo; mr.inputs["From Max"].default_value = hi
+    nt.links.new(dz, mr.inputs["Value"])
+    return mr.outputs["Result"]
+
+def _math(nt, op, a, b=None):
+    n = nt.nodes.new("ShaderNodeMath"); n.operation = op
+    for k, v in ((0, a), (1, b)):
+        if v is None: continue
+        if isinstance(v, (int, float)): n.inputs[k].default_value = v
+        else: nt.links.new(v, n.inputs[k])
+    return n.outputs[0]
+
+def principled(nt, **kw):
+    b = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    for k, v in kw.items():
+        k = k.replace("_", " ")
+        if isinstance(v, tuple): b.inputs[k].default_value = (*v, 1) if len(v) == 3 and k != "Subsurface Radius" else v
+        elif isinstance(v, (int, float)): b.inputs[k].default_value = v
+        else: nt.links.new(v, b.inputs[k])
+    return b
+
+def ct_glass(nt, tint, milk, milk_col, rough, ior):
+    g = principled(nt, Base_Color=tint, Transmission_Weight=1.0, Roughness=rough, IOR=ior)
+    tl = nt.nodes.new("ShaderNodeBsdfTranslucent"); tl.inputs["Color"].default_value = (*milk_col, 1)
+    mx = nt.nodes.new("ShaderNodeMixShader")
+    if isinstance(milk, float): mx.inputs[0].default_value = milk
+    else: nt.links.new(milk, mx.inputs[0])
+    nt.links.new(g.outputs[0], mx.inputs[1]); nt.links.new(tl.outputs[0], mx.inputs[2])
+    return mx.outputs[0]
+
+def finish(nt, natural, ct, fac):
+    out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
+    for l in list(out.inputs["Surface"].links): nt.links.remove(l)
+    mx = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(fac, mx.inputs[0]); nt.links.new(natural, mx.inputs[1]); nt.links.new(ct, mx.inputs[2])
+    nt.links.new(mx.outputs[0], out.inputs["Surface"])
+
+def new_mat(name):
+    m = bpy.data.materials.new(name); m.use_nodes = True
+    nt = m.node_tree
+    if "Principled BSDF" in nt.nodes: nt.nodes.remove(nt.nodes["Principled BSDF"])
+    return m, nt
+
+def mat_outer():
+    m, nt = new_mat("tooth_outer")
+    fac, sep = ct_factor(nt)
+    en = cej_fac(nt, sep)
+    # живой зуб: эмаль цвета слоновой кости, к вершинам бугров светлее, серее и прозрачнее; корень тёплый бежевый
+    tip = nt.nodes.new("ShaderNodeMapRange"); tip.inputs["From Min"].default_value = 5.6; tip.inputs["From Max"].default_value = 7.6
+    nt.links.new(sep.outputs["Z"], tip.inputs["Value"])
+    enamel_col = mix_rgb(nt, tip.outputs["Result"], (0.80, 0.74, 0.62), (0.76, 0.75, 0.71))
+    ao = nt.nodes.new("ShaderNodeAmbientOcclusion"); ao.inputs["Distance"].default_value = 0.7; ao.samples = 12
+    enamel_col = mix_rgb(nt, ao.outputs["AO"], (0.50, 0.42, 0.31), enamel_col)
+    root_col = (0.70, 0.57, 0.40)
+    col = mix_rgb(nt, en, root_col, enamel_col)
+    nat = principled(nt, Base_Color=col,
+                     Roughness=mix_f(nt, en, 0.50, 0.30),
+                     Subsurface_Weight=mix_f(nt, en, 0.25, mix_f(nt, tip.outputs["Result"], 0.35, 0.65)),
+                     Subsurface_Radius=(1.0, 0.72, 0.48), Subsurface_Scale=0.45,
+                     Coat_Weight=mix_f(nt, en, 0.04, 0.22), Coat_Roughness=0.18)
+    nat.subsurface_method = "RANDOM_WALK"
+    milk = mix_f(nt, en, 0.10, 0.20)
+    ct = ct_glass(nt, (0.86, 0.85, 0.82), milk, (0.78, 0.76, 0.71), 0.20, 1.30)
+    finish(nt, nat.outputs[0], ct, fac)
+    return m
+
+def mat_dentin():
+    m, nt = new_mat("dentin")
+    fac, sep = ct_factor(nt)
+    nat = principled(nt, Base_Color=(0.74, 0.60, 0.42), Roughness=0.5)
+    ct = ct_glass(nt, (0.80, 0.78, 0.74), 0.07, (0.62, 0.59, 0.55), 0.18, 1.04)
+    finish(nt, nat.outputs[0], ct, fac)
+    return m
+
+def mat_pulp():
+    m, nt = new_mat("pulp")
+    b = principled(nt, Base_Color=(0.33, 0.17, 0.15), Roughness=0.45, Subsurface_Weight=0.2,
+                   Subsurface_Radius=(1.0, 0.4, 0.3), Subsurface_Scale=0.2)
+    out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
+    nt.links.new(b.outputs[0], out.inputs["Surface"])
+    return m
+
+def mat_clay():
+    m, nt = new_mat("clay")
+    b = principled(nt, Base_Color=(0.6, 0.6, 0.6), Roughness=0.5)
+    out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
+    nt.links.new(b.outputs[0], out.inputs["Surface"])
+    return m
+
+if CLAY:
+    tooth.data.materials.append(mat_clay()); dentin.hide_render = True; pulp.hide_render = True
+else:
+    tooth.data.materials.append(mat_outer())
+    dentin.data.materials.append(mat_dentin())
+    pulp.data.materials.append(mat_pulp())
+
+# ---------- свет и камера (как у импланта) ----------
+world = bpy.data.worlds.new("w"); scene.world = world; world.use_nodes = True
+bg = world.node_tree.nodes["Background"]; bg.inputs["Color"].default_value = (0.006, 0.02, 0.01, 1); bg.inputs["Strength"].default_value = 1.0
+
+def area(name, loc, size, power, color=(1, 1, 1), sy=None):
+    ld = bpy.data.lights.new(name, "AREA"); ld.shape = "RECTANGLE"; ld.size = size
+    ld.size_y = sy if sy else size
+    ld.energy = power; ld.color = color
+    ob = bpy.data.objects.new(name, ld); bpy.context.collection.objects.link(ob)
+    ob.location = loc
+    return ob
+
+def aim(ob, target=(0, 0, 3)):
+    d = Vector(target) - ob.location
+    ob.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+
+k = area("key", (-70, -60, 50), 55, 2.4e5, (1.0, 0.98, 0.95)); aim(k)
+s1 = area("stripL", (-50, 60, 8), 5, 2.2e5, (0.92, 0.97, 1.0), sy=100); aim(s1, (0, 0, 2))
+s2 = area("stripR", (55, 55, 12), 5, 2.4e5, (0.92, 0.97, 1.0), sy=100); aim(s2, (0, 0, 2))
+sf = area("stripF", (-40, -50, 0), 4, 0.6e5, (1.0, 1.0, 1.0), sy=90); aim(sf, (0, 0, 2))
+tp = area("top", (10, 10, 80), 30, 2.2e4); aim(tp, (0, 0, 8))
+gb = area("green", (10, 70, -10), 50, 3.5e4, (0.3, 0.9, 0.35)); aim(gb, (0, 0, 0))
+fill = area("fill", (70, -60, 20), 50, 0.8e4, (0.85, 0.95, 0.9)); aim(fill)
+
+# зуб: середина по высоте примерно там же, где была середина импланта с коронкой
+Z_TOP, Z_APEX = 7.75, -14.05
+root = bpy.data.objects.new("root", None); bpy.context.collection.objects.link(root)
+root.location = (0, 0, -1.0 - (Z_TOP + Z_APEX) / 2)
+for o in (tooth, dentin, pulp): o.parent = root
+
+cam_d = bpy.data.cameras.new("cam"); cam_d.lens = 135; cam_d.sensor_width = 36
+cam = bpy.data.objects.new("cam", cam_d); bpy.context.collection.objects.link(cam)
+scene.camera = cam
+CAM_ELEV, CAM_DIST, CAM_Z = math.radians(14), 108.0, -0.6
+cam.location = (0, -CAM_DIST * math.cos(CAM_ELEV), CAM_Z + CAM_DIST * math.sin(CAM_ELEV))
+aim(cam, (0, 0, CAM_Z))
+
+def ease(x): return x * x * (3 - 2 * x)
+
+def pose(t):
+    """t = 0: живой зуб; плоскость идёт сверху вниз; t = 1: весь зуб в виде КТ. Поворот на 30° за ролик."""
+    root.rotation_euler = Euler((0, 0, math.radians(-24 + 30 * ease(t))), "XYZ")
+    u = min(1.0, max(0.0, (t - 0.03) / 0.94))
+    u = 0.5 * u + 0.5 * ease(u)
+    zs = (Z_TOP + 0.35) + ((Z_APEX - 0.35) - (Z_TOP + 0.35)) * u
+    for mr in SCAN_NODES:
+        mr.inputs["From Min"].default_value = zs - 0.15
+        mr.inputs["From Max"].default_value = zs + 0.15
+    return zs
+
+# ---------- рендер ----------
+scene.render.engine = "CYCLES"
+scene.cycles.device = "CPU"
+scene.cycles.samples = SAMPLES
+scene.cycles.use_adaptive_sampling = True
+scene.cycles.use_denoising = True
+try: scene.cycles.denoiser = "OPENIMAGEDENOISE"
+except Exception as ex: print("denoiser", ex)
+scene.cycles.max_bounces = 24; scene.cycles.glossy_bounces = 8
+scene.cycles.transmission_bounces = 24; scene.cycles.transparent_max_bounces = 24
+scene.cycles.diffuse_bounces = 3
+scene.render.film_transparent = True
+scene.cycles.film_transparent_glass = True
+scene.cycles.film_transparent_roughness = 0.6
+scene.render.resolution_x = W; scene.render.resolution_y = H; scene.render.resolution_percentage = 100
+scene.view_settings.view_transform = "AgX"
+scene.view_settings.exposure = -0.35
+try: scene.view_settings.look = "AgX - Medium High Contrast"
+except Exception as ex: print("look", ex)
+scene.render.image_settings.file_format = "PNG"; scene.render.image_settings.color_mode = "RGBA"
+scene.render.threads_mode = "FIXED"
+scene.render.threads = 2
+
+os.makedirs(OUT, exist_ok=True)
+for i in range(N):
+    if ONLY is not None and i not in ONLY: continue
+    t0 = time.time()
+    zs = pose(i / (N - 1) if N > 1 else 0.0)
+    scene.render.filepath = os.path.join(OUT, "f%03d.png" % i)
+    bpy.ops.render.render(write_still=True)
+    print("frame", i, "scan z %.2f" % zs, round(time.time() - t0, 1), "s", flush=True)
