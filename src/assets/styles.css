@@ -1413,49 +1413,36 @@ html:not(.js-intro) .intro { display: none; }
 .team__more { display: flex; justify-content: center; margin-top: clamp(28px, 3vw, 44px); }
 @media (max-width: 760px) { .team__more .btn { width: 100%; } }
 
-/* ---------- вопросы (16.10, 13:30): принцип Lava Dental, темы раскрываются плюсом, внутри свои вопросы со своим плюсом ---------- */
-.faqv__in { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: clamp(28px, 5vw, 90px); align-items: start; }
-.faqv__side { position: sticky; top: calc(var(--header-h) + 34px); display: grid; justify-items: start; }
-.faqv__side .section__title { margin-top: 18px; }
-.faqv__intro { max-width: 40ch; margin-top: 16px; color: var(--muted); text-wrap: pretty; }
-.faqv__ask { display: grid; gap: 10px; justify-items: start; width: 100%; margin-top: clamp(28px, 3.4vw, 44px); padding: clamp(20px, 2.2vw, 28px); border-radius: var(--radius); background: var(--sage-2); }
-.faqv__ask b { font: 500 clamp(19px, 1.5vw, 22px)/1.2 var(--display); letter-spacing: -.02em; }
-.faqv__ask p { color: var(--muted); }
-.faqv__ask a:not(.btn) { color: var(--text); font-weight: 500; text-decoration: none; white-space: nowrap; }
-.faqv__ask .btn { margin-top: 6px; }
-.faqv__main { margin-top: calc(-1 * clamp(14px, 1.6vw, 24px)); }
+/* ---------- вопросы (16.10, 14:00): раскладка и механика Lava Dental. Заголовок сверху, темы на всю ширину,
+   тема раскрывается плюсом, внутри свои вопросы со своим плюсом; пункты открываются независимо ---------- */
+.faqv__title { max-width: 15.5em; font-size: clamp(34px, 4.1vw, 60px); line-height: 1.12; letter-spacing: -.035em; text-wrap: balance; }
+.faqv__main { display: grid; gap: clamp(40px, 4.6vw, 80px); margin-top: clamp(56px, 6.6vw, 96px); }
 .faqt > summary, .faqq > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 24px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .faqt > summary::-webkit-details-marker, .faqq > summary::-webkit-details-marker { display: none; }
-.faqt > summary { padding: clamp(14px, 1.6vw, 24px) 0; }
-.faqt h3 { margin: 0; font: 500 clamp(22px, 2.05vw, 31px)/1.2 var(--display); letter-spacing: -.025em; color: var(--muted); transition: color .35s; }
-.faqt > summary:hover h3, .faqt[open]:not(.is-off) h3 { color: var(--text); }
-.faqt > summary > i, .faqq > summary > i { flex: none; position: relative; width: 22px; height: 22px; color: var(--text); }
-.faqq > summary > i { width: 14px; height: 14px; color: var(--muted); transition: color .3s; }
-.faqt > summary > i::before, .faqt > summary > i::after, .faqq > summary > i::before, .faqq > summary > i::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1.5px; margin-top: -.75px; border-radius: 1px; background: currentColor; transition: transform .55s var(--ease); }
-.faqq > summary > i::before, .faqq > summary > i::after { height: 1.25px; margin-top: -.625px; }
+.faqt h3 { margin: 0; font: 500 clamp(25px, 2.5vw, 36px)/1.4 var(--display); letter-spacing: -.025em; color: var(--muted); transition: color .5s cubic-bezier(.33, 0, .11, 1); }
+.faqt[open]:not(.is-off) h3 { color: var(--text); }
+.faqt > summary > i, .faqq > summary > i { flex: none; position: relative; width: clamp(28px, 2.8vw, 40px); height: clamp(28px, 2.8vw, 40px); color: var(--text); }
+.faqq > summary > i { width: clamp(22px, 2.1vw, 30px); height: clamp(22px, 2.1vw, 30px); }
+.faqt > summary > i::before, .faqt > summary > i::after, .faqq > summary > i::before, .faqq > summary > i::after { content: ""; position: absolute; left: 17%; right: 17%; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; background: currentColor; transition: transform .5s cubic-bezier(.1, .75, .25, 1); }
+.faqq > summary > i::before, .faqq > summary > i::after { height: 1.6px; margin-top: -.8px; }
 .faqt > summary > i::after, .faqq > summary > i::after { transform: rotate(90deg); }
 .faqt[open]:not(.is-off) > summary > i::after, .faqq[open]:not(.is-off) > summary > i::after { transform: rotate(180deg); }
 .faqt__body, .faqq__a { overflow: hidden; }
-.faqt__list { padding: 2px 0 clamp(18px, 2.4vw, 34px); }
+.faqt__list { padding-top: clamp(14px, 1.6vw, 22px); }
 .faqq { border-bottom: 1px solid var(--line); }
-.faqq > summary { padding: clamp(16px, 1.4vw, 20px) 0; font: 400 clamp(16px, 1.2vw, 18px)/1.4 var(--body); color: var(--muted); transition: color .3s; }
-.faqq > summary:hover, .faqq[open]:not(.is-off) > summary { color: var(--text); }
-.faqq > summary:hover > i, .faqq[open]:not(.is-off) > summary > i { color: var(--text); }
-.faqq__a p { max-width: 64ch; padding: 0 48px 22px 0; font-size: 16px; line-height: 1.6; color: var(--muted); text-wrap: pretty; }
+.faqq > summary { padding: clamp(16px, 2.1vw, 30px) 0; font: 400 clamp(19px, 1.85vw, 26px)/1.4 var(--body); letter-spacing: -.01em; color: var(--muted); transition: color .5s cubic-bezier(.33, 0, .11, 1); }
+.faqq[open]:not(.is-off) > summary { color: var(--text); }
+.faqq__a p { padding: 0 0 clamp(18px, 2.1vw, 30px); font-size: clamp(15px, 1.15vw, 17px); line-height: 1.65; color: var(--muted); text-wrap: pretty; }
 .faqq__a a { color: var(--green-deep); font-weight: 500; text-underline-offset: 3px; }
 .faqt > summary:focus-visible, .faqq > summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; border-radius: 6px; }
-@media (max-width: 1024px) {
-  .faqv__in { grid-template-columns: minmax(0, 1fr); gap: 0; }
-  .faqv__in > .faqv__side { display: contents; }
-  .faqv__main { order: 2; margin-top: clamp(14px, 3vw, 26px); }
-  .faqv__ask { order: 3; margin-top: 22px; }
-}
+.faqv__ask { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; margin-top: clamp(48px, 5.5vw, 80px); padding: clamp(20px, 2.2vw, 28px) clamp(20px, 2.6vw, 36px); border-radius: var(--radius); background: var(--sage-2); }
+.faqv__ask b { font: 500 clamp(19px, 1.5vw, 22px)/1.2 var(--display); letter-spacing: -.02em; }
+.faqv__ask p { margin-top: 6px; color: var(--muted); }
+.faqv__ask a:not(.btn) { color: var(--text); font-weight: 500; text-decoration: none; white-space: nowrap; }
+.faqv__ask .btn { flex: none; }
 @media (max-width: 760px) {
-  .faqt > summary { gap: 16px; padding: 16px 0; }
-  .faqt h3 { font-size: 21px; }
-  .faqt > summary > i { width: 18px; height: 18px; }
-  .faqq > summary { gap: 16px; padding: 15px 0; font-size: 16px; }
-  .faqq__a p { padding: 0 0 18px; font-size: 15px; }
+  .faqt > summary, .faqq > summary { gap: 18px; }
+  .faqv__ask { flex-direction: column; align-items: flex-start; }
 }
 
 /* ---------- контакты «дорога до двери» и заявка одной строкой (16.10, 11:21) ---------- */
