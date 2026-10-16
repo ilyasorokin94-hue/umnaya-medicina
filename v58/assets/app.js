@@ -71,7 +71,7 @@
   const header = $(".header");
   const demo = $(".demo-bar");
   let demoH = 0;
-  const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; onScrollHeader(); };
+  const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; root.style.setProperty("--demo-h", demoH + "px"); onScrollHeader(); };
   const onScrollHeader = () => {
     const y = lenis ? lenis.scroll : scrollY;
     root.style.setProperty("--hdr-top", Math.max(0, demoH - y) + "px");
@@ -242,7 +242,15 @@
   // телефон: нижняя панель не дублирует кнопку первого экрана и форму в подвале, прячется при наборе текста
   const heroCta = $(".hero .hero__actions");
   if ("IntersectionObserver" in window) {
-    if (heroCta) { root.classList.add("mb-off"); new IntersectionObserver(([en]) => root.classList.toggle("mb-off", en.isIntersecting), { rootMargin: "-90px 0px 0px 0px" }).observe(heroCta); }
+    if (heroCta) {
+      // на телефоне первый экран стоит на месте, а шторка слогана наезжает на него: кнопка закрыта, панель нужна
+      const curtain = $(".opening .slogan");
+      let ctaIn = true;
+      const mb = () => root.classList.toggle("mb-off", ctaIn && !(curtain && phoneMQ.matches && curtain.getBoundingClientRect().top < heroCta.getBoundingClientRect().bottom));
+      root.classList.add("mb-off");
+      new IntersectionObserver(([en]) => { ctaIn = en.isIntersecting; mb(); }, { rootMargin: "-90px 0px 0px 0px" }).observe(heroCta);
+      if (curtain) addEventListener("scroll", mb, { passive: true });
+    }
     const fcta = $(".footer__cta");
     if (fcta) new IntersectionObserver(([en]) => root.classList.toggle("bar-off", en.isIntersecting), { rootMargin: "0px 0px -30% 0px" }).observe(fcta);
   }
@@ -567,7 +575,7 @@
       if (to && o.v > to) pb.textContent = ps.textContent.trim();
       if (to && o.v > to) tl.to(o, { v: to, duration: 1.4, ease: "power3.out", onUpdate: () => (pb.textContent = (Math.round(o.v / 100) * 100).toLocaleString("ru-RU").replace(/\s/g, "\u00a0") + "\u00a0₽"), onComplete: () => (pb.textContent = orig) }, 0.9);
     }
-    const trio = $(".hero__trio", h);
+    const trio = $(".slogan__more .hero__trio") || $(".hero__trio", h);
     if (trio && small) {
       const st = { trigger: trio, start: "top 92%", once: true };
       G.from($$(".hero__face", trio), { scale: 0.6, autoAlpha: 0, duration: 1.1, stagger: 0.12, ease: "back.out(1.7)", scrollTrigger: st });
@@ -806,31 +814,26 @@
     G.ticker.add((time, dt) => { if (phoneMQ.matches) return; target += (dir - target) * 0.04; cur += (target - cur) * 0.12; x = (x - (cur * dt) / 600) % 50; if (x > 0) x -= 50; setX(x); });
   });
 
-  // телефон: слоган всегда читается по порядку. Пока строка поднимается снизу, «Сначала думаем.» стоит целиком;
-  // с четверти экрана строка бежит влево, 120 px в секунду, при прокрутке до пяти раз быстрее.
-  // Ушла с экрана — встаёт обратно на «Сначала думаем.», поэтому каждый показ начинается с начала фразы
-  mm.add("(max-width: 760px)", () => {
-    const stop = $$(".marquee__track").map((tr) => {
-      const item = tr.firstElementChild, em = $("em", item), box = tr.parentElement, setX = G.quickSetter(tr, "x", "px");
-      let x0 = 0, w = 0, x = 0, run = false, cur = 1, target = 1;
-      const home = () => {
-        const ir = item.getBoundingClientRect(), a = em.getBoundingClientRect().left - ir.left - (parseFloat(getComputedStyle(item).columnGap) || 0);
-        w = ir.width; x0 = Math.max(0, Math.min(($(".wrap")?.getBoundingClientRect().left || 0), (innerWidth - a) / 2));
-        x = x0; run = false; cur = target = 1; setX(x);
-      };
-      G.set(tr, { xPercent: 0 }); home();
-      const seen = ST.create({ trigger: box, start: "top bottom", end: "bottom top", onToggle: (self) => { if (!self.isActive) home(); }, onRefresh: (self) => { if (!self.isActive) home(); } });
-      const go = ST.create({ trigger: box, start: "top 75%", end: "bottom top", onToggle: (self) => { run = self.isActive; },
-        onUpdate: (self) => { target = 1 + Math.min(Math.abs(self.getVelocity()) / 400, 4); } });
-      const tick = (time, dt) => {
-        if (!run || !w) return;
-        target += (1 - target) * 0.04; cur += (target - cur) * 0.12;
-        x -= cur * dt * 0.12; if (x < x0 - w) x += w; setX(x);
-      };
-      G.ticker.add(tick);
-      return () => { seen.kill(); go.kill(); G.ticker.remove(tick); G.set(tr, { x: 0 }); };
-    });
-    return () => stop.forEach((f) => f());
+  // телефон: первый экран уходит под шторку слогана, как у Лава Дент (стили и сама механика в styles.css).
+  // Строки слогана загораются по очереди, когда верх шторки прошёл середину экрана, один раз.
+  // Где нет CSS scroll-driven animations, то же самое по прокрутке делает GSAP
+  const opening = $(".opening");
+  const sHead = opening && $(".slogan__head", opening);
+  if (sHead) {
+    const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { sHead.classList.add("is-visible"); io.disconnect(); } }, { threshold: 0, rootMargin: "0px 0px -50% 0px" });
+    io.observe(sHead);
+  }
+  // шторке нужны именованные шкалы прокрутки соседних блоков (timeline-scope); без них имплант и слоган ведёт GSAP
+  if (sHead && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
+    const sl = $(".slogan", opening), more = $(".slogan__more", opening), d3 = $(".hero__3d", opening);
+    const tl = [
+      G.fromTo($(".slogan__title", sHead), { y: () => -innerHeight, autoAlpha: 0 }, { y: 0, autoAlpha: 1, ease: "none", immediateRender: true,
+        scrollTrigger: { trigger: sl, start: "top bottom", end: "top top", scrub: true, invalidateOnRefresh: true } }),
+      G.to(sHead, { autoAlpha: 0, ease: "power1.in", scrollTrigger: { trigger: more, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } }),
+    ];
+    if (d3) tl.push(G.fromTo(d3, { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" }, { clipPath: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)", ease: "power1.in",
+      scrollTrigger: { trigger: sl, start: "top bottom", end: () => "+=" + innerHeight * 0.75, scrub: true, invalidateOnRefresh: true } }));
+    return () => tl.forEach((t) => { t.scrollTrigger?.kill(); t.kill(); });
   });
 
   // услуги на телефоне: лента направлений сама показывает, что она листается. Пока блок поднимается снизу,

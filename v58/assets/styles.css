@@ -1695,3 +1695,47 @@ html:not(.js-intro) .intro { display: none; }
 @media (max-width: 760px) and (forced-colors: active) {
   .burger::before, .burger::after { forced-color-adjust: none; background: ButtonText; }
 }
+
+/* первый экран на телефоне уходит, как у Лава Дент (Ilya 16.10): он стоит на месте ровно в один экран,
+   снизу его закрывает тёмная шторка слогана; имплант за первые три четверти экрана сжимается в точку,
+   «Сначала думаем. Потом лечим.» всё время стоит в центре экрана и проявляется, пока шторка поднимается,
+   строки дополнительно загораются по очереди. Дальше под слоганом едут три врача и факты, слоган гаснет.
+   На компьютере обёртка .opening не участвует в раскладке, копии блоков скрыты */
+.opening { display: contents; }
+.slogan__head, .slogan__more { display: none; }
+@media (max-width: 760px) {
+  .opening { display: block; position: relative; timeline-scope: --um-slogan, --um-more; }
+  .opening .hero { position: sticky; top: 0; z-index: 0; display: flex; flex-direction: column; height: calc(100svh - var(--demo-h, 0px)); min-height: 520px; padding: calc(var(--header-h) + 28px) 0 22px; }
+  .opening .hero__in { flex: 1; min-height: 0; }
+  .opening .hero--3d .hero__3d { flex: 1 1 0; height: auto; min-height: 120px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  .opening .hero .hero__sub, .opening .hero .hero__facts, .opening .hero .hero__note, .opening .hero .hero__trio { display: none; }
+  .opening .slogan { position: relative; z-index: 1; overflow: clip; view-timeline: --um-slogan block; }
+  .opening .slogan .marquee { display: none; }
+  .slogan__head { display: flex; position: sticky; top: 0; min-height: 100svh; padding: 0 var(--gutter); align-items: center; justify-content: center; text-align: center; overflow: clip; }
+  .slogan__title { margin: 0; font: 500 clamp(38px, 10.6vw, 50px)/1.1 var(--display); letter-spacing: -.03em; color: #dfe8dc; text-wrap: balance; }
+  .slogan__title .line { display: block; }
+  .js-anim .slogan__title .line { opacity: 0; transition: opacity 2.5s cubic-bezier(.33, 0, .11, 1); }
+  .js-anim .slogan__head.is-visible .line { opacity: 1; }
+  .js-anim .slogan__head.is-visible .line:nth-child(1) { transition-delay: .5s; }
+  .js-anim .slogan__head.is-visible .line:nth-child(2) { transition-delay: 1s; }
+  .slogan__more { display: block; position: relative; z-index: 1; padding: 8px 0 56px; background: var(--ink); color: #fff; view-timeline: --um-more block; }
+  .slogan__more .hero__trio { margin-top: 0; }
+  .slogan__more .hero__trio b { color: #fff; }
+  .slogan__more .hero__trio a > span:last-child { color: rgba(255, 255, 255, .62); }
+  .slogan__more .hero__face { background: var(--ink-2); }
+  .slogan__more .hero__sub { margin-top: 30px; font-size: 16px; color: rgba(255, 255, 255, .74); }
+  .slogan__more .hero__facts li { border-top-color: var(--line-on-dark); color: rgba(255, 255, 255, .92); }
+  .slogan__more .hero__facts li:last-child { border-bottom-color: var(--line-on-dark); }
+  .slogan__more .hero__note { color: rgba(255, 255, 255, .58); }
+}
+/* сама механика на прокрутке, как у Лава Дент: CSS scroll-driven animations; где их нет, то же делает app.js */
+@supports (animation-timeline: view()) {
+  @media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+    .opening .hero--3d .hero__3d { animation: um-hero-leave ease-in both; animation-timeline: --um-slogan; animation-range: 0 75svh; }
+    .js-anim .slogan__title { animation: um-slogan-enter linear both; animation-timeline: --um-slogan; animation-range: 0 100vh; }
+    .js-anim .slogan__head { animation: um-slogan-leave ease-in both; animation-timeline: --um-more; animation-range: 0 50vh; }
+  }
+}
+@keyframes um-hero-leave { to { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); } }
+@keyframes um-slogan-enter { from { transform: translateY(-100svh); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes um-slogan-leave { to { opacity: 0; } }
