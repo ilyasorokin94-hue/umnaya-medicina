@@ -1292,4 +1292,6 @@ html:not(.js-intro) .intro { display: none; }
 @media (min-width: 761px) {
   .tour__rows { padding-bottom: clamp(28px, 3vw, 48px); }
   #clinic + #path .feat { padding-top: 0; }
+  /* лента не растягивается на весь экран: закрепляется, когда встала по центру, поэтому над ней нет пустой полосы */
+  .feat__pin { height: auto; padding: clamp(20px, 2.4vw, 36px) 0; }
 }

@@ -499,7 +499,7 @@
     const pin = $(".feat__pin"), track = $(".feat__track");
     if (!pin || !track) return;
     const dist = () => Math.max(0, track.scrollWidth - innerWidth);
-    const tw = G.to(track, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: pin, start: "top top", end: () => "+=" + dist(), pin: true, anticipatePin: 1, scrub: true, invalidateOnRefresh: true, refreshPriority: 1 } });
+    const tw = G.to(track, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: pin, start: "center center", end: () => "+=" + dist(), pin: true, anticipatePin: 1, scrub: true, invalidateOnRefresh: true, refreshPriority: 1 } });
     // вступительный текст слегка уходит, когда наезжают карточки
     const introCard = $(".fcard--intro", track);
     if (introCard) G.to(introCard, { autoAlpha: 0.25, ease: "none", scrollTrigger: { trigger: introCard, containerAnimation: tw, start: "right 60%", end: "right 10%", scrub: true } });
