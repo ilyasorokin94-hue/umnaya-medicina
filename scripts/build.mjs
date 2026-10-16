@@ -220,13 +220,19 @@ function footer(depth) {
   <div class="footer__cta">
     <div><h2 data-split>${esc(home.final[0])}</h2><p class="footer__lead">${esc(home.final[1])}</p></div>
     <div class="footer__form">
-      <form class="fform lead" data-lead="final">
-        <h3 class="fform__title">${esc(home.footForm.title)}</h3>
-        <div class="fform__row"><label>Имя<input name="name" autocomplete="given-name" placeholder="Как к вам обращаться"></label><label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label></div>
-        <button class="btn btn--lg btn--wide">${esc(home.footForm.btn)}</button>
-        <p class="fform__note">${esc(home.footForm.note)} Отправляя заявку, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
-        <p class="fform__alt">Есть снимок или план из другой клиники? <a href="${fallbackHref("xray", p)}" data-modal="xray" data-reason="Сказали удалить">Прислать на второе мнение</a></p>
+      <form class="cb" data-lead="final" novalidate>
+        <label class="cb__label" for="cb-phone">Ваш телефон</label>
+        <div class="cb__field"><input id="cb-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 ___ ___-__-__" required aria-describedby="cb-hint"><button class="cb__btn" type="submit">${esc(home.footForm.btn)}</button></div>
+        <p class="cb__hint" id="cb-hint">Перезвоним ежедневно с 9:00 до 21:00. Оставите номер вечером, позвоним утром.</p>
+        <p class="cb__consent">Отправляя номер, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
+        <div class="cb__alt"><p>Есть снимок или план из другой клиники?</p><a class="btn btn--ghost btn--sm" href="${fallbackHref("xray", p)}" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
       </form>
+      <div class="cb__done" role="status" tabindex="-1" hidden>
+        <p class="cb__done-t">Спасибо, номер у нас</p>
+        <p class="cb__done-s" data-done-s>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}.</p>
+        <div class="cb__alt"><p>Пока ждёте, можно прислать снимок.</p><a class="btn btn--ghost btn--sm" href="${fallbackHref("xray", p)}" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
+        <button class="way__link cb__again" type="button" data-again>Указать другой номер</button>
+      </div>
     </div>
   </div>
   <div class="footer__grid">
@@ -274,13 +280,16 @@ const dentistLd = {
   address: { "@type": "PostalAddress", streetAddress: "ул. Громова, 10/2", addressLocality: "пгт Удельная", addressRegion: "Московская область", postalCode: "140140", addressCountry: "RU" },
   geo: { "@type": "GeoCoordinates", latitude: clinic.geo.lat, longitude: clinic.geo.lon },
   openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: "09:00", closes: "21:00" }],
-  aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", reviewCount: "199" },
   priceRange: "₽₽",
 };
 const crumbsLd = (items) => ({
   "@context": "https://schema.org", "@type": "BreadcrumbList",
   itemListElement: [["/", "Главная"], ...items].map(([href, name], i) => ({ "@type": "ListItem", position: i + 1, name, item: SITE + (href === "/" ? "" : "/" + href) })),
 });
+// ответ вопроса: [текст](окно) становится ссылкой, которая открывает окно записи, перезвона или снимка
+// «All-on-4» не рвём по дефису
+const nobr = (s) => s.replace(/All-on-4/g, '<span class="nobr">All-on-4</span>');
+const faqA = (a, p) => esc(a).replace(/\[([^\]]+)\]\((xray|call|book)\)/g, (m, t, k) => `<a href="${fallbackHref(k, p)}" data-modal="${k}">${t}</a>`);
 const faqLd = (faq) => ({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
 
 // ---------- блоки ----------
@@ -343,31 +352,35 @@ function marquee(text) {
   return `<div class="marquee" aria-hidden="true"><div class="marquee__track">${item.repeat(4)}</div></div>`;
 }
 
+// контакты «дорога до двери»: слева адрес и что важно знать, справа фото пути от улицы до входа.
+// На компьютере сцена закрепляется, и прокрутка ведёт от точки к точке; на телефоне фото листаются свайпом. Карта по кнопке
 function place() {
   const { lat, lon } = clinic.geo;
-  return `<section class="section" id="contacts" aria-labelledby="ct-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Контакты</span><h2 id="ct-title" data-split>${esc(home.contacts[0])}</h2></div><p>${esc(home.contacts[1])}</p></div>
-  <div class="place">
-    <div class="place__map" data-ph data-clip>
-      <div class="place__go">
-        <p class="place__addr">Громова, 10/2<small>пгт Удельная, 5 минут от Жуковского. Своя парковка у входа, рядом многопрофильная клиника на Громова, 10.</small></p>
-        <ul class="place__towns" aria-label="К нам ездят из">${["Жуковский", "Раменское", "Быково", "Ильинский", "Красково", "Малаховка", "Островцы"].map((t) => `<li>${t}</li>`).join("")}</ul>
-        <div class="place__apps"><a class="place__app" href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}><span class="rt-mark rt-mark--ya"><img src="${pick(["images/brand/yandex-maps.svg"], 0).src}" alt=""></span>Маршрут в Яндекс Картах</a><a class="place__app" href="${clinic.gis}"${ext}><span class="rt-mark rt-mark--2gis"><img src="${pick(["images/brand/2gis.png"], 0).src}" alt=""></span>Открыть в 2ГИС</a></div>
-        <button class="place__show" type="button">Показать карту</button>
+  const W = v2.way;
+  return `<section class="section way" id="contacts" aria-labelledby="ct-title">
+  <div class="wrap way__stage">
+    <div class="way__info">
+      <span class="label way__label">${esc(W.label)}</span>
+      <h2 id="ct-title" class="way__addr" data-split>${esc(W.title)}</h2>
+      <p class="way__where">${esc(W.where)}</p>
+      <div class="way__now"><p class="way__status" data-open-status>${esc(clinic.hours)}</p><a class="way__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a></div>
+      <ul class="way__facts">${W.facts.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
+      <p class="way__towns">${esc(W.towns)}</p>
+      <div class="way__apps">
+        <a class="way__app" href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}><span class="rt-mark rt-mark--ya"><img src="${pick(["images/brand/yandex-maps.svg"], 0).src}" alt=""></span><span>Маршрут<small>Яндекс Карты</small></span></a>
+        <a class="way__app" href="${clinic.gis}"${ext}><span class="rt-mark rt-mark--2gis"><img src="${pick(["images/brand/2gis.png"], 0).src}" alt=""></span><span>Маршрут<small>2ГИС</small></span></a>
       </div>
-      <iframe title="Карта: стоматология на Громова, 10/2" data-src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm" loading="lazy"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button>${ph("Карта")}</div>
-    <div class="place__info" data-reveal>
-      <h3>Умная Медицина. Стоматология</h3>
-      <dl class="place__list">
-        <div><dt>Адрес</dt><dd>${esc(clinic.address)}</dd></div>
-        <div><dt>Телефон</dt><dd><a href="${clinic.phoneHref}">${esc(clinic.phone)}</a></dd></div>
-        <div><dt>Часы работы</dt><dd>${esc(clinic.hours)}</dd></div>
-        <div><dt>Почта</dt><dd><a href="mailto:${clinic.email}">${esc(clinic.email)}</a></dd></div>
-      </dl>
-      <div class="place__btns"><a class="btn btn--sm" href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}>Построить маршрут</a><a class="btn btn--ghost btn--sm" href="${clinic.phoneHref}">Позвонить</a></div>
+      <div class="way__more"><button class="way__link" type="button" data-share data-share-text="${esc(W.share)}" data-share-url="${clinic.yandex}">Отправить адрес</button><button class="way__link" type="button" data-map-toggle aria-expanded="false" aria-controls="way-map">Показать карту</button></div>
+    </div>
+    <div class="way__walk">
+      <div class="way__frame" aria-label="Как пройти от улицы до входа">${W.stops.map((x) => `<figure class="way__shot" style="--op:${x.pos}"><span class="way__img">${img([x.img], x.alt, 0)}</span><figcaption><b>${esc(x.title)}</b><span>${esc(x.text)}</span></figcaption></figure>`).join("")}</div>
+      <div class="way__cap"><div class="chips way__stops">${W.stops.map((x, i) => `<button class="chip${i ? "" : " is-on"}" type="button" aria-pressed="${!i}">${esc(x.title)}</button>`).join("")}</div><p class="way__text" aria-live="polite">${esc(W.stops[0].text)}</p></div>
     </div>
   </div>
-</div></section>`;
+  <div class="wrap way__mapwrap" id="way-map" hidden>
+    <div class="way__map"><iframe title="Карта: стоматология на Громова, 10/2" data-src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button></div>
+  </div>
+</section>`;
 }
 
 // ---------- главная: порядок блоков Тридента ----------
@@ -381,13 +394,13 @@ function pageHome() {
   const D = v2;
   const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 
-  return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq)] })
+  return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq.flatMap(([, qs]) => qs).map(([q, a]) => [q, a.replace(/\[([^\]]+)\]\((\w+)\)/g, "$1")]))] })
   + intro(depth) + header(depth, true) + `
 <main id="main">
 
 <section class="hero hero--3d on-dark" aria-labelledby="h1"><div class="wrap hero__in">
   <div class="hero__text">
-    <h1 id="h1"><span class="kicker">${esc(D.kicker)}</span><span data-split>${esc(D.h1)}</span></h1>
+    <h1 id="h1"><span class="kicker">${esc(D.kicker)}</span> <span data-split>${esc(D.h1)}</span></h1>
     <p class="hero__sub">${esc(D.sub)}</p>
     <p class="hero__promo"><span class="hero__promo-tag">Акция</span><span>${esc(D.promo[0])} <b>${esc(D.promo[1])}</b> <s>${esc(D.promo[2])}</s></span></p>
     <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
@@ -481,9 +494,14 @@ function pageHome() {
   </div>
 </section>
 
-<section class="section" id="faq" aria-labelledby="fq-title"><div class="wrap faq faq--short">
-  <div class="faq__side"><span class="label">Вопросы</span><h2 id="fq-title" class="section__title" data-split>Частые вопросы</h2><p class="faq__more">Не нашли ответ? Позвоните <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a> или оставьте номер, перезвоним за 5 минут.</p>${act("Перезвоните мне", "call", p, { cls: "btn--ghost faq__btn" })}</div>
-  <div class="faq__list">${D.faq.map(([q, a], i) => `<details class="qa"${i ? "" : " open"}><summary>${esc(q)}<i aria-hidden="true"></i></summary><div class="qa__a"><p>${esc(a)}</p></div></details>`).join("")}</div>
+<section class="section faqv" id="faq" aria-labelledby="fq-title"><div class="wrap faqv__in">
+  <div class="faqv__side">
+    <span class="label">Вопросы</span><h2 id="fq-title" class="section__title" data-split>${esc(D.faqTitle)}</h2>
+    <p class="faqv__intro">${esc(D.faqIntro)}</p>
+    <div class="faqv__tabs" role="tablist" aria-label="Темы вопросов" data-tabs="faqv">${D.faq.map(([t, qs], i) => `<button type="button" role="tab" data-tab="g${i}" aria-selected="${i === 0}"><span>${esc(t)}</span><small>${qs.length}</small></button>`).join("")}</div>
+    <div class="faqv__ask"><b>Не нашли ответ?</b><p>Позвоните <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a> или оставьте номер, перезвоним за 5 минут.</p>${act("Перезвоните мне", "call", p, { cls: "btn--sm" })}</div>
+  </div>
+  <div class="faqv__main">${D.faq.map(([t, qs], i) => `<div class="faqv__panel" role="tabpanel" data-panel="faqv" data-key="g${i}"${i ? " hidden" : ""}><h3 class="faqv__ttl">${esc(t)}</h3>${qs.map(([q, a], k) => `<details class="qa faqv__qa"${!i && !k ? " open" : ""}><summary>${nobr(esc(q))}<i aria-hidden="true"></i></summary><div class="qa__a"><p>${nobr(faqA(a, p))}</p></div></details>`).join("")}</div>`).join("")}</div>
 </div></section>
 
 ${place()}

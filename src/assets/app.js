@@ -301,7 +301,7 @@
   };
   const defDone = $("#m-done [data-done-text]")?.textContent;
   $$("form[data-lead]").forEach((f) => {
-    if (f.hasAttribute("data-quiz")) return;
+    if (f.hasAttribute("data-quiz") || f.classList.contains("cb")) return;
     f.addEventListener("submit", (e) => {
       e.preventDefault();
       const kind = f.dataset.lead, d = doneText[kind];
@@ -361,6 +361,98 @@
       ST?.refresh();
     });
   });
+
+  // ---------- контакты «дорога до двери» ----------
+  // открыто ли сейчас: время Москвы, ежедневно с 9:00 до 21:00
+  const nowMsk = () => {
+    const pt = new Intl.DateTimeFormat("ru-RU", { timeZone: "Europe/Moscow", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+    return +pt.find((x) => x.type === "hour").value * 60 + +pt.find((x) => x.type === "minute").value;
+  };
+  const isOpen = () => { const t = nowMsk(); return t >= 540 && t < 1260; };
+  const openSt = $("[data-open-status]");
+  if (openSt) {
+    if (isOpen()) { openSt.textContent = "Сейчас открыто, до 21:00"; openSt.classList.add("is-open"); }
+    else openSt.textContent = nowMsk() < 540 ? "Сейчас закрыто, откроемся в 9:00" : "Сейчас закрыто, откроемся завтра в 9:00";
+  }
+  // точки пути: без закрепления (телефон, низкий экран, «уменьшить движение») фото меняются по нажатию на точку
+  const wayShots = $$(".way__shot"), wayChips = $$(".way__stops .chip"), wayText = $(".way__text");
+  let wayCur = -1, wayTrig = null;
+  const wayActive = (i) => {
+    if (i === wayCur || !wayShots[i]) return;
+    wayCur = i;
+    wayChips.forEach((c, k) => { c.classList.toggle("is-on", k === i); c.setAttribute("aria-pressed", String(k === i)); });
+    wayShots.forEach((x, k) => x.classList.toggle("is-on", k === i));
+    if (wayText) wayText.textContent = $("figcaption span", wayShots[i])?.textContent || "";
+  };
+  wayActive(0);
+  wayChips.forEach((c, i) => c.addEventListener("click", () => {
+    if (!wayTrig) return wayActive(i);
+    const y = wayTrig.start + ((wayTrig.end - wayTrig.start) * i) / (wayShots.length - 1);
+    lenis ? lenis.scrollTo(y, { duration: 0.9 }) : scrollTo(0, y);
+  }));
+  // карта по кнопке: грузится только при первом открытии
+  const mapBtn = $("[data-map-toggle]"), mapWrap = $("#way-map");
+  mapBtn?.addEventListener("click", () => {
+    const open = mapWrap.hidden, fr = $("iframe", mapWrap);
+    if (open && fr && !fr.src) fr.src = fr.dataset.src;
+    mapBtn.setAttribute("aria-expanded", String(open));
+    mapBtn.textContent = open ? "Скрыть карту" : "Показать карту";
+    if (open) {
+      mapWrap.hidden = false;
+      if (anim) G.from(mapWrap, { height: 0, duration: 0.8, ease: "power3.inOut", clearProps: "height", onComplete: () => ST.refresh() });
+      else ST?.refresh();
+    } else {
+      const fin = () => { mapWrap.hidden = true; if (G) G.set(mapWrap, { clearProps: "height" }); ST?.refresh(); };
+      if (anim) G.to(mapWrap, { height: 0, duration: 0.5, ease: "power2.in", onComplete: fin }); else fin();
+    }
+  });
+  $(".way__map")?.addEventListener("click", (e) => e.currentTarget.classList.add("is-active"));
+  $(".way__map")?.addEventListener("mouseleave", (e) => e.currentTarget.classList.remove("is-active"));
+  // отправить адрес себе или тому, кто повезёт
+  const shareBtn = $("[data-share]");
+  shareBtn?.addEventListener("click", async () => {
+    const data = { title: "Умная Медицина. Стоматология", text: shareBtn.dataset.shareText, url: shareBtn.dataset.shareUrl };
+    try {
+      if (navigator.share) { await navigator.share(data); return; }
+      await navigator.clipboard.writeText(data.title + ". " + data.text + " " + data.url);
+      const t = shareBtn.textContent; shareBtn.textContent = "Адрес скопирован"; setTimeout(() => (shareBtn.textContent = t), 2500);
+    } catch (err) { /* отмена или нет доступа к буферу */ }
+  });
+
+  // ---------- заявка в подвале: одно поле, ответ на месте ----------
+  const cb = $(".cb"), cbIn = $("#cb-phone"), cbDone = $(".cb__done"), cbHint = $(".cb__hint");
+  if (cb && cbIn && cbDone && cbHint) {
+    const hint0 = cbHint.textContent;
+    const digits = (v) => { let d = v.replace(/\D/g, ""); if (d[0] === "8") d = "7" + d.slice(1); if (d && d[0] !== "7") d = "7" + d; return d.slice(0, 11); };
+    const fmt = (d) => { const r = d.slice(1); let t = "+7"; if (r.length) t += " " + r.slice(0, 3); if (r.length > 3) t += " " + r.slice(3, 6); if (r.length > 6) t += "-" + r.slice(6, 8); if (r.length > 8) t += "-" + r.slice(8, 10); return t; };
+    const clearErr = () => { cb.classList.remove("is-error"); cbIn.removeAttribute("aria-invalid"); cbHint.textContent = hint0; };
+    cbIn.addEventListener("focus", () => { if (!cbIn.value) cbIn.value = "+7 "; });
+    cbIn.addEventListener("blur", () => { if (digits(cbIn.value).length <= 1) cbIn.value = ""; });
+    cbIn.addEventListener("input", () => { const d = digits(cbIn.value); cbIn.value = d.length <= 1 ? "+7 " : fmt(d); if (cb.classList.contains("is-error") && d.length === 11) clearErr(); });
+    cb.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const d = digits(cbIn.value);
+      if (d.length !== 11) {
+        cb.classList.add("is-error"); cbIn.setAttribute("aria-invalid", "true");
+        cbHint.textContent = d.length <= 1 ? "Введите номер, и мы перезвоним" : "Не хватает цифр: после +7 нужно 10";
+        cbIn.focus();
+        if (anim) G.fromTo($(".cb__field", cb), { x: -6 }, { x: 0, duration: 0.5, ease: "elastic.out(1, .35)" });
+        return;
+      }
+      const btn = $(".cb__btn", cb); btn.disabled = true; btn.textContent = "Отправляем";
+      // демо: на рабочем сайте здесь заявка уходит в amoCRM с формой «подвал», страницей и UTM-метками
+      setTimeout(() => {
+        $("[data-done-s]", cbDone).textContent = isOpen()
+          ? "Администратор перезвонит за 5 минут с номера +7\u00a0495\u00a0150-36-15."
+          : "Сейчас клиника закрыта. Перезвоним утром, после 9:00, с номера +7\u00a0495\u00a0150-36-15.";
+        const h0 = cb.offsetHeight;
+        cb.hidden = true; cbDone.hidden = false; cbDone.focus({ preventScroll: true });
+        if (anim) { G.from(cbDone, { height: h0, duration: 0.6, ease: "power3.out", clearProps: "height" }); G.from(cbDone.children, { y: 16, autoAlpha: 0, duration: 0.6, stagger: 0.06, ease: "power3.out" }); }
+        btn.disabled = false; btn.textContent = "Жду звонка"; cbIn.value = ""; clearErr();
+      }, 700);
+    });
+    $("[data-again]", cbDone)?.addEventListener("click", () => { cbDone.hidden = true; cb.hidden = false; cbIn.focus(); });
+  }
 
   // ---------- анимации ----------
   // Правило: прокрутку сглаживает только Lenis, поэтому все scrub = true (без второго сглаживания),
@@ -564,6 +656,24 @@
     let x = 0, dir = 1, cur = 1, target = 1;
     ST.create({ trigger: tr, start: "top bottom", end: "bottom top", onUpdate: (self) => { dir = self.direction; target = dir * (1 + Math.min(Math.abs(self.getVelocity()) / 400, 4)); } });
     G.ticker.add((time, dt) => { target += (dir - target) * 0.04; cur += (target - cur) * 0.12; x = (x - (cur * dt) / 600) % 50; if (x > 0) x -= 50; setX(x); });
+  });
+
+  // контакты: сцена закрепляется, прокрутка ведёт от улицы к двери, каждое фото поднимается шторкой.
+  // Создаётся после ленты «путь», поэтому её отступ учтён; refreshPriority как у неё
+  if (wayShots.length > 1) mm.add("(min-width: 1025px) and (min-height: 780px)", () => {
+    const n = wayShots.length, imgs = wayShots.map((x) => $("img", x)), way = $(".way");
+    way.classList.add("is-pinned");
+    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: {
+      trigger: ".way__stage", start: "top top", end: () => "+=" + Math.round((n - 1) * innerHeight * 0.55), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 1,
+      onUpdate: (self) => wayActive(Math.round(self.progress * (n - 1))),
+    } });
+    wayTrig = tl.scrollTrigger;
+    for (let i = 1; i < n; i++) {
+      tl.fromTo(wayShots[i], { clipPath: "inset(100% 0% 0% 0% round 22px)" }, { clipPath: "inset(0% 0% 0% 0% round 22px)", duration: 1 }, i - 1)
+        .fromTo(imgs[i], { scale: 1.18, yPercent: 4 }, { scale: 1, yPercent: 0, duration: 1 }, i - 1)
+        .to(imgs[i - 1], { scale: 1.1, yPercent: -3, duration: 1 }, i - 1);
+    }
+    return () => { wayTrig = null; way.classList.remove("is-pinned"); G.set(wayShots, { clearProps: "clipPath" }); G.set(imgs, { clearProps: "transform" }); };
   });
 
   // подвал: логотип поднимается
