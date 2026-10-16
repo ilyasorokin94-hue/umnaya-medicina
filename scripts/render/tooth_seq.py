@@ -7,6 +7,9 @@
 # Запуск: python3 scripts/render/tooth_seq.py <папка_кадров> 0 <samples> <w> <h> <число_кадров> [номера,через,запятую]
 # Сайт: python3 scripts/render/tooth_seq.py /tmp/tooth 0 64 1000 1200 96
 #       python3 scripts/render/frames_to_webp.py /tmp/tooth src/images/tooth 96  (печатает data-crop для build.mjs)
+# Отладка через переменные окружения: TOOTH_CLAY=1 (только форма), TOOTH_H (шаг сетки, мм, по умолчанию 0.065),
+# TOOTH_ELEV (наклон камеры, °), TOOTH_VS/VA/VE/FROST/BACK/BACKD/VD/PULP — параметры вида КТ (см. «материалы»).
+# Один процесс рендерит все кадры: сетки строятся один раз (~50 с), Cycles на 2 потоках.
 import bpy, math, sys, os, time
 import numpy as np
 from mathutils import Vector, Euler
@@ -401,10 +404,6 @@ CT_BACK_D = float(os.environ.get("TOOTH_BACKD", "0.3"))   # то же у ден�
 VOL_DENTIN = float(os.environ.get("TOOTH_VD", "0.035"))   # поглощение в дентине, 1/мм
 PULP_COL = tuple(float(x) for x in os.environ.get("TOOTH_PULP", "0.15,0.06,0.055").split(","))
 
-def nodes_of(m):
-    nt = m.node_tree
-    return nt, nt.nodes, nt.links
-
 def ct_factor(nt):
     """1 там, где плоскость уже прошла (z объекта выше плоскости), и для лучей, прошедших сквозь «стекло»."""
     tc = nt.nodes.new("ShaderNodeTexCoord")
@@ -541,7 +540,7 @@ def mat_outer():
     # корень: тёплый бежевый, чуть неравномерный по тону
     nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 0.35; nz.inputs["Detail"].default_value = 3
     nt.links.new(nt.nodes.new("ShaderNodeTexCoord").outputs["Object"], nz.inputs["Vector"])
-    root_col = mix_rgb(nt, nz.outputs["Fac"], (0.74, 0.60, 0.42), (0.68, 0.55, 0.38))
+    root_col = mix_rgb(nt, nz.outputs["Fac"], (0.72, 0.56, 0.37), (0.66, 0.51, 0.34))
     col = mix_rgb(nt, en, root_col, enamel_col)
     nat = principled(nt, Base_Color=col,
                      Roughness=mix_f(nt, en, 0.40, 0.30),

@@ -27,6 +27,7 @@ ss = P.smoothstep
 X0 = 16.5            # отрезок челюсти по x от -X0 до X0
 ZB = -16.0           # нижний срез
 NOTCH = 5.6          # вырез в десне и кости над фикстурой: |x| < NOTCH, y < 0
+FULLCUT = True       # срез по всей длине отрезка, как на картинке ChatGPT
 
 def side_w(z, buccal, inset=0.0):
     s = ss(-2.5, -12.0, z)
@@ -143,7 +144,8 @@ spongy_cutter = extrude("spongy_cutter", lambda x: bone_profile(inset=1.05, top=
 spongy_cutter.hide_render = True; spongy_cutter.hide_viewport = True
 gum = extrude("gum", gum_profile, xs)
 
-notch = box("notch", -NOTCH, NOTCH, -30, 0, -40, 40)
+nx = X0 + 1 if FULLCUT else NOTCH
+notch = box("notch", -nx, nx, -30, 0, -40, 40)
 sock = socket("socket", 6.0)
 cut(bone_outer, spongy_cutter)
 for o in (bone_outer, spongy, gum):
@@ -177,48 +179,32 @@ def mat_cortical():
     return m
 
 def mat_spongy():
-    """Губчатая кость: сетка тонких перемычек и пор (Вороной: расстояние до края ячейки)."""
+    """Губчатая кость: текстура среза из ChatGPT (tex/bone_spongy.jpg), проекция кубом в координатах объекта."""
     m = bpy.data.materials.new("spongy"); m.use_nodes = True
     nt = m.node_tree; b = nt.nodes["Principled BSDF"]
-    b.inputs["Roughness"].default_value = 0.7
-    b.inputs["Subsurface Weight"].default_value = 0.1
+    b.inputs["Roughness"].default_value = 0.72
+    b.inputs["Subsurface Weight"].default_value = 0.08
     b.inputs["Subsurface Radius"].default_value = (1.0, 0.6, 0.4)
     b.inputs["Subsurface Scale"].default_value = 0.3
     tc = nt.nodes.new("ShaderNodeTexCoord")
-    warp = node(nt, "ShaderNodeTexNoise", Scale=0.9, Detail=3.0)
-    nt.links.new(tc.outputs["Object"], warp.inputs["Vector"])
-    mixv = nt.nodes.new("ShaderNodeMix"); mixv.data_type = "VECTOR"
-    mixv.inputs["Factor"].default_value = 0.35
-    nt.links.new(tc.outputs["Object"], mixv.inputs[4]); nt.links.new(warp.outputs["Color"], mixv.inputs[5])
-    vor = nt.nodes.new("ShaderNodeTexVoronoi"); vor.feature = "DISTANCE_TO_EDGE"
-    vor.inputs["Scale"].default_value = 1.35; vor.inputs["Randomness"].default_value = 1.0
-    nt.links.new(mixv.outputs[1], vor.inputs["Vector"])
-    vor2 = nt.nodes.new("ShaderNodeTexVoronoi"); vor2.feature = "DISTANCE_TO_EDGE"
-    vor2.inputs["Scale"].default_value = 3.1
-    nt.links.new(mixv.outputs[1], vor2.inputs["Vector"])
-    # перемычки там, где расстояние до края мало
-    s1 = nt.nodes.new("ShaderNodeMapRange"); s1.inputs["From Min"].default_value = 0.03; s1.inputs["From Max"].default_value = 0.11
-    nt.links.new(vor.outputs["Distance"], s1.inputs["Value"])
-    s2 = nt.nodes.new("ShaderNodeMapRange"); s2.inputs["From Min"].default_value = 0.02; s2.inputs["From Max"].default_value = 0.08
-    nt.links.new(vor2.outputs["Distance"], s2.inputs["Value"])
-    pore = nt.nodes.new("ShaderNodeMath"); pore.operation = "MULTIPLY"
-    nt.links.new(s1.outputs["Result"], pore.inputs[0]); nt.links.new(s2.outputs["Result"], pore.inputs[1])
-    # pore: 0 на перемычке, 1 в глубине поры
-    col = nt.nodes.new("ShaderNodeMix"); col.data_type = "RGBA"
-    col.inputs[6].default_value = (0.74, 0.66, 0.52, 1)
-    col.inputs[7].default_value = (0.30, 0.20, 0.13, 1)
-    nt.links.new(pore.outputs[0], col.inputs["Factor"])
-    nt.links.new(col.outputs[2], b.inputs["Base Color"])
-    inv = nt.nodes.new("ShaderNodeMath"); inv.operation = "SUBTRACT"; inv.inputs[0].default_value = 1.0
-    nt.links.new(pore.outputs[0], inv.inputs[1])
-    bp = node(nt, "ShaderNodeBump", Strength=0.6, Distance=0.25)
-    nt.links.new(inv.outputs[0], bp.inputs["Height"]); nt.links.new(bp.outputs["Normal"], b.inputs["Normal"])
+    mp = nt.nodes.new("ShaderNodeMapping"); mp.inputs["Scale"].default_value = (1 / 22.0, 1 / 22.0, 1 / 22.0)
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    tex = nt.nodes.new("ShaderNodeTexImage"); tex.projection = "BOX"; tex.projection_blend = 0.2
+    tex.image = bpy.data.images.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "tex", "bone_spongy.jpg"))
+    nt.links.new(mp.outputs["Vector"], tex.inputs["Vector"])
+    # чуть темнее и теплее, как губчатая кость в разрезе на картинке ChatGPT
+    hsv = nt.nodes.new("ShaderNodeHueSaturation")
+    hsv.inputs["Saturation"].default_value = 0.95; hsv.inputs["Value"].default_value = 0.93
+    nt.links.new(tex.outputs["Color"], hsv.inputs["Color"])
+    nt.links.new(hsv.outputs["Color"], b.inputs["Base Color"])
+    bp = node(nt, "ShaderNodeBump", Strength=0.55, Distance=0.2)
+    nt.links.new(tex.outputs["Color"], bp.inputs["Height"]); nt.links.new(bp.outputs["Normal"], b.inputs["Normal"])
     return m
 
 def mat_gum():
     m = bpy.data.materials.new("gum"); m.use_nodes = True
     nt = m.node_tree; b = nt.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (0.62, 0.23, 0.23, 1)
+    b.inputs["Base Color"].default_value = (0.80, 0.17, 0.15, 1)
     b.inputs["Subsurface Weight"].default_value = 0.5
     b.inputs["Subsurface Radius"].default_value = (1.0, 0.35, 0.25)
     b.inputs["Subsurface Scale"].default_value = 0.35
@@ -226,9 +212,9 @@ def mat_gum():
     b.inputs["Coat Weight"].default_value = 0.12
     b.inputs["Coat Roughness"].default_value = 0.25
     tc = nt.nodes.new("ShaderNodeTexCoord")
-    nz = node(nt, "ShaderNodeTexNoise", Scale=6.0, Detail=6.0)
+    nz = node(nt, "ShaderNodeTexNoise", Scale=9.0, Detail=8.0, Roughness=0.65)
     nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
-    bp = node(nt, "ShaderNodeBump", Strength=0.08, Distance=0.1)
+    bp = node(nt, "ShaderNodeBump", Strength=0.22, Distance=0.12)
     nt.links.new(nz.outputs["Fac"], bp.inputs["Height"]); nt.links.new(bp.outputs["Normal"], b.inputs["Normal"])
     return m
 
@@ -266,6 +252,10 @@ cr = P.crown(); cr.data.materials.append(zr)
 cr.rotation_euler = Euler((0, 0, math.radians(90)), "XYZ")  # длинная ось коронки вдоль дуги (x)
 
 neigh = []
+# шейки соседних зубов срезаны чуть глубже плоскости среза, чтобы не выходить на срез
+neck_cut = box("neck_cut", -X0 - 2, X0 + 2, -30, 0.35, -40, 40)
+dentin = bpy.data.materials.new("dentin"); dentin.use_nodes = True
+_b = dentin.node_tree.nodes["Principled BSDF"]; _b.inputs["Base Color"].default_value = (0.72, 0.60, 0.42, 1); _b.inputs["Roughness"].default_value = 0.5
 for sx, rz, sc_ in ((-10.9, 270, 1.0), (10.9, 92, 0.97)):
     me = cr.data.copy()
     o = bpy.data.objects.new("tooth", me); bpy.context.collection.objects.link(o)
@@ -277,7 +267,8 @@ for sx, rz, sc_ in ((-10.9, 270, 1.0), (10.9, 92, 0.97)):
     for v in bm.verts: v.co.y *= 0.92; v.co.z += -1.2
     nme = bpy.data.meshes.new("neck"); bm.to_mesh(nme); bm.free()
     nk = bpy.data.objects.new("neck", nme); bpy.context.collection.objects.link(nk)
-    nk.location = (sx, 0, 0); nk.data.materials.append(zr)
+    nk.location = (sx, 0, 0); nk.data.materials.append(dentin)
+    cut(nk, neck_cut)
 
 # ---------- свет ----------
 world = bpy.data.worlds.new("w"); scene.world = world; world.use_nodes = True
@@ -304,13 +295,13 @@ def ease(x):
 def pose(t):
     ec = ease(t / 0.8)            # коронка уходит первой
     ea = ease((t - 0.18) / 0.82)  # абатмент следом
-    ab.location = (0, 0, 9.0 * ea)
-    cr.location = (0, 0, 1.9 + 9.0 * ea + 10.5 * ec)
+    ab.location = (0, 0, 7.0 * ea)
+    cr.location = (0, 0, 1.9 + 7.0 * ea + 8.0 * ec)
     cr.rotation_euler = Euler((math.radians(-8 * ec), 0, math.radians(90 + 14 * ec)), "XYZ")
     az = math.radians(-24 + 12 * ease(t))
     el = math.radians(15 - 4 * ease(t))
-    dist = 215
-    tz = -2.0 + 7.5 * ec
+    dist = 172
+    tz = -1.5 + 5.5 * ec
     cam.location = (dist * math.cos(el) * math.sin(az), -dist * math.cos(el) * math.cos(az), tz + dist * math.sin(el))
     aim(cam, (0, 0, tz))
 
