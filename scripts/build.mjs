@@ -1,16 +1,17 @@
 #!/usr/bin/env node
-// Сборка макета v2: одностраничник по механике Lava Dental + страницы услуг, прайс и онлайн-запись.
+// Сборка макета, вариант 2: главная по логике trydentspb.ru (9 блоков) в дизайне и механике Lava Dental + страницы услуг, прайс и онлайн-запись.
 // Каждая страница отдаётся готовым HTML (важно для SEO). Запуск: npm run build → dist/
 import { mkdirSync, writeFileSync, copyFileSync, rmSync, readdirSync, existsSync, cpSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { clinic, doctors, prices, services, brand, pics, homeOrder, features, priceTabs, offers, about, home } from "../src/data.mjs";
+import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
 const SITE = process.env.SITE_URL || "https://umnaya-stomatologiya.ru"; // домен-пример для canonical и разметки
 
-const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+// неразрывные пробелы в числах и перед ₽: «3 000» и «17 500 ₽» не разрываются переносом строки
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/(\d) (?=\d{3}\b)/g, "$1\u00a0").replace(/ ₽/g, "\u00a0₽");
 const rub = (n) => n.toLocaleString("ru-RU").replace(/\s/g, " ") + " ₽";
 const priceText = (p) => {
   if (p === 0) return "Бесплатно";
@@ -51,7 +52,8 @@ const icon = {
 };
 
 // ---------- общие куски ----------
-const sections = [["services", "Услуги"], ["about", "О клинике"], ["team", "Врачи"], ["reviews", "Отзывы"], ["pricing", "Цены"], ["faq", "Вопросы"], ["contacts", "Контакты"]];
+// меню сайта, как у Тридента: «Услуги» раскрываются списком направлений, остальное разделы и страницы
+const menuItems = (p, href) => [["Цены", `${p}ceny.html`], ["Врачи", href("team")], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
 
 function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
   const p = pre(depth);
@@ -74,7 +76,7 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="${p}assets/styles.css">
 <script>
-(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um-intro"))d.classList.add("js-intro")}}catch(e){}
+(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
 window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
 window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big,.intro__logo");if(p)p.classList.add("is-fallback");i.style.display="none"};
@@ -111,21 +113,27 @@ const ext = ' target="_blank" rel="noopener"';
 function header(depth, home = false) {
   const p = pre(depth);
   const href = (id) => (home ? `#${id}` : `${p}index.html#${id}`);
+  const items = menuItems(p, href);
   return `
 <header class="header"><div class="header__bar">
   <a class="logo" href="${p}index.html" aria-label="Умная Медицина. Стоматология, на главную">${logoImg(depth)}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
-  <nav class="nav" aria-label="Разделы">${sections.map(([id, t]) => `<a href="${href(id)}">${t}</a>`).join("")}</nav>
+  <nav class="nav" aria-label="Разделы">
+    <div class="nav__drop"><a href="${href("services")}">Услуги</a><div class="nav__panel">${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html"><span>${esc(svc[k].menu)}</span><small>${esc(svc[k].from)}</small></a>`).join("")}</div></div>
+    ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}
+  </nav>
   <div class="header__cta">
     <a class="header__phone" href="${clinic.phoneHref}"><b>${esc(clinic.phone)}</b><small>${esc(clinic.hours)}</small></a>
-    ${act("Перезвоните мне", "call", p, { cls: "btn--ghost btn--sm header__call" })}
     ${act("Записаться", "book", p, { cls: "btn--sm header__book", magnet: true })}
     <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="menu">${icon.menu}</button>
   </div>
 </div></header>
-<div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Меню">
+<div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Меню" data-lenis-prevent>
   <div class="menu__top"><a class="logo logo--white" href="${p}index.html">${logoImg(depth, false)}<span class="logo__text">Умная Медицина<small>стоматология</small></span></a><button class="menu__close" type="button" aria-label="Закрыть меню">${icon.close}</button></div>
-  <nav aria-label="Разделы">${sections.map(([id, t]) => `<a href="${href(id)}">${t}</a>`).join("")}</nav>
-  <div class="menu__foot"><a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a><span class="note">${esc(clinic.hours)}</span>${act("Перезвоните мне", "call", p, { cls: "btn--ghost btn--wide" })}${act("Записаться", "book", p, { cls: "btn--wide" })}</div>
+  <nav aria-label="Разделы">
+    <details class="menu__svc"><summary>Услуги</summary><div class="menu__list">${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html">${esc(svc[k].menu)}</a>`).join("")}</div></details>
+    ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}
+  </nav>
+  <div class="menu__foot"><a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a><span class="note">${esc(clinic.hours)}. Перезвоним за 5 минут.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
 </div>`;
 }
 
@@ -136,7 +144,7 @@ function modals(depth) {
   const phone = `<label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>`;
   const name = `<label>Имя<input name="name" autocomplete="given-name" required></label>`;
   const msgr = `<div class="modal__msgr"><a class="btn btn--ghost" href="${clinic.telegram}"${ext}>Отправить в Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>Отправить в MAX</a></div>`;
-  const box = (id, title, inner, wide = false) => `<div class="modal" id="m-${id}" role="dialog" aria-modal="true" aria-labelledby="m-${id}-t" hidden><div class="modal__box${wide ? " modal__box--wide" : ""}" data-lenis-prevent>
+  const box = (id, title, inner, wide = false) => `<div class="modal modal--${id}" id="m-${id}" role="dialog" aria-modal="true" aria-labelledby="m-${id}-t" hidden><div class="modal__box${wide ? " modal__box--wide" : ""}" data-lenis-prevent>
   <button class="modal__x" type="button" aria-label="Закрыть" data-close>${icon.close}</button>
   <h2 id="m-${id}-t" tabindex="-1">${title}</h2>${inner}
 </div></div>`;
@@ -163,7 +171,7 @@ ${box("xray", "Пришлите снимок, и врач скажет, можн
     <button class="btn btn--lg btn--wide">Отправить снимок</button>
     <p class="modal__note">Если зуб можно спасти, скажем, как и сколько это стоит. ${consent}</p>
   </form>`)}
-${box("allon", "Расчёт All-on-4 для вашего случая", `<p class="modal__sub">Имплантолог посмотрит ответы, и мы перезвоним с полной ценой: хирургия, временные зубы и постоянный протез.</p>
+${box("allon", "Расчёт All-on-4 для вашего случая", `<p class="modal__sub">Имплантолог посмотрит ответы, и мы перезвоним: скажем, подходит ли вам All-on-4, и запишем на бесплатную консультацию с планом и ценой.</p>
   <form class="form lead" data-lead="allon">${name}${phone}
     <fieldset class="reasons"><legend>Одна или обе челюсти</legend><div class="chips">${["Одна челюсть", "Обе челюсти"].map((r, i) => `<label class="chip chip--pick"><input type="radio" name="jaws" value="${r}"${i ? "" : " checked"}><span>${r}</span></label>`).join("")}</div></fieldset>
     <fieldset class="reasons"><legend>Носите ли съёмный протез</legend><div class="chips">${["Да, ношу", "Нет"].map((r) => `<label class="chip chip--pick"><input type="radio" name="denture" value="${r}"><span>${r}</span></label>`).join("")}</div></fieldset>
@@ -172,8 +180,12 @@ ${box("allon", "Расчёт All-on-4 для вашего случая", `<p cla
   </form>`)}
 ${box("write", "Напишите нам", `<p class="modal__sub">Ответим за 5 минут, ежедневно с 9:00 до 21:00. Можно сразу прислать снимок, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn btn--lg" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--lg btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>`)}
-${box("exit", "Пока не готовы прийти?", `<p class="modal__sub">Пришлите снимок, и врач бесплатно скажет, можно ли сохранить зуб.</p>
-  <div class="modal__msgr">${act("Прислать снимок", "xray", p, { cls: "btn--lg" })}</div>`)}
+${box("exit", esc(v2.exit[0]), `<p class="modal__sub">${esc(v2.exit[1])}</p>
+  <form class="form lead" data-lead="exit">${phone}
+    <button class="btn btn--lg btn--wide">Жду звонка</button>
+    <p class="modal__note">${consent}</p>
+  </form>
+  <button class="btn btn--ghost btn--wide modal__later" type="button" data-close>Продолжить смотреть сайт</button>`)}
 ${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}. Пока ждёте, можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>`)}
@@ -186,10 +198,10 @@ function footer(depth) {
   return `
 <footer class="footer on-dark"><div class="wrap footer__in">
   <div class="footer__cta">
-    <div><h2 data-split>${esc(home.final[0])}</h2><p class="footer__lead">${esc(home.final[1])}</p></div>
+    <div><h2 data-split>${esc(v2.final[0])}</h2><p class="footer__lead">${esc(v2.final[1])}</p></div>
     <div class="footer__form">
-      <form class="lead lead--inline" data-lead="final"><label class="sr" for="f-name-${depth}">Имя</label><input id="f-name-${depth}" name="name" placeholder="Имя" autocomplete="given-name"><label class="sr" for="f-phone-${depth}">Телефон</label><input id="f-phone-${depth}" name="phone" type="tel" required placeholder="Телефон" autocomplete="tel" inputmode="tel"><button class="btn btn--lg">Жду звонка</button></form>
-      ${act("Прислать снимок", "xray", p, { cls: "btn--ghost btn--lg" })}
+      <form class="lead lead--inline" data-lead="final"><label class="sr" for="f-phone-${depth}">Телефон</label><input id="f-phone-${depth}" name="phone" type="tel" required placeholder="Телефон" autocomplete="tel" inputmode="tel"><button class="btn btn--lg">Жду звонка</button></form>
+      <p class="cta-box__note">Отправляя номер, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
     </div>
   </div>
   <div class="footer__grid">
@@ -226,7 +238,7 @@ function footer(depth) {
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
   </div>
 </div></footer>
-<div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${clinic.telegram}" data-modal="write">Написать</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
+<div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
 ${modals(depth)}`;
 }
 const end = `\n</body>\n</html>\n`;
@@ -258,13 +270,13 @@ const reviewsText = (n) => `${n} ${plural(n, "отзыв", "отзыва", "от
 
 function doctorCard(d, depth) {
   const p = pre(depth);
-  return `<article class="doc" data-tags="${d.tags.join(" ")}" data-reveal>
+  return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}" data-reveal>
   <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth)}
     <a class="doc__cover" href="${p}vrachi/${d.id}.html" tabindex="-1" aria-hidden="true"></a></div>
   <h3><a href="${p}vrachi/${d.id}.html">${esc(d.name)}</a></h3>
-  <p class="doc__role">${esc(d.role)}</p>
+  <p class="doc__role${d.chief ? " doc__role--chief" : ""}">${esc(d.role)}</p>
   ${d.focus ? `<p class="doc__focus">${esc(d.focus)}</p>` : ""}
-  <p class="doc__meta">${d.exp ? `<span>Стаж <b>${d.exp} лет</b></span>` : ""}${d.rating ? `<span>ПроДокторов <b>${d.rating}</b> · ${reviewsText(d.reviews)}</span>` : ""}</p>
+  <p class="doc__meta">${d.claims ? d.claims.map(([n, t]) => `<span><b>${esc(n)}</b> ${esc(t)}</span>`).join("") : d.exp ? `<span>Стаж <b>${d.exp} ${plural(d.exp, "год", "года", "лет")}</b></span>` : ""}</p>
   ${act("Записаться к врачу", "book", p, { cls: "btn--ghost btn--sm doc__cta", doctor: d.id })}
 </article>`;
 }
@@ -315,231 +327,121 @@ function place() {
         <div><dt>Часы работы</dt><dd>${esc(clinic.hours)}</dd></div>
         <div><dt>Почта</dt><dd><a href="mailto:${clinic.email}">${esc(clinic.email)}</a></dd></div>
       </dl>
-      <div class="place__btns"><a class="btn btn--sm" href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}>Построить маршрут</a><a class="btn btn--ghost btn--sm" href="${clinic.phoneHref}">Позвонить</a><a class="btn btn--ghost btn--sm" href="${clinic.telegram}"${ext}>Написать в Telegram</a></div>
-      <form class="lead lead--inline lead--light" data-lead="contacts"><label class="sr" for="c-phone">Телефон</label><input id="c-phone" name="phone" type="tel" required placeholder="Телефон" autocomplete="tel" inputmode="tel"><button class="btn">Перезвоните мне</button></form>
-      <p class="cta-box__note">Перезвоним за 5 минут.</p>
+      <div class="place__btns"><a class="btn btn--sm" href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}>Построить маршрут</a><a class="btn btn--ghost btn--sm" href="${clinic.phoneHref}">Позвонить</a></div>
     </div>
   </div>
 </div></section>`;
 }
 
-// ---------- главная ----------
+// ---------- главная: порядок блоков Тридента ----------
+// первый экран, услуги и цены вкладками, клиника и оборудование, путь пациента, врачи, отзывы, три вопроса, контакты
+const rowPrice = ([, v, old]) => (v === 0 ? "Бесплатно" : typeof v === "number" ? rub(v) : priceText(v)) + (old ? ` <s>${rub(old)}</s>` : "");
+
 function pageHome() {
   const depth = 0, p = "";
-  const facts = (list, cls = "") => `<ul class="facts${cls}">${list.map((t) => `<li data-reveal>${esc(t)}</li>`).join("")}</ul>`;
-  const sit = ([t, d, price, btn, kind, reason, k, pic]) => `<article class="sit${pic ? " sit--img" : ""}" data-reveal>${pic ? `<span class="svc__bg" data-ph>${img([pic], t, depth)}</span>` : ""}
-        <a class="sit__link" href="uslugi/${k}.html" aria-label="${esc(svc[k].title)}"></a>
-        <span class="sit__body"><h3>${esc(t)}</h3><p>${esc(d)}</p></span>
-        <span class="sit__foot"><b class="sit__price">${esc(price)}</b>${act(btn, kind, p, { cls: `btn--sm ${pic ? "btn--light" : ""}`, reason })}</span></article>`;
-  const { save, restore, allon, kids, quiz, rating } = home;
+  const { rating } = home;
   const star = icon.star;
-  const sum = (n) => rub(n);
-  const sys0 = allon.systems[0];
+  const D = v2;
 
-  return head({ title: home.seoTitle, desc: home.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(home.faq.flatMap((g) => g[1]))] })
+  return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq)] })
   + intro(depth) + header(depth, true) + `
 <main id="main">
 
 <section class="hero" aria-labelledby="h1">
-  <div class="hero__media" data-ph>${img(pics.hero, "Стоматология «Умная Медицина» в Удельной", depth, ' fetchpriority="high" loading="eager"')}</div>
+  <div class="hero__media" data-ph>${img(D.hero, "Лечебный кабинет стоматологии «Умная Медицина» в Удельной", depth, ' fetchpriority="high" loading="eager"')}</div>
   <div class="hero__in">
     <div class="hero__main">
-      <h1 id="h1"><span class="kicker">${esc(home.kicker)}</span><span data-split>${esc(home.h1)}</span></h1>
-      <p class="hero__sub">${esc(home.sub)}</p>
-      <ul class="hero__facts">${home.heroFacts.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
-      <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}${act("Прислать снимок на второе мнение", "xray", p, { cls: "btn--ghost btn--lg", reason: "Сказали удалить" })}</div>
-      <p class="hero__note">${home.heroNote.map((t) => `<span>${esc(t)}</span>`).join("")}</p>
+      <h1 id="h1"><span class="kicker">${esc(D.kicker)}</span><span data-split>${esc(D.h1)}</span></h1>
+      <p class="hero__sub">${esc(D.sub)}</p>
+      <ul class="hero__facts">${D.facts.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+      <p class="hero__promo"><span class="hero__promo-tag">Акция</span><span>${esc(D.promo[0])} <b>${esc(D.promo[1])}</b> <s>${esc(D.promo[2])}</s></span></p>
+      <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
+      <p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>
     </div>
-    <aside class="hero__offer" aria-label="Акция">
-      <h2>${esc(home.heroOffer.title)}</h2>
-      <ul>${home.heroOffer.rows.map(([t, v, old]) => `<li><span>${esc(t)}</span><b>${esc(v)}</b><s>${esc(old)}</s></li>`).join("")}</ul>
-      ${act("Записаться на консультацию", "book", p, { cls: "btn--light btn--wide", reason: "Нужен имплант" })}
-    </aside>
   </div>
 </section>
 
 <section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">С чего начать</span><h2 id="sv-title" data-split>С чем вы к нам придёте</h2></div><a class="link" href="ceny.html">Все цены</a></div>
-  <div class="sit-grid">${home.situations.map(sit).join("")}</div>
-  <div class="strip" data-reveal><p>${esc(home.situationsMore)}</p>${act("Перезвоните мне", "call", p, { cls: "btn--ghost" })}</div>
-  <div class="sit-more"><span class="label">Ещё направления</span>${svcRows(["diagnostika", "protezirovanie", "hirurgiya"], depth)}</div>
-</div></section>
-
-<section class="section" id="about" aria-labelledby="ab-title"><div class="wrap">
-  <span class="label">О клинике</span>
-  <div class="about__grid" style="margin-top:28px">
-    <h2 id="ab-title" class="about__statement">${esc(about.statement)}</h2>
-    <div class="about__text">${about.text.map((t) => `<p data-reveal>${esc(t)}</p>`).join("")}
-      ${facts(about.facts)}
-      ${ctaBox("", act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg" }), "", "Перезвоним за 5 минут.")}
+  <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><p>${esc(D.services.text)}</p><a class="link" href="ceny.html">Весь прайс</a></div></div>
+  <div class="ptabs dirs__tabs" role="tablist" aria-label="Направления" data-tabs="dir">${D.dirs.map((d, i) => `<button class="chip" type="button" role="tab" data-tab="d${i}" aria-selected="${i === 0}">${esc(d.tab)}</button>`).join("")}</div>
+  ${D.dirs.map((d, i) => `<div class="dir" data-panel="dir" data-key="d${i}"${i ? " hidden" : ""}>
+    <aside class="offer dir__card">
+      <span class="label label--light">${esc(d.promo.tag)}</span>
+      <h3>${esc(d.promo.title)}</h3>
+      ${d.promo.price ? `<p class="offer__price"><b>${esc(d.promo.price)}</b>${d.promo.old ? `<s>${esc(d.promo.old)}</s>` : ""}</p>` : ""}
+      <p class="dir__promo">${esc(d.promo.text)}</p>
+      ${act(d.btn[0], d.btn[1], p, { cls: "btn--light", reason: d.btn[2] })}
+    </aside>
+    <div class="dir__body">
+      <h3 class="dir__title">${esc(d.title)}</h3>
+      <p class="dir__lead">${esc(d.lead)}</p>
+      <ul class="plist">${d.rows.map((r) => `<li><span>${esc(r[0])}</span><b>${rowPrice(r)}</b></li>`).join("")}</ul>
+      <div class="dir__links">${d.links.map(([t, k]) => `<a class="link" href="uslugi/${k}.html">${esc(t)}</a>`).join("")}</div>
     </div>
-  </div>
-  <div class="collage">
-    ${pics.about.map((e, i) => `<figure class="c${i + 1}" data-ph data-parallax data-speed="${[0.25, -0.12, 0.3, -0.2][i]}">${img(e, ["Лечебный кабинет", "3D-томограф Vatech", "Ресепшен стоматологии", "Вход в клинику на Громова, 10/2"][i], depth)}${ph()}</figure>`).join("")}
-  </div>
+  </div>`).join("")}
 </div></section>
 
-<section class="foil on-dark" id="rules" aria-labelledby="ft-title">
+<section class="tour on-dark" id="clinic" aria-labelledby="tr-title">
+  <div class="tour__pin">
+    <div class="tour__frame">${img([D.clinic.frame], "Лечебный кабинет стоматологии «Умная Медицина»", depth)}</div>
+    <div class="tour__title wrap"><span class="label label--light">${esc(D.clinic.label)}</span><h2 id="tr-title" data-split>${esc(D.clinic.title)}</h2><p>${esc(D.clinic.text)}</p></div>
+  </div>
+  <div class="tour__rows" aria-label="Фото клиники">
+    ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap], j) => `<figure${j >= row.length ? ' aria-hidden="true"' : ""}>${img([f], cap, depth)}<figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
+  </div>
+</section>
+
+<section class="foil on-dark" id="path" aria-labelledby="ph-title">
   <div class="foil__bg">${pick(pics.foil, depth).src ? `<img src="${pick(pics.foil, depth).src}" alt="" loading="lazy">` : ""}</div>
   <div class="feat">
     <div class="feat__pin"><div class="feat__track">
-      <div class="fcard fcard--intro"><span class="label">${esc(home.rules.label)}</span><h2 id="ft-title" data-split>${esc(home.rules.title)}</h2><p>${esc(home.rules.intro)}</p></div>
-      ${features.map(([big, t, d]) => `<article class="fcard"><div class="fcard__body"><b class="fcard__big">${esc(big)}</b><h3>${esc(t)}</h3><p>${esc(d)}</p></div></article>`).join("")}
+      <div class="fcard fcard--intro"><span class="label">${esc(D.path.label)}</span><h2 id="ph-title" data-split>${esc(D.path.title)}</h2><p>${esc(D.path.intro)}</p></div>
+      ${D.path.steps.map(([big, t, d]) => `<article class="fcard"><div class="fcard__body"><b class="fcard__big">${esc(big)}</b><h3>${esc(t)}</h3><p>${esc(d)}</p></div></article>`).join("")}
     </div></div>
   </div>
-  <div class="wrap cta-strip"><p>${esc(home.rules.note)}</p>${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true })}</div>
+  <div class="wrap cta-strip"><p>${esc(D.path.note)}</p>${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true })}</div>
   ${marquee("Сначала думаем. <em>Потом лечим.</em>")}
 </section>
 
-<section class="section" id="save" aria-label="Сохранить или восстановить"><div class="wrap fork">
-  ${[save, restore].map((b, i) => `<article class="fork__col"${i ? ' data-speed="-0.25"' : ""}>
-    <span class="label">${esc(b.label)}</span>
-    <h2 data-split>${esc(b.title)}</h2>
-    ${b.sub ? `<p class="fork__sub" data-reveal>${esc(b.sub)}</p>` : ""}
-    <p class="sr__text" data-reveal>${esc(b.text)}</p>
-    ${facts(b.facts)}
-    ${b.quote ? `<blockquote class="sr__quote" data-reveal>«${esc(b.quote)}»<cite>из отзыва пациента</cite></blockquote>` : ""}
-    ${ctaBox(b.offer, act(b.btn[0], b.btn[1], p, { reason: b.btn[2] }), `<a class="link" href="uslugi/${b.link[1]}.html">${esc(b.link[0])}</a>`, b.note)}
-  </article>`).join("")}
-</div></section>
-
-<section class="section section--dark on-dark allon" id="allon" aria-labelledby="ao-title"><div class="wrap allon__in">
-  <div class="allon__text">
-    <span class="label">All-on-4</span>
-    <h2 id="ao-title" data-split>${esc(allon.title)}</h2>
-    <p data-reveal>${esc(allon.text)}</p>
-    <div class="allon__calc" data-reveal data-calc='${JSON.stringify({ systems: allon.systems, temp: allon.temp, perm: allon.perm })}'>
-      <div class="calc__opts">
-        <div class="chips" role="group" aria-label="Система имплантов">${allon.systems.map(([n], i) => `<button class="chip" type="button" data-sys="${i}" aria-pressed="${i === 0}">${n}</button>`).join("")}</div>
-        <div class="chips" role="group" aria-label="Сколько челюстей">${["Одна челюсть", "Обе челюсти"].map((t, i) => `<button class="chip" type="button" data-jaws="${i + 1}" aria-pressed="${i === 0}">${t}</button>`).join("")}</div>
-      </div>
-      <ul>
-        <li><span>Хирургический этап</span><b><i data-c="surg">${sum(sys0[1])}</i>${sys0[2] ? ` <s data-c="old">${sum(sys0[2])}</s>` : ""}</b></li>
-        <li><span>Временный протез на имплантах</span><b>от <i data-c="temp">${sum(allon.temp)}</i></b></li>
-        <li><span>Постоянный протез</span><b>от <i data-c="perm">${sum(allon.perm)}</i></b></li>
-      </ul>
-      <div class="allon__total"><span>Весь путь</span><b>от <i data-c="total" data-count="${(sys0[1] + allon.temp + allon.perm).toLocaleString("ru-RU").replace(/\s/g, " ")}">${(sys0[1] + allon.temp + allon.perm).toLocaleString("ru-RU").replace(/\s/g, " ")}</i> ₽</b></div>
-      <p class="allon__pay">Оплата по этапам: в день операции от <i data-c="day">${sum(sys0[1] + allon.temp)}</i> (хирургия и временные зубы), через 4–6 месяцев от <i data-c="later">${sum(allon.perm)}</i> (постоянный протез). Есть рассрочка и кредит, скидка 10% при оплате в день консультации.</p>
-      <p class="allon__six">${esc(allon.six)}</p>
-    </div>
-    <p class="allon__compare" data-reveal>${esc(allon.compare)}</p>
-    ${ctaBox(allon.offer, act("Получить расчёт для своего случая", "allon", p, { cls: "btn--light btn--lg" }), `<a class="link" href="uslugi/all-on-4.html">Подробнее об All-on-4</a>`, allon.note)}
-  </div>
-  <figure class="allon__img" data-ph data-clip data-parallax>${img(allon.img, "All-on-4", depth)}${ph("All-on-4")}</figure>
-</div></section>
-
-<section class="section section--sage" id="quiz" aria-labelledby="qz-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Расчёт</span><h2 id="qz-title" data-split>${esc(quiz.title)}</h2></div><p>${esc(quiz.sub)}</p></div>
-  <div class="quiz" data-reveal>
-    <div class="quiz__bar" aria-hidden="true"><i></i></div>
-    <form class="quiz__form lead" data-lead="quiz" data-quiz>
-      <fieldset class="quiz__step" data-step="0"><legend>${esc(quiz.first[0])}</legend><div class="quiz__opts">${quiz.first[1].map(([t, price]) => `<label class="qopt"><input type="radio" name="q0" value="${esc(t)}" data-price="${esc(price)}"><span>${esc(t)}</span></label>`).join("")}</div></fieldset>
-      ${quiz.rest.map(([q, opts], i) => `<fieldset class="quiz__step" data-step="${i + 1}" hidden><legend>${esc(q)}</legend><div class="quiz__opts">${opts.map((t) => `<label class="qopt"><input type="radio" name="q${i + 1}" value="${esc(t)}"><span>${esc(t)}</span></label>`).join("")}</div><button class="btn btn--ghost btn--sm quiz__back" type="button" data-qback>Назад</button></fieldset>`).join("")}
-      <fieldset class="quiz__step" data-step="${quiz.rest.length + 1}" hidden><legend>Куда прислать план и цену?</legend>
-        <div class="quiz__contact">
-          <label>Имя<input name="name" autocomplete="given-name"></label>
-          <label>Телефон<input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__" data-req></label>
-          <label class="file">Снимок, если есть<input name="file" type="file" accept="image/*,.pdf,.zip,.dcm"><span>Приложить файл</span></label>
-        </div>
-        <div class="quiz__nav"><button class="btn btn--ghost btn--sm" type="button" data-qback>Назад</button><button class="btn btn--lg">Получить план и цену</button></div>
-        <p class="cta-box__note">Перезвоним за 5 минут. Отправляя заявку, вы соглашаетесь на обработку персональных данных.</p>
-      </fieldset>
-    </form>
-    <div class="quiz__done" hidden>
-      <h3>Готово. Перезвоним за 5 минут.</h3>
-      <p>Предварительно по вашему случаю:</p>
-      <p class="quiz__price" data-qprice></p>
-      <p class="cta-box__note">${esc(quiz.discount)}</p>
-    </div>
-  </div>
-</div></section>
-
-<section class="section" id="kids" aria-labelledby="kd-title"><div class="wrap split">
-  <div class="split__img" data-ph data-clip data-parallax>${img(kids.img, "Детская стоматология", depth)}${ph("Детям")}</div>
-  <div class="kids__text">
-    <span class="label">Детям</span>
-    <h2 id="kd-title" class="kids__title" data-split>${esc(kids.title)}</h2>
-    <p class="fork__sub" data-reveal>${esc(kids.sub)}</p>
-    <p class="sr__text" data-reveal>${esc(kids.text)}</p>
-    ${facts(kids.facts)}
-    <blockquote class="sr__quote" data-reveal>«${esc(kids.quote[0])}»<cite>${esc(kids.quote[1])}</cite></blockquote>
-    ${ctaBox(kids.offer, act("Записать ребёнка", "book", p, { cls: "btn--lg", reason: "Ребёнок" }), `<a class="link" href="uslugi/detskaya.html">Детская стоматология</a>`, kids.note)}
-  </div>
-</div></section>
-
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Врачи</span><h2 id="tm-title" data-split>Кто будет вас лечить</h2></div><p>${esc(home.team.intro)}</p></div>
+  <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>
   <div class="chips team__tabs" role="tablist" data-tabs="team">
     ${[["", "Все"], ["lechenie-zubov", "Терапия"], ["implantaciya", "Хирургия и имплантация"], ["protezirovanie", "Ортопедия"], ["ortodontiya", "Ортодонтия"], ["detskaya", "Детям"]].map(([v, t], i) => `<button class="chip" type="button" role="tab" data-tab="${v}" aria-selected="${i === 0}">${t}</button>`).join("")}
   </div>
   <div class="team__grid">${doctors.map((d) => doctorCard(d, depth)).join("")}</div>
-  <div class="strip" data-reveal><p>${esc(home.team.more)}</p>${act("Перезвоните мне", "call", p, { cls: "btn--ghost" })}</div>
 </div></section>
 
 <section class="section reviews" id="reviews" aria-labelledby="rv-title">
   <div class="wrap section__head"><div><span class="label">Отзывы</span><h2 id="rv-title" data-split>Что пишут пациенты</h2></div></div>
-  <div class="wrap"><div class="rt" aria-label="Оценки клиники на площадках" data-reveal>
+  <div class="wrap"><div class="rt rt--two" aria-label="Оценки клиники на площадках" data-reveal>
     <div class="rt-avg">
       <div class="rt-avg__num">${rating.avg}</div>
       <div class="rt-stars" role="img" aria-label="5 из 5">${star.repeat(5)}</div>
       <p class="rt-avg__cap">${esc(rating.avgCap)}</p>
     </div>
     <div class="rt-sites">
-      ${[["ya", "Я", clinic.ratings[2], "reviews_yandex"], ["pd", '<span class="pd-word"><b>про</b><span>докторов</span></span>', clinic.ratings[0], "reviews_prodoctorov"], ["2gis", "2ГИС", clinic.ratings[1], "reviews_2gis"]].map(([k, mark, r, goal]) => `<a class="rt-site" href="${r.url}"${ext} data-goal="${goal}">
-        <span class="rt-site__top"><span class="rt-mark rt-mark--${k}">${mark}</span><span class="rt-site__val">${r.value}${star}</span></span>
+      ${[["ya", "images/brand/yandex-maps.svg", clinic.ratings[2], "reviews_yandex"], ["2gis", "images/brand/2gis.png", clinic.ratings[1], "reviews_2gis"]].map(([k, logo, r, goal]) => `<a class="rt-site" href="${r.url}"${ext} data-goal="${goal}">
+        <span class="rt-site__top"><span class="rt-mark rt-mark--${k}"><img src="${logo}" alt="" loading="lazy"></span><span class="rt-site__val">${r.value}${star}</span></span>
         <span><span class="rt-site__name">${esc(r.site)}</span><span class="rt-site__count">${esc(r.count)}</span></span>
         <span class="rt-site__link">Смотреть отзывы</span>
       </a>`).join("")}
     </div>
     <div class="rt-pd">
-      <a class="rt-seal" href="${clinic.prodoctorov}"${ext} data-goal="reviews_prodoctorov" aria-label="Рейтинг 4,9 на ПроДокторов"><span class="rt-seal__in"><span class="rt-seal__num">4,9</span><span class="rt-seal__cap">199 отзывов<br>на сайте</span><span class="pd-word"><b>про</b><span>докторов</span></span></span></a>
+      <a class="rt-seal" href="${clinic.prodoctorov}"${ext} data-goal="reviews_prodoctorov" aria-label="Рейтинг 4,9 на ПроДокторов"><span class="rt-seal__in"><span class="rt-seal__num">4,9</span><span class="rt-seal__cap">199 отзывов</span><img class="rt-seal__logo" src="images/brand/prodoctorov.svg" alt="ПроДокторов" loading="lazy"></span></a>
       <div class="rt-pd__text">
         <p class="rt-pd__quote">${esc(rating.pdText)}</p>
-        <a class="btn btn--ghost rt-btn" href="${home.reviewsUrl}"${ext} data-goal="reviews_prodoctorov">Читать отзывы на ПроДокторов</a>
+        <a class="btn btn--ghost rt-btn" href="${home.reviewsUrl || clinic.prodoctorov}"${ext} data-goal="reviews_prodoctorov">Читать отзывы на ПроДокторов</a>
       </div>
     </div>
   </div></div>
   <div class="rv__rows">
     ${[home.reviews.slice(0, 9), home.reviews.slice(9)].map((row, r) => `<div class="rv__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map((q, j) => `<figure class="rv${q.length > 110 ? " rv--long" : q.length < 60 ? " rv--short" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><blockquote>«${esc(q)}»</blockquote></figure>`).join("")}</div>`).join("")}
   </div>
-  <div class="wrap">${ctaBox("", act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg" }), "", "Перезвоним за 5 минут.")}</div>
 </section>
 
-<section class="tour on-dark" id="clinic" aria-labelledby="tr-title">
-  <div class="tour__pin">
-    <div class="tour__frame">${img(["images/clinic/2gis-04.jpg"], "Лечебный кабинет стоматологии «Умная Медицина»", depth)}</div>
-    <div class="tour__title wrap"><span class="label label--light">Клиника изнутри</span><h2 id="tr-title" data-split>Здесь вас ждут</h2><p>Лечебные кабинеты, 3D-томограф Vatech, панорамный рентген и стерилизационная. ${esc(home.tour)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>
-  </div>
-  <div class="tour__rows" aria-label="Фото клиники">
-    ${[pics.tour.slice(0, 6), pics.tour.slice(5)].map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap], j) => `<figure${j >= row.length ? ' aria-hidden="true"' : ""}>${img([`images/clinic/${f}.jpg`], cap, depth)}<figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
-  </div>
-</section>
-
-<section class="section section--sage" id="pricing" aria-labelledby="pr-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Цены</span><h2 id="pr-title" data-split>Цены до того, как вы сели в кресло</h2></div><p>Цены на 15.10.2026 из прайса клиники. Точную сумму врач запишет в план лечения, и она попадёт в договор.</p></div>
-  <div class="pricing">
-    <aside class="offer" data-reveal>
-      ${offers.map((o, i) => `<div class="offer__item"${i ? " hidden" : ""}>
-        <span class="label label--light">${esc(o.tag)}</span>
-        <h3>${esc(o.title)}</h3>
-        ${o.price ? `<p class="offer__price"><b>${esc(o.price)}</b>${o.old ? `<s>${esc(o.old)}</s>` : ""}</p>` : ""}
-        <ul>${o.items.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
-        ${act(o.btn, o.act, p, { cls: "btn--light", reason: o.reason })}
-      </div>`).join("")}
-      <div class="offer__switch">${offers.map((o, i) => `<button type="button" aria-label="${esc(o.title)}" aria-pressed="${i === 0}"></button>`).join("")}</div>
-    </aside>
-    <div>
-      <div class="ptabs" role="tablist" data-tabs="price">${priceTabs.map(([t], i) => `<button class="chip" type="button" role="tab" data-tab="p${i}" aria-selected="${i === 0}">${esc(t)}</button>`).join("")}</div>
-      ${priceTabs.map(([t, keys], i) => `<div class="ppanel" data-panel="price" data-key="p${i}"${i ? " hidden" : ""}>${plist(keys, 9)}</div>`).join("")}
-      <div class="pricing__foot"><p>${esc(home.priceFoot)}</p><div class="cta-box__row">${act("Получить план с ценой", "book", p)}<a class="link" href="ceny.html">Весь прайс</a></div></div>
-    </div>
-  </div>
-</div></section>
-
-<section class="section" id="faq" aria-labelledby="fq-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">Вопросы</span><h2 id="fq-title" data-split>Что спрашивают перед первым визитом</h2></div></div>
-  ${faqBlock(home.faq)}
-  <div class="strip" data-reveal><p>${esc(home.faqMore)}</p><div class="cta-box__row">${act("Написать", "write", p)}${act("Перезвоните мне", "call", p, { cls: "btn--ghost" })}</div></div>
+<section class="section" id="faq" aria-labelledby="fq-title"><div class="wrap faq faq--short">
+  <div class="faq__side"><span class="label">Вопросы</span><h2 id="fq-title" class="section__title" data-split>Частые вопросы</h2><p class="faq__more">Не нашли ответ? Позвоните <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a> или оставьте номер, перезвоним за 5 минут.</p></div>
+  <div class="faq__list">${D.faq.map(([q, a], i) => `<details class="qa"${i ? "" : " open"}><summary>${esc(q)}<i aria-hidden="true"></i></summary><div class="qa__a"><p>${esc(a)}</p></div></details>`).join("")}</div>
 </div></section>
 
 ${place()}
@@ -632,7 +534,7 @@ function pageDoctor(d) {
       <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../index.html#team">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
       <span class="label label--light doc-hero__role">${esc(d.title)}</span>
       <h1><span data-split>${esc(last)}</span> <span data-split>${esc(given.join(" "))}</span></h1>
-      ${d.exp || d.courses.length ? `<ul class="doc-hero__facts">
+      ${d.claims ? `<ul class="doc-hero__facts">${d.claims.map(([n, t]) => `<li><b>${esc(n)}</b><span>${esc(t)}</span></li>`).join("")}</ul>` : d.exp || d.courses.length ? `<ul class="doc-hero__facts">
         ${d.exp ? `<li><b data-count="${d.exp}">${d.exp}</b><span>${plural(d.exp, "год", "года", "лет")} стажа</span></li>` : ""}
         ${d.courses.length ? `<li><b data-count="${d.courses.length}">${d.courses.length}</b><span>${plural(d.courses.length, "курс", "курса", "курсов")} повышения<br>квалификации</span></li>` : ""}
       </ul>` : ""}

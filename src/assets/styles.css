@@ -963,3 +963,96 @@ html:not(.js-intro) .intro { display: none; }
   .btn, .btn--lg { font-size: 15px; padding-left: 14px; padding-right: 14px; }
   .doc__cta { font-size: 14px; padding-left: 8px; padding-right: 8px; }
 }
+
+/* ---------- вариант 2 (16.10): главная по логике Тридента в том же дизайне ---------- */
+/* шапка: логотип не сжимается и не уходит под меню; «Услуги» раскрываются списком направлений */
+.logo { flex: none; }
+.nav { min-width: 0; }
+.nav__drop { position: relative; display: flex; }
+.nav .nav__panel { position: absolute; top: calc(100% + 18px); left: -14px; z-index: 5; width: 540px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; padding: 12px; border-radius: var(--radius); background: var(--paper); box-shadow: 0 1px 0 rgba(12, 36, 16, .06), 0 28px 60px -28px rgba(12, 36, 16, .5); opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity .3s var(--ease), transform .3s var(--ease), visibility 0s .3s; }
+.nav .nav__panel::before { content: ""; position: absolute; left: 0; right: 0; top: -20px; height: 20px; }
+.nav__drop:hover .nav__panel, .nav__drop:focus-within .nav__panel { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.nav .nav__panel a { display: grid; gap: 3px; padding: 12px 14px; border-radius: 14px; white-space: normal; }
+.nav .nav__panel a span { font-weight: 500; }
+.nav .nav__panel a small { font-size: 13px; color: var(--muted); }
+.nav .nav__panel a:hover { background: var(--sage-2); }
+
+/* меню на телефоне: меню сайта, а не якоря лендинга */
+.menu { overflow-y: auto; }
+.menu nav { margin: 36px 0; }
+.menu__svc summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; font: 500 clamp(34px, 9vw, 56px)/1.1 var(--display); letter-spacing: -.03em; }
+.menu__svc summary::-webkit-details-marker { display: none; }
+.menu__svc summary::after { content: "+"; flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line-on-dark); font: 400 26px/1 var(--body); transition: transform .4s var(--ease), background .3s; }
+.menu__svc[open] summary::after { transform: rotate(45deg); background: var(--green); border-color: var(--green); }
+.menu nav .menu__list { display: grid; gap: 0; padding: 8px 0 16px; }
+.menu nav .menu__list a { display: block; padding: 8px 0; font: 400 19px/1.3 var(--body); letter-spacing: 0; color: rgba(255, 255, 255, .8); }
+
+/* первый экран: строка с акцией вместо карточки */
+.hero h1 { font-size: clamp(44px, 6.8vw, 112px); max-width: 13ch; }
+.hero__promo { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 22px; padding: 8px 20px 8px 8px; border-radius: 999px; background: rgba(41, 153, 38, .94); font-size: 16px; line-height: 1.3; }
+.hero__promo-tag { padding: 7px 12px; border-radius: 999px; background: #fff; color: var(--green-deep); font: 500 12px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; }
+.hero__promo b { font: 500 20px/1 var(--display); letter-spacing: -.02em; }
+.hero__promo s { color: rgba(255, 255, 255, .72); }
+.hero__actions { margin-top: 28px; }
+
+/* услуги и цены вкладками */
+.section__aside { display: grid; gap: 14px; justify-items: start; max-width: 460px; }
+.section__aside p { color: var(--muted); }
+.dirs__tabs { margin-bottom: 26px; }
+.dir { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: clamp(20px, 3vw, 40px); align-items: start; }
+.dir[hidden] { display: none; }
+.offer.dir__card { position: relative; top: auto; display: grid; justify-items: start; }
+.dir__card h3 { margin: 18px 0 4px; }
+.dir__card .offer__price { margin: 14px 0 12px; }
+.dir__promo { max-width: 36ch; margin: 8px 0 28px; color: rgba(255, 255, 255, .86); }
+.dir__title { font-size: clamp(28px, 2.6vw, 40px); letter-spacing: -.03em; }
+.dir__lead { max-width: 62ch; margin: 14px 0 24px; color: var(--muted); }
+.dir .plist b s { margin-left: 8px; font: 400 15px/1 var(--body); color: var(--muted); }
+.dir__links { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-top: 24px; }
+
+/* врачи: главный врач первым */
+.doc__role--chief { color: var(--green-deep); font-weight: 500; }
+
+/* отзывы: оригинальные значки площадок, ПроДокторов только печатью */
+.rt--two .rt-sites { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.rt-mark--ya, .rt-mark--2gis { padding: 0; background: #fff; overflow: hidden; }
+.rt-mark--ya img { width: 26px; height: 26px; }
+.rt-mark--2gis img { width: 100%; height: 100%; object-fit: cover; }
+.rt-seal__logo { width: clamp(96px, 9vw, 124px); height: auto; margin-top: 4px; }
+
+/* три вопроса */
+.faq--short .section__title { margin-top: 18px; }
+.faq__more { max-width: 36ch; margin-top: 22px; color: var(--muted); }
+.faq__more a { color: var(--text); font-weight: 500; text-decoration: none; white-space: nowrap; }
+.faq__list { border-top: 1px solid var(--line); }
+
+/* окно при долгом просмотре: заявка, крупный крестик, «Продолжить смотреть сайт» */
+.modal--exit .modal__x { width: 54px; height: 54px; top: 12px; right: 12px; background: var(--ink); border-color: var(--ink); color: #fff; }
+.modal--exit .modal__x svg { width: 24px; height: 24px; }
+.modal--exit h2 { padding-right: 64px; }
+.modal__later { margin-top: 10px; }
+.footer__form .cta-box__note a { color: inherit; }
+
+@media (max-width: 1024px) {
+  .dir { grid-template-columns: minmax(0, 1fr); }
+  .dir__card { order: 2; }
+}
+@media (max-width: 760px) {
+  .hero h1 { font-size: clamp(38px, 10.4vw, 56px); }
+  .hero__promo { font-size: 15px; border-radius: 22px; }
+  .section__aside { max-width: none; }
+  .dir .plist li { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 14px 2px; }
+  .dir .plist b { font-size: 17px; }
+  .mobilebar { grid-template-columns: 1fr 1.3fr; }
+  .mobilebar a:nth-child(2) { box-shadow: none; }
+  /* врачи листаются свайпом, по одной карточке на экран */
+  .team__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px; margin-inline: calc(-1 * var(--gutter)); padding: 0 var(--gutter) 6px; scrollbar-width: none; }
+  .team__grid::-webkit-scrollbar { display: none; }
+  .team__grid .doc { flex: 0 0 76%; scroll-snap-align: start; }
+}
+/* без анимаций лента этапов не закрепляется, поэтому карточки переносятся, а не уезжают за край */
+.no-anim .feat__pin { height: auto; }
+.no-anim .feat__track { flex-wrap: wrap; width: auto; padding-right: max(var(--gutter), (100vw - 1440px) / 2); }
+@media (max-width: 760px) { .rt--two .rt-sites { grid-template-columns: minmax(0, 1fr); } }
+/* в шапке теперь меньше пунктов: телефону хватает места с 1240 px */
+@media (min-width: 1240px) { .header__phone { display: grid; } }

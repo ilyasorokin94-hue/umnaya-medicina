@@ -111,7 +111,7 @@
         $$(".works__grid .case").forEach((c) => { const ok = !val || c.dataset.cat === val; c.hidden = !ok || (c.dataset.extra === "1" && !worksOpen); if (!c.hidden) shown.push(c); });
         fadeIn(shown);
       } else {
-        $$(`[data-panel="${kind}"]`).forEach((p) => { p.hidden = p.dataset.key !== val; if (!p.hidden) fadeIn($$("li, .qa", p)); });
+        $$(`[data-panel="${kind}"]`).forEach((p) => { p.hidden = p.dataset.key !== val; if (!p.hidden) fadeIn($$(".dir__card, li, .qa", p)); });
       }
       ST?.refresh();
     }));
@@ -280,14 +280,17 @@
     });
   });
 
-  // окно при уходе со страницы: один раз за визит, только на компьютере
-  if (fine && $("#m-exit")) {
+  // окно-заявка: один раз за визит. На компьютере, когда курсор уходит из окна (не раньше 15 с),
+  // на любом устройстве после 60 с на сайте. Не показываем, если человек уже открывал любое окно.
+  if ($("#m-exit")) {
     const t0 = Date.now();
-    document.addEventListener("mouseout", (e) => {
-      if (e.relatedTarget || e.clientY > 8 || openM || anyModal || Date.now() - t0 < 15000) return;
-      try { if (sessionStorage.getItem("um-exit")) return; sessionStorage.setItem("um-exit", "1"); } catch (err) { return; }
+    const tryExit = () => {
+      if (openM || anyModal) return;
+      try { if (sessionStorage.getItem("um2-exit")) return; sessionStorage.setItem("um2-exit", "1"); } catch (err) { return; }
       showModal("exit");
-    });
+    };
+    if (fine) document.addEventListener("mouseout", (e) => { if (!e.relatedTarget && e.clientY <= 8 && Date.now() - t0 > 15000) tryExit(); });
+    setTimeout(tryExit, 60000);
   }
 
   // расчёт All-on-4: система и число челюстей
@@ -361,7 +364,7 @@
     const tl = G.timeline();
     tl.from($(".hero__media img", h), { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0)
       .from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .from($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__actions > *, .hero__note, .hero__offer, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24, duration: 1, stagger: 0.07 }, 0.4)
+      .from($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .hero__offer, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24, duration: 1, stagger: 0.07 }, 0.4)
       .from(".header__bar", { y: -24, autoAlpha: 0, duration: 0.9 }, 0.2);
   };
 
@@ -371,7 +374,7 @@
   const intro = $(".intro");
   if (intro && root.classList.contains("js-intro")) {
     lenis?.stop();
-    try { sessionStorage.setItem("um-intro", "1"); } catch (e) { /* приватный режим */ }
+    try { sessionStorage.setItem("um2-intro", "1"); } catch (e) { /* приватный режим */ }
     G.timeline({ onComplete: () => { intro.remove(); lenis?.start(); root.classList.remove("js-intro"); } })
       .from(".intro__logo", { autoAlpha: 0, y: 16, duration: 0.8 })
       .from(".intro__word", { autoAlpha: 0, duration: 0.8 }, 0.15)
@@ -472,10 +475,11 @@
       .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
       .to({}, { duration: 0.25 });
   }
-  // ленты фото и отзывов едут навстречу друг другу
+  // ленты фото и отзывов едут навстречу друг другу; за один оборот колеса проезжает больше карточек (просьба Ilya 16.10)
   $$(".tour__row, .rv__row").forEach((row) => {
     const d = parseFloat(row.dataset.dir) || -1;
-    G.fromTo(row, { x: () => (d < 0 ? 0 : -innerWidth * 0.2) }, { x: () => (d < 0 ? -innerWidth * 0.2 : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
+    const dist = () => Math.min(row.scrollWidth / 2, innerWidth * (innerWidth <= 760 ? 0.9 : 0.6));
+    G.fromTo(row, { x: () => (d < 0 ? 0 : -dist()) }, { x: () => (d < 0 ? -dist() : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
   });
 
   // бегущая строка: скорость плавно следует за скоростью прокрутки, направление — за её направлением
