@@ -292,7 +292,7 @@ html:not(.js-intro) .intro { display: none; }
 .place__btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; }
 
 /* ---------- подвал ---------- */
-.footer { position: relative; background: var(--ink); color: #fff; overflow: hidden; }
+.footer { position: relative; background: var(--ink); color: #fff; overflow: hidden; overflow: clip; }
 .footer__in { padding: clamp(70px, 9vw, 120px) 0 28px; }
 .footer__cta { display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: end; padding-bottom: clamp(50px, 6vw, 80px); border-bottom: 1px solid var(--line-on-dark); }
 .footer__cta h2 { font-size: clamp(38px, 5.4vw, 86px); letter-spacing: -.045em; max-width: 14ch; }
@@ -1571,4 +1571,52 @@ html:not(.js-intro) .intro { display: none; }
   .cb__btn { height: 44px; padding: 0 18px; font-size: 15px; }
   .cb__alt { margin-top: 14px; }
   .cb__alt .btn { width: 100%; }
+}
+
+/* ---------- подвал по механике Лава Дент: большой логотип во всю ширину, при прокрутке
+   он уменьшается и закрепляется слева, а справа проезжает колонка контактов ---------- */
+.fstage { --fpin: calc(var(--header-h) + 14px + 34px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; padding: clamp(44px, 5vw, 72px) 0 clamp(48px, 5vw, 80px); }
+.fstage__pin { min-width: 0; }
+.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 0; will-change: transform; }
+.fstage__logo img { display: block; width: 100%; max-width: none; height: auto; max-height: none; aspect-ratio: 106548 / 19978; object-fit: contain; filter: brightness(0) invert(1); opacity: .96; }
+.fstage__logo .footer__word { text-align: left; font-size: clamp(44px, 10vw, 180px); }
+.fstage__info { display: grid; gap: clamp(36px, 4vw, 56px); align-content: start; }
+.fstage__group { display: grid; gap: 14px; align-content: start; }
+.fstage__group h3 { font: 500 13px/1 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted-on-dark); margin-bottom: 4px; }
+.fstage__big { justify-self: start; font: 500 clamp(28px, 2.4vw, 38px)/1.15 var(--display); letter-spacing: -.02em; color: #fff; text-decoration: none; padding-bottom: 10px; background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat; transition: color .3s; }
+.fstage__big--mail { font-size: clamp(22px, 1.9vw, 30px); }
+.fstage__big:hover { color: var(--green-hi); }
+.fstage__addr { font: 500 clamp(22px, 1.9vw, 30px)/1.25 var(--display); letter-spacing: -.02em; max-width: 20ch; text-wrap: balance; }
+.fstage__text { font-size: 17px; color: rgba(255, 255, 255, .86); }
+.fstage__links, .fstage__list { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 15px; }
+.fstage__list--2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px; }
+.fstage a:not(.fstage__big) { color: rgba(255, 255, 255, .86); text-decoration: none; transition: color .3s; }
+.fstage a:not(.fstage__big):hover { color: var(--green-hi); }
+.fstage__links a { text-decoration: underline !important; text-underline-offset: 5px; text-decoration-color: rgba(255, 255, 255, .35) !important; }
+
+@media (min-width: 761px) and (max-width: 1024px) {
+  .fstage__info { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 30px; }
+  .fstage__info > :nth-child(-n+2) { grid-column: 1 / -1; }
+}
+/* компьютер: две колонки, логотип липнет под шапкой; его ширину и уменьшение задаёт app.js */
+@media (min-width: 1025px) {
+  .fstage { grid-template-columns: minmax(0, 1fr) minmax(0, 470px); column-gap: clamp(48px, 6vw, 120px); }
+  .fstage__pin { position: sticky; top: var(--fpin); align-self: start; }
+  .fstage__logo { width: var(--fstage-w, 100%); }
+  .fstage__info { padding-top: max(0px, calc(100svh - var(--fpin) - 190px)); }
+}
+.fstage__bg { display: none; }
+/* телефон: логотип во всю ширину, при прокрутке уменьшается и едет плашкой под шапкой, контакты уходят под неё */
+@media (max-width: 760px) {
+  .fstage { --fpin: calc(var(--header-h) + 18px); gap: 36px; padding: 36px 0 40px; }
+  .js-anim .fstage__pin { position: sticky; top: var(--fpin); z-index: 2; }
+  .js-anim .fstage__info { padding-bottom: 96px; }
+  .fstage__bg { display: block; position: absolute; left: calc(-1 * var(--gutter)); right: calc(-1 * var(--gutter)); top: calc(-1 * var(--fpin)); height: 100%; background: linear-gradient(180deg, var(--ink) calc(100% - 22px), rgba(12, 36, 16, 0)); opacity: 0; transition: opacity .25s; pointer-events: none; }
+  .fstage.is-stuck .fstage__bg { opacity: 1; }
+  .fstage__logo { position: relative; }
+  .fstage__big { font-size: 28px; }
+  .fstage__big--mail { font-size: 22px; }
+  .fstage__addr { font-size: 22px; }
+  .fstage__links, .fstage__list { font-size: 14px; gap: 2px 16px; }
+  .fstage__list--2 { gap: 0 16px; }
 }

@@ -235,35 +235,41 @@ function footer(depth) {
       </div>
     </div>
   </div>
-  <div class="footer__grid">
-    <div class="footer__col">
-      <h3>Стоматология</h3>
-      <a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a>
-      <a href="mailto:${clinic.email}">${esc(clinic.email)}</a>
-      <span>${esc(clinic.hours)}</span>
-    </div>
-    <div class="footer__col">
-      <h3>Адрес</h3>
-      <span>${esc(clinic.address)}</span>
-      <a href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}>Маршрут в Яндекс Картах</a>
-      <a href="${clinic.gis}"${ext}>Открыть в 2ГИС</a>
-    </div>
-    <nav class="footer__col" aria-label="Услуги">
-      <h3>Услуги</h3>
-      ${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html">${esc(svc[k].menu)}</a>`).join("")}
-    </nav>
-    <div class="footer__col">
-      <h3>Пациентам</h3>
-      <a href="${p}ceny.html">Полный прайс</a>
-      <a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a>
-      <a href="${clinic.vk}"${ext}>ВКонтакте</a>
-      <a href="https://um-med.com/assets/files/dogovor-oferta.pdf"${ext}>Договор-оферта</a>
-      <a href="https://um-med.com/assets/files/pol.pdf"${ext}>Политика обработки данных</a>
-      <a href="${clinic.mainSite}"${ext}>Многопрофильная клиника</a>
-      <a href="https://um-med.com/vacancies.html"${ext}>Вакансии</a>
+  <div class="fstage">
+    <div class="fstage__pin" aria-hidden="true"><i class="fstage__bg"></i><div class="fstage__logo footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div></div>
+    <div class="fstage__info">
+      <div class="fstage__group">
+        <h3>Контакты</h3>
+        <a class="fstage__big" href="${clinic.phoneHref}">${esc(clinic.phone)}</a>
+        <a class="fstage__big fstage__big--mail" href="mailto:${clinic.email}">${esc(clinic.email)}</a>
+      </div>
+      <div class="fstage__group">
+        <h3>Адрес</h3>
+        <p class="fstage__addr">${esc(clinic.address)}</p>
+        <p class="fstage__links"><a href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}>Маршрут в Яндекс Картах</a><a href="${clinic.gis}"${ext}>Открыть в 2ГИС</a></p>
+      </div>
+      <div class="fstage__group">
+        <h3>Часы работы</h3>
+        <p class="fstage__text">${esc(clinic.hours)}</p>
+      </div>
+      <nav class="fstage__group" aria-label="Услуги">
+        <h3>Услуги</h3>
+        <p class="fstage__list fstage__list--2">${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html">${esc(svc[k].menu)}</a>`).join("")}</p>
+      </nav>
+      <div class="fstage__group">
+        <h3>Пациентам</h3>
+        <p class="fstage__list fstage__list--2">
+          <a href="${p}ceny.html">Полный прайс</a>
+          <a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a>
+          <a href="${clinic.vk}"${ext}>ВКонтакте</a>
+          <a href="https://um-med.com/assets/files/dogovor-oferta.pdf"${ext}>Договор-оферта</a>
+          <a href="https://um-med.com/assets/files/pol.pdf"${ext}>Политика обработки данных</a>
+          <a href="${clinic.mainSite}"${ext}>Многопрофильная клиника</a>
+          <a href="https://um-med.com/vacancies.html"${ext}>Вакансии</a>
+        </p>
+      </div>
     </div>
   </div>
-  <div class="footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div>
   <div class="footer__legal">
     <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. Лицензия на медицинскую деятельность.</span>
     <span>Имеются противопоказания, необходима консультация специалиста.</span>

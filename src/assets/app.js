@@ -679,9 +679,37 @@
     return () => { wayTrig = null; way.classList.remove("is-pinned"); G.set(wayShots, { clearProps: "clipPath" }); G.set(imgs, { clearProps: "transform" }); };
   });
 
-  // подвал: логотип поднимается
-  const big = $(".footer__big");
-  if (big) G.from(big.children, { yPercent: 50, autoAlpha: 0, ease: "none", scrollTrigger: { trigger: ".footer", start: "top 85%", end: "bottom bottom", scrub: true } });
+  // подвал, как у Лава Дент: логотип сначала во всю ширину, пока справа поднимаются контакты,
+  // он уменьшается до левой колонки и остаётся под шапкой (position: sticky), пока колонка не кончится
+  const fst = $(".fstage");
+  if (fst) {
+    const pin = $(".fstage__pin", fst), logo = $(".fstage__logo", fst), info = $(".fstage__info", fst);
+    mm.add("(min-width: 1025px)", () => {
+      const setW = () => fst.style.setProperty("--fstage-w", fst.clientWidth + "px");
+      setW();
+      ST.addEventListener("refreshInit", setW);
+      const pinTop = () => parseFloat(getComputedStyle(pin).top) || 0;
+      const tw = G.fromTo(logo, { scale: 1, y: () => Math.round(innerHeight * 0.08) }, {
+        scale: () => pin.clientWidth / fst.clientWidth, y: 0, ease: "power2.out",
+        scrollTrigger: { trigger: fst, start: () => `top ${pinTop()}px`, end: () => "+=" + Math.max(240, parseFloat(getComputedStyle(info).paddingTop) - 40), scrub: true, invalidateOnRefresh: true },
+      });
+      return () => { ST.removeEventListener("refreshInit", setW); tw.scrollTrigger?.kill(); tw.kill(); fst.style.removeProperty("--fstage-w"); G.set(logo, { clearProps: "transform" }); };
+    });
+    // телефон: тот же принцип по вертикали: логотип липнет под шапкой и сжимается в плашку, контакты проезжают под ней
+    mm.add("(max-width: 760px)", () => {
+      const bg = $(".fstage__bg", fst), k = 0.56;
+      const pinTop = () => parseFloat(getComputedStyle(pin).top) || 0;
+      const st = { trigger: fst, start: () => `top ${pinTop()}px`, end: () => "+=" + Math.round(innerHeight * 0.3), scrub: true, invalidateOnRefresh: true };
+      const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: st })
+        .fromTo(logo, { scale: 1 }, { scale: k }, 0)
+        .fromTo(bg, { height: () => pinTop() + logo.offsetHeight + 22 }, { height: () => pinTop() + logo.offsetHeight * k + 30 }, 0);
+      const stuck = ST.create({ trigger: fst, start: () => `top ${pinTop() + 1}px`, end: () => `bottom ${pinTop() + logo.offsetHeight + 40}px`, toggleClass: "is-stuck" });
+      return () => { stuck.kill(); tl.scrollTrigger?.kill(); tl.kill(); G.set([logo, bg], { clearProps: "all" }); };
+    });
+    mm.add("(min-width: 761px) and (max-width: 1024px)", () => {
+      G.from(logo, { yPercent: 40, autoAlpha: 0, ease: "none", scrollTrigger: { trigger: fst, start: "top 95%", end: "top 55%", scrub: true } });
+    });
+  }
 
   // пересчитываем позиции, когда догрузились шрифты и картинки (до того, как пользователь доскроллил)
   const refresh = () => ST.refresh();
