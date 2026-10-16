@@ -338,7 +338,14 @@ function place() {
   return `<section class="section" id="contacts" aria-labelledby="ct-title"><div class="wrap">
   <div class="section__head"><div><span class="label">Контакты</span><h2 id="ct-title" data-split>${esc(home.contacts[0])}</h2></div><p>${esc(home.contacts[1])}</p></div>
   <div class="place">
-    <div class="place__map" data-ph data-clip><iframe title="Карта: стоматология на Громова, 10/2" src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm" loading="lazy"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button>${ph("Карта")}</div>
+    <div class="place__map" data-ph data-clip>
+      <div class="place__go">
+        <p class="place__addr">Громова, 10/2<small>пгт Удельная, 5 минут от Жуковского. Своя парковка у входа, рядом многопрофильная клиника на Громова, 10.</small></p>
+        <ul class="place__towns" aria-label="К нам ездят из">${["Жуковский", "Раменское", "Быково", "Ильинский", "Красково", "Малаховка", "Островцы"].map((t) => `<li>${t}</li>`).join("")}</ul>
+        <div class="place__apps"><a class="place__app" href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}><span class="rt-mark rt-mark--ya"><img src="${pick(["images/brand/yandex-maps.svg"], 0).src}" alt=""></span>Маршрут в Яндекс Картах</a><a class="place__app" href="${clinic.gis}"${ext}><span class="rt-mark rt-mark--2gis"><img src="${pick(["images/brand/2gis.png"], 0).src}" alt=""></span>Открыть в 2ГИС</a></div>
+        <button class="place__show" type="button">Показать карту</button>
+      </div>
+      <iframe title="Карта: стоматология на Громова, 10/2" data-src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm" loading="lazy"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button>${ph("Карта")}</div>
     <div class="place__info" data-reveal>
       <h3>Умная Медицина. Стоматология</h3>
       <dl class="place__list">
@@ -377,9 +384,14 @@ function pageHome() {
     <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
     <ul class="hero__facts">${D.facts.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
     <p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>
+    <ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short)}</span></a></li>`).join("")}</ul>
   </div>
   <figure class="hero__media" data-ph>${heroImg}${ph()}</figure>
 </div></section>
+
+<section class="slogan on-dark" aria-label="Сначала думаем. Потом лечим.">
+  ${marquee("Сначала думаем. <em>Потом лечим.</em>")}
+</section>
 
 <section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><p>${esc(D.services.text)}</p><a class="link" href="ceny.html">Весь прайс</a></div></div>
@@ -403,9 +415,10 @@ function pageHome() {
 
 <section class="tour on-dark" id="clinic" aria-labelledby="tr-title">
   <div class="tour__pin">
-    <div class="tour__frame">${img([D.clinic.frame], "Лечебный кабинет стоматологии «Умная Медицина»", depth)}</div>
-    <div class="tour__title wrap"><span class="label label--light">${esc(D.clinic.label)}</span><h2 id="tr-title" data-split>${esc(D.clinic.title)}</h2><p>${esc(D.clinic.text)}</p></div>
+    <div class="tour__frame">${img(D.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»", depth)}</div>
+    <div class="tour__title wrap"><span class="label label--light">${esc(D.clinic.label)}</span><h2 id="tr-title" data-split>${esc(D.clinic.title)}</h2><p>${esc(D.clinic.text)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>
   </div>
+  <p class="tour__lead wrap" aria-hidden="true">${esc(D.clinic.text)}</p>
   <div class="tour__rows" aria-label="Фото клиники">
     ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
   </div>
@@ -420,7 +433,6 @@ function pageHome() {
     </div></div>
   </div>
   <div class="wrap cta-strip"><p>${esc(D.path.note)}</p>${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true })}</div>
-  ${marquee("Сначала думаем. <em>Потом лечим.</em>")}
 </section>
 
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
@@ -435,7 +447,7 @@ function pageHome() {
   <div class="wrap section__head"><div><span class="label">Отзывы</span><h2 id="rv-title" data-split>Что пишут пациенты</h2></div></div>
   <div class="wrap"><div class="rt" aria-label="Оценки клиники на площадках" data-reveal>
     <div class="rt-avg">
-      <div class="rt-avg__num">${rating.avg}</div>
+      <div class="rt-avg__num" data-count="${rating.avg}">${rating.avg}</div>
       <div class="rt-stars" role="img" aria-label="5 из 5">${star.repeat(5)}</div>
       <p class="rt-avg__cap">${esc(rating.avgCap)}</p>
     </div>
@@ -463,7 +475,7 @@ function pageHome() {
 </section>
 
 <section class="section" id="faq" aria-labelledby="fq-title"><div class="wrap faq faq--short">
-  <div class="faq__side"><span class="label">Вопросы</span><h2 id="fq-title" class="section__title" data-split>Частые вопросы</h2><p class="faq__more">Не нашли ответ? Позвоните <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a> или оставьте номер, перезвоним за 5 минут.</p></div>
+  <div class="faq__side"><span class="label">Вопросы</span><h2 id="fq-title" class="section__title" data-split>Частые вопросы</h2><p class="faq__more">Не нашли ответ? Позвоните <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a> или оставьте номер, перезвоним за 5 минут.</p>${act("Перезвоните мне", "call", p, { cls: "btn--ghost faq__btn" })}</div>
   <div class="faq__list">${D.faq.map(([q, a], i) => `<details class="qa"${i ? "" : " open"}><summary>${esc(q)}<i aria-hidden="true"></i></summary><div class="qa__a"><p>${esc(a)}</p></div></details>`).join("")}</div>
 </div></section>
 
