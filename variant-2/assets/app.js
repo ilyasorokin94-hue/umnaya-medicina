@@ -14,7 +14,7 @@
 
   // ---------- разбивка текста для анимаций ----------
   const splitWords = (el, cls = "sw") => {
-    const words = el.textContent.trim().split(/\s+/);
+    const words = el.textContent.trim().split(/[ \t\r\n]+/);
     el.setAttribute("aria-label", el.textContent.trim());
     el.innerHTML = words.map((w) => (cls === "sw" ? `<span class="sw" aria-hidden="true"><span>${w}</span></span>` : `<span class="${cls}" aria-hidden="true">${w}</span>`)).join(" ");
     return $$(cls === "sw" ? ".sw > span" : "." + cls, el);
@@ -256,15 +256,15 @@
       $$('input[name="reason"]', m).forEach((r) => (r.checked = !!reason && r.value === reason));
     }
     m.hidden = false;
-    openM = m; anyModal = true;
-    hidePop();
+    openM = m; if (id !== "offer") anyModal = true;
     root.classList.add("has-modal");
     lenis?.stop();
     if (anim) {
       G.fromTo(m, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" });
       G.fromTo($(".modal__box", m), { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
     }
-    ($("input:not([type=hidden]):not([type=radio])", m) || $("h2", m))?.focus({ preventScroll: true });
+    // окно, которое всплыло само, не забирает фокус в поле: человек его не звал
+    ((fine && id !== "offer" && $("input:not([type=hidden]):not([type=radio])", m)) || $("h2", m))?.focus({ preventScroll: true });
     return true;
   };
   function hideModal(instant) {
@@ -308,34 +308,28 @@
       const dm = $("#m-done");
       if (dm) { $("h2", dm).textContent = d ? d[0] : "Спасибо!"; $("[data-done-text]", dm).textContent = d ? d[1] : defDone; }
       f.reset();
-      if (f.closest(".pop")) hidePop();
       showModal("done");
     });
   });
 
-  // карточка-заявка в углу: через 40 секунд на странице или когда курсор уходит к вкладкам (не раньше 15 секунд).
-  // Один раз за визит, только на компьютере и только если человек ещё не открывал окна записи.
-  // Страницу не блокирует: прокрутка работает, закрыть можно крестиком или Esc.
-  const pop = $("#pop");
-  function hidePop() {
-    if (!pop || pop.hidden) return;
-    if (anim) G.to(pop, { autoAlpha: 0, y: 24, duration: 0.3, ease: "power2.in", onComplete: () => { pop.hidden = true; G.set(pop, { clearProps: "opacity,visibility,transform" }); } });
-    else pop.hidden = true;
+  // окно с предложением по центру: через 35 секунд на сайте, если вкладка открыта и человек уже пролистал первый экран,
+  // или когда курсор уходит к вкладкам (не раньше 15 секунд). Один раз за визит, после показа молчит 3 дня.
+  // Не всплывает поверх других окон и меню, во время ввода и у тех, кто уже открывал запись. Закрывается крестиком, Esc и кликом мимо.
+  const offer = $("#m-offer");
+  if (offer) {
+    const quiet = () => { try { return !!sessionStorage.getItem("um2-exit") || Date.now() - (+localStorage.getItem("um2-offer") || 0) < 3 * 864e5; } catch (err) { return true; } };
+    let seen = 0, deep = false;
+    addEventListener("scroll", () => { if (scrollY > innerHeight * 0.7) deep = true; }, { passive: true });
+    const tryShow = () => {
+      if (quiet() || anyModal) return clearInterval(tick);
+      if (openM || menu?.classList.contains("is-open") || document.activeElement?.matches?.("input, textarea, select")) return;
+      try { sessionStorage.setItem("um2-exit", "1"); localStorage.setItem("um2-offer", String(Date.now())); } catch (err) {}
+      clearInterval(tick);
+      showModal("offer");
+    };
+    const tick = setInterval(() => { if (!document.hidden && ++seen >= 35 && deep) tryShow(); }, 1000);
+    if (fine) document.addEventListener("mouseout", (e) => { if (!e.relatedTarget && e.clientY <= 8 && seen >= 15) tryShow(); });
   }
-  const showPop = () => {
-    if (!pop || !pop.hidden || openM || anyModal || menu?.classList.contains("is-open")) return;
-    try { if (sessionStorage.getItem("um2-exit")) return; sessionStorage.setItem("um2-exit", "1"); } catch (err) { return; }
-    pop.hidden = false;
-    if (anim) G.fromTo(pop, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.7, ease: "expo.out", clearProps: "transform" });
-  };
-  if (pop && fine) {
-    const t0 = Date.now();
-    setTimeout(showPop, 40000);
-    document.addEventListener("mouseout", (e) => { if (!e.relatedTarget && e.clientY <= 8 && Date.now() - t0 > 15000) showPop(); });
-  }
-  $$("[data-pop-close]").forEach((b) => b.addEventListener("click", hidePop));
-  // Esc закрывает карточку, только если не открыто окно (окно закрывается первым)
-  addEventListener("keydown", (e) => { if (e.key === "Escape" && !openM) hidePop(); }, true);
 
   // квиз: вопрос за вопросом, без номеров, полоска прогресса
   $$("[data-quiz]").forEach((form) => {
@@ -384,13 +378,15 @@
     const media = h.classList.contains("hero") && $(".hero__media", h);
     const small = phoneMQ.matches;
     if (media) tl.fromTo(media, { clipPath: small ? "inset(0% 0% 100% 0% round 22px)" : "inset(10% 6% 10% 6% round 22px)" }, { clipPath: "inset(0% 0% 0% 0% round 22px)", duration: small ? 1.4 : 1.6, ease: "power3.inOut" }, small ? 0.35 : 0);
-    tl.from($(".hero__media img", h), { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0)
-      .from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
+    const mimg = $(".hero__media img", h);
+    if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
+    tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
       .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4)
-      .from(".header__bar", { y: -24, autoAlpha: 0, duration: 0.9 }, 0.2);
+      .from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     const pb = $(".hero__promo b", h), ps = $(".hero__promo s", h);
     if (small && pb && ps) {
       const orig = pb.textContent, to = +orig.replace(/\D/g, ""), o = { v: +ps.textContent.replace(/\D/g, "") };
+      if (to && o.v > to) pb.textContent = ps.textContent.trim();
       if (to && o.v > to) tl.to(o, { v: to, duration: 1.4, ease: "power3.out", onUpdate: () => (pb.textContent = (Math.round(o.v / 100) * 100).toLocaleString("ru-RU").replace(/\s/g, "\u00a0") + "\u00a0₽"), onComplete: () => (pb.textContent = orig) }, 0.9);
     }
     const trio = $(".hero__trio", h);
@@ -424,7 +420,7 @@
   // на внутренних страницах текст первого экрана спокойно тает, на телефоне нет
   const mm = G.matchMedia();
   const hero = $(".hero");
-  if (hero) G.fromTo(".hero__media img", { yPercent: 0 }, { yPercent: -6, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
+  if (hero && $(".hero__media img", hero)) G.fromTo(".hero__media img", { yPercent: 0 }, { yPercent: -6, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
   mm.add("(min-width: 761px)", () => {
     const ph = $(".page-hero");
     if (ph) G.to($(".page-hero__in, .doc-hero__text", ph), { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
@@ -432,7 +428,7 @@
 
   // заголовки разделов: слова поднимаются из-под строки
   $$("[data-split]").forEach((el) => {
-    if (el.closest(".hero, .page-hero")) return;
+    if (el.closest(".hero, .page-hero, .tour__title")) return;
     G.from($$(".sw > span", el), { yPercent: 110, duration: 1.1, stagger: 0.04, ease: "power4.out", scrollTrigger: { trigger: el, start: "top 90%", once: true } });
   });
 
@@ -499,10 +495,16 @@
     const pin = $(".feat__pin"), track = $(".feat__track");
     if (!pin || !track) return;
     const dist = () => Math.max(0, track.scrollWidth - innerWidth);
-    const tw = G.to(track, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: pin, start: "center center", end: () => "+=" + dist(), pin: true, anticipatePin: 1, scrub: true, invalidateOnRefresh: true, refreshPriority: 1 } });
-    // вступительный текст слегка уходит, когда наезжают карточки
+    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: pin, start: "center center", end: () => "+=" + dist(), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 1 } });
+    tl.to(track, { x: () => -dist(), duration: 1 }, 0);
+    // вступительный текст начинает с полной яркости и слегка уходит, когда наезжают карточки
     const introCard = $(".fcard--intro", track);
-    if (introCard) G.to(introCard, { autoAlpha: 0.25, ease: "none", scrollTrigger: { trigger: introCard, containerAnimation: tw, start: "right 60%", end: "right 10%", scrub: true } });
+    if (introCard) tl.fromTo(introCard, { autoAlpha: 1 }, { autoAlpha: 0.25, duration: 0.35 }, 0.05);
+    // абзацы карточек одной высоты, чтобы заголовки стояли на одной линии
+    const ps = $$(".fcard:not(.fcard--intro) p", track);
+    const eq = () => { ps.forEach((x) => (x.style.minHeight = "")); const m = Math.max(...ps.map((x) => x.offsetHeight)); ps.forEach((x) => (x.style.minHeight = m + "px")); };
+    eq(); ST.addEventListener("refreshInit", eq);
+    return () => { ST.removeEventListener("refreshInit", eq); ps.forEach((x) => (x.style.minHeight = "")); };
   });
 
   // клиника изнутри: кадр раскрывается из карточки на весь экран, затем проявляется заголовок
@@ -511,10 +513,11 @@
     const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
     // на телефоне кадр стартует широкой карточкой, как фото в лентах, и закрепление короче
     const narrow = () => innerWidth <= 760;
-    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: () => (narrow() ? "+=85%" : "+=110%"), pin: true, anticipatePin: 1, scrub: true, invalidateOnRefresh: true, refreshPriority: 2 } });
+    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: () => (narrow() ? "+=85%" : "+=110%"), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 2 } });
     tl.fromTo(frame, { clipPath: () => (narrow() ? "inset(14% 4% 24% 4% round 22px)" : "inset(16% 22% 16% 22% round 28px)") }, { clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 1 }, 0)
       .fromTo(fim, { scale: () => (narrow() ? 1.1 : 1.25) }, { scale: 1, duration: 1 }, 0)
       .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
+      .fromTo($$(".sw > span", tt), { yPercent: 110 }, { yPercent: 0, duration: 0.3, stagger: 0.04, ease: "power3.out" }, 0.72)
       .to({}, { duration: 0.25 });
   }
   mm.add("(max-width: 760px)", () => {
@@ -544,8 +547,9 @@
   // Ленту дополняем копиями (для чтения с экрана скрыты), чтобы её хватило на весь сдвиг.
   $$(".tour__row, .rv__row").forEach((row) => {
     const d = parseFloat(row.dataset.dir) || -1;
-    const dist = () => (innerHeight + row.offsetHeight) * 1.2;
     const base = [...row.children];
+    const setW = () => base[base.length / 2].offsetLeft - base[0].offsetLeft;
+    const dist = () => Math.max((innerHeight + row.offsetHeight) * 1.2, row.classList.contains("rv__row") ? setW() - innerWidth : 0);
     const fill = () => {
       for (let n = 0; n < 8 && row.scrollWidth < dist() + innerWidth + 40; n++) base.forEach((c) => { const k = c.cloneNode(true); k.setAttribute("aria-hidden", "true"); row.appendChild(k); });
     };
@@ -556,10 +560,10 @@
 
   // бегущая строка: скорость плавно следует за скоростью прокрутки, направление — за её направлением
   $$(".marquee__track").forEach((tr) => {
-    const loop = G.to(tr, { xPercent: -50, duration: 30, ease: "none", repeat: -1 });
-    let dir = 1, cur = 1, target = 1;
+    const setX = G.quickSetter(tr, "xPercent");
+    let x = 0, dir = 1, cur = 1, target = 1;
     ST.create({ trigger: tr, start: "top bottom", end: "bottom top", onUpdate: (self) => { dir = self.direction; target = dir * (1 + Math.min(Math.abs(self.getVelocity()) / 400, 4)); } });
-    G.ticker.add(() => { target += (dir - target) * 0.04; cur += (target - cur) * 0.12; loop.timeScale(cur); });
+    G.ticker.add((time, dt) => { target += (dir - target) * 0.04; cur += (target - cur) * 0.12; x = (x - (cur * dt) / 600) % 50; if (x > 0) x -= 50; setX(x); });
   });
 
   // подвал: логотип поднимается
