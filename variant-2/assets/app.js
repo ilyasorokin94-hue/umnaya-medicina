@@ -159,6 +159,28 @@
     });
   });
 
+  // вопросы главной по принципу Lava Dental: тема раскрывается плюсом, внутри свои вопросы со своим плюсом.
+  // Как у них: пункты открываются независимо, по умолчанию открыты первая тема и её первый вопрос, раскрытие 0,5 с.
+  // Все ответы лежат в разметке, без скриптов работают обычные <details>.
+  $$(".faqt, .faqq").forEach((d) => {
+    const a = $(":scope > .faqt__body, :scope > .faqq__a", d);
+    $(":scope > summary", d).addEventListener("click", (e) => {
+      if (!anim) return;
+      e.preventDefault();
+      G.killTweensOf(a);
+      if (d.open && !d.classList.contains("is-off")) {
+        d.classList.add("is-off");
+        G.fromTo(a, { height: a.offsetHeight }, { height: 0, duration: 0.5, ease: "power4.out", onComplete: () => { d.open = false; d.classList.remove("is-off"); a.style.height = ""; ST.refresh(); } });
+        return;
+      }
+      const from = d.open ? a.offsetHeight : 0;
+      d.classList.remove("is-off");
+      d.open = true;
+      G.fromTo(a, { height: from }, { height: a.scrollHeight, duration: 0.5, ease: "power4.out", onComplete: () => { a.style.height = ""; ST.refresh(); } });
+      if (d.classList.contains("faqt")) G.fromTo($$(".faqq", a), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.05, delay: 0.05, ease: "power4.out", clearProps: "opacity,transform" });
+    });
+  });
+
   // «магнитные» кнопки
   if (anim && fine) {
     $$("[data-magnet]").forEach((b) => {
