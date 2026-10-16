@@ -198,7 +198,8 @@ def ellipsoid(X, Y, Z, c, r):
 
 def pulp_field(X, Y, Z):
     # камера пульпы: шире мезиодистально, свод с невысокими рогами под буграми, дно над фуркацией
-    ch = rbox(X, Y, Z, (0.25, 0.0, 0.75), (2.65, 1.75, 1.30), 1.05)
+    ch = rbox(X, Y, Z, (0.25, 0.0, 0.80), (2.65, 1.75, 1.15), 1.12)
+    ch = ch + 0.30 * np.exp(-((X - 0.1) / 1.3) ** 2) * smoothstep(0.9, -0.4, Z)      # выпуклое дно камеры
     horns = [((1.75, -1.10, 2.25), (0.62, 0.55, 1.20)),    # мезиощёчный
              ((-0.25, -1.20, 2.15), (0.58, 0.52, 1.00)),   # дистощёчный
              ((-2.05, -0.80, 1.95), (0.52, 0.50, 0.85)),   # дистальный
@@ -391,6 +392,14 @@ pulp = build("pulp", pulp_field, (-4.3, -2.9, -13.6), (4.6, 2.9, 4.2), HG * 0.75
 
 # ---------- материалы ----------
 SCAN_NODES = []      # узлы Map Range, куда на каждом кадре пишется высота плоскости
+VOL_SCATTER = float(os.environ.get("TOOTH_VS", "0.04"))   # рассеяние в толще, 1/мм
+VOL_ABS = float(os.environ.get("TOOTH_VA", "0.06"))       # поглощение в толще, 1/мм
+VOL_EMIT = float(os.environ.get("TOOTH_VE", "0.04"))      # «свечение плотности», на 1 мм пути
+CT_FROST = float(os.environ.get("TOOTH_FROST", "0.08"))   # матовость наружной стенки
+CT_BACK = float(os.environ.get("TOOTH_BACK", "0.65"))      # молочность дальней стенки на просвет
+CT_BACK_D = float(os.environ.get("TOOTH_BACKD", "0.3"))   # то же у дентина
+VOL_DENTIN = float(os.environ.get("TOOTH_VD", "0.035"))   # поглощение в дентине, 1/мм
+PULP_COL = tuple(float(x) for x in os.environ.get("TOOTH_PULP", "0.15,0.06,0.055").split(","))
 
 def nodes_of(m):
     nt = m.node_tree
@@ -404,12 +413,13 @@ def ct_factor(nt):
     nt.links.new(sep.outputs["Z"], mr.inputs["Value"])
     mr.inputs["From Min"].default_value = 100; mr.inputs["From Max"].default_value = 100.3
     SCAN_NODES.append(mr)
+    # луч уже внутри зуба (прошёл сквозь прозрачную часть) или смотрит на стенку изнутри — тоже вид КТ,
+    # иначе сквозь «стекло» была бы видна изнанка непрозрачной нижней части
     lp = nt.nodes.new("ShaderNodeLightPath")
-    gt = nt.nodes.new("ShaderNodeMath"); gt.operation = "GREATER_THAN"; gt.inputs[1].default_value = 0.5
-    nt.links.new(lp.outputs["Transmission Depth"], gt.inputs[0])
-    mx = nt.nodes.new("ShaderNodeMath"); mx.operation = "MAXIMUM"
-    nt.links.new(mr.outputs["Result"], mx.inputs[0]); nt.links.new(gt.outputs[0], mx.inputs[1])
-    return mx.outputs[0], sep
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    depth = _math(nt, "ADD", lp.outputs["Transparent Depth"], lp.outputs["Transmission Depth"])
+    inside = _math(nt, "MAXIMUM", _math(nt, "GREATER_THAN", depth, 0.5), geo.outputs["Backfacing"])
+    return _math(nt, "MAXIMUM", mr.outputs["Result"], inside), sep
 
 def mix_rgb(nt, fac, a, b):
     m = nt.nodes.new("ShaderNodeMix"); m.data_type = "RGBA"
@@ -458,10 +468,52 @@ def principled(nt, **kw):
         else: nt.links.new(v, b.inputs[k])
     return b
 
-def ct_glass(nt, base, transmission, rough, ior):
-    """Вид КТ: матовое стекло. Часть света проходит (шероховатое преломление), часть рассеивается молочным слоем."""
-    return principled(nt, Base_Color=base, Transmission_Weight=transmission, Roughness=rough, IOR=ior,
-                      Specular_IOR_Level=0.5).outputs[0]
+def ct_surface(nt, frost, back_milk, milk_col, gloss_rough=0.16, ior=1.45):
+    """Поверхность в виде КТ — матовое стекло без преломления.
+    Снаружи: прозрачность, френелевский блик и лёгкая матовость. Изнутри (дальняя стенка): прозрачность и
+    просвечивающий молочный слой — дальняя стенка светится на просвет, пульпа перед ней читается тёмной."""
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    gl = nt.nodes.new("ShaderNodeBsdfGlossy"); gl.inputs["Roughness"].default_value = gloss_rough
+    gl.inputs["Color"].default_value = (0.92, 0.92, 0.90, 1)
+    fr = nt.nodes.new("ShaderNodeFresnel"); fr.inputs["IOR"].default_value = ior
+    front = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(fr.outputs[0], front.inputs[0]); nt.links.new(tr.outputs[0], front.inputs[1]); nt.links.new(gl.outputs[0], front.inputs[2])
+    if frost:
+        df = nt.nodes.new("ShaderNodeBsdfDiffuse"); df.inputs["Color"].default_value = (*milk_col, 1)
+        m2 = nt.nodes.new("ShaderNodeMixShader"); m2.inputs[0].default_value = frost
+        nt.links.new(front.outputs[0], m2.inputs[1]); nt.links.new(df.outputs[0], m2.inputs[2])
+        front = m2
+    tl = nt.nodes.new("ShaderNodeBsdfTranslucent"); tl.inputs["Color"].default_value = (*milk_col, 1)
+    back = nt.nodes.new("ShaderNodeMixShader"); back.inputs[0].default_value = back_milk
+    nt.links.new(tr.outputs[0], back.inputs[1]); nt.links.new(tl.outputs[0], back.inputs[2])
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    mx = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(geo.outputs["Backfacing"], mx.inputs[0]); nt.links.new(front.outputs[0], mx.inputs[1]); nt.links.new(back.outputs[0], mx.inputs[2])
+    return mx.outputs[0]
+
+def volume(nt, scatter, scol, sigma_a, emit=0.0, ecol=(1, 1, 1), aniso=0.2):
+    """Толща в виде КТ: рассеяние (объём освещён), поглощение и слабое собственное «свечение плотности»,
+    как на рентгене: чем толще слой, тем светлее; пульпа заслоняет толщу за собой и читается тёмной."""
+    out = nt.nodes.get("Material Output")
+    parts = []
+    if scatter:
+        vs = nt.nodes.new("ShaderNodeVolumeScatter"); vs.inputs["Density"].default_value = scatter
+        vs.inputs["Color"].default_value = (*scol, 1); vs.inputs["Anisotropy"].default_value = aniso
+        parts.append(vs.outputs[0])
+    if max(sigma_a) > 0:
+        # у Volume Absorption коэффициент поглощения = Density * (1 - Color); задаём его по каналам, 1/мм
+        va = nt.nodes.new("ShaderNodeVolumeAbsorption"); va.inputs["Density"].default_value = 1.0
+        va.inputs["Color"].default_value = (*(1.0 - min(1.0, c) for c in sigma_a), 1)
+        parts.append(va.outputs[0])
+    if emit:
+        em = nt.nodes.new("ShaderNodeEmission"); em.inputs["Strength"].default_value = emit
+        em.inputs["Color"].default_value = (*ecol, 1)
+        parts.append(em.outputs[0])
+    sh = parts[0]
+    for p in parts[1:]:
+        ad = nt.nodes.new("ShaderNodeAddShader")
+        nt.links.new(sh, ad.inputs[0]); nt.links.new(p, ad.inputs[1]); sh = ad.outputs[0]
+    nt.links.new(sh, out.inputs["Volume"])
 
 def finish(nt, natural, ct, fac):
     out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
@@ -486,30 +538,33 @@ def mat_outer():
     enamel_col = mix_rgb(nt, tip.outputs["Result"], (0.80, 0.74, 0.62), (0.76, 0.75, 0.71))
     ao = nt.nodes.new("ShaderNodeAmbientOcclusion"); ao.inputs["Distance"].default_value = 0.7; ao.samples = 12
     enamel_col = mix_rgb(nt, ao.outputs["AO"], (0.50, 0.42, 0.31), enamel_col)
-    root_col = (0.70, 0.57, 0.40)
+    # корень: тёплый бежевый, чуть неравномерный по тону
+    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 0.35; nz.inputs["Detail"].default_value = 3
+    nt.links.new(nt.nodes.new("ShaderNodeTexCoord").outputs["Object"], nz.inputs["Vector"])
+    root_col = mix_rgb(nt, nz.outputs["Fac"], (0.74, 0.60, 0.42), (0.68, 0.55, 0.38))
     col = mix_rgb(nt, en, root_col, enamel_col)
     nat = principled(nt, Base_Color=col,
-                     Roughness=mix_f(nt, en, 0.50, 0.30),
+                     Roughness=mix_f(nt, en, 0.40, 0.30),
                      Subsurface_Weight=mix_f(nt, en, 0.25, mix_f(nt, tip.outputs["Result"], 0.35, 0.65)),
                      Subsurface_Radius=(1.0, 0.72, 0.48), Subsurface_Scale=0.45,
-                     Coat_Weight=mix_f(nt, en, 0.04, 0.22), Coat_Roughness=0.18)
+                     Coat_Weight=mix_f(nt, en, 0.10, 0.22), Coat_Roughness=mix_f(nt, en, 0.32, 0.18))
     nat.subsurface_method = "RANDOM_WALK"
-    ct = ct_glass(nt, mix_rgb(nt, en, (0.70, 0.68, 0.64), (0.80, 0.78, 0.73)), mix_f(nt, en, 0.74, 0.62), 0.24, 1.30)
-    finish(nt, nat.outputs[0], ct, fac)
+    finish(nt, nat.outputs[0], ct_surface(nt, CT_FROST, CT_BACK, (0.86, 0.83, 0.77)), fac)
+    # толща зуба в виде КТ: мягкое молочное рассеяние (до плоскости сюда смотрят только сквозь «стекло»)
+    volume(nt, VOL_SCATTER, (0.88, 0.85, 0.78), (VOL_ABS * 0.92, VOL_ABS, VOL_ABS * 1.15), VOL_EMIT, (1.0, 0.94, 0.85))
     return m
 
 def mat_dentin():
+    # дентин виден только сквозь «стекло»: поверхность прозрачная, толща чуть темнее и теплее эмали
     m, nt = new_mat("dentin")
-    fac, sep = ct_factor(nt)
-    nat = principled(nt, Base_Color=(0.74, 0.60, 0.42), Roughness=0.5)
-    ct = ct_glass(nt, (0.66, 0.63, 0.58), 0.86, 0.20, 1.03)
-    finish(nt, nat.outputs[0], ct, fac)
+    out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
+    nt.links.new(ct_surface(nt, 0.03, CT_BACK_D, (0.78, 0.74, 0.68), 0.3, 1.08), out.inputs["Surface"])
+    volume(nt, 0.0, (1, 1, 1), (VOL_DENTIN * 0.8, VOL_DENTIN, VOL_DENTIN * 1.3))
     return m
 
 def mat_pulp():
     m, nt = new_mat("pulp")
-    b = principled(nt, Base_Color=(0.33, 0.17, 0.15), Roughness=0.45, Subsurface_Weight=0.2,
-                   Subsurface_Radius=(1.0, 0.4, 0.3), Subsurface_Scale=0.2)
+    b = principled(nt, Base_Color=PULP_COL, Roughness=0.55)
     out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
     nt.links.new(b.outputs[0], out.inputs["Surface"])
     return m
@@ -588,7 +643,8 @@ try: scene.cycles.denoiser = "OPENIMAGEDENOISE"
 except Exception as ex: print("denoiser", ex)
 scene.cycles.max_bounces = 24; scene.cycles.glossy_bounces = 8
 scene.cycles.transmission_bounces = 24; scene.cycles.transparent_max_bounces = 24
-scene.cycles.diffuse_bounces = 3
+scene.cycles.diffuse_bounces = 3; scene.cycles.volume_bounces = 3
+scene.cycles.transparent_max_bounces = 32
 scene.render.film_transparent = True
 scene.cycles.film_transparent_glass = True
 scene.cycles.film_transparent_roughness = 0.6

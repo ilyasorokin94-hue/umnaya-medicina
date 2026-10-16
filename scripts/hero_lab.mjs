@@ -17,6 +17,7 @@ const variants = [
   { file: "hero-tooth.html", dir: "tooth", kind: "frames", intro: "fade" },
   { file: "hero-gpt-bone.html", dir: "gpt-bone", kind: "layers" },
   { file: "hero-gpt-tooth.html", dir: "gpt-tooth", kind: "reveal", intro: "fade" },
+  { file: "hero-gpt-tooth-section.html", dir: "gpt-tooth-section", kind: "reveal", intro: "fade" },
 ];
 
 const home = readFileSync(path.join(dist, "index.html"), "utf8");

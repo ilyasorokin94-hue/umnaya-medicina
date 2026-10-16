@@ -1,5 +1,5 @@
 # Слои для первого экрана из картинок ChatGPT на ровном тёмно-зелёном фоне.
-# bone:  python3 scripts/render/gpt_layers.py bone <exploded.png> <assembled.png> <папка> [--da-abut N] [--da-crown N] [--clip-abut Y]
+# bone:  python3 scripts/render/gpt_layers.py bone <exploded.png> <assembled.png|-> <папка> [--da-abut N] [--da-crown N] [--clip-abut Y] [--clip-crown Y]
 #        Режет разобранную картинку по пустым горизонтальным полосам на коронку, абатмент и челюсть,
 #        подбирает сдвиг коронки до собранного положения по второй картинке и пишет spec.json для data-layers.
 # tooth: python3 scripts/render/gpt_layers.py tooth <whole.png> <top.png> <папка>
@@ -45,6 +45,14 @@ def components(alpha, f=4, thr=40):
         out.append((int(mk.sum()), mk))
     return sorted(out, key=lambda c: -c[0])
 
+def dilate(mask, r):
+    out = mask.copy()
+    for _ in range(r):
+        m = out.copy()
+        m[1:] |= out[:-1]; m[:-1] |= out[1:]; m[:, 1:] |= out[:, :-1]; m[:, :-1] |= out[:, 1:]
+        out = m
+    return out
+
 def bbox_of(mask, pad=4):
     ys, xs = np.nonzero(mask)
     return max(0, xs.min() - pad), max(0, ys.min() - pad), min(mask.shape[1], xs.max() + 1 + pad), min(mask.shape[0], ys.max() + 1 + pad)
@@ -68,7 +76,7 @@ def match_dy(layer, x, y, target, search=(0, 900), dx=12):
             if e < best[0]: best = (e, dy, ddx)
     return best
 
-def bone(exp_p, asm_p, out, da_abut=None, da_crown=None, clip_abut=None):
+def bone(exp_p, asm_p, out, da_abut=None, da_crown=None, clip_abut=None, clip_crown=None):
     os.makedirs(out, exist_ok=True)
     rgba, bg = key_bg(exp_p)
     H, W = rgba.shape[:2]
@@ -82,9 +90,11 @@ def bone(exp_p, asm_p, out, da_abut=None, da_crown=None, clip_abut=None):
     crown_m, abut_m = parts[0][1], parts[1][1]
     items = []
     total = 0
-    rest = np.ones_like(jaw)
-    for mk in (crown_m, abut_m): rest &= ~mk
-    for name, mk in (("base", rest & (a > 2)), ("abut", abut_m), ("crown", crown_m)):
+    # мягкие края (полупрозрачные пиксели) отходят к ближайшей детали, а не остаются ореолом на челюсти
+    soft = a > 2
+    crown_d, abut_d = dilate(crown_m, 8) & soft, dilate(abut_m, 8) & soft
+    jaw_d = dilate(jaw, 8) & soft & ~crown_d & ~abut_d
+    for name, mk in (("base", jaw_d), ("abut", abut_d & ~crown_d), ("crown", crown_d)):
         x0, y0, x1, y1 = bbox_of(mk)
         crop = rgba[y0:y1, x0:x1].copy()
         crop[..., 3] = np.where(mk[y0:y1, x0:x1], crop[..., 3], 0)
@@ -108,10 +118,12 @@ def bone(exp_p, asm_p, out, da_abut=None, da_crown=None, clip_abut=None):
     cr.update(da=int(da_crown), **{"from": 0.0, "to": 0.8})
     ab.update(da=int(da_abut), **{"from": 0.18, "to": 1.0})
     if clip_abut is not None: ab["clip"] = [0, int(clip_abut)]
+    if clip_crown is not None: cr["clip"] = [0, int(clip_crown)]; cr["soft"] = 10
+    if clip_abut is not None: ab["soft"] = 6
     spec = {"fw": W, "fh": H, "items": [{k: v for k, v in it.items() if k != "arr"} for it in (base, ab, cr)]}
     json.dump(spec, open(os.path.join(out, "spec.json"), "w"))
     # проверочные кадры: собрано и разобрано, на фоне сайта
-    for t, nm in ((0.0, "check_assembled.png"), (1.0, "check_exploded.png")):
+    for t, nm in ((0.0, "check_assembled.png"), (0.35, "check_35.png"), (0.6, "check_60.png"), (1.0, "check_exploded.png")):
         c = Image.new("RGBA", (W, H), (12, 36, 16, 255))
         for it in (base, ab, cr):
             e = 0.0 if "da" not in it else min(1, max(0, (t - it["from"]) / (it["to"] - it["from"])))
@@ -119,10 +131,10 @@ def bone(exp_p, asm_p, out, da_abut=None, da_crown=None, clip_abut=None):
             x = it["x"] + it.get("dxa", 0) * (1 - e * e * (3 - 2 * e))
             lay = Image.fromarray(it["arr"])
             if "clip" in it:
-                m = Image.new("L", lay.size, 0)
-                vis = max(0, min(lay.size[1], int(it["clip"][1] - y)))
-                m.paste(255, (0, 0, lay.size[0], vis))
-                lay.putalpha(Image.fromarray(np.minimum(np.asarray(lay.split()[3]), np.asarray(m))))
+                yy = np.arange(lay.size[1])[:, None] + y
+                sf = max(1, it.get("soft", 0))
+                m = np.clip((it["clip"][1] - yy) / sf, 0, 1) * np.ones((1, lay.size[0]))
+                lay.putalpha(Image.fromarray((np.asarray(lay.split()[3]) * m).astype(np.uint8)))
             c.alpha_composite(lay, (int(round(x)), int(round(y))))
         c.convert("RGB").save(os.path.join(out, nm))
     print(f"слои {total / 1024:.0f} КБ, spec.json и проверочные кадры в {out}")

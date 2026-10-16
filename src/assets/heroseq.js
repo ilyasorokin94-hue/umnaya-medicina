@@ -69,11 +69,12 @@ function frames(phone, changed) {
 }
 
 // слои одной картинки: {fw, fh, items: [{src, x, y, w, h, da, from, to, clip: [y0, y1]}]}
-// x, y: положение в разобранном виде; da, dxa: сдвиг вниз и вбок до собранного положения; from/to: когда слой едет (доли t)
+// x, y: положение в разобранном виде; da, dxa: сдвиг вниз и вбок до собранного положения; from/to: когда слой едет (доли t);
+// clip: [0, y] слой виден только выше y, soft: ширина мягкого края в пикселях картинки
 function layers(spec, changed) {
   const S = JSON.parse(spec);
   const imgs = [];
-  let ready = false;
+  let ready = false, tmp = null;
   return {
     load: () => Promise.all(S.items.map((it) => loadImg(it.src))).then((a) => { imgs.push(...a); ready = true; changed(); }, () => {}),
     has0: () => ready,
@@ -86,14 +87,20 @@ function layers(spec, changed) {
       S.items.forEach((it, n) => {
         const e = 1 - span(t, it.from, it.to);
         const x = it.x + (it.dxa || 0) * e, y = it.y + (it.da || 0) * e;
-        if (it.clip) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(0, oy + it.clip[0] * k, W, (it.clip[1] - it.clip[0]) * k);
-          ctx.clip();
-        }
-        ctx.drawImage(imgs[n], ox + x * k, oy + y * k, it.w * k, it.h * k);
-        if (it.clip) ctx.restore();
+        if (!it.clip) { ctx.drawImage(imgs[n], ox + x * k, oy + y * k, it.w * k, it.h * k); return; }
+        // слой виден только выше линии clip[1] (уходит в десну или в фикстуру), край мягкий
+        if (!tmp) tmp = document.createElement("canvas");
+        if (tmp.width !== W || tmp.height !== H) { tmp.width = W; tmp.height = H; }
+        const c = tmp.getContext("2d");
+        c.clearRect(0, 0, W, H);
+        c.drawImage(imgs[n], ox + x * k, oy + y * k, it.w * k, it.h * k);
+        const yb = oy + it.clip[1] * k, soft = Math.max(1, (it.soft || 0) * k);
+        const g = c.createLinearGradient(0, yb - soft, 0, yb);
+        g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,1)");
+        c.globalCompositeOperation = "destination-out";
+        c.fillStyle = g; c.fillRect(0, yb - soft, W, H - yb + soft);
+        c.globalCompositeOperation = "source-over";
+        ctx.drawImage(tmp, 0, 0);
       });
     },
   };
@@ -126,14 +133,8 @@ function reveal(spec, changed) {
       c.globalCompositeOperation = "destination-in";
       c.fillStyle = g; c.fillRect(0, 0, W, H);
       c.globalCompositeOperation = "source-over";
+      // исходная картинка целиком, вторая поверх (контуры совпадают, поэтому края не двоятся)
       ctx.drawImage(a, ox, oy, w, h);
-      // под открытой частью исходную картинку стираем, чтобы края не двоились
-      ctx.save();
-      ctx.globalCompositeOperation = "destination-out";
-      const g2 = ctx.createLinearGradient(0, yb - soft, 0, yb + soft);
-      g2.addColorStop(0, "rgba(0,0,0,1)"); g2.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
-      ctx.restore();
       ctx.drawImage(tmp, 0, 0);
     },
   };
