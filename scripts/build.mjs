@@ -407,28 +407,38 @@ function pageHome() {
   const { rating } = home;
   const star = icon.star;
   const D = v2;
+  // пояснение, факты и три врача первого экрана: на телефоне первый экран занимает ровно один экран и уходит под шторку
+  // со слоганом, как у Лава Дент, а эти блоки идут после слогана (копия в .slogan__more, на компьютере скрыта)
+  const heroSub = `<p class="hero__sub">${esc(D.sub)}</p>`;
+  const heroFacts = `<ul class="hero__facts">${D.facts.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`;
+  const heroNote = `<p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>`;
+  const heroTrio = `<ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>`;
   const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 
   return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq.flatMap(([, qs]) => qs).map(([q, a]) => [q, a.replace(/\[([^\]]+)\]\((\w+)\)/g, "$1")]))] })
   + intro(depth) + header(depth, true) + `
 <main id="main">
 
+<div class="opening">
 <section class="hero hero--3d on-dark" aria-labelledby="h1"><div class="wrap hero__in">
   <div class="hero__text">
     <h1 id="h1"><span class="kicker">${esc(D.kicker)}</span> <span data-split>${esc(D.h1)}</span></h1>
-    <p class="hero__sub">${esc(D.sub)}</p>
+    ${heroSub}
     <p class="hero__promo"><span class="hero__promo-tag">Акция</span><span>${esc(D.promo[0])} <b>${esc(D.promo[1])}</b> <s>${esc(D.promo[2])}</s></span></p>
     <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
-    <ul class="hero__facts">${D.facts.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
-    <p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>
-    <ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>
+    ${heroFacts}
+    ${heroNote}
+    ${heroTrio}
   </div>
   <div class="hero__3d" aria-hidden="true" data-seq="images/implant/l/" data-frames="96" data-crop="1000,1200,288,118,426,926" data-seq-s="images/implant/s/" data-frames-s="24" data-crop-s="1000,1200,288,118,426,926"><canvas></canvas></div>
 </div></section>
 
 <section class="slogan on-dark" aria-label="Сначала думаем. Потом лечим.">
   ${marquee("Сначала думаем. <em>Потом лечим.</em>")}
+  <div class="slogan__head" aria-hidden="true"><p class="slogan__title"><span class="line">Сначала думаем.</span> <span class="line">Потом лечим.</span></p></div>
+  <div class="slogan__more"><div class="wrap">${heroTrio}${heroSub}${heroFacts}${heroNote}</div></div>
 </section>
+</div>
 
 <section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><p>${esc(D.services.text)}</p><a class="link" href="ceny.html">Весь прайс</a></div></div>
