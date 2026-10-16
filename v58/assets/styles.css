@@ -1785,6 +1785,10 @@ html:not(.js-intro) .intro { display: none; }
   .menu__close::before, .menu__close::after { forced-color-adjust: none; background: ButtonText; }
   .mnav__link.is-current::before { forced-color-adjust: none; background: CanvasText; }
 }
+/* без анимаций общее правило растягивает и «мгновенные» переходы на .01ms: меню с крестиком оставалось скрытым в момент фокуса */
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) {
+  .menu.is-open, .menu.is-open * { transition-property: none !important; }
+}
 
 /* тур на телефоне как вторая секция Лава Дент (Ilya 16.10, их .about-process-carousel и .about-process-gallery):
    лента стоит на месте экрана, а карточки едут вбок, пока страницу листают на три экрана; карточка это фото
@@ -1810,7 +1814,7 @@ html:not(.js-intro) .intro { display: none; }
   .ptour__spacer { display: none; }
   .ptour__after { position: relative; z-index: 1; padding-top: 56px; }
   .ptour__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 48px 12px; padding: 0 20px; }
-  .ptour__fig { margin: 0; min-width: 0; display: grid; gap: 8px; align-content: start; }
+  .ptour__fig { margin: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-content: start; }
   .ptour__fig:nth-child(1) { grid-column: 8 / span 5; grid-row: 1; padding-bottom: 64px; }
   .ptour__fig:nth-child(2) { grid-column: 1 / span 4; grid-row: 1; align-self: end; }
   .ptour__fig:nth-child(3) { grid-column: 7 / span 6; grid-row: 2; padding-bottom: 64px; }
@@ -1820,7 +1824,7 @@ html:not(.js-intro) .intro { display: none; }
   .ptour__pic { display: block; aspect-ratio: var(--r); border-radius: 14px; overflow: clip; background: var(--ink-2); }
   .ptour__pic img { width: 100%; height: 100%; object-fit: cover; scale: 1.1; }
   /* подписи фото идут поверх затемнённого кабинета и заголовка: светлые, с тёмным ореолом, иначе не читаются */
-  .ptour__fig figcaption { font: 500 13px/1.35 var(--body); color: rgba(255, 255, 255, .92); text-shadow: 0 1px 2px rgba(12, 36, 16, .8), 0 0 12px rgba(12, 36, 16, .9); }
+  .ptour__fig figcaption { font: 500 13px/1.35 var(--body); color: rgba(255, 255, 255, .92); text-shadow: 0 0 1px rgba(12, 36, 16, .95), 0 0 3px rgba(12, 36, 16, .95), 0 0 6px rgba(12, 36, 16, .9), 0 0 12px rgba(12, 36, 16, .9); }
   .ptour__text { position: relative; margin-top: 56px; padding: 48px var(--gutter) 56px; background: var(--ink); }
   .ptour__text p { margin: 0 0 24px; color: rgba(255, 255, 255, .82); font-size: 16px; line-height: 1.5; text-wrap: pretty; }
 
@@ -1837,10 +1841,12 @@ html:not(.js-intro) .intro { display: none; }
   /* отступ шапки (scroll-padding) не должен сдвигать шкалы: лента едет ровно с момента, как встала */
   .js-anim .ptour__spacer { display: block; height: 400vh; margin-top: -100vh; view-timeline: --pt-car block; view-timeline-inset: 0px; }
   /* после раскрытия кабинета пауза, как у Лава Дент (их отступ 3xl), потом поднимаются фото и проявляется заголовок */
-  .js-anim .ptour__after { padding-top: calc(50vh + clamp(96px, 87.27px + 2.4242vw, 120px)); view-timeline: --pt-end block; view-timeline-inset: 0px; }
+  .js-anim .ptour__after { padding-top: calc(50vh + min(clamp(96px, 87.27px + 2.4242vw, 120px), 11.5vh)); view-timeline: --pt-end block; view-timeline-inset: 0px; }
   .js-anim .ptour__text { margin-top: 40svh; }
   .js-anim .ptour__slogan .w { opacity: 0; transition: opacity 2.5s cubic-bezier(.33, 0, .11, 1) calc(var(--i) * .2s); }
   .js-anim .ptour.is-on .ptour__slogan .w { opacity: 1; }
+  /* телефон боком: под карточкой нет места до нижней панели сайта, подписи ленты прячем (они дублируют alt) */
+  @media (max-height: 540px) { .js-anim .ptour__cap { display: none; } }
   .ptour__item--left { --pt-x: -20vw; }
   .ptour__item--right { --pt-x: 20vw; }
 }
