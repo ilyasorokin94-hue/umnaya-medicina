@@ -55,11 +55,11 @@ def prof(z, zs, vs):
 
 # бугры: x, y, высота вершины, крутизна, скругление вершины
 CUSPS = [
-    (3.00, -2.45, 7.25, 0.74, 1.25),   # мезиощёчный
-    (-0.45, -2.80, 7.05, 0.74, 1.25),  # дистощёчный
-    (-3.55, -1.60, 6.55, 0.80, 1.05),  # дистальный
-    (2.75, 2.35, 7.70, 0.84, 0.95),    # мезиоязычный
-    (-1.75, 2.55, 7.45, 0.84, 0.95),   # дистоязычный
+    (3.05, -2.40, 7.25, 0.74, 1.25),   # мезиощёчный
+    (-0.35, -2.85, 7.05, 0.74, 1.20),  # дистощёчный
+    (-3.65, -1.75, 6.60, 0.86, 0.90),  # дистальный
+    (2.65, 2.40, 7.70, 0.84, 0.95),    # мезиоязычный
+    (-1.85, 2.50, 7.45, 0.84, 0.95),   # дистоязычный
 ]
 # краевые валики: отрезок, высота
 RIDGES = [((4.30, -1.85), (4.15, 1.90), 6.15), ((-4.15, -0.55), (-3.45, 2.15), 5.85)]
@@ -90,28 +90,29 @@ def occlusal(X, Y, fine=True):
         srt = np.sort(cs, axis=0)
         c1, c2 = srt[-1], srt[-2]
         rmax = rs.max(0)
-        fiss = np.exp(-((c1 - c2) / 0.20) ** 2) * smoothstep(-0.05, 0.35, c1 - rmax)
+        fiss = np.exp(-((c1 - c2) / 0.26) ** 2) * smoothstep(-0.05, 0.35, c1 - rmax)
         T = T - 0.42 * fiss
         for px, py, dep in ((0.55, 0.05, 0.30), (3.35, 0.05, 0.25), (-2.75, 0.45, 0.22)):
-            T = T - dep * np.exp(-((X - px) ** 2 + (Y - py) ** 2) / 0.35 ** 2)
+            T = T - dep * np.exp(-((X - px) ** 2 + (Y - py) ** 2) / 0.42 ** 2)
     return T
 
 def side_field(X, Y, Z, fine=True):
     """Стенки коронки и корневого ствола: суперэллипс с размерами, зависящими от высоты."""
     z1 = Z[0, 0, :]
-    xm = prof(z1, [-4, -2, -0.6, 0.6, 1.8, 3.2, 4.6, 5.4, 6.4, 7.6], [4.40, 4.30, 4.30, 4.55, 5.00, 5.35, 5.50, 5.48, 5.15, 4.50])
-    xd = prof(z1, [-4, -2, -0.6, 0.6, 1.8, 3.2, 4.4, 5.2, 6.4, 7.6], [4.40, 4.30, 4.30, 4.50, 4.95, 5.30, 5.45, 5.40, 4.95, 4.20])
+    xm = prof(z1, [-4, -2, -0.6, 0.6, 1.8, 3.2, 4.6, 5.4, 6.4, 7.6], [4.40, 4.25, 4.18, 4.50, 5.00, 5.35, 5.50, 5.48, 5.15, 4.50])
+    xd = prof(z1, [-4, -2, -0.6, 0.6, 1.8, 3.2, 4.4, 5.2, 6.4, 7.6], [4.40, 4.25, 4.18, 4.45, 4.95, 5.30, 5.45, 5.40, 4.95, 4.20])
     yb = prof(z1, [-4, -2, -0.5, 0.4, 1.2, 2.0, 3.0, 4.2, 5.4, 6.4, 7.6], [4.05, 4.05, 4.15, 4.55, 5.10, 5.30, 5.22, 4.92, 4.45, 3.95, 3.30])
     yl = prof(z1, [-4, -2, -0.5, 0.6, 1.8, 3.0, 3.8, 4.8, 5.8, 6.6, 7.6], [4.10, 4.10, 4.20, 4.55, 5.00, 5.25, 5.30, 5.20, 4.90, 4.50, 3.80])
     ax = ((xm + xd) / 2)[None, None, :]; cx = ((xm - xd) / 2)[None, None, :]
     ay = ((yb + yl) / 2)[None, None, :]; cy = ((yl - yb) / 2)[None, None, :]
-    m = prof(z1, [-4, -1, 1, 4, 7.6], [2.7, 2.6, 2.45, 2.4, 2.3])[None, None, :]
+    m = prof(z1, [-4, -1, 1, 4, 7.6], [2.7, 2.6, 2.6, 2.75, 2.6])[None, None, :]
     Xr = X - cx; Yr = Y - cy
     yn = np.clip(Yr / ay, -1, 1)
     axe = ax * (1 - 0.045 * yn)                       # коронка сужается к язычной стороне
-    u = np.abs(Xr) / axe + 1e-6; v = np.abs(Yr) / ay + 1e-6
+    aye = ay * (1 - 0.05 * np.clip(-Xr / ax, 0, 1) * smoothstep(0.5, 3.0, Z))   # и к дистальной
+    u = np.abs(Xr) / axe + 1e-6; v = np.abs(Yr) / aye + 1e-6
     n = (u ** m + v ** m) ** (1 / m)
-    gu = n ** (1 - m) * u ** (m - 1) / axe; gv = n ** (1 - m) * v ** (m - 1) / ay
+    gu = n ** (1 - m) * u ** (m - 1) / axe; gv = n ** (1 - m) * v ** (m - 1) / aye
     g = np.maximum(np.sqrt(gu * gu + gv * gv), 0.12)
     d = (n - 1) / g
     wb = smoothstep(0.35, 0.85, -yn); wl = smoothstep(0.35, 0.85, yn)
@@ -129,7 +130,7 @@ def ellipse_tube(X, Y, Z, cx, cy, ax, ay, zc, Lc, zt):
     cx, cy, ax, ay — массивы по z (1d), для z < zc замораживаются на значении в zc."""
     z1 = Z[0, 0, :]
     zcl = np.maximum(z1, zc)
-    cxz = cx(zcl)[None, None, :]; cyz = cy(zcl)[None, None, :]
+    cxz = cx(z1)[None, None, :]; cyz = cy(z1)[None, None, :]
     axz = ax(zcl)[None, None, :]; ayz = ay(zcl)[None, None, :]
     s = (np.maximum(zc - z1, 0) / Lc)[None, None, :]
     Xr = X - cxz; Yr = Y - cyz
@@ -139,17 +140,17 @@ def ellipse_tube(X, Y, Z, cx, cy, ax, ay, zc, Lc, zt):
     d = (n - 1) / g
     return smax(d, Z - zt, 0.4), Xr, Yr
 
-# корни
-MR = dict(cx=lambda z: prof(z, [-1, -4, -7, -10, -12.6], [2.30, 2.55, 2.60, 2.38, 2.02]),
+# корни: ось и полуширины по высоте; ниже zc ширины замораживаются и корень сходится эллипсоидом длиной Lc к апексу
+MR = dict(cx=lambda z: prof(z, [-1, -3, -5.5, -8.5, -11, -14], [2.20, 2.60, 2.85, 2.82, 2.58, 2.25]),
           cy=lambda z: 0.10 + 0 * z,
-          ax=lambda z: prof(z, [-1, -4, -8, -11, -12.6], [2.02, 1.95, 1.65, 1.30, 1.02]),
-          ay=lambda z: prof(z, [-1, -3, -5, -8, -11, -12.6], [4.00, 3.98, 3.60, 2.80, 1.85, 1.25]),
-          zc=-12.6, Lc=1.45)
-DR = dict(cx=lambda z: prof(z, [-1, -4, -8, -11, -11.9], [-2.45, -2.70, -2.92, -3.02, -3.05]),
+          ax=lambda z: prof(z, [-1, -4, -7, -9.4, -10.0], [2.05, 1.95, 1.68, 1.46, 1.44]),
+          ay=lambda z: prof(z, [-1, -3, -5, -7.5, -9.4, -10.0], [4.00, 3.98, 3.55, 2.70, 2.16, 2.12]),
+          zc=-10.0, Lc=4.05)
+DR = dict(cx=lambda z: prof(z, [-1, -4, -8, -11, -13.3], [-2.40, -2.80, -3.12, -3.32, -3.42]),
           cy=lambda z: 0.05 + 0 * z,
-          ax=lambda z: prof(z, [-1, -4, -8, -11, -11.9], [2.10, 2.02, 1.70, 1.28, 1.05]),
-          ay=lambda z: prof(z, [-1, -3, -5, -8, -10.5, -11.9], [3.85, 3.78, 3.35, 2.55, 1.65, 1.25]),
-          zc=-11.9, Lc=1.35)
+          ax=lambda z: prof(z, [-1, -4, -7, -8.9, -9.4], [2.12, 2.02, 1.74, 1.55, 1.53]),
+          ay=lambda z: prof(z, [-1, -3, -5, -7.5, -8.9, -9.4], [3.85, 3.78, 3.30, 2.45, 1.95, 1.92]),
+          zc=-9.4, Lc=3.85)
 
 def outer_field(X, Y, Z, fine=True):
     T = occlusal(X[:, :, 0], Y[:, :, 0], fine)
@@ -159,9 +160,9 @@ def outer_field(X, Y, Z, fine=True):
     body = smax(body, -3.0 - Z, 1.6)                                    # низ корневого ствола
     dm, Xm, Ym = ellipse_tube(X, Y, Z, MR["cx"], MR["cy"], MR["ax"], MR["ay"], MR["zc"], MR["Lc"], -0.6)
     # продольные вдавления на мезиальной и дистальной поверхности мезиального корня
-    dm = dm + 0.42 * np.exp(-(Ym / 1.35) ** 2) * smoothstep(-2.6, -4.6, Z) * (1 - smoothstep(-10.0, -12.4, Z))
+    dm = dm + 0.40 * np.exp(-(Ym / 1.35) ** 2) * smoothstep(-2.6, -4.8, Z) * (1 - smoothstep(-7.0, -12.8, Z))
     dd, Xd, Yd = ellipse_tube(X, Y, Z, DR["cx"], DR["cy"], DR["ax"], DR["ay"], DR["zc"], DR["Lc"], -0.6)
-    dd = dd + 0.18 * np.exp(-(Yd / 1.4) ** 2) * smoothstep(-3.0, -5.0, Z) * (1 - smoothstep(-9.0, -11.0, Z))
+    dd = dd + 0.16 * np.exp(-(Yd / 1.3) ** 2) * smoothstep(-3.0, -5.0, Z) * (1 - smoothstep(-7.0, -11.5, Z))
     roots = np.minimum(dm, dd)
     return smin(body, roots, 1.3)
 
@@ -190,29 +191,35 @@ def rbox(X, Y, Z, c, h, r):
     out = np.sqrt(np.maximum(qx, 0) ** 2 + np.maximum(qy, 0) ** 2 + np.maximum(qz, 0) ** 2)
     return out + np.minimum(np.maximum(np.maximum(qx, qy), qz), 0) - r
 
+def ellipsoid(X, Y, Z, c, r):
+    k0 = np.sqrt(((X - c[0]) / r[0]) ** 2 + ((Y - c[1]) / r[1]) ** 2 + ((Z - c[2]) / r[2]) ** 2)
+    k1 = np.sqrt(((X - c[0]) / r[0] ** 2) ** 2 + ((Y - c[1]) / r[1] ** 2) ** 2 + ((Z - c[2]) / r[2] ** 2) ** 2)
+    return k0 * (k0 - 1.0) / np.maximum(k1, 1e-6)
+
 def pulp_field(X, Y, Z):
-    ch = rbox(X, Y, Z, (0.25, 0.0, 0.45), (2.55, 1.65, 1.25), 0.95)
-    horns = [((1.85, -1.15, 1.2), (2.45, -1.70, 3.45), 0.55, 0.22),
-             ((-0.30, -1.25, 1.2), (-0.45, -1.85, 3.05), 0.52, 0.22),
-             ((-1.85, -0.95, 1.1), (-2.55, -1.15, 2.55), 0.48, 0.22),
-             ((1.85, 1.10, 1.2), (2.30, 1.60, 3.70), 0.55, 0.22),
-             ((-1.00, 1.20, 1.2), (-1.30, 1.75, 3.30), 0.52, 0.22)]
+    # камера пульпы: шире мезиодистально, свод с невысокими рогами под буграми, дно над фуркацией
+    ch = rbox(X, Y, Z, (0.25, 0.0, 0.75), (2.65, 1.75, 1.30), 1.05)
+    horns = [((1.75, -1.10, 2.25), (0.62, 0.55, 1.20)),    # мезиощёчный
+             ((-0.25, -1.20, 2.15), (0.58, 0.52, 1.00)),   # дистощёчный
+             ((-2.05, -0.80, 1.95), (0.52, 0.50, 0.85)),   # дистальный
+             ((1.65, 1.10, 2.30), (0.62, 0.55, 1.30)),     # мезиоязычный
+             ((-1.05, 1.15, 2.20), (0.58, 0.52, 1.10))]    # дистоязычный
     f = ch
-    for a, b, r0, r1 in horns:
-        f = smin(f, capsule(X, Y, Z, a, b, r0, r1), 0.55)
+    for c, r in horns:
+        f = smin(f, ellipsoid(X, Y, Z, c, r), 0.7)
     # каналы: два в мезиальном корне (щёчный и язычный), один лентовидный в дистальном
     for side in (-1, 1):
-        cyf = lambda z, s=side: s * prof(z, [-0.2, -3, -7, -11, -13.2], [1.25, 1.35, 1.05, 0.60, 0.35])
+        cyf = lambda z, s=side: s * prof(z, [0.0, -2.5, -7, -11, -13.2], [1.20, 1.25, 0.95, 0.55, 0.32])
         d, _, _ = ellipse_tube(X, Y, Z, MR["cx"], cyf,
-                               lambda z: prof(z, [-0.2, -3, -7, -11, -13.0], [0.62, 0.42, 0.30, 0.20, 0.14]),
-                               lambda z: prof(z, [-0.2, -3, -7, -11, -13.0], [0.75, 0.50, 0.34, 0.22, 0.14]),
-                               -13.0, 0.35, 0.4)
-        f = smin(f, d, 0.5)
+                               lambda z: prof(z, [0.0, -2.0, -6, -10, -13.0], [0.50, 0.32, 0.25, 0.18, 0.13]),
+                               lambda z: prof(z, [0.0, -2.0, -6, -10, -13.0], [0.60, 0.38, 0.28, 0.19, 0.13]),
+                               -13.0, 0.3, 0.6)
+        f = smin(f, d, 0.6)
     d, _, _ = ellipse_tube(X, Y, Z, DR["cx"], lambda z: 0.05 + 0 * z,
-                           lambda z: prof(z, [-0.2, -3, -7, -10, -12.3], [0.70, 0.46, 0.34, 0.24, 0.15]),
-                           lambda z: prof(z, [-0.2, -3, -6, -9, -11.0, -12.3], [1.40, 1.15, 0.85, 0.55, 0.30, 0.16]),
-                           -12.3, 0.3, 0.4)
-    return smin(f, d, 0.5)
+                           lambda z: prof(z, [0.0, -2.0, -6, -10, -12.3], [0.55, 0.36, 0.28, 0.20, 0.14]),
+                           lambda z: prof(z, [0.0, -2.0, -5, -8, -10.5, -12.3], [1.15, 0.95, 0.72, 0.48, 0.28, 0.15]),
+                           -12.3, 0.3, 0.6)
+    return smin(f, d, 0.6)
 
 # ---------- поле -> сетка (surface nets), сглаживание с проекцией на поверхность ----------
 def sample(fn, lo, hi, h, chunk=24):
@@ -271,6 +278,56 @@ def surface_nets(F, org, h):
         quads.append(q)
     return V, np.concatenate(quads, 0)
 
+def fix_pinches(V, Q):
+    """Разводит вершины, где сходятся два листа поверхности (неоднозначные ячейки): у каждого веера граней своя копия.
+    У ребра с четырьмя гранями листы сшиваются попарно по ориентации и близости нормалей."""
+    v = Q.ravel(); nxt = np.roll(Q, -1, 1).ravel(); prv = np.roll(Q, 1, 1).ravel()
+    ne = np.int64(len(V) + 1)
+    ka = np.minimum(v, nxt) * ne + np.maximum(v, nxt); kb = np.minimum(v, prv) * ne + np.maximum(v, prv)
+    allk = np.concatenate([ka, kb])
+    _, inv, c = np.unique(allk, return_inverse=True, return_counts=True)
+    man = (c[inv] // 2) == 2
+    ncor = len(v)
+    cid = np.concatenate([np.arange(ncor), np.arange(ncor)])
+    endv = np.concatenate([v, v])
+    hk = np.stack([allk, endv], 1)[man]; hc = cid[man]
+    o = np.lexsort((hk[:, 1], hk[:, 0])); hk = hk[o]; hc = hc[o]
+    same = (hk[1:] == hk[:-1]).all(1)
+    pa = list(hc[:-1][same]); pb = list(hc[1:][same])
+    # рёбра с четырьмя гранями: пары граней с противоположным обходом и близкими нормалями
+    badk = np.unique(allk[~man])
+    if len(badk):
+        nrm = np.cross(V[Q[:, 2]] - V[Q[:, 0]], V[Q[:, 3]] - V[Q[:, 1]])
+        nrm /= np.maximum(np.linalg.norm(nrm, axis=1, keepdims=True), 1e-12)
+        for k in badk:
+            a, b = int(k // ne), int(k % ne)
+            fs = np.nonzero((Q == a).any(1) & (Q == b).any(1))[0]
+            fwd = [f for f in fs if Q[f][(list(Q[f]).index(a) + 1) % 4] == b]
+            bwd = [f for f in fs if f not in fwd]
+            if len(fwd) != 2 or len(bwd) != 2: continue
+            s1 = nrm[fwd[0]] @ nrm[bwd[0]] + nrm[fwd[1]] @ nrm[bwd[1]]
+            s2 = nrm[fwd[0]] @ nrm[bwd[1]] + nrm[fwd[1]] @ nrm[bwd[0]]
+            prs = [(fwd[0], bwd[0]), (fwd[1], bwd[1])] if s1 >= s2 else [(fwd[0], bwd[1]), (fwd[1], bwd[0])]
+            for f1, f2 in prs:
+                for x in (a, b):
+                    pa.append(f1 * 4 + list(Q[f1]).index(x)); pb.append(f2 * 4 + list(Q[f2]).index(x))
+    pa = np.array(pa, np.int64); pb = np.array(pb, np.int64)
+    lab = np.arange(ncor)
+    for _ in range(200):
+        old = lab.copy()
+        m = np.minimum(lab[pa], lab[pb])
+        np.minimum.at(lab, pa, m); np.minimum.at(lab, pb, m)
+        lab = lab[lab]
+        if (lab == old).all(): break
+    pair = np.stack([v, lab], 1)
+    up, inv2 = np.unique(pair, axis=0, return_inverse=True)
+    first = np.ones(len(up), bool); first[1:] = up[1:, 0] != up[:-1, 0]
+    newid = np.where(first, up[:, 0], 0)
+    extra = np.nonzero(~first)[0]
+    newid[extra] = len(V) + np.arange(len(extra))
+    Vn = np.concatenate([V, V[up[extra, 0]]], 0)
+    return Vn, newid[inv2.ravel()].reshape(Q.shape), len(extra)
+
 def trilinear(F, org, h, P):
     g = (P - org) / h
     i = np.clip(np.floor(g).astype(np.int64), 0, np.array(F.shape) - 2)
@@ -309,11 +366,12 @@ def build(name, fn, lo, hi, h):
     t0 = time.time()
     F, org, h = sample(fn, lo, hi, h)
     V, Q = surface_nets(F, org, h)
+    V, Q, nsplit = fix_pinches(V, Q)
     V, E = relax(V, Q, F, org, h)
     # проверка замкнутости: каждое ребро ровно у двух граней
     Ed = np.concatenate([Q[:, [0, 1]], Q[:, [1, 2]], Q[:, [2, 3]], Q[:, [3, 0]]], 0)
     _, c = np.unique(np.sort(Ed, 1), axis=0, return_counts=True)
-    print("mesh", name, len(V), "verts", len(Q), "quads", "non-manifold edges", int((c != 2).sum()),
+    print("mesh", name, len(V), "verts", len(Q), "quads", "non-manifold edges", int((c != 2).sum()), "split", nsplit, "euler", len(V) - len(Q),
           "%.1fs" % (time.time() - t0), flush=True)
     me = bpy.data.meshes.new(name)
     me.vertices.add(len(V)); me.vertices.foreach_set("co", V.astype(np.float32).ravel())
@@ -400,14 +458,10 @@ def principled(nt, **kw):
         else: nt.links.new(v, b.inputs[k])
     return b
 
-def ct_glass(nt, tint, milk, milk_col, rough, ior):
-    g = principled(nt, Base_Color=tint, Transmission_Weight=1.0, Roughness=rough, IOR=ior)
-    tl = nt.nodes.new("ShaderNodeBsdfTranslucent"); tl.inputs["Color"].default_value = (*milk_col, 1)
-    mx = nt.nodes.new("ShaderNodeMixShader")
-    if isinstance(milk, float): mx.inputs[0].default_value = milk
-    else: nt.links.new(milk, mx.inputs[0])
-    nt.links.new(g.outputs[0], mx.inputs[1]); nt.links.new(tl.outputs[0], mx.inputs[2])
-    return mx.outputs[0]
+def ct_glass(nt, base, transmission, rough, ior):
+    """Вид КТ: матовое стекло. Часть света проходит (шероховатое преломление), часть рассеивается молочным слоем."""
+    return principled(nt, Base_Color=base, Transmission_Weight=transmission, Roughness=rough, IOR=ior,
+                      Specular_IOR_Level=0.5).outputs[0]
 
 def finish(nt, natural, ct, fac):
     out = nt.nodes.get("Material Output") or nt.nodes.new("ShaderNodeOutputMaterial")
@@ -440,8 +494,7 @@ def mat_outer():
                      Subsurface_Radius=(1.0, 0.72, 0.48), Subsurface_Scale=0.45,
                      Coat_Weight=mix_f(nt, en, 0.04, 0.22), Coat_Roughness=0.18)
     nat.subsurface_method = "RANDOM_WALK"
-    milk = mix_f(nt, en, 0.10, 0.20)
-    ct = ct_glass(nt, (0.86, 0.85, 0.82), milk, (0.78, 0.76, 0.71), 0.20, 1.30)
+    ct = ct_glass(nt, mix_rgb(nt, en, (0.70, 0.68, 0.64), (0.80, 0.78, 0.73)), mix_f(nt, en, 0.74, 0.62), 0.24, 1.30)
     finish(nt, nat.outputs[0], ct, fac)
     return m
 
@@ -449,7 +502,7 @@ def mat_dentin():
     m, nt = new_mat("dentin")
     fac, sep = ct_factor(nt)
     nat = principled(nt, Base_Color=(0.74, 0.60, 0.42), Roughness=0.5)
-    ct = ct_glass(nt, (0.80, 0.78, 0.74), 0.07, (0.62, 0.59, 0.55), 0.18, 1.04)
+    ct = ct_glass(nt, (0.66, 0.63, 0.58), 0.86, 0.20, 1.03)
     finish(nt, nat.outputs[0], ct, fac)
     return m
 
@@ -508,7 +561,7 @@ for o in (tooth, dentin, pulp): o.parent = root
 cam_d = bpy.data.cameras.new("cam"); cam_d.lens = 135; cam_d.sensor_width = 36
 cam = bpy.data.objects.new("cam", cam_d); bpy.context.collection.objects.link(cam)
 scene.camera = cam
-CAM_ELEV, CAM_DIST, CAM_Z = math.radians(14), 108.0, -0.6
+CAM_ELEV, CAM_DIST, CAM_Z = math.radians(float(os.environ.get("TOOTH_ELEV", "14"))), 104.0, -0.6
 cam.location = (0, -CAM_DIST * math.cos(CAM_ELEV), CAM_Z + CAM_DIST * math.sin(CAM_ELEV))
 aim(cam, (0, 0, CAM_Z))
 
@@ -547,6 +600,35 @@ except Exception as ex: print("look", ex)
 scene.render.image_settings.file_format = "PNG"; scene.render.image_settings.color_mode = "RGBA"
 scene.render.threads_mode = "FIXED"
 scene.render.threads = 2
+
+# альфа у матового стекла шумит (часть лучей уходит в прозрачный фон), шумоподавитель Cycles её не трогает:
+# в композиторе прогоняем альфу через тот же OIDN по нормалям и альбедо
+vl = scene.view_layers[0]
+vl.cycles.denoising_store_passes = True
+comp = bpy.data.node_groups.new("comp", "CompositorNodeTree")
+comp.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
+scene.compositing_node_group = comp
+rl = comp.nodes.new("CompositorNodeRLayers"); rl.scene = scene
+cc = comp.nodes.new("CompositorNodeCombineColor")
+for ch in ("Red", "Green", "Blue"): comp.links.new(rl.outputs["Alpha"], cc.inputs[ch])
+dn = comp.nodes.new("CompositorNodeDenoise")
+comp.links.new(cc.outputs["Image"], dn.inputs["Image"])
+comp.links.new(rl.outputs["Denoising Normal"], dn.inputs["Normal"])
+comp.links.new(rl.outputs["Denoising Albedo"], dn.inputs["Albedo"])
+try: dn.inputs["HDR"].default_value = False
+except Exception: pass
+sp = comp.nodes.new("CompositorNodeSeparateColor"); comp.links.new(dn.outputs["Image"], sp.inputs["Image"])
+cl = comp.nodes.new("ShaderNodeMath"); cl.operation = "MINIMUM"; cl.use_clamp = True
+comp.links.new(sp.outputs["Red"], cl.inputs[0]); cl.inputs[1].default_value = 1.0
+sa = comp.nodes.new("CompositorNodeSetAlpha")
+comp.links.new(rl.outputs["Image"], sa.inputs["Image"]); comp.links.new(cl.outputs[0], sa.inputs["Alpha"])
+try: sa.inputs["Type"].default_value = "Replace Alpha"
+except Exception as ex: print("setalpha", ex)
+go = comp.nodes.new("NodeGroupOutput"); comp.links.new(sa.outputs["Image"], go.inputs[0])
+scene.render.use_compositing = True
+scene.render.compositor_device = "CPU"
+try: scene.render.compositor_denoise_device = "CPU"
+except Exception as ex: print("denoise device", ex)
 
 os.makedirs(OUT, exist_ok=True)
 for i in range(N):
