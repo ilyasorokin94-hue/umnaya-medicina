@@ -69,7 +69,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
     <p class="hero__note"><span>Перезвоним за 5 минут</span><span>Ежедневно с 9:00 до 21:00</span><span>Громова, 10/2, своя парковка</span></p>
     <ul class="hero__trio" aria-label="Кто составляет план"><li><a href="vrachi/hludnevskiy.html"><span class="hero__face"><img src="images/doctors/hludnevskiy.jpg" data-fb="https://prodoctorov.ru/media/photo/moskva/doctorimage/909501/3142349-909501-hludnevskiy_square.jpg" alt="Михаил Хлудневский" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"></span><b>Хирург</b><span>Михаил<br>Хлудневский</span></a></li><li><a href="vrachi/solodukhin.html"><span class="hero__face"><img src="images/doctors/solodukhin.jpg" alt="Евгений Солодухин" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"></span><b>Ортопед</b><span>Евгений<br>Солодухин</span></a></li><li><a href="vrachi/chitaykin.html"><span class="hero__face"><img src="images/doctors/chitaykin.jpg" data-fb="https://prodoctorov.ru/media/photo/saransk/doctorimage/602094/3142158-602094-chitaykin_square.jpg" alt="Артём Читайкин" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"></span><b>Терапевт</b><span>Артём<br>Читайкин</span></a></li></ul>
   </div>
-  <div class="hero__3d" aria-hidden="true"><canvas></canvas></div>
+  <div class="hero__3d" aria-hidden="true" data-seq="images/implant/l/" data-frames="96" data-crop="1000,1200,288,118,426,926" data-seq-s="images/implant/s/" data-frames-s="24" data-crop-s="1000,1200,288,118,426,926"><canvas></canvas></div>
 </div></section>
 
 <section class="slogan on-dark" aria-label="Сначала думаем. Потом лечим.">
@@ -369,35 +369,41 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
       </div>
     </div>
   </div>
-  <div class="footer__grid">
-    <div class="footer__col">
-      <h3>Стоматология</h3>
-      <a class="footer__phone" href="tel:+74951503615">+7 495 150-36-15</a>
-      <a href="mailto:dent@um-clinic.ru">dent@um-clinic.ru</a>
-      <span>Ежедневно с 9:00 до 21:00</span>
-    </div>
-    <div class="footer__col">
-      <h3>Адрес</h3>
-      <span>Московская обл., Раменский округ, пгт Удельная, ул. Громова, 10/2</span>
-      <a href="https://yandex.ru/maps/?rtext=~55.628303,38.040086" target="_blank" rel="noopener">Маршрут в Яндекс Картах</a>
-      <a href="https://2gis.ru/moscow/firm/70000001080535965" target="_blank" rel="noopener">Открыть в 2ГИС</a>
-    </div>
-    <nav class="footer__col" aria-label="Услуги">
-      <h3>Услуги</h3>
-      <a href="uslugi/diagnostika.html">КТ и снимки</a><a href="uslugi/gigiena.html">Профгигиена</a><a href="uslugi/lechenie-zubov.html">Лечение зубов</a><a href="uslugi/implantaciya.html">Имплантация</a><a href="uslugi/all-on-4.html">All-on-4</a><a href="uslugi/mikroskop.html">Под микроскопом</a><a href="uslugi/protezirovanie.html">Протезирование</a><a href="uslugi/hirurgiya.html">Удаление зубов</a><a href="uslugi/ortodontiya.html">Брекеты и элайнеры</a><a href="uslugi/detskaya.html">Детская стоматология</a>
-    </nav>
-    <div class="footer__col">
-      <h3>Пациентам</h3>
-      <a href="ceny.html">Полный прайс</a>
-      <a href="zapis.html" data-modal="book">Записаться</a>
-      <a href="https://vk.com/um_med_stomatologia" target="_blank" rel="noopener">ВКонтакте</a>
-      <a href="https://um-med.com/assets/files/dogovor-oferta.pdf" target="_blank" rel="noopener">Договор-оферта</a>
-      <a href="https://um-med.com/assets/files/pol.pdf" target="_blank" rel="noopener">Политика обработки данных</a>
-      <a href="https://um-med.com/" target="_blank" rel="noopener">Многопрофильная клиника</a>
-      <a href="https://um-med.com/vacancies.html" target="_blank" rel="noopener">Вакансии</a>
+  <div class="fstage">
+    <div class="fstage__pin" aria-hidden="true"><div class="fstage__logo footer__big"><img class="footer__logo" src="images/brand/header-logo.svg" data-fb="https://um-med.com/assets/template/img/header-logo.svg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="umLogo(this)"><span class="footer__word">Умная Медицина</span></div></div>
+    <div class="fstage__info">
+      <div class="fstage__group">
+        <h3>Контакты</h3>
+        <a class="fstage__big" href="tel:+74951503615">+7 495 150-36-15</a>
+        <a class="fstage__big fstage__big--mail" href="mailto:dent@um-clinic.ru">dent@um-clinic.ru</a>
+      </div>
+      <div class="fstage__group">
+        <h3>Адрес</h3>
+        <p class="fstage__addr">Московская обл., Раменский округ, пгт Удельная, ул. Громова, 10/2</p>
+        <p class="fstage__links"><a href="https://yandex.ru/maps/?rtext=~55.628303,38.040086" target="_blank" rel="noopener">Маршрут в Яндекс Картах</a><a href="https://2gis.ru/moscow/firm/70000001080535965" target="_blank" rel="noopener">Открыть в 2ГИС</a></p>
+      </div>
+      <div class="fstage__group">
+        <h3>Часы работы</h3>
+        <p class="fstage__text">Ежедневно с 9:00 до 21:00</p>
+      </div>
+      <nav class="fstage__group" aria-label="Услуги">
+        <h3>Услуги</h3>
+        <p class="fstage__list fstage__list--2"><a href="uslugi/diagnostika.html">КТ и снимки</a><a href="uslugi/gigiena.html">Профгигиена</a><a href="uslugi/lechenie-zubov.html">Лечение зубов</a><a href="uslugi/implantaciya.html">Имплантация</a><a href="uslugi/all-on-4.html">All-on-4</a><a href="uslugi/mikroskop.html">Под микроскопом</a><a href="uslugi/protezirovanie.html">Протезирование</a><a href="uslugi/hirurgiya.html">Удаление зубов</a><a href="uslugi/ortodontiya.html">Брекеты и элайнеры</a><a href="uslugi/detskaya.html">Детская стоматология</a></p>
+      </nav>
+      <div class="fstage__group">
+        <h3>Пациентам</h3>
+        <p class="fstage__list fstage__list--2">
+          <a href="ceny.html">Полный прайс</a>
+          <a href="zapis.html" data-modal="book">Записаться</a>
+          <a href="https://vk.com/um_med_stomatologia" target="_blank" rel="noopener">ВКонтакте</a>
+          <a href="https://um-med.com/assets/files/dogovor-oferta.pdf" target="_blank" rel="noopener">Договор-оферта</a>
+          <a href="https://um-med.com/assets/files/pol.pdf" target="_blank" rel="noopener">Политика обработки данных</a>
+          <a href="https://um-med.com/" target="_blank" rel="noopener">Многопрофильная клиника</a>
+          <a href="https://um-med.com/vacancies.html" target="_blank" rel="noopener">Вакансии</a>
+        </p>
+      </div>
     </div>
   </div>
-  <div class="footer__big"><img class="footer__logo" src="images/brand/header-logo.svg" data-fb="https://um-med.com/assets/template/img/header-logo.svg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="umLogo(this)"><span class="footer__word">Умная Медицина</span></div>
   <div class="footer__legal">
     <span>© 2026 ООО «Смартмед», ИНН 5040170382, ОГРН 1205000110743. Лицензия на медицинскую деятельность.</span>
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
@@ -476,6 +482,6 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>
 </div></div>
 </div>
-<script type="module" src="assets/hero3d.js"></script>
+<script type="module" src="assets/heroseq.js"></script>
 </body>
 </html>
