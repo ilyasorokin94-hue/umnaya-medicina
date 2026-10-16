@@ -6,6 +6,7 @@
   const root = document.documentElement;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = matchMedia("(pointer: fine)").matches;
+  const phoneMQ = matchMedia("(max-width: 760px)");
   const G = window.gsap, ST = window.ScrollTrigger;
   const anim = !!(G && ST) && !reduce;
   window.__umReady = true;
@@ -55,7 +56,10 @@
     lenis?.start();
   }
   burger?.addEventListener("click", () => {
+    const r = burger.getBoundingClientRect();
+    menu.style.setProperty("--mo", `${r.left + r.width / 2}px ${r.top + r.height / 2}px`);
     menu.classList.add("is-open");
+    if (anim) G.fromTo($$(".menu nav > a, .menu__svc > summary, .menu__foot > *", menu), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.9, stagger: 0.05, delay: 0.15, ease: "expo.out", overwrite: true });
     burger.setAttribute("aria-expanded", "true");
     lenis?.stop();
     $(".menu__close", menu)?.focus();
@@ -87,25 +91,28 @@
     map.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
   }
 
-  // ---------- слайды в карточке героя ----------
-  const slides = $$(".hero__slides img");
-  if (slides.length > 1) {
-    let i = 0;
-    setInterval(() => { slides[i].classList.remove("is-on"); i = (i + 1) % slides.length; slides[i].classList.add("is-on"); }, 3600);
-  }
-
   // ---------- вкладки (команда, прайс, FAQ) ----------
   const fadeIn = (els) => { if (anim && els.length) G.fromTo(els, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.05, ease: "expo.out", clearProps: "transform" }); };
   $$("[data-tabs]").forEach((group) => {
     const kind = group.dataset.tabs;
     const btns = $$("[data-tab]", group);
+    const edge = () => group.classList.toggle("is-end", group.scrollLeft + group.clientWidth >= group.scrollWidth - 4);
+    group.addEventListener("scroll", edge, { passive: true });
+    edge();
     btns.forEach((b) => b.addEventListener("click", () => {
+      if (group.scrollWidth > group.clientWidth + 2) {
+        const gr = group.getBoundingClientRect(), br = b.getBoundingClientRect();
+        group.scrollBy({ left: br.left - gr.left - (gr.width - br.width) / 2, behavior: reduce ? "auto" : "smooth" });
+      }
       btns.forEach((x) => x.setAttribute("aria-selected", String(x === b)));
       const val = b.dataset.tab;
       if (kind === "team") {
         const shown = [];
         $$(".team__grid .doc").forEach((d) => { const ok = !val || d.dataset.tags.split(" ").includes(val); d.hidden = !ok; if (ok) shown.push(d); });
         fadeIn(shown);
+        const tg = $(".team__grid");
+        if (tg && tg.scrollWidth > tg.clientWidth) tg.scrollTo({ left: 0, behavior: reduce ? "auto" : "smooth" });
+        requestAnimationFrame(teamDeck);
       } else if (kind === "works") {
         const shown = [];
         $$(".works__grid .case").forEach((c) => { const ok = !val || c.dataset.cat === val; c.hidden = !ok || (c.dataset.extra === "1" && !worksOpen); if (!c.hidden) shown.push(c); });
@@ -135,15 +142,6 @@
     r?.addEventListener("input", () => ba.style.setProperty("--pos", r.value + "%"));
   });
 
-  // переключатель предложений в прайсе
-  const offers = $$(".offer__item");
-  const dots = $$(".offer__switch button");
-  dots.forEach((d, i) => d.addEventListener("click", () => {
-    offers.forEach((o, j) => (o.hidden = j !== i));
-    dots.forEach((x, j) => x.setAttribute("aria-pressed", String(j === i)));
-    fadeIn([offers[i]]);
-  }));
-
   // FAQ: плавное раскрытие
   $$(".qa").forEach((d) => {
     const s = $("summary", d), a = $(".qa__a", d);
@@ -171,9 +169,42 @@
 
   // карта: включаем взаимодействие по клику, выключаем, когда курсор ушёл
   $$(".place__map").forEach((m) => {
-    m.addEventListener("click", () => m.classList.add("is-active"));
+    const fr = $("iframe", m);
+    const load = () => { if (fr && !fr.getAttribute("src") && fr.dataset.src) fr.src = fr.dataset.src; };
+    if (!phoneMQ.matches) load();
+    else phoneMQ.addEventListener?.("change", (e) => { if (!e.matches) load(); });
+    $(".place__show", m)?.addEventListener("click", (e) => { e.stopPropagation(); load(); m.classList.add("is-live"); ST?.refresh(); });
+    m.addEventListener("click", (e) => { if (!phoneMQ.matches || m.classList.contains("is-live")) { if (!e.target.closest(".place__go")) m.classList.add("is-active"); } });
     m.addEventListener("mouseleave", () => m.classList.remove("is-active"));
   });
+
+  // телефон: нижняя панель не дублирует кнопку первого экрана и форму в подвале, прячется при наборе текста
+  const heroCta = $(".hero .hero__actions");
+  if ("IntersectionObserver" in window) {
+    if (heroCta) { root.classList.add("mb-off"); new IntersectionObserver(([en]) => root.classList.toggle("mb-off", en.isIntersecting), { rootMargin: "-90px 0px 0px 0px" }).observe(heroCta); }
+    const fcta = $(".footer__cta");
+    if (fcta) new IntersectionObserver(([en]) => root.classList.toggle("bar-off", en.isIntersecting), { rootMargin: "0px 0px -30% 0px" }).observe(fcta);
+  }
+  document.addEventListener("focusin", (e) => { if (e.target.matches?.("input, textarea, select")) root.classList.add("bar-kb"); });
+  document.addEventListener("focusout", () => root.classList.remove("bar-kb"));
+
+  // телефон: врач в центре ленты крупнее, соседние чуть меньше и тише, портрет слегка сдвигается внутри рамки
+  const tgrid = $(".team__grid");
+  function teamDeck() {
+    if (!tgrid || reduce) return;
+    if (!phoneMQ.matches) { $$(".doc", tgrid).forEach((c) => { c.style.removeProperty("--p"); c.style.removeProperty("--a"); }); return; }
+    const x0 = tgrid.getBoundingClientRect().left + parseFloat(getComputedStyle(tgrid).paddingLeft);
+    $$(".doc:not([hidden])", tgrid).forEach((c) => {
+      const r = c.getBoundingClientRect();
+      const k = Math.max(-1, Math.min(1, (r.left - x0) / (r.width + 14)));
+      c.style.setProperty("--p", k.toFixed(3));
+      c.style.setProperty("--a", Math.abs(k).toFixed(3));
+    });
+  }
+  let tdr = 0;
+  tgrid?.addEventListener("scroll", () => { cancelAnimationFrame(tdr); tdr = requestAnimationFrame(teamDeck); }, { passive: true });
+  addEventListener("resize", teamDeck);
+  teamDeck();
 
   // кнопка «наверх»
   $$("[data-totop]").forEach((b) => b.addEventListener("click", () => (lenis ? lenis.scrollTo(0, { duration: 1.6 }) : scrollTo({ top: 0, behavior: "smooth" }))));
@@ -185,12 +216,12 @@
     const tables = $$(".ptables .ptable");
     const empty = $(".pempty");
     const apply = () => {
-      const q = search.value.trim().toLowerCase();
+      const q = search.value.trim().replace(/\s+/g, " ").toLowerCase();
       let any = false;
       tables.forEach((t) => {
         const inCat = !cat || t.dataset.cat === cat;
         let n = 0;
-        $$("li", t).forEach((li) => { const ok = inCat && (!q || li.textContent.toLowerCase().includes(q)); li.hidden = !ok; if (ok) n++; });
+        $$("li", t).forEach((li) => { const ok = inCat && (!q || li.textContent.replace(/\u00a0/g, " ").toLowerCase().includes(q)); li.hidden = !ok; if (ok) n++; });
         t.hidden = n === 0;
         if (n) any = true;
       });
@@ -226,6 +257,7 @@
     }
     m.hidden = false;
     openM = m; anyModal = true;
+    hidePop();
     root.classList.add("has-modal");
     lenis?.stop();
     if (anim) {
@@ -276,49 +308,34 @@
       const dm = $("#m-done");
       if (dm) { $("h2", dm).textContent = d ? d[0] : "Спасибо!"; $("[data-done-text]", dm).textContent = d ? d[1] : defDone; }
       f.reset();
+      if (f.closest(".pop")) hidePop();
       showModal("done");
     });
   });
 
-  // окно-заявка: один раз за визит. На компьютере, когда курсор уходит из окна (не раньше 15 с),
-  // на любом устройстве после 60 с на сайте. Не показываем, если человек уже открывал любое окно.
-  if ($("#m-exit")) {
-    const t0 = Date.now();
-    const tryExit = () => {
-      if (openM || anyModal) return;
-      try { if (sessionStorage.getItem("um2-exit")) return; sessionStorage.setItem("um2-exit", "1"); } catch (err) { return; }
-      showModal("exit");
-    };
-    if (fine) document.addEventListener("mouseout", (e) => { if (!e.relatedTarget && e.clientY <= 8 && Date.now() - t0 > 15000) tryExit(); });
-    setTimeout(tryExit, 60000);
+  // карточка-заявка в углу: через 40 секунд на странице или когда курсор уходит к вкладкам (не раньше 15 секунд).
+  // Один раз за визит, только на компьютере и только если человек ещё не открывал окна записи.
+  // Страницу не блокирует: прокрутка работает, закрыть можно крестиком или Esc.
+  const pop = $("#pop");
+  function hidePop() {
+    if (!pop || pop.hidden) return;
+    if (anim) G.to(pop, { autoAlpha: 0, y: 24, duration: 0.3, ease: "power2.in", onComplete: () => { pop.hidden = true; G.set(pop, { clearProps: "opacity,visibility,transform" }); } });
+    else pop.hidden = true;
   }
-
-  // расчёт All-on-4: система и число челюстей
-  $$("[data-calc]").forEach((box) => {
-    const c = JSON.parse(box.dataset.calc);
-    let sys = 0, jaws = 1;
-    const fmt = (n) => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    const set = (k, v, rub = true) => { const el = $(`[data-c="${k}"]`, box); if (el) el.textContent = fmt(v) + (rub ? " ₽" : ""); };
-    const totalEl = $('[data-c="total"]', box);
-    const upd = () => {
-      const [, surg, old] = c.systems[sys];
-      const t = (surg + c.temp + c.perm) * jaws;
-      set("surg", surg * jaws); set("temp", c.temp * jaws); set("perm", c.perm * jaws);
-      const o = $('[data-c="old"]', box);
-      if (o) { o.hidden = !old; if (old) o.textContent = fmt(old * jaws) + " ₽"; }
-      set("day", (surg + c.temp) * jaws); set("later", c.perm * jaws);
-      const from = parseFloat(totalEl.textContent.replace(/\s/g, "")) || t;
-      if (anim) { const v = { n: from }; G.to(v, { n: t, duration: 0.8, ease: "power2.out", onUpdate: () => (totalEl.textContent = fmt(v.n)) }); }
-      else totalEl.textContent = fmt(t);
-    };
-    box.addEventListener("click", (e) => {
-      const b = e.target.closest("[data-sys], [data-jaws]");
-      if (!b) return;
-      if (b.dataset.sys) sys = +b.dataset.sys; else jaws = +b.dataset.jaws;
-      $$(b.dataset.sys ? "[data-sys]" : "[data-jaws]", box).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-      upd();
-    });
-  });
+  const showPop = () => {
+    if (!pop || !pop.hidden || openM || anyModal || menu?.classList.contains("is-open")) return;
+    try { if (sessionStorage.getItem("um2-exit")) return; sessionStorage.setItem("um2-exit", "1"); } catch (err) { return; }
+    pop.hidden = false;
+    if (anim) G.fromTo(pop, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.7, ease: "expo.out", clearProps: "transform" });
+  };
+  if (pop && fine) {
+    const t0 = Date.now();
+    setTimeout(showPop, 40000);
+    document.addEventListener("mouseout", (e) => { if (!e.relatedTarget && e.clientY <= 8 && Date.now() - t0 > 15000) showPop(); });
+  }
+  $$("[data-pop-close]").forEach((b) => b.addEventListener("click", hidePop));
+  // Esc закрывает карточку, только если не открыто окно (окно закрывается первым)
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && !openM) hidePop(); }, true);
 
   // квиз: вопрос за вопросом, без номеров, полоска прогресса
   $$("[data-quiz]").forEach((form) => {
@@ -327,14 +344,16 @@
     const go = (n) => {
       const from = steps[cur], to = steps[n];
       cur = n;
-      if (bar) bar.style.transform = `scaleX(${n / (steps.length - 1)})`;
+      if (bar) bar.style.transform = `scaleX(${(n + 1) / (steps.length + 1)})`;
       const show = () => { steps.forEach((s) => (s.hidden = s !== to)); if (anim) G.fromTo(to, { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out", clearProps: "transform" }); };
       if (anim && from !== to) G.to(from, { opacity: 0, x: -30, duration: 0.2, ease: "power2.in", onComplete: show }); else show();
     };
-    form.addEventListener("change", (e) => {
-      if (e.target.type === "radio") setTimeout(() => go(Math.min(cur + 1, steps.length - 1)), 220);
+    // по клику, а не по change: после «Назад» тот же ответ уже выбран, и change не придёт
+    form.addEventListener("click", (e) => {
+      if (e.target.closest("[data-qback]")) return go(Math.max(0, cur - 1));
+      const r = e.target.closest('input[type="radio"]');
+      if (r && /^q\d/.test(r.name)) { const at = cur; setTimeout(() => { if (cur === at) go(Math.min(at + 1, steps.length - 1)); }, 220); }
     });
-    form.addEventListener("click", (e) => { if (e.target.closest("[data-qback]")) go(Math.max(0, cur - 1)); });
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const ph = $("[data-req]", form);
@@ -362,10 +381,24 @@
     if (!h) return;
     const words = $$("[data-split] .sw > span", h);
     const tl = G.timeline();
+    const media = h.classList.contains("hero") && $(".hero__media", h);
+    const small = phoneMQ.matches;
+    if (media) tl.fromTo(media, { clipPath: small ? "inset(0% 0% 100% 0% round 22px)" : "inset(10% 6% 10% 6% round 22px)" }, { clipPath: "inset(0% 0% 0% 0% round 22px)", duration: small ? 1.4 : 1.6, ease: "power3.inOut" }, small ? 0.35 : 0);
     tl.from($(".hero__media img", h), { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0)
       .from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .from($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .hero__offer, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24, duration: 1, stagger: 0.07 }, 0.4)
+      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4)
       .from(".header__bar", { y: -24, autoAlpha: 0, duration: 0.9 }, 0.2);
+    const pb = $(".hero__promo b", h), ps = $(".hero__promo s", h);
+    if (small && pb && ps) {
+      const orig = pb.textContent, to = +orig.replace(/\D/g, ""), o = { v: +ps.textContent.replace(/\D/g, "") };
+      if (to && o.v > to) tl.to(o, { v: to, duration: 1.4, ease: "power3.out", onUpdate: () => (pb.textContent = (Math.round(o.v / 100) * 100).toLocaleString("ru-RU").replace(/\s/g, "\u00a0") + "\u00a0₽"), onComplete: () => (pb.textContent = orig) }, 0.9);
+    }
+    const trio = $(".hero__trio", h);
+    if (trio && small) {
+      const st = { trigger: trio, start: "top 92%", once: true };
+      G.from($$(".hero__face", trio), { scale: 0.6, autoAlpha: 0, duration: 1.1, stagger: 0.12, ease: "back.out(1.7)", scrollTrigger: st });
+      G.from($$("b, a > span:last-child", trio), { y: 16, autoAlpha: 0, duration: 0.8, stagger: 0.05, delay: 0.25, scrollTrigger: st });
+    }
   };
 
   // разбиваем заголовки до первого кадра
@@ -387,13 +420,12 @@
     heroIn();
   }
 
-  // герой: фон уходит медленнее страницы, текст спокойно тает
-  // на телефоне первый экран выше окна (оффер, кнопки), поэтому текст не тает: его ещё читают
+  // первый экран главной: фото чуть сдвигается внутри рамки, текст не тает (его ещё читают)
+  // на внутренних страницах текст первого экрана спокойно тает, на телефоне нет
   const mm = G.matchMedia();
   const hero = $(".hero");
-  if (hero) G.to(".hero__media", { yPercent: 22, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
+  if (hero) G.fromTo(".hero__media img", { yPercent: 0 }, { yPercent: -6, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
   mm.add("(min-width: 761px)", () => {
-    if (hero) G.to(".hero__in", { y: -80, autoAlpha: 0, ease: "none", scrollTrigger: { trigger: hero, start: "40% top", end: "95% top", scrub: true } });
     const ph = $(".page-hero");
     if (ph) G.to($(".page-hero__in, .doc-hero__text", ph), { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
   });
@@ -454,12 +486,20 @@
     G.to(o, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => (el.textContent = fmt(o.v)) });
   });
 
+  const ring = $(".rt-seal__fill");
+  if (ring) {
+    mm.add("(max-width: 760px)", () => { G.fromTo(ring, { strokeDashoffset: 100 }, { strokeDashoffset: 2, ease: "none", scrollTrigger: { trigger: ".rt-seal", start: "top 85%", end: "center 50%", scrub: true } }); });
+    mm.add("(min-width: 761px)", () => { G.fromTo(ring, { strokeDashoffset: 100 }, { strokeDashoffset: 2, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: ".rt-seal", start: "top 92%", once: true } }); });
+  }
+  if ($(".rt-avg .rt-stars svg")) G.from(".rt-avg .rt-stars svg", { scale: 0, transformOrigin: "50% 50%", stagger: 0.07, duration: 0.6, ease: "back.out(2.2)", scrollTrigger: { trigger: ".rt-avg", start: "top 85%", once: true } });
+  if ($(".rt-seal__stars svg")) G.from(".rt-seal__stars svg", { scale: 0, transformOrigin: "50% 50%", stagger: 0.07, duration: 0.6, ease: "back.out(2.2)", scrollTrigger: { trigger: ".rt-seal", start: "top 80%", once: true } });
+
   // преимущества: горизонтальная лента с закреплением, карточки едут ровно
   mm.add("(min-width: 761px)", () => {
     const pin = $(".feat__pin"), track = $(".feat__track");
     if (!pin || !track) return;
     const dist = () => Math.max(0, track.scrollWidth - innerWidth);
-    const tw = G.to(track, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: pin, start: "top top", end: () => "+=" + dist(), pin: true, anticipatePin: 1, scrub: true, invalidateOnRefresh: true } });
+    const tw = G.to(track, { x: () => -dist(), ease: "none", scrollTrigger: { trigger: pin, start: "top top", end: () => "+=" + dist(), pin: true, anticipatePin: 1, scrub: true, invalidateOnRefresh: true, refreshPriority: 1 } });
     // вступительный текст слегка уходит, когда наезжают карточки
     const introCard = $(".fcard--intro", track);
     if (introCard) G.to(introCard, { autoAlpha: 0.25, ease: "none", scrollTrigger: { trigger: introCard, containerAnimation: tw, start: "right 60%", end: "right 10%", scrub: true } });
@@ -469,16 +509,48 @@
   const tour = $(".tour__pin");
   if (tour) {
     const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
-    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: "+=110%", pin: true, anticipatePin: 1, scrub: true } });
-    tl.fromTo(frame, { clipPath: "inset(16% 22% 16% 22% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 1 }, 0)
-      .fromTo(fim, { scale: 1.25 }, { scale: 1, duration: 1 }, 0)
+    // на телефоне кадр стартует широкой карточкой, как фото в лентах, и закрепление короче
+    const narrow = () => innerWidth <= 760;
+    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: () => (narrow() ? "+=85%" : "+=110%"), pin: true, anticipatePin: 1, scrub: true, invalidateOnRefresh: true, refreshPriority: 2 } });
+    tl.fromTo(frame, { clipPath: () => (narrow() ? "inset(14% 4% 24% 4% round 22px)" : "inset(16% 22% 16% 22% round 28px)") }, { clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 1 }, 0)
+      .fromTo(fim, { scale: () => (narrow() ? 1.1 : 1.25) }, { scale: 1, duration: 1 }, 0)
       .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
       .to({}, { duration: 0.25 });
   }
-  // ленты фото и отзывов едут навстречу друг другу; за один оборот колеса проезжает больше карточек (просьба Ilya 16.10)
+  mm.add("(max-width: 760px)", () => {
+    const track = $(".feat__track");
+    if (!track) return;
+    const cards = $$(".fcard:not(.fcard--intro)", track);
+    const upd = () => {
+      for (let i = 0; i < cards.length - 1; i++) {
+        const c = cards[i].getBoundingClientRect(), n = cards[i + 1].getBoundingClientRect();
+        const k = Math.min(1, Math.max(0, (c.bottom - n.top) / c.height));
+        cards[i].style.transform = k ? `scale(${1 - 0.07 * k})` : "";
+        cards[i].firstElementChild.style.opacity = String(1 - 0.6 * k);
+      }
+    };
+    const t = ST.create({ trigger: track, start: "top bottom", end: "bottom top", onUpdate: upd, onRefresh: upd });
+    return () => { t.kill(); cards.forEach((c) => { c.style.transform = ""; c.firstElementChild.style.opacity = ""; }); };
+  });
+
+  // телефон: подвал раскрывается из карточки на всю ширину, как кадр «Здесь вас ждут»
+  mm.add("(max-width: 760px)", () => {
+    const f = $(".footer");
+    if (f) G.fromTo(f, { clipPath: "inset(0% 4% 0% 4% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "top 30%", scrub: true } });
+  });
+
+  // ленты фото и отзывов едут навстречу друг другу и быстрее прокрутки: пока лента проходит экран,
+  // она сдвигается на 1,2 этого пути, поэтому за оборот колеса проезжает больше фото и отзывов.
+  // Ленту дополняем копиями (для чтения с экрана скрыты), чтобы её хватило на весь сдвиг.
   $$(".tour__row, .rv__row").forEach((row) => {
     const d = parseFloat(row.dataset.dir) || -1;
-    const dist = () => Math.min(row.scrollWidth / 2, innerWidth * (innerWidth <= 760 ? 0.9 : 0.6));
+    const dist = () => (innerHeight + row.offsetHeight) * 1.2;
+    const base = [...row.children];
+    const fill = () => {
+      for (let n = 0; n < 8 && row.scrollWidth < dist() + innerWidth + 40; n++) base.forEach((c) => { const k = c.cloneNode(true); k.setAttribute("aria-hidden", "true"); row.appendChild(k); });
+    };
+    fill();
+    ST.addEventListener("refreshInit", fill);
     G.fromTo(row, { x: () => (d < 0 ? 0 : -dist()) }, { x: () => (d < 0 ? -dist() : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
   });
 
@@ -499,7 +571,7 @@
   document.fonts?.ready.then(refresh);
   addEventListener("load", refresh);
   let rt = 0;
-  $$(".tour img, .feat img, .collage img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
+  $$(".tour img, .feat img, .apic img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
 
   // ---------- запись: шаги ----------
   function booking(box) {
