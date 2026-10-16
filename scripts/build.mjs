@@ -414,7 +414,7 @@ function pageHome() {
     <p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>
     <ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>
   </div>
-  <div class="hero__3d" aria-hidden="true" data-seq="images/implant/l/" data-frames="96" data-seq-s="images/implant/s/" data-frames-s="24"><canvas></canvas></div>
+  <div class="hero__3d" aria-hidden="true" data-seq="images/implant/l/" data-frames="96" data-crop="1000,1200,288,156,426,842" data-seq-s="images/implant/s/" data-frames-s="24" data-crop-s="500,600,144,78,213,421"><canvas></canvas></div>
 </div></section>
 
 <section class="slogan on-dark" aria-label="Сначала думаем. Потом лечим.">
