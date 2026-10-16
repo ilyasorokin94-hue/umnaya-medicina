@@ -158,45 +158,24 @@
   });
 
   // вопросы главной по принципу Lava Dental: тема раскрывается плюсом, внутри свои вопросы со своим плюсом.
-  // В группе [data-acc] открыт один пункт: соседний закрывается одновременно, строка под пальцем остаётся на месте.
+  // Как у них: пункты открываются независимо, по умолчанию открыты первая тема и её первый вопрос, раскрытие 0,5 с.
   // Все ответы лежат в разметке, без скриптов работают обычные <details>.
-  const keepPlace = (el, ms) => {
-    let y0 = el.getBoundingClientRect().top;
-    const t0 = performance.now();
-    root.style.overflowAnchor = "none"; // своя компенсация вместо браузерной, иначе сдвиг считается дважды
-    const fn = () => {
-      const d = el.getBoundingClientRect().top - y0;
-      if (Math.abs(d) > 0.5) { if (lenis) lenis.scrollTo(lenis.scroll + d, { immediate: true, force: true }); else scrollBy(0, d); y0 = el.getBoundingClientRect().top; }
-      if (performance.now() - t0 > ms) { G.ticker.remove(fn); root.style.overflowAnchor = ""; }
-    };
-    G.ticker.add(fn);
-  };
-  const accBody = (d) => $(":scope > .faqt__body, :scope > .faqq__a", d);
-  const accClose = (d) => {
-    const a = accBody(d);
-    d.classList.add("is-off");
-    G.killTweensOf(a);
-    G.fromTo(a, { height: a.offsetHeight }, { height: 0, duration: 0.5, ease: "power3.inOut", onComplete: () => { d.open = false; d.classList.remove("is-off"); a.style.height = ""; ST.refresh(); } });
-  };
-  const accOpen = (d) => {
-    const a = accBody(d);
-    d.classList.remove("is-off");
-    G.killTweensOf(a);
-    const from = d.open ? a.offsetHeight : 0;
-    d.open = true;
-    G.fromTo(a, { height: from }, { height: a.scrollHeight, duration: 0.65, ease: "expo.out", onComplete: () => { a.style.height = ""; ST.refresh(); } });
-    if (d.classList.contains("faqt")) G.fromTo($$(".faqq", a), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.05, delay: 0.08, ease: "expo.out", clearProps: "opacity,transform" });
-  };
   $$(".faqt, .faqq").forEach((d) => {
+    const a = $(":scope > .faqt__body, :scope > .faqq__a", d);
     $(":scope > summary", d).addEventListener("click", (e) => {
       if (!anim) return;
       e.preventDefault();
-      if (d.open && !d.classList.contains("is-off")) { accClose(d); return; }
-      const group = d.parentElement.closest("[data-acc]");
-      const others = group ? $$(":scope > details", d.parentElement).filter((x) => x !== d && x.open && !x.classList.contains("is-off")) : [];
-      if (others.some((x) => x.compareDocumentPosition(d) & Node.DOCUMENT_POSITION_FOLLOWING)) keepPlace(e.currentTarget, 700);
-      others.forEach(accClose);
-      accOpen(d);
+      G.killTweensOf(a);
+      if (d.open && !d.classList.contains("is-off")) {
+        d.classList.add("is-off");
+        G.fromTo(a, { height: a.offsetHeight }, { height: 0, duration: 0.5, ease: "power4.out", onComplete: () => { d.open = false; d.classList.remove("is-off"); a.style.height = ""; ST.refresh(); } });
+        return;
+      }
+      const from = d.open ? a.offsetHeight : 0;
+      d.classList.remove("is-off");
+      d.open = true;
+      G.fromTo(a, { height: from }, { height: a.scrollHeight, duration: 0.5, ease: "power4.out", onComplete: () => { a.style.height = ""; ST.refresh(); } });
+      if (d.classList.contains("faqt")) G.fromTo($$(".faqq", a), { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.05, delay: 0.05, ease: "power4.out", clearProps: "opacity,transform" });
     });
   });
 
