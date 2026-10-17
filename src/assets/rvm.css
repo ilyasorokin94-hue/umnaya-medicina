@@ -1,2 +1,27 @@
 /* Отзывы на телефоне (до 760px). На компьютере блок скрыт, там прежние ленты. */
 @media (min-width: 761px) { .rvm { display: none !important; } }
+
+/* Вариант 1. Стопка карточек */
+@media (max-width: 760px) {
+  .reviews .rv__rows { display: none; }
+  .rvm--stack { margin-top: 30px; padding-inline: var(--gutter); }
+  .rvs { display: grid; gap: 12px; }
+  .rvs__card { margin: 0; padding: 30px 26px; border-radius: var(--radius); background: #fff; color: var(--ink); }
+  .rvs__card[data-tone="ink"] { background: var(--ink); color: #fff; }
+  .rvs__card[data-tone="green"] { background: var(--green); color: #fff; }
+  .rvs__card[data-tone="sage"] { background: var(--sage-2); }
+  .rvs__card blockquote { margin: 0; font: 500 27px/1.2 var(--display); letter-spacing: -.02em; text-wrap: pretty; }
+  .rvs__card--short blockquote { font-size: 35px; line-height: 1.1; letter-spacing: -.03em; }
+  .rvs__card--long blockquote { font-size: 23px; line-height: 1.26; }
+  .rvs__card b { font-weight: inherit; color: var(--green); }
+  .rvs__card[data-tone="ink"] b { color: var(--green-hi); }
+  .rvs__card[data-tone="green"] b { color: var(--ink); }
+  /* со скриптом карточки лежат стопкой: видна верхняя и края двух следующих */
+  .rvs--on { position: relative; display: block; height: 392px; touch-action: pan-y; }
+  .rvs--on .rvs__card { position: absolute; inset: 0 0 34px; transform-origin: 50% 100%; transition: transform .55s var(--ease), opacity .4s; will-change: transform; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; box-shadow: 0 18px 36px -28px rgba(12, 36, 16, .55); }
+  .rvs--on .rvs__card.is-drag { transition: none; }
+  .rvs__bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; }
+  .rvs:not(.rvs--on) + .rvs__bar { display: none; }
+  .rvs__hint { margin: 0; max-width: 15em; font-size: 14px; line-height: 1.35; color: var(--muted); }
+  .rvs__next { flex: none; }
+}
