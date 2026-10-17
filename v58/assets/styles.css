@@ -1512,11 +1512,14 @@ html:not(.js-intro) .intro { display: none; }
 .way__map.is-active iframe { pointer-events: auto; }
 .way__map.is-active .place__unlock { display: none; }
 
-/* закреплённая сцена на компьютере: экран минус шапка */
+/* закреплённая сцена на компьютере: экран минус шапка (шапка компьютера выше --header-h, её высота в --hdr-d) */
 @media (min-width: 1025px) and (min-height: 780px) {
-  .js-anim .way__stage { height: 100svh; padding: calc(var(--header-h) + 30px) 0 30px; }
+  .js-anim .way__stage { height: 100svh; padding: calc(var(--hdr-d) + 20px) 0 24px; }
   .js-anim .way__frame { min-height: 0; }
   .js-anim .way { padding-top: 0; }
+}
+@media (min-width: 1025px) and (min-height: 780px) and (max-height: 859px) {
+  .js-anim .way__now { margin-top: 20px; } .js-anim .way__facts { margin-top: 16px; } .js-anim .way__apps { padding-top: 16px; }
 }
 @media (max-width: 1024px) {
   .way__stage { display: flex; flex-direction: column; gap: 0; }
@@ -1925,6 +1928,10 @@ html:not(.js-intro) .intro { display: none; }
    Под разделами тонкая линия из отрезков: отрезок раздела заполняется, пока этот раздел проходит по экрану (view-timeline).
    При загрузке шапка въезжает сверху и проявляется, а светлая линия под разделами убегает влево */
 @media (min-width: 1025px) {
+  :root { --hdr-d: calc(2 * clamp(1.5rem, 1.1364rem + 1.6162vw, 2.5rem) + 2 * clamp(.5rem, .4545rem + .202vw, .625rem) + 1.4 * clamp(.8rem, .7499rem + .2226vw, .9377rem)); }
+  html { scroll-padding-top: calc(var(--hdr-d) + 12px); }
+  .demo-bar { z-index: 101; }
+  .header a:focus-visible { outline-color: rgb(var(--hc)); box-shadow: 0 0 0 3px var(--ink); }
   body { timeline-scope: --tl-services, --tl-clinic, --tl-team, --tl-reviews, --tl-faq, --tl-contacts; }
   #services { view-timeline: --tl-services block; }
   #clinic { view-timeline: --tl-clinic block; }
@@ -1948,7 +1955,7 @@ html:not(.js-intro) .intro { display: none; }
   .nav__progress { position: absolute; left: 0; bottom: 0; width: calc(100% + var(--hgap)); height: 1px; background: rgba(var(--hc), .2); pointer-events: none; }
   .nav__item:last-child .nav__progress { width: 100%; }
   .nav__fill { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: rgb(var(--hc)); transform: scaleX(0); transform-origin: 0 50%; }
-  .nav__item.is-current .nav__fill { transform: scaleX(1); width: calc(100% - var(--hgap)); }
+  .nav__item.is-current .nav__fill { animation: none; transform: scaleX(1); width: calc(100% - var(--hgap)); }
   .nav__item:last-child .nav__fill { width: 100%; }
   .nav__list::after { content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px; background: rgb(var(--hc)); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none; transition: transform 2s var(--hease); }
   .js-anim .header:not(.is-loaded) .nav__list::after { transform: scaleX(1); }
@@ -1963,6 +1970,7 @@ html:not(.js-intro) .intro { display: none; }
 @media (min-width: 1025px) and (max-width: 1180px) {
   .header .header__bar { gap: 16px; }
   .header .header__bar .logo { --lh: 32px; }
+  .nav__list { --hgap: calc(1.5rem + (100vw - 1025px) * .0855); }
 }
 @supports (animation-timeline: scroll()) {
   @media (min-width: 1025px) {
@@ -1970,6 +1978,11 @@ html:not(.js-intro) .intro { display: none; }
   }
 }
 @supports not (animation-timeline: scroll()) {
-  @media (min-width: 1025px) { .nav__item.is-active .nav__fill { transform: scaleX(1); width: calc(100% - var(--hgap)); } }
+  @media (min-width: 1025px) { .nav__item.is-active .nav__fill { transform: scaleX(1); width: calc(100% - var(--hgap)); } .nav__item:last-child .nav__fill { width: 100%; } }
+}
+@media (min-width: 1025px) and (forced-colors: active) {
+  .header { background-color: Canvas; }
+  .nav__progress { forced-color-adjust: none; background: GrayText; }
+  .nav__fill, .nav__list::after { forced-color-adjust: none; background: CanvasText; }
 }
 @keyframes nav-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
