@@ -17,6 +17,7 @@
   --muted-on-dark: #a9bba9;
   --line: rgba(12, 36, 16, .14);
   --line-on-dark: rgba(223, 232, 220, .18);
+  /* скругление только у плашек, кнопок и форм: фото везде с прямыми углами, как у Лава Дент (Ilya 17.10) */
   --radius: 22px;
   --radius-sm: 12px;
   --gutter: clamp(16px, 4vw, 56px);
@@ -186,7 +187,7 @@ html:not(.js-intro) .intro { display: none; }
 .case[hidden] { display: none; }
 .case__tag { justify-self: start; padding: 7px 12px; border-radius: 999px; background: var(--sage-2); font-size: 13px; }
 .case p { font-size: 15px; color: var(--muted); }
-.ba { position: relative; aspect-ratio: 3 / 2; border-radius: var(--radius); overflow: hidden; user-select: none; touch-action: pan-y; --pos: 50%; cursor: ew-resize; background: var(--paper-2); }
+.ba { position: relative; aspect-ratio: 3 / 2; overflow: hidden; user-select: none; touch-action: pan-y; --pos: 50%; cursor: ew-resize; background: var(--paper-2); }
 .ba__pane { position: absolute; inset: 0; display: grid; align-items: center; }
 .ba__pane--before { justify-items: start; padding-left: 9%; }
 .ba__pane--after { justify-items: end; padding-right: 9%; }
@@ -233,7 +234,7 @@ html:not(.js-intro) .intro { display: none; }
 
 /* ---------- команда ---------- */
 .team__intro { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(28px, 5vw, 80px); align-items: end; margin-bottom: clamp(40px, 6vw, 80px); }
-.team__photo { border-radius: var(--radius); overflow: hidden; aspect-ratio: 5 / 4; background: var(--paper-2); }
+.team__photo { overflow: hidden; aspect-ratio: 5 / 4; background: var(--paper-2); }
 .team__photo img { width: 100%; height: 115%; object-fit: cover; }
 .team__lead { font: 500 clamp(24px, 2.6vw, 38px)/1.2 var(--display); letter-spacing: -.025em; }
 .team__intro p + p { margin-top: 18px; color: var(--muted); }
@@ -241,7 +242,7 @@ html:not(.js-intro) .intro { display: none; }
 .team__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 1.8vw, 26px); }
 .doc { display: grid; gap: 6px; align-content: start; }
 .doc[hidden] { display: none; }
-.doc__photo { position: relative; aspect-ratio: 4 / 5; border-radius: var(--radius); overflow: hidden; background: linear-gradient(160deg, var(--sage-2), var(--sage)); margin-bottom: 12px; }
+.doc__photo { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: linear-gradient(160deg, var(--sage-2), var(--sage)); margin-bottom: 12px; }
 .doc__photo img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: cover; object-position: 50% 6%; transition: transform 1s var(--ease); }
 .doc:hover .doc__photo img { transform: scale(1.04); }
 .doc__initials { position: absolute; inset: 0; display: grid; place-items: center; font: 500 64px/1 var(--display); color: rgba(12, 36, 16, .3); }
@@ -284,7 +285,7 @@ html:not(.js-intro) .intro { display: none; }
 
 /* ---------- мы здесь ---------- */
 .place { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px, 3vw, 40px); align-items: stretch; }
-.place__map { position: relative; min-height: 460px; border-radius: var(--radius); overflow: hidden; background: var(--sage-2); }
+.place__map { position: relative; min-height: 460px; overflow: hidden; background: var(--sage-2); }
 .place__map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; filter: saturate(.6) contrast(1.05); }
 .place__info { display: flex; flex-direction: column; gap: 26px; padding: clamp(26px, 3vw, 44px); border-radius: var(--radius); background: var(--white); }
 .place__info h3 { font-size: clamp(26px, 2.6vw, 40px); }
@@ -346,7 +347,7 @@ html:not(.js-intro) .intro { display: none; }
 .prose { display: grid; gap: 18px; max-width: 760px; font-size: clamp(17px, 1.3vw, 19px); color: var(--muted); }
 .prose p:first-child { color: var(--text); font: 500 clamp(22px, 2vw, 30px)/1.3 var(--display); letter-spacing: -.02em; }
 .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 90px); align-items: start; }
-.split__img { border-radius: var(--radius); overflow: hidden; aspect-ratio: 4 / 5; background: var(--paper-2); position: sticky; top: calc(var(--header-h) + 30px); }
+.split__img { overflow: hidden; aspect-ratio: 4 / 5; background: var(--paper-2); position: sticky; top: calc(var(--header-h) + 30px); }
 .split__img img { width: 100%; height: 115%; object-fit: cover; }
 .svc-list { display: grid; border-top: 1px solid var(--line); }
 .svc-row { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--line); text-decoration: none; transition: padding .5s var(--ease), color .3s; }
@@ -417,7 +418,7 @@ html:not(.js-intro) .intro { display: none; }
 .js-anim [data-reveal] { opacity: 0; transform: translateY(24px); }
 .js-anim [data-reveal="fade"] { transform: none; }
 .js-anim [data-reveal="scale"] { transform: scale(.94); }
-.js-anim [data-clip] { clip-path: inset(18% 0 18% 0 round var(--radius)); }
+.js-anim [data-clip] { clip-path: inset(18% 0 18% 0); }
 
 /* ---------- адаптив ---------- */
 @media (max-width: 1200px) {
@@ -539,7 +540,7 @@ html:not(.js-intro) .intro { display: none; }
 .doc-hero__facts span { font-size: 14px; line-height: 1.4; color: var(--muted-on-dark); }
 .doc-hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
 .doc-hero__cta .btn--ghost { color: #fff; }
-.doc-hero__photo { position: relative; margin: 0; width: 100%; aspect-ratio: 4 / 5; max-height: calc(100svh - var(--header-h) - 70px); border-radius: var(--radius); overflow: hidden; background: linear-gradient(160deg, var(--sage-2), var(--sage)); }
+.doc-hero__photo { position: relative; margin: 0; width: 100%; aspect-ratio: 4 / 5; max-height: calc(100svh - var(--header-h) - 70px); overflow: hidden; background: linear-gradient(160deg, var(--sage-2), var(--sage)); }
 .doc-hero__photo img { position: absolute; left: 0; top: 0; width: 100%; height: 112%; object-fit: cover; object-position: 50% 0%; }
 .doc-hero__photo .doc__initials { font-size: clamp(64px, 8vw, 120px); }
 .doc-about { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 90px); align-items: start; }
@@ -816,9 +817,9 @@ html:not(.js-intro) .intro { display: none; }
 .hero__facts { list-style: none; margin: 34px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px clamp(16px, 2vw, 28px); max-width: 660px; }
 .hero__facts li { padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px; line-height: 1.35; }
 .hero__note { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 18px; font-size: 14px; color: var(--muted); }
-.hero__media { position: relative; margin: 0; aspect-ratio: 1 / 1; max-height: calc(100svh - var(--header-h) - 110px); min-height: 360px; border-radius: var(--radius); overflow: hidden; isolation: isolate; background: var(--sage-2); }
+.hero__media { position: relative; margin: 0; aspect-ratio: 1 / 1; max-height: calc(100svh - var(--header-h) - 110px); min-height: 360px; overflow: hidden; isolation: isolate; background: var(--sage-2); }
 .hero__media img { position: absolute; left: 0; top: 0; width: 100%; height: 112%; object-fit: cover; object-position: 50% 50%; }
-.js-anim .hero__media { clip-path: inset(10% 6% 10% 6% round var(--radius)); }
+.js-anim .hero__media { clip-path: inset(10% 6% 10% 6%); }
 
 /* заголовок раздела: справа пояснение и ссылка */
 .section__aside { display: grid; gap: 14px; justify-items: start; max-width: 460px; }
@@ -843,7 +844,7 @@ html:not(.js-intro) .intro { display: none; }
 /* «О клинике»: три фото ровным рядом, подписи под фото */
 .about__pics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 24px); margin-top: clamp(56px, 7vw, 110px); }
 .apic { margin: 0; display: grid; gap: 14px; align-content: start; }
-.apic__img { position: relative; aspect-ratio: 4 / 3; border-radius: var(--radius); overflow: hidden; background: var(--paper-2); }
+.apic__img { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--paper-2); }
 .apic__img img { position: absolute; left: 0; top: 0; width: 100%; height: 115%; object-fit: cover; }
 .apic figcaption { font-size: 15px; line-height: 1.4; color: var(--muted); }
 
@@ -922,7 +923,7 @@ html:not(.js-intro) .intro { display: none; }
 .tour__rows { display: grid; gap: clamp(18px, 2vw, 28px); padding: clamp(56px, 8vw, 120px) 0; }
 .tour__row { display: flex; align-items: flex-start; gap: clamp(12px, 1.4vw, 20px); width: max-content; will-change: transform; }
 .tfig { --h: clamp(200px, 22vw, 340px); flex: none; margin: 0; display: grid; gap: 12px; }
-.tfig__img { display: block; height: var(--h); aspect-ratio: 4 / 3; border-radius: var(--radius); overflow: hidden; background: var(--ink-2); }
+.tfig__img { display: block; height: var(--h); aspect-ratio: 4 / 3; overflow: hidden; background: var(--ink-2); }
 .tfig--tall .tfig__img { aspect-ratio: 3 / 4; }
 .tfig__img img { width: 100%; height: 100%; object-fit: cover; }
 /* подпись не растягивает карточку: переносится по ширине фото */
@@ -1209,7 +1210,7 @@ html:not(.js-intro) .intro { display: none; }
   .tour__lead { display: block; padding-top: 36px; color: rgba(255, 255, 255, .82); font-size: 16px; line-height: 1.5; }
   .tour__rows { padding: 32px 0 44px; }
   /* тур: кадр раскрывается без закрепления экрана (см. app.js); ленты фото листаются пальцем вбок, страница при этом прокручивается как обычно */
-  .tour__frame { border-radius: 22px; will-change: transform; }
+  .tour__frame { will-change: transform; }
   .tour__row { touch-action: pan-y pinch-zoom; }
 
   /* путь пациента: колода, каждая следующая карточка накрывает предыдущую */
@@ -1380,7 +1381,7 @@ html:not(.js-intro) .intro { display: none; }
 .invite__docs { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
 .invite__docs li { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: 2px; min-width: 0; font-size: 13px; line-height: 1.3; color: var(--muted); }
 .invite__docs b { margin-top: 10px; font-size: 15px; font-weight: 500; color: var(--ink); }
-.invite__pic { display: block; height: 100%; min-height: 200px; border-radius: 16px; overflow: hidden; background: var(--sage); }
+.invite__pic { display: block; height: 100%; min-height: 200px; overflow: hidden; background: var(--sage); }
 .invite__pic img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 12%; }
 .invite__body { position: relative; display: flex; flex-direction: column; padding: clamp(28px, 3.4vw, 44px); }
 .invite__body .label { color: var(--green-deep); }
@@ -1408,7 +1409,7 @@ html:not(.js-intro) .intro { display: none; }
   .invite__docs { gap: 8px; }
   .invite__docs li { font-size: 12px; }
   .invite__docs b { margin-top: 6px; font-size: 14px; }
-  .invite__pic { aspect-ratio: 1 / 1; border-radius: 14px; }
+  .invite__pic { aspect-ratio: 1 / 1; }
   .invite__docs li > span:last-child { display: none; }
   .invite__body { position: static; padding: 20px 16px calc(20px + env(safe-area-inset-bottom)); }
   .invite__body .label { margin-right: 0; }
@@ -1491,7 +1492,7 @@ html:not(.js-intro) .intro { display: none; }
 .way__link:hover { text-decoration-color: currentColor; }
 
 .way__walk { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 18px; min-width: 0; }
-.way__frame { position: relative; min-height: 520px; border-radius: var(--radius); overflow: hidden; background: var(--sage); isolation: isolate; }
+.way__frame { position: relative; min-height: 520px; overflow: hidden; background: var(--sage); isolation: isolate; }
 .way__shot { position: absolute; inset: 0; margin: 0; }
 .way__img { position: absolute; inset: 0; display: block; overflow: hidden; }
 .way__img img { width: 100%; height: 100%; object-fit: cover; object-position: var(--op, 50% 50%); transform-origin: 50% 60%; will-change: transform; }
@@ -1506,7 +1507,7 @@ html:not(.js-intro) .intro { display: none; }
 .way__text { min-height: 1.5em; font-size: 16px; color: var(--muted); }
 
 .way__mapwrap { overflow: hidden; }
-.way__map { position: relative; height: clamp(340px, 42vw, 480px); margin-top: clamp(24px, 3vw, 40px); border-radius: var(--radius); overflow: hidden; background: var(--sage); }
+.way__map { position: relative; height: clamp(340px, 42vw, 480px); margin-top: clamp(24px, 3vw, 40px); overflow: hidden; background: var(--sage); }
 .way__map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; filter: saturate(.7); }
 .way__map.is-active iframe { pointer-events: auto; }
 .way__map.is-active .place__unlock { display: none; }
@@ -1527,7 +1528,7 @@ html:not(.js-intro) .intro { display: none; }
   .way__frame { display: flex; gap: 12px; min-height: 0; margin: 28px calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter) 4px; border-radius: 0; background: none; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); scrollbar-width: none; overscroll-behavior-x: contain; }
   .way__frame::-webkit-scrollbar { display: none; }
   .way__shot { position: relative; inset: auto; flex: 0 0 min(78%, 420px); scroll-snap-align: start; clip-path: none !important; opacity: 1 !important; }
-  .way__img { position: relative; aspect-ratio: 4 / 5; border-radius: 18px; background: var(--sage); }
+  .way__img { position: relative; aspect-ratio: 4 / 5; background: var(--sage); }
   .way__shot figcaption { display: grid; gap: 2px; padding: 12px 4px 0; font-size: 15px; line-height: 1.4; color: var(--muted); }
   .way__shot figcaption b { font: 500 17px/1.25 var(--display); letter-spacing: -.01em; color: var(--ink); }
   .way__facts { margin-top: 26px; }
