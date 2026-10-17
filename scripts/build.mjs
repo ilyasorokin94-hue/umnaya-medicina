@@ -45,9 +45,9 @@ const logoImg = (depth, eager = true) => {
   return `<img class="logo__img" src="${src}"${fb ? ` data-fb="${fb}"` : ""} alt=""${eager ? "" : ' loading="lazy"'} referrerpolicy="no-referrer" onerror="umLogo(this)">`;
 };
 
-// в шапке телефона светлая надпись логотипа (шапка там тёмная и полупрозрачная, как у Лава Дент);
+// в шапке телефона и компьютера светлая надпись логотипа (шапка там прозрачная с тёмной дымкой, как у Лава Дент);
 // в меню телефона логотип одним тёмным цветом на шалфейном фоне, как у Лава Дент
-const phoneLogo = (depth, eager = true, file = "header-logo-light.svg") => `<picture><source media="(max-width: 760px) and (forced-colors: none)" srcset="${pre(depth)}images/brand/${file}">${logoImg(depth, eager)}</picture>`;
+const phoneLogo = (depth, eager = true, file = "header-logo-light.svg", desk = false) => `<picture><source media="(max-width: 760px) and (forced-colors: none)${desk ? ", (min-width: 1025px) and (forced-colors: none)" : ""}" srcset="${pre(depth)}images/brand/${file}">${logoImg(depth, eager)}</picture>`;
 
 // ---------- иконки ----------
 const icon = {
@@ -63,6 +63,14 @@ const icon = {
 // ---------- общие куски ----------
 // меню сайта, как у Тридента: «Услуги» раскрываются списком направлений, остальное разделы и страницы
 const menuItems = (p, href) => [["Цены", `${p}ceny.html`], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
+// шапка компьютера как у Лава Дент: под каждым разделом отрезок линии, он заполняется, пока этот раздел проходит
+// по экрану (CSS view-timeline блока). «Цены» отдельной страницей, поэтому блок услуг с ценами «от» делят пополам «Услуги» и «Цены»
+const navLine = {
+  "Услуги": "animation-timeline:--tl-services;animation-range:entry-crossing 0% entry-crossing 50%",
+  "Цены": "animation-timeline:--tl-services;animation-range:entry-crossing 50% entry-crossing 100%",
+  "О клинике": "animation-timeline:--tl-clinic", "Врачи": "animation-timeline:--tl-team", "Отзывы": "animation-timeline:--tl-reviews",
+  "Вопросы": "animation-timeline:--tl-faq", "Контакты": "animation-timeline:--tl-contacts",
+};
 // меню телефона как у Лава Дент: разделы в порядке страницы, «Цены» рядом с услугами
 const phoneMenuItems = (p, href) => [["Услуги", href("services"), "uslugi"], ["Цены", `${p}ceny.html`], ["О клинике", href("clinic")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
@@ -152,10 +160,9 @@ function header(depth, home = false) {
   const items = menuItems(p, href);
   return `
 <header class="header"><div class="header__bar">
-  <a class="logo" href="${p}index.html" aria-label="Умная Медицина. Стоматология, на главную">${phoneLogo(depth)}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
+  <a class="logo" href="${p}index.html" aria-label="Умная Медицина. Стоматология, на главную">${phoneLogo(depth, true, "header-logo-light.svg", true)}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
   <nav class="nav" aria-label="Разделы">
-    <div class="nav__drop"><a href="${href("services")}">Услуги</a><div class="nav__panel">${homeOrder.map((k) => `<a href="${p}uslugi/${k}.html"><span>${esc(svc[k].menu)}</span><small>${esc(svc[k].from)}</small></a>`).join("")}</div></div>
-    ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}
+    <ul class="nav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li class="nav__item"><a class="nav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="${navLine[t] || ""}"></span></span></li>`).join("")}</ul>
   </nav>
   <div class="header__cta">
     <a class="header__phone" href="${clinic.phoneHref}"><b>${esc(clinic.phone)}</b><small>${esc(clinic.hours)}</small></a>

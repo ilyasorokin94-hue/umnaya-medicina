@@ -99,6 +99,8 @@
 
   // ---------- шапка: всегда на месте, уезжает вверх ровно вместе с демо-полосой ----------
   const header = $(".header");
+  // страховка: если первый экран так и не запустился, шапка компьютера всё равно появляется
+  setTimeout(() => header?.classList.add("is-loaded"), 6000);
   const demo = $(".demo-bar");
   let demoH = 0;
   const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; root.style.setProperty("--demo-h", demoH + "px"); hdrTop = null; onScrollHeader(); };
@@ -114,14 +116,21 @@
   addEventListener("resize", setDemo);
   setDemo();
 
-  // подсветка пункта меню текущего раздела
-  const navLinks = $$('.nav a[href^="#"]');
-  if (navLinks.length && "IntersectionObserver" in window) {
-    const map = new Map(navLinks.map((a) => [a.hash.slice(1), a]));
-    const io = new IntersectionObserver((ents) => ents.forEach((en) => {
-      if (en.isIntersecting) navLinks.forEach((a) => a.classList.toggle("is-active", a === map.get(en.target.id)));
-    }), { rootMargin: "-45% 0px -50% 0px" });
-    map.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
+  // разделы в шапке компьютера как у Лава Дент: светлый тот, что сейчас посередине экрана (между разделами ни один);
+  // на других страницах светлый сама страница или её раздел (услуги, врачи), и его отрезок линии заполнен
+  const navItems = $$(".nav__item");
+  const navSecs = navItems.map((li) => { const a = $("a", li); return [li, a.hash && a.pathname === location.pathname && document.getElementById(decodeURIComponent(a.hash.slice(1)))]; }).filter(([, s]) => s);
+  if (navSecs.length && "IntersectionObserver" in window) {
+    const seen = new Set();
+    const io = new IntersectionObserver((ents) => {
+      ents.forEach((en) => (en.isIntersecting ? seen.add(en.target) : seen.delete(en.target)));
+      navSecs.forEach(([li, s]) => li.classList.toggle("is-active", seen.has(s)));
+    }, { rootMargin: "-45% 0px -50% 0px" });
+    navSecs.forEach(([, s]) => io.observe(s));
+  } else if (!navSecs.length) {
+    const cur = navItems.find((li) => { const a = $("a", li); return !a.hash && a.pathname === location.pathname; })
+      || navItems.find((li) => { const d = $("a", li).dataset.dir; return d && location.pathname.includes(`/${d}/`); });
+    cur?.classList.add("is-current");
   }
 
   // ---------- вкладки (команда, прайс, FAQ) ----------
@@ -610,6 +619,9 @@
     // сигнал первому экрану с имплантом: шторка ушла, можно собирать
     window.__umHeroIn = true;
     document.dispatchEvent(new Event("um:hero-in"));
+    // шапка компьютера въезжает сверху и проявляется, линия под разделами убегает влево, как у Лава Дент (CSS);
+    // класс ставим через кадр, чтобы браузер успел нарисовать начальное положение
+    requestAnimationFrame(() => requestAnimationFrame(() => header?.classList.add("is-loaded")));
     const h = $(".hero, .page-hero");
     if (!h) return;
     const words = $$("[data-split] .sw > span", h);
@@ -620,8 +632,8 @@
     const mimg = $(".hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4)
-      .from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
+      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
+    if (!matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     const pb = $(".hero__promo b", h), ps = $(".hero__promo s", h);
     if (small && pb && ps) {
       const orig = pb.textContent, to = +orig.replace(/\D/g, ""), o = { v: +ps.textContent.replace(/\D/g, "") };
