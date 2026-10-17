@@ -2076,3 +2076,47 @@ html:not(.js-intro) .intro { display: none; }
 .svm__act .btn { flex: 1 1 50%; max-width: 50%; }
 .svm__act .btn:not(.btn--ghost) { --bg: var(--ink); --fg: var(--sage-2); }
 @media (max-width: 640px) { .svm__row { flex-direction: column; align-items: flex-start; gap: 4px; } .svm__act { flex-wrap: wrap; } .svm__act .btn { max-width: none; } }
+
+/* ---------- первый экран без перегруза (Ilya 17.10): заголовок, одна строка, кнопка и акция строкой.
+   Без кикера, фактов и пометок; картинка одна и стоит на месте, без анимации ---------- */
+.hero--v { position: relative; display: flex; flex-direction: column; min-height: 100svh; padding: calc(var(--hdr-d, var(--header-h)) + clamp(28px, 3.4vw, 56px)) 0 clamp(36px, 4vw, 64px); background: var(--ink); color: #fff; overflow: hidden; }
+.hero--v .hero__in { flex: 1; min-height: 0; }
+.hero--v h1 { color: #fff; }
+.hero--v h1 [data-split] { max-width: none; }
+.hv__sub { margin: 24px 0 0; max-width: 32ch; font-size: clamp(17px, 1.35vw, 21px); line-height: 1.45; color: rgba(255, 255, 255, .7); text-wrap: pretty; }
+.hero--v .hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 26px; margin-top: 36px; }
+.hv__offer { margin: 0; font-size: 15px; line-height: 1.3; color: rgba(255, 255, 255, .66); }
+.hv__offer b { font: 500 19px/1 var(--display); letter-spacing: -.02em; color: #fff; font-variant-numeric: tabular-nums; }
+.hv__offer s { color: rgba(255, 255, 255, .42); }
+.hv__pic { position: relative; margin: 0; overflow: hidden; }
+.hv__pic img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 760px) {
+  .hero--v { min-height: 0; }
+  .hero--v h1 { order: 0; font-size: clamp(36px, 10.4vw, 48px); line-height: 1.02; }
+  .hv__sub { order: 1; margin-top: 14px; font-size: 16px; }
+  .hv__pic { order: 2; flex: 1 1 0; min-height: 140px; margin-top: 22px; }
+  .hero--v .hero__actions { order: 3; display: grid; gap: 12px; margin-top: 18px; }
+  .hero--v .hero__actions .btn { width: 100%; }
+  .hv__offer { text-align: center; }
+}
+/* вариант «Три врача»: заголовок и рядом три настоящих врача, кто составляет план */
+.hv__docs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(10px, 1.2vw, 18px); }
+.hv__docs a { display: grid; grid-template-rows: 1fr auto auto; height: 100%; color: inherit; text-decoration: none; }
+.hv__docs .hv__pic { background: var(--sage-2); }
+.hv__docs .hv__pic img { object-position: 50% 12%; transition: transform 1s var(--ease); }
+.hv__docs a:hover .hv__pic img { transform: scale(1.04); }
+.hv__docs b { margin-top: 14px; font: 500 clamp(17px, 1.4vw, 21px)/1.15 var(--display); letter-spacing: -.02em; }
+.hv__docs a > span:last-child { margin-top: 4px; font-size: 14px; line-height: 1.3; color: rgba(255, 255, 255, .6); }
+@media (min-width: 761px) {
+  .hero--v2 .hero__in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(32px, 4vw, 80px); align-items: center; }
+  .hero--v2 h1 { font-size: clamp(42px, 4.6vw, 80px); letter-spacing: -.045em; }
+  .hv__docs .hv__pic { aspect-ratio: 2 / 3; max-height: calc(100svh - var(--hdr-d, var(--header-h)) - 200px); width: 100%; }
+}
+@media (max-width: 760px) {
+  .hv__docs { order: 2; flex: 1 1 0; min-height: 170px; margin-top: 22px; gap: 8px; }
+  .hv__docs a { min-height: 0; }
+  .hero--v2 .hv__sub { display: none; }
+  .hv__docs .hv__pic { order: 0; flex: none; min-height: 0; margin: 0; }
+  .hv__docs b { margin-top: 10px; font-size: 16px; }
+  .hv__docs a > span:last-child { font-size: 12.5px; }
+}
