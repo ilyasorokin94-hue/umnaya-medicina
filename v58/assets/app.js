@@ -808,6 +808,15 @@
     pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
     return () => { ro.disconnect(); G.set([items, img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" }); };
   });
+  // то же для старых браузеров: окно ведёт по широким фото ленты (вход, ресепшен, врачи) в тех же отрезках прокрутки, что в CSS
+  if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px) and (max-aspect-ratio: 4 / 5)", () => {
+    const spacer = $(".ptour__spacer", pt);
+    const at = (k) => () => `top+=${k * (spacer.offsetHeight - innerHeight)} top`;
+    const ranges = [[() => `top bottom-=${0.4 * innerHeight}`, at(0.25)], [at(0.11), at(0.56)], [at(0.44), at(0.89)]];
+    const rails = $$(".ptour__items > .ptour__item", pt).slice(1, 4).map((it) => $(".ptour__rail", it));
+    rails.forEach((r, i) => r && G.fromTo(r, { xPercent: 0 }, { xPercent: -100, ease: "none", scrollTrigger: { trigger: spacer, start: ranges[i][0], end: ranges[i][1], scrub: true, invalidateOnRefresh: true } }));
+    return () => G.set(rails.filter(Boolean), { clearProps: "transform" });
+  });
   mm.add("(max-width: 760px)", () => {
     const track = $(".feat__track");
     if (!track) return;
