@@ -291,22 +291,20 @@ function footer(depth) {
   const { lat, lon } = clinic.geo;
   return `
 <footer class="footer on-dark"><div class="wrap footer__in">
-  <div class="footer__cta">
-    <div><h2 data-split>${esc(home.final[0])}</h2><p class="footer__lead">${esc(home.final[1])}</p></div>
-    <div class="footer__form">
-      <form class="cb" data-lead="final" novalidate>
-        <label class="cb__label" for="cb-phone">Ваш телефон</label>
-        <div class="cb__field"><input id="cb-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 ___ ___-__-__" required aria-describedby="cb-hint"><button class="cb__btn" type="submit">${esc(home.footForm.btn)}</button></div>
-        <p class="cb__hint" id="cb-hint">Перезвоним ежедневно с 9:00 до 21:00. Оставите номер вечером, позвоним утром.</p>
-        <p class="cb__consent">Отправляя номер, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
-        <div class="cb__alt"><p>Есть снимок или план из другой клиники?</p><a class="btn btn--ghost btn--sm" href="${fallbackHref("xray", p)}" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
-      </form>
-      <div class="cb__done" role="status" tabindex="-1" hidden>
-        <p class="cb__done-t">Спасибо, номер у нас</p>
-        <p class="cb__done-s" data-done-s>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}.</p>
-        <div class="cb__alt"><p>Пока ждёте, можно прислать снимок.</p><a class="btn btn--ghost btn--sm" href="${fallbackHref("xray", p)}" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
-        <button class="way__link cb__again" type="button" data-again>Указать другой номер</button>
-      </div>
+  <div class="footer__cta footer__cta--big">
+    <form class="cb big" data-lead="final" novalidate>
+      <p class="label label--light">${esc(home.footForm.label)}</p>
+      <h2 class="big__t" data-split>${esc(home.final[0])}</h2>
+      <label class="big__field" for="cb-phone"><span class="sr">Ваш телефон</span><span class="big__ghost" aria-hidden="true"><i data-typed></i><span data-rest>+7 000 000-00-00</span></span><input class="big__in" id="cb-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required aria-describedby="cb-hint"></label>
+      <button class="big__btn" type="submit">${esc(home.footForm.btn)}</button>
+      <p class="cb__hint" id="cb-hint">${esc(home.final[1])}</p>
+      <p class="cb__consent">Отправляя номер, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
+    </form>
+    <div class="cb__done" role="status" tabindex="-1" hidden>
+      <p class="cb__done-t">Спасибо, номер у нас</p>
+      <p class="cb__done-s" data-done-s>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}.</p>
+      <div class="cb__alt"><p>Пока ждёте, можно прислать снимок.</p><a class="btn btn--ghost btn--sm" href="${fallbackHref("xray", p)}" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
+      <button class="way__link cb__again" type="button" data-again>Указать другой номер</button>
     </div>
   </div>
   <div class="fstage">

@@ -543,36 +543,47 @@
     } catch (err) { /* отмена или нет доступа к буферу */ }
   });
 
-  // ---------- заявка в подвале: одно поле, ответ на месте ----------
+  // ---------- заявка в подвале: один большой номер, ответ на месте ----------
+  // Введённые цифры встают поверх серой маски «+7 000 000-00-00», кнопка загорается на десятой цифре.
   const cb = $(".cb"), cbIn = $("#cb-phone"), cbDone = $(".cb__done"), cbHint = $(".cb__hint");
   if (cb && cbIn && cbDone && cbHint) {
-    const hint0 = cbHint.textContent;
+    const hint0 = cbHint.textContent, btn = $(".big__btn", cb), typed = $("[data-typed]", cb), rest = $("[data-rest]", cb);
+    const M = rest.textContent;
     const digits = (v) => { let d = v.replace(/\D/g, ""); if (d[0] === "8") d = "7" + d.slice(1); if (d && d[0] !== "7") d = "7" + d; return d.slice(0, 11); };
     const fmt = (d) => { const r = d.slice(1); let t = "+7"; if (r.length) t += " " + r.slice(0, 3); if (r.length > 3) t += " " + r.slice(3, 6); if (r.length > 6) t += "-" + r.slice(6, 8); if (r.length > 8) t += "-" + r.slice(8, 10); return t; };
     const clearErr = () => { cb.classList.remove("is-error"); cbIn.removeAttribute("aria-invalid"); cbHint.textContent = hint0; };
-    cbIn.addEventListener("focus", () => { if (!cbIn.value) cbIn.value = "+7 "; });
-    cbIn.addEventListener("blur", () => { if (digits(cbIn.value).length <= 1) cbIn.value = ""; });
-    cbIn.addEventListener("input", () => { const d = digits(cbIn.value); cbIn.value = d.length <= 1 ? "+7 " : fmt(d); if (cb.classList.contains("is-error") && d.length === 11) clearErr(); });
+    const draw = () => {
+      typed.textContent = cbIn.value; rest.textContent = M.slice(cbIn.value.length);
+      const full = digits(cbIn.value).length === 11;
+      if (full === btn.classList.contains("is-ready")) return;
+      btn.classList.toggle("is-ready", full);
+      if (full) { clearErr(); if (anim) G.fromTo(btn, { scale: 0.92 }, { scale: 1, duration: 0.6, ease: "back.out(2.5)" }); }
+    };
+    cbIn.addEventListener("focus", () => { if (!cbIn.value) { cbIn.value = "+7 "; draw(); } });
+    cbIn.addEventListener("blur", () => { if (digits(cbIn.value).length <= 1) { cbIn.value = ""; draw(); } });
+    // привычная 8 сразу после «+7» не становится первой цифрой номера
+    cbIn.addEventListener("input", () => { let d = digits(cbIn.value); if (d === "78") d = "7"; cbIn.value = d.length <= 1 ? "+7 " : fmt(d); draw(); });
     cb.addEventListener("submit", (e) => {
       e.preventDefault();
+      if (btn.disabled) return;
       const d = digits(cbIn.value);
       if (d.length !== 11) {
         cb.classList.add("is-error"); cbIn.setAttribute("aria-invalid", "true");
         cbHint.textContent = d.length <= 1 ? "Введите номер, и мы перезвоним" : "Не хватает цифр: после +7 нужно 10";
         cbIn.focus();
-        if (anim) G.fromTo($(".cb__field", cb), { x: -6 }, { x: 0, duration: 0.5, ease: "elastic.out(1, .35)" });
+        if (anim) G.fromTo($(".big__field", cb), { x: -8 }, { x: 0, duration: 0.5, ease: "elastic.out(1, .35)" });
         return;
       }
-      const btn = $(".cb__btn", cb); btn.disabled = true; btn.textContent = "Отправляем";
+      btn.disabled = true; btn.textContent = "Отправляем";
       // демо: на рабочем сайте здесь заявка уходит в amoCRM с формой «подвал», страницей и UTM-метками
       setTimeout(() => {
         $("[data-done-s]", cbDone).textContent = isOpen()
-          ? "Администратор перезвонит за 5 минут с номера +7\u00a0495\u00a0150-36-15."
-          : "Сейчас клиника закрыта. Перезвоним утром, после 9:00, с номера +7\u00a0495\u00a0150-36-15.";
+          ? "Администратор перезвонит за 5 минут с номера +7 495 150-36-15."
+          : "Сейчас клиника закрыта. Перезвоним утром, после 9:00, с номера +7 495 150-36-15.";
         const h0 = cb.offsetHeight;
         cb.hidden = true; cbDone.hidden = false; cbDone.focus({ preventScroll: true });
         if (anim) { G.from(cbDone, { height: h0, duration: 0.6, ease: "power3.out", clearProps: "height" }); G.from(cbDone.children, { y: 16, autoAlpha: 0, duration: 0.6, stagger: 0.06, ease: "power3.out" }); }
-        btn.disabled = false; btn.textContent = "Жду звонка"; cbIn.value = ""; clearErr();
+        btn.disabled = false; btn.textContent = "Жду звонка"; cbIn.value = ""; draw(); clearErr();
       }, 700);
     });
     $("[data-again]", cbDone)?.addEventListener("click", () => { cbDone.hidden = true; cb.hidden = false; cbIn.focus(); });
