@@ -508,7 +508,7 @@
     });
   });
 
-  // ---------- контакты «дорога до двери» ----------
+  // ---------- контакты: адрес, часы, маршрут, Яндекс Карта ----------
   // открыто ли сейчас: время Москвы, ежедневно с 9:00 до 21:00
   const nowMsk = () => {
     const pt = new Intl.DateTimeFormat("ru-RU", { timeZone: "Europe/Moscow", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
@@ -520,40 +520,51 @@
     if (isOpen()) { openSt.textContent = "Сейчас открыто, до 21:00"; openSt.classList.add("is-open"); }
     else openSt.textContent = nowMsk() < 540 ? "Сейчас закрыто, откроемся в 9:00" : "Сейчас закрыто, откроемся завтра в 9:00";
   }
-  // точки пути: без закрепления (телефон, низкий экран, «уменьшить движение») фото меняются по нажатию на точку
-  const wayShots = $$(".way__shot"), wayChips = $$(".way__stops .chip"), wayText = $(".way__text");
-  let wayCur = -1, wayTrig = null;
-  const wayActive = (i) => {
-    if (i === wayCur || !wayShots[i]) return;
-    wayCur = i;
-    wayChips.forEach((c, k) => { c.classList.toggle("is-on", k === i); c.setAttribute("aria-pressed", String(k === i)); });
-    wayShots.forEach((x, k) => x.classList.toggle("is-on", k === i));
-    if (wayText) wayText.textContent = $("figcaption span", wayShots[i])?.textContent || "";
-  };
-  wayActive(0);
-  wayChips.forEach((c, i) => c.addEventListener("click", () => {
-    if (!wayTrig) return wayActive(i);
-    const y = wayTrig.start + ((wayTrig.end - wayTrig.start) * i) / (wayShots.length - 1);
-    lenis ? lenis.scrollTo(y, { duration: 0.9 }) : scrollTo(0, y);
-  }));
-  // карта по кнопке: грузится только при первом открытии
-  const mapBtn = $("[data-map-toggle]"), mapWrap = $("#way-map");
+  // карта двигается только после нажатия, иначе колесо и палец застревают на ней при прокрутке страницы
+  $$(".ctmap").forEach((m) => {
+    m.addEventListener("click", () => m.classList.add("is-active"));
+    m.addEventListener("mouseleave", () => m.classList.remove("is-active"));
+  });
+  document.addEventListener("pointerdown", (e) => { $$(".ctmap.is-active").forEach((m) => { if (!m.contains(e.target)) m.classList.remove("is-active"); }); });
+  // на телефоне своя карта: метка по центру, а не справа от карточки (вариант 5)
+  if (matchMedia("(max-width: 1024px)").matches) $$("iframe[data-src-phone]").forEach((f) => { f.src = f.dataset.srcPhone; });
+  // вариант 2: карта по плитке «Показать карту», грузится при первом открытии и раскрывается из плитки во всю ширину экрана
+  const mapBtn = $("[data-map-toggle]"), mapWrap = $("#ct-map");
   mapBtn?.addEventListener("click", () => {
-    const open = mapWrap.hidden, fr = $("iframe", mapWrap);
+    const open = mapWrap.hidden, fr = $("iframe", mapWrap), box = $(".ctmap", mapWrap);
     if (open && fr && !fr.src) fr.src = fr.dataset.src;
     mapBtn.setAttribute("aria-expanded", String(open));
-    mapBtn.textContent = open ? "Скрыть карту" : "Показать карту";
+    $("[data-map-label]", mapBtn).textContent = open ? "Скрыть карту" : "Показать карту";
     if (open) {
       mapWrap.hidden = false;
-      if (anim) G.from(mapWrap, { height: 0, duration: 0.8, ease: "power3.inOut", clearProps: "height", onComplete: () => ST.refresh() });
-      else ST?.refresh();
+      if (!anim) return ST?.refresh();
+      const b = mapBtn.getBoundingClientRect(), w = mapWrap.getBoundingClientRect();
+      G.timeline({ onComplete: () => ST.refresh() })
+        .from(mapWrap, { height: 0, duration: 0.9, ease: "power3.inOut", clearProps: "height" })
+        .fromTo(box, { clipPath: `inset(0px ${Math.max(0, w.right - b.right)}px 0px ${Math.max(0, b.left - w.left)}px)` }, { clipPath: "inset(0px 0px 0px 0px)", duration: 1, ease: "power3.inOut", clearProps: "clipPath" }, 0.15);
+      if (lenis) lenis.scrollTo(mapBtn, { offset: -($(".header")?.offsetHeight || headerH()) - 12, duration: 1.2 });
     } else {
       const fin = () => { mapWrap.hidden = true; if (G) G.set(mapWrap, { clearProps: "height" }); ST?.refresh(); };
-      if (anim) G.to(mapWrap, { height: 0, duration: 0.5, ease: "power2.in", onComplete: fin }); else fin();
+      if (anim) G.to(mapWrap, { height: 0, duration: 0.55, ease: "power2.in", onComplete: fin }); else fin();
     }
   });
-  $(".way__map")?.addEventListener("click", (e) => e.currentTarget.classList.add("is-active"));
-  $(".way__map")?.addEventListener("mouseleave", (e) => e.currentTarget.classList.remove("is-active"));
+  // вариант 3: выбрали город и способ, карта строит маршрут, кнопка «Маршрут» открывает его в Яндекс Картах
+  const ct3 = $(".ct3");
+  if (ct3) {
+    const fr = $(".ct3__map iframe"), to = $(".ct3__map").dataset.to, ya = $("[data-route-ya]", ct3);
+    const towns = $$(".ct3__towns .chip", ct3), modes = $$(".ct3__mode button", ct3);
+    let from = towns[0]?.dataset.from, rtt = "auto";
+    const sub = (t) => (t ? "из " + t.dataset.of : "Яндекс Карты");
+    const go = () => {
+      const q = `rtext=${from}~${to}&rtt=${rtt}`;
+      fr.src = `https://yandex.ru/map-widget/v1/?${q}`;
+      ya.href = `https://yandex.ru/maps/?${q}`;
+      $("small", ya).textContent = sub(towns.find((t) => t.classList.contains("is-on")));
+    };
+    const pick = (list, el) => list.forEach((b) => { b.classList.toggle("is-on", b === el); b.setAttribute("aria-pressed", String(b === el)); });
+    towns.forEach((t) => t.addEventListener("click", () => { pick(towns, t); from = t.dataset.from; go(); }));
+    modes.forEach((m) => m.addEventListener("click", () => { pick(modes, m); rtt = m.dataset.rtt; go(); }));
+  }
   // отправить адрес себе или тому, кто повезёт
   const shareBtn = $("[data-share]");
   shareBtn?.addEventListener("click", async () => {
@@ -991,22 +1002,12 @@
     };
   });
 
-  // контакты: сцена закрепляется, прокрутка ведёт от улицы к двери, каждое фото поднимается шторкой.
-  // Создаётся после ленты «путь», поэтому её отступ учтён; refreshPriority как у неё
-  if (wayShots.length > 1) mm.add("(min-width: 1025px) and (min-height: 780px)", () => {
-    const n = wayShots.length, imgs = wayShots.map((x) => $("img", x)), way = $(".way");
-    way.classList.add("is-pinned");
-    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: {
-      trigger: ".way__stage", start: "top top", end: () => "+=" + Math.round((n - 1) * innerHeight * 0.55), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 1,
-      onUpdate: (self) => wayActive(Math.round(self.progress * (n - 1))),
-    } });
-    wayTrig = tl.scrollTrigger;
-    for (let i = 1; i < n; i++) {
-      tl.fromTo(wayShots[i], { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1 }, i - 1)
-        .fromTo(imgs[i], { scale: 1.18, yPercent: 4 }, { scale: 1, yPercent: 0, duration: 1 }, i - 1)
-        .to(imgs[i - 1], { scale: 1.1, yPercent: -3, duration: 1 }, i - 1);
-    }
-    return () => { wayTrig = null; way.classList.remove("is-pinned"); G.set(wayShots, { clearProps: "clipPath" }); G.set(imgs, { clearProps: "transform" }); };
+  // контакты, вариант 4: узкая полоса карты при прокрутке раскрывается до краёв экрана
+  if ($(".ct4__map")) mm.add("(min-width: 0px)", () => {
+    const map = $(".ct4__map");
+    const inset = () => { const g = Math.round(innerWidth > 1024 ? innerWidth * 0.2 : Math.max(0, (innerWidth - $(".ct4").offsetWidth) / 2)), v = Math.round(map.offsetHeight * 0.16); return `inset(${v}px ${g}px ${v}px ${g}px)`; };
+    const tw = G.fromTo(map, { clipPath: inset }, { clipPath: "inset(0px 0px 0px 0px)", ease: "none", scrollTrigger: { trigger: map, start: "top 92%", end: "top 18%", scrub: true, invalidateOnRefresh: true } });
+    return () => { tw.scrollTrigger?.kill(); tw.kill(); G.set(map, { clearProps: "clipPath" }); };
   });
 
   // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте и открывается из-под неё.
