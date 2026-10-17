@@ -1788,3 +1788,163 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
   .pr4-card { position: relative; top: auto; }
 }
 .pr4--flat .pr4-card { position: relative; top: auto; max-height: none; transform: none !important; }
+
+/* ---------- страницы услуг нового формата (Ilya 17.10): первый экран с картинкой справа, блоки по ТЗ ----------
+   Картинка первого экрана (ChatGPT) на тёмно-зелёном фоне, предмет справа: стоит во всю высоту справа и тает к тексту,
+   текст на ней не лежит. Ниже экрана крупные цифры, как «5 минут, 0 ₽, 3 врача» на главной. */
+.sp-page { --sv-ease: cubic-bezier(.33, 0, .11, 1); --sv-ease-4: cubic-bezier(.1, .75, .25, 1); }
+.sp-hero { padding: 0; background: #05140b; }
+.sp-hero__top { position: relative; display: grid; grid-template-columns: max(var(--gutter), (100% - 1440px) / 2) minmax(0, 46%) 1fr; grid-template-areas: ". text ." ". act ."; align-content: end; row-gap: clamp(28px, 3vw, 44px); min-height: clamp(600px, 92svh, 960px); padding: calc(var(--header-h) + 90px) 0 clamp(44px, 5vw, 72px); }
+.sp-hero__media { position: absolute; inset: 0 0 0 auto; width: 60%; z-index: 0; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 32%), linear-gradient(0deg, transparent 0, #000 22%);
+  -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0, #000 32%), linear-gradient(0deg, transparent 0, #000 22%); mask-composite: intersect; }
+.sp-hero__media img { width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%; }
+.sp-hero__text { grid-area: text; position: relative; z-index: 1; }
+.sp-hero__act { grid-area: act; position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 18px 28px; }
+.sp-hero h1 { font-size: clamp(2.5rem, 1.55rem + 2.7vw, 4.4rem); line-height: 1.02; letter-spacing: -.04em; max-width: 15ch; margin-top: 22px; text-wrap: balance; }
+.sp-hero .page-hero__lead { max-width: 34em; }
+.sp-hero__act .sp-warn { flex-basis: 100%; max-width: max-content; }
+.sp-hero__wait { position: absolute; right: var(--gutter); bottom: 18px; z-index: 2; }
+.sp-hero__bottom { padding-bottom: clamp(56px, 6vw, 96px); }
+.sp-facts { list-style: none; margin: 0; padding: clamp(28px, 3vw, 44px) 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px clamp(20px, 3vw, 48px); border-top: 1px solid var(--line-on-dark); }
+.sp-facts li { display: grid; gap: 10px; align-content: start; }
+.sp-facts b { font: 500 var(--fs-3)/1 var(--display); letter-spacing: -.04em; color: var(--green-hi); white-space: nowrap; }
+.sp-facts span { font-size: var(--fs--1); line-height: 1.45; color: var(--muted-on-dark); max-width: 22ch; }
+.sp-facts__note { margin-top: 18px; }
+.sp-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: clamp(32px, 4vw, 56px); }
+.sp-nav .label { margin-right: 8px; }
+.sp-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line-on-dark); color: #fff; text-decoration: none; font-size: 15px; transition: background .3s, color .3s; }
+a.sp-pill:hover { background: var(--paper); color: var(--ink); }
+.sp-pill.sp-soon { color: var(--muted-on-dark); border-style: dashed; }
+
+/* плашка о противопоказаниях: не мельче основного текста (ч. 7 ст. 24 ФЗ «О рекламе») */
+.sp-warn { display: inline-block; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: var(--fs-0); line-height: 1.4; color: var(--text); }
+.on-dark .sp-warn { border-color: rgba(223, 232, 220, .35); color: #fff; }
+
+/* разделы */
+.sp-sec { padding: clamp(80px, 9vw, 140px) 0; }
+.sp-head { display: grid; gap: 22px; margin-bottom: clamp(36px, 5vw, 72px); }
+.sp-head h2, .sp-grid__aside h2, .sp-split__text h2 { font-size: var(--fs-4); line-height: 1.1; letter-spacing: -.035em; max-width: 20ch; text-wrap: balance; }
+.sp-head__lead { max-width: 40em; color: var(--muted); }
+.on-dark .sp-head__lead { color: var(--muted-on-dark); }
+.sp-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px clamp(40px, 6vw, 120px); align-items: start; }
+.sp-grid__aside { position: sticky; top: calc(var(--header-h) + 40px); display: grid; gap: 28px; justify-items: start; }
+.sp-date { max-width: 30em; }
+.sp-sub { margin-top: clamp(40px, 4.5vw, 64px); display: grid; gap: 18px; }
+.sp-sub h3 { font-size: var(--fs-2); line-height: 1.2; letter-spacing: -.025em; }
+.sp-subs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(32px, 5vw, 80px); }
+.sp-more { margin-top: clamp(32px, 3.5vw, 48px); max-width: 52em; }
+.sp-lead { font: 500 var(--fs-1)/1.4 var(--display); letter-spacing: -.015em; }
+.sp-after { margin-top: clamp(28px, 3vw, 40px); display: flex; flex-wrap: wrap; gap: 14px 28px; }
+.sp-points { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.sp-points li { padding: 14px 0; border-bottom: 1px solid var(--line); }
+.sp-pc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px clamp(24px, 3vw, 48px); }
+.sp-pc .label { margin-bottom: 12px; }
+.sp-soon small { margin-left: 8px; font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: #a36a10; }
+.on-dark .sp-soon small { color: #f0c27a; }
+
+/* прайс */
+.sp-plist { list-style: none; margin: 0 0 28px; padding: 0; border-top: 1px solid var(--line); }
+.sp-plist li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: baseline; padding: clamp(14px, 1.4vw, 20px) 0; border-bottom: 1px solid var(--line); }
+.sp-plist b { font: 500 var(--fs-1)/1.2 var(--display); letter-spacing: -.02em; white-space: nowrap; text-align: right; }
+.sp-plist a { text-decoration: underline; text-decoration-color: rgba(12, 36, 16, .3); text-underline-offset: 4px; transition: color .3s; }
+.sp-plist a:hover { color: var(--green-deep); }
+
+/* строки крупным шрифтом (показания), как строки услуг на главной */
+.sp-rows { border-top: 1px solid var(--line); }
+.sp-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 24px; margin: 0; padding: clamp(16px, 1.8vw, 26px) 0; border-bottom: 1px solid var(--line); font: 500 var(--fs-2)/1.3 var(--display); letter-spacing: -.02em; color: var(--text); text-decoration: none; }
+a.sp-row .svl-go { background: var(--ink); color: var(--sage-2); transition: rotate .5s var(--sv-ease-4); }
+@media (hover: hover) { a.sp-row:hover .svl-go { rotate: 45deg; } }
+
+/* карточки без рамок, как надписи «5 минут, 0 ₽» */
+.sp-cards { --cols: 3; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: clamp(32px, 3.5vw, 56px) clamp(20px, 2.6vw, 40px); }
+.sp-card { display: grid; gap: 14px; align-content: start; padding-top: 22px; border-top: 1px solid var(--line); }
+.sp-card h3 { font-size: var(--fs-2); line-height: 1.2; letter-spacing: -.025em; }
+.sp-cards--4 { --cols: 4; }
+.sp-cards--4 .sp-card h3 { font-size: var(--fs-1); }
+.sp-card h3 a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 6px; }
+.sp-card > p { color: var(--muted); }
+
+/* этапы: лента главной «Как проходит лечение» */
+.sp-steps .fcard__big { font-size: var(--fs-3); }
+@media (min-width: 761px) { .sp-steps .fcard--intro { width: clamp(300px, 38vw, 580px); } }
+.sp-steps .fcard--intro h2 { hyphens: auto; overflow-wrap: break-word; }
+.sp-steps .fcard--intro > p { margin-top: 20px; }
+.sp-steps__sub { padding-bottom: clamp(60px, 7vw, 110px); }
+.sp-steps__sub .sp-sub { margin-top: 0; max-width: 52em; }
+
+/* картинка и текст */
+.sp-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px clamp(40px, 6vw, 110px); align-items: center; }
+.sp-split__fig { margin: 0; }
+.sp-split__img { display: block; aspect-ratio: 4 / 5; overflow: hidden; background: var(--ink-2); }
+.sp-split__img img { width: 100%; height: 112%; object-fit: cover; }
+.sp-split__fig figcaption { margin-top: 12px; font-size: var(--fs--1); color: var(--muted); }
+.sp-split__text { display: grid; gap: 28px; align-content: start; }
+
+/* сравнение */
+.sp-table { position: relative; overflow-x: auto; }
+.sp-table table { width: 100%; min-width: 620px; border-collapse: collapse; }
+.sp-table th, .sp-table td { text-align: left; vertical-align: top; padding: clamp(14px, 1.5vw, 22px) clamp(12px, 1.6vw, 24px) clamp(14px, 1.5vw, 22px) 0; border-bottom: 1px solid var(--line); }
+.sp-table thead th { font: 500 var(--fs-1)/1.2 var(--display); letter-spacing: -.02em; border-bottom-color: var(--text); }
+.sp-table thead a { color: inherit; }
+.sp-table tbody th { font-weight: 400; color: var(--muted); width: 26%; }
+.sp-table > .todo-tag { margin-top: 14px; }
+
+/* дочерние страницы: строки услуг главной */
+.sp-links .svl-list { padding-top: 0; border-top: 1px solid rgba(223, 232, 220, .2); }
+.sp-links__price { margin-left: 14px; font: 400 var(--fs-0)/1 var(--body); color: var(--muted-on-dark); letter-spacing: 0; }
+.sp-links .svl-row.is-soon { cursor: default; }
+
+/* отзывы */
+.sp-rates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 1.8vw, 26px); }
+.sp-rate { display: grid; gap: 8px; align-content: start; padding: clamp(24px, 2.4vw, 36px); border-radius: var(--radius); background: var(--paper); color: var(--text); text-decoration: none; }
+.section--sage .sp-rate { background: #fff; }
+.sp-rate b { font: 500 var(--fs-4)/1 var(--display); letter-spacing: -.045em; }
+.sp-rate span:not(.link) { font: 500 var(--fs-1)/1.2 var(--display); }
+.sp-rate small { color: var(--muted); font-size: var(--fs--1); }
+.sp-rate .link { justify-self: start; margin-top: 14px; font-size: 15px; }
+
+/* вопросы, подпись врача, призыв */
+.sp-faq { border-top: 1px solid var(--line); }
+.sp-meta { margin-top: clamp(40px, 5vw, 72px); font-size: var(--fs--1); color: var(--muted); }
+.sp-cta__in { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); gap: 32px clamp(40px, 6vw, 110px); align-items: end; }
+.sp-cta__t { font: 500 var(--fs-3)/1.15 var(--display); letter-spacing: -.035em; text-wrap: balance; }
+.sp-cta__act { display: grid; gap: 22px; justify-items: start; }
+.way__h { font-size: var(--fs-1); line-height: 1.3; letter-spacing: -.02em; }
+p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em; }
+
+/* пометки демо: чего ждём от SEO-треда и клиники. С PUBLISH=1 сборка с ними не пройдёт */
+.todo { display: block; padding: 12px 16px; border: 1.5px dashed #d08a1e; border-radius: 10px; background: rgba(255, 186, 73, .12); color: #7a4a00; font: 500 var(--fs--1)/1.45 var(--body); text-wrap: pretty; }
+.todo::before { content: "Ждём: "; font-weight: 700; }
+.todo.todo--in { display: inline; padding: 2px 8px; border-radius: 6px; }
+.on-dark .todo { color: #ffd598; background: rgba(255, 186, 73, .1); }
+.todo-tag { display: inline-block; vertical-align: middle; padding: 3px 8px; border-radius: 6px; background: #ffe0a8; color: #6b4100; font: 600 11px/1.2 var(--body); letter-spacing: .06em; text-transform: uppercase; }
+.faqq__a .todo { margin-bottom: clamp(18px, 2.1vw, 30px); }
+
+@media (max-width: 1024px) {
+  .sp-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sp-cards { --cols: 2; }
+  .sp-grid, .sp-split, .sp-cta__in { grid-template-columns: minmax(0, 1fr); }
+  .sp-grid__aside { position: static; }
+  .sp-hero__top { grid-template-columns: var(--gutter) minmax(0, 58%) 1fr; }
+}
+@media (max-width: 760px) {
+  .sp-hero__top { display: grid; grid-template-columns: var(--gutter) minmax(0, 1fr) var(--gutter); grid-template-areas: ". text ." "media media media" ". act ."; min-height: 0; padding: calc(var(--header-h) + 44px) 0 36px; row-gap: 22px; }
+  .sp-hero__media { grid-area: media; position: relative; inset: auto; width: 100%; aspect-ratio: 4 / 3; margin-block: -6px -10px;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 82%, transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 82%, transparent 100%); -webkit-mask-composite: source-over; mask-composite: add; }
+  .sp-hero__media img { object-position: 78% 50%; }
+  .sp-hero h1 { font-size: clamp(34px, 9.6vw, 46px); }
+  .sp-hero__act .btn { width: 100%; }
+  .sp-facts { gap: 24px 16px; }
+  .sp-facts b { font-size: clamp(24px, 7vw, 32px); }
+  .sp-head h2, .sp-grid__aside h2, .sp-split__text h2 { font-size: min(var(--fs-4), 8.5vw); }
+  .sp-cards { --cols: 1; }
+  .sp-hero__wait { bottom: auto; top: calc(var(--header-h) + 12px); }
+  .sp-subs, .sp-pc, .sp-rates { grid-template-columns: minmax(0, 1fr); }
+  .sp-row { font-size: min(var(--fs-2), 6.4vw); }
+  .sp-plist li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .sp-plist b { text-align: left; }
+  .sp-split__img { aspect-ratio: 4 / 3; }
+  .sp-cta__act .btn { width: 100%; }
+  .sp-nav .label { flex-basis: 100%; }
+}

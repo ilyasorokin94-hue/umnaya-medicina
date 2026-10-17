@@ -679,13 +679,13 @@
     const conv = !phoneMQ.matches && h.classList.contains("hero--v1") && $(".hv__l2", h);
     const words = $$("[data-split] .sw > span", h).filter((w) => !conv || !conv.contains(w));
     const tl = G.timeline();
-    const media = h.classList.contains("hero") && $(".hero__media", h);
+    const media = h.classList.contains("hero") ? $(".hero__media", h) : $(".sp-hero__media", h);
     const small = phoneMQ.matches;
     if (media) tl.fromTo(media, { clipPath: small ? "inset(0% 0% 100% 0%)" : "inset(10% 6% 10% 6%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: small ? 1.4 : 1.6, ease: "power3.inOut" }, small ? 0.35 : 0);
-    const mimg = $(".hero__media img", h);
+    const mimg = $(".hero__media img, .sp-hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h).filter((el) => !conv || !el.closest(".hero__actions")), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
+      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav", h).filter((el) => !conv || !el.closest(".hero__actions")), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
     if (bar && !matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     if (conv) {
       tl.fromTo(conv, { letterSpacing: "0.5em", autoAlpha: 0, filter: "blur(6px)" }, { letterSpacing: "-0.055em", autoAlpha: 1, filter: "blur(0px)", duration: 2, ease: "expo.out", clearProps: "letterSpacing,filter" }, 0.45);
