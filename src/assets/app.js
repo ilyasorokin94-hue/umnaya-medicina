@@ -295,11 +295,12 @@
     if (heroCta) {
       // на телефоне первый экран стоит на месте, а шторка слогана наезжает на него: кнопка закрыта, панель нужна
       const curtain = $(".opening .slogan");
-      let ctaIn = true;
+      let ctaIn = true, mq = 0;
       const mb = () => root.classList.toggle("mb-off", ctaIn && !(curtain && phoneMQ.matches && curtain.getBoundingClientRect().top < heroCta.getBoundingClientRect().bottom));
       root.classList.add("mb-off");
       new IntersectionObserver(([en]) => { ctaIn = en.isIntersecting; mb(); }, { rootMargin: "-90px 0px 0px 0px" }).observe(heroCta);
-      if (curtain) addEventListener("scroll", mb, { passive: true });
+      // пока кнопка первого экрана не видна, панель нужна при любом положении шторки: размеры не читаем
+      if (curtain) addEventListener("scroll", () => { if (ctaIn && !mq) mq = requestAnimationFrame(() => { mq = 0; mb(); }); }, { passive: true });
     }
     const fcta = $(".footer__cta");
     if (fcta) new IntersectionObserver(([en]) => root.classList.toggle("bar-off", en.isIntersecting), { rootMargin: "0px 0px -30% 0px" }).observe(fcta);
@@ -332,15 +333,17 @@
   let lavaOff = false;
   function lavaTeam() {
     if (!lavaDocs.length || !anim) return;
-    if (!lavaMQ.matches) { if (!lavaOff) { lavaOff = true; lavaDocs.forEach((c) => c.style.removeProperty("--k")); } return; }
+    if (!lavaMQ.matches) { if (!lavaOff) { lavaOff = true; lavaDocs.forEach((c) => { c.__k = null; c.style.removeProperty("--k"); }); } return; }
     lavaOff = false;
     const vh = innerHeight;
-    lavaDocs.forEach((c) => {
-      if (c.hidden) return;
+    // сначала все замеры, потом все записи: иначе каждая карточка заставляет браузер заново считать раскладку
+    const ks = lavaDocs.map((c) => {
+      if (c.hidden) return null;
       const r = c.getBoundingClientRect();
       const t = Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height)));
-      c.style.setProperty("--k", (1 - 2 * t).toFixed(4));
+      return (1 - 2 * t).toFixed(4);
     });
+    lavaDocs.forEach((c, i) => { if (ks[i] !== null && c.__k !== ks[i]) { c.__k = ks[i]; c.style.setProperty("--k", ks[i]); } });
   }
   if (lavaDocs.length && anim) {
     if (lenis) lenis.on("scroll", lavaTeam); else addEventListener("scroll", lavaTeam, { passive: true });
@@ -461,8 +464,10 @@
   const offer = $("#m-offer");
   if (offer) {
     const quiet = () => { try { return !!sessionStorage.getItem("um2-exit") || Date.now() - (+localStorage.getItem("um2-offer") || 0) < 3 * 864e5; } catch (err) { return true; } };
-    let seen = 0, deep = false;
-    addEventListener("scroll", () => { if (scrollY > innerHeight * 0.7) deep = true; }, { passive: true });
+    // пролистан ли первый экран: проверяем раз в кадр и снимаем слушатель, как только да (чтение размеров окна на каждом событии прокрутки заставляет браузер пересчитывать раскладку)
+    let seen = 0, deep = false, dq = 0;
+    const onDeep = () => { if (dq) return; dq = requestAnimationFrame(() => { dq = 0; if (scrollY > innerHeight * 0.7) { deep = true; removeEventListener("scroll", onDeep); } }); };
+    addEventListener("scroll", onDeep, { passive: true });
     const tryShow = () => {
       if (quiet() || anyModal) return clearInterval(tick);
       if (openM || menu?.classList.contains("is-open") || document.activeElement?.matches?.("input, textarea, select")) return;
@@ -598,9 +603,6 @@
   ST.config({ ignoreMobileResize: true });
 
   const heroIn = () => {
-    // сигнал первому экрану с имплантом: шторка ушла, можно собирать
-    window.__umHeroIn = true;
-    document.dispatchEvent(new Event("um:hero-in"));
     // шапка компьютера въезжает сверху и проявляется, линия под разделами убегает влево, как у Лава Дент (CSS);
     // класс ставим через кадр, чтобы браузер успел нарисовать начальное положение
     requestAnimationFrame(() => requestAnimationFrame(() => header?.classList.add("is-loaded")));
@@ -804,8 +806,10 @@
     if (!track) return;
     const cards = $$(".fcard:not(.fcard--intro)", track);
     const upd = () => {
+      // сначала замеры всех карточек, потом записи (иначе раскладка пересчитывается на каждой карточке)
+      const rs = cards.map((c) => c.getBoundingClientRect());
       for (let i = 0; i < cards.length - 1; i++) {
-        const c = cards[i].getBoundingClientRect(), n = cards[i + 1].getBoundingClientRect();
+        const c = rs[i], n = rs[i + 1];
         const k = Math.min(1, Math.max(0, (c.bottom - n.top) / c.height));
         cards[i].style.transform = k ? `scale(${1 - 0.07 * k})` : "";
         cards[i].firstElementChild.style.opacity = String(1 - 0.6 * k);
@@ -911,16 +915,14 @@
     const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { sHead.classList.add("is-visible"); io.disconnect(); } }, { threshold: 0, rootMargin: "0px 0px -50% 0px" });
     io.observe(sHead);
   }
-  // шторке нужны именованные шкалы прокрутки соседних блоков (timeline-scope); без них имплант и слоган ведёт GSAP
+  // шторке нужны именованные шкалы прокрутки соседних блоков (timeline-scope); без них слоган ведёт GSAP
   if (sHead && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
-    const sl = $(".slogan", opening), more = $(".slogan__more", opening), d3 = $(".hero__3d", opening);
+    const sl = $(".slogan", opening), more = $(".slogan__more", opening);
     const tl = [
       G.fromTo($(".slogan__title", sHead), { y: () => -innerHeight, autoAlpha: 0 }, { y: 0, autoAlpha: 1, ease: "none", immediateRender: true,
         scrollTrigger: { trigger: sl, start: "top bottom", end: "top top", scrub: true, invalidateOnRefresh: true } }),
       G.to(sHead, { autoAlpha: 0, ease: "power1.in", scrollTrigger: { trigger: more, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } }),
     ];
-    if (d3) tl.push(G.fromTo(d3, { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" }, { clipPath: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)", ease: "power1.in",
-      scrollTrigger: { trigger: sl, start: "top bottom", end: () => "+=" + innerHeight * 0.75, scrub: true, invalidateOnRefresh: true } }));
     return () => tl.forEach((t) => { t.scrollTrigger?.kill(); t.kill(); });
   });
 
@@ -988,8 +990,9 @@
   document.fonts?.ready.then(refresh);
   addEventListener("load", refresh);
   let rt = 0;
-  // фото тура на телефоне раскладку не меняют, а скрытые копии не видны: для них пересчёт только дёргает прокрутку
-  $$(".tour img:not(.ptour img), .feat img, .apic img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { if (!im.getClientRects().length) return; clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
+  // фото тура (лента, кадр, телефон) стоят в рамках с размерами из CSS и раскладку не меняют: пересчёт на их догрузку
+  // только дёргал прокрутку на компьютере посреди ленты
+  $$(".feat img, .apic img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { if (!im.getClientRects().length) return; clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
 
   // ---------- запись: шаги ----------
   function booking(box) {

@@ -4,6 +4,7 @@
 import { mkdirSync, writeFileSync, readFileSync, copyFileSync, rmSync, readdirSync, existsSync, cpSync } from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { transformSync } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 import { reviewsMobile } from "./reviews-mobile.mjs";
@@ -11,9 +12,21 @@ import { reviewsMobile } from "./reviews-mobile.mjs";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
 // метка версии у стилей и скриптов: после выкладки браузер берёт новые файлы, а не старые из кэша
-const ver = (f) => createHash("md5").update(readFileSync(path.join(root, "src/assets", f))).digest("hex").slice(0, 8);
-const V = { css: ver("styles.css"), app: ver("app.js"), heroseq: ver("heroseq.js"), rvm: ver("rvm.js"), rvmCss: ver("rvm.css") };
+// Стили (шрифты, основные, отзывы на телефоне) идут одним файлом, стили и скрипты сжаты; исходники в src/assets остаются читаемыми
+const hash = (t) => createHash("md5").update(t).digest("hex").slice(0, 8);
+const srcAsset = (f) => readFileSync(path.join(root, "src/assets", f), "utf8");
+const assets = {
+  "styles.css": transformSync(["fonts.css", "styles.css", "rvm.css"].map(srcAsset).join("\n"), { loader: "css", minify: true }).code,
+  "app.js": transformSync(srcAsset("app.js"), { loader: "js", minify: true }).code,
+  "rvm.js": transformSync(srcAsset("rvm.js"), { loader: "js", minify: true }).code,
+};
+const V = { css: hash(assets["styles.css"]), app: hash(assets["app.js"]), rvm: hash(assets["rvm.js"]) };
+// шрифты лежат на сайте (без Google Fonts): первыми грузим кириллицу и латиницу (цифры, знаки) текста и заголовков
+const fontPreload = ["golos-text-cyrillic", "golos-text-latin", "manrope-cyrillic", "manrope-latin"];
 const SITE = process.env.SITE_URL || "https://umnaya-stomatologiya.ru"; // домен-пример для canonical и разметки
+// PUBLISH=1 SITE_URL=https://… npm run build — сборка для боевого домена: страницы открыты поисковикам, robots.txt
+// с картой сайта, без полосы «демонстрационный макет». По умолчанию собирается демо: noindex и полоса сверху
+const PUBLISH = process.env.PUBLISH === "1";
 
 // неразрывные пробелы в ценах и номерах: «КТ от 2 000 ₽» не переносится по частям
 const nb = (t) => t.replace(/(\d) (?=\d{3}(?!\d))/g, "$1\u00a0").replace(/ ₽/g, "\u00a0₽").replace(/(^|\s)(от|до) (?=\d)/g, "$1$2\u00a0");
@@ -29,9 +42,23 @@ const svc = Object.fromEntries(services.map((s) => [s.slug, s]));
 const pre = (depth) => "../".repeat(depth);
 
 // ---------- картинки: локальный файл, если он есть, иначе запасной адрес ----------
+// Фото (jpg, png) уходят на сайт в WebP того же размера: на 40–60% легче, на вид то же. Без sharp (не сделан npm install)
+// остаются как есть. Значки, показанные мелко, ужимаются до размера для экранов x3
 const local = (rel) => rel && existsSync(path.join(root, "src", rel));
+let sharp = null;
+try { sharp = (await import("sharp")).default; } catch { console.warn("sharp не установлен (npm install): фото идут без перевода в WebP"); }
+const RASTER = /\.(jpe?g|png)$/i;
+const shrink = { "images/brand/2gis.png": 160 };
+const webpJobs = new Map();
+const asWebp = (rel) => {
+  if (!sharp || !RASTER.test(rel)) return rel;
+  const out = rel.replace(RASTER, ".webp");
+  if (webpJobs.has(out) && webpJobs.get(out).from !== rel) throw new Error(`${rel} и ${webpJobs.get(out).from} дают один ${out}`);
+  webpJobs.set(out, { from: rel, width: shrink[rel] });
+  return out;
+};
 function pick(entry, depth) {
-  const c = entry.filter(Boolean).filter((u) => /^https?:/.test(u) || local(u)).map((u) => (/^https?:/.test(u) ? u : pre(depth) + u));
+  const c = entry.filter(Boolean).filter((u) => /^https?:/.test(u) || local(u)).map((u) => (/^https?:/.test(u) ? u : pre(depth) + asWebp(u)));
   return { src: c[0] || "", fb: c[1] || "" };
 }
 const img = (entry, alt, depth, attrs = "") => {
@@ -83,7 +110,7 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
-<meta name="robots" content="noindex, nofollow">
+<meta name="robots" content="${PUBLISH ? "index, follow" : "noindex, nofollow"}">
 <link rel="canonical" href="${SITE}${canonical}">
 <link rel="icon" type="image/svg+xml" href="${p}images/brand/favicon.svg">
 <meta property="og:type" content="website">
@@ -91,9 +118,8 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:locale" content="ru_RU">
 <meta name="theme-color" content="#0c2410">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Inter+Tight:wght@450&family=Manrope:wght@400;500;600&display=swap">
+<link rel="apple-touch-icon" href="${p}images/brand/apple-touch-icon.png">
+${fontPreload.map((f) => `<link rel="preload" href="${p}assets/fonts/${f}.woff2" as="font" type="font/woff2" crossorigin>`).join("\n")}
 <link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
@@ -109,7 +135,7 @@ ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</sc
 </head>
 <body${page === "booking" ? ' class="booking-page"' : ""}>
 <a class="skip" href="#main">К содержанию</a>
-<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». Заявки из форм пока никуда не отправляются.</div>`;
+${PUBLISH ? "" : `<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». Заявки из форм пока никуда не отправляются.</div>`}`;
 }
 
 function intro(depth) {
@@ -529,7 +555,6 @@ ${svlBlock(p, depth)}
 </div></section>
 
 <section class="section reviews" id="reviews" aria-labelledby="rv-title">
-  <link rel="stylesheet" href="assets/rvm.css?v=${V.rvmCss}">
   <div class="wrap section__head"><div><span class="label">Отзывы</span><h2 id="rv-title" data-split>Что пишут пациенты</h2></div></div>
   <div class="wrap"><div class="rt" aria-label="Оценки клиники на площадках" data-reveal>
     <div class="rt-avg">
@@ -820,22 +845,49 @@ mkdirSync(path.join(dist, "assets", "vendor"), { recursive: true });
 // типографика: после коротких слов (в, к, на, от, до…) неразрывный пробел, чтобы они не висели в конце строки.
 // Только в тексте между тегами, без скриптов и стилей.
 const typo = (html) => html.replace(/(<(script|style)\b[\s\S]*?<\/\2>)|>([^<]+)</g, (m, block, _t, text) => block || ">" + text.replace(/(?<=^|[\s(«])([А-Яа-яЁё]{1,2}) (?=\S|$)/g, "$1\u00a0") + "<");
-const out = (f, html) => writeFileSync(path.join(dist, f), f.endsWith(".html") ? typo(html) : html);
+const pages = [];
+const out = (f, html) => { if (f.endsWith(".html")) pages.push((html = typo(html))); writeFileSync(path.join(dist, f), html); };
 out("index.html", pageHome());
 out("ceny.html", pagePrices());
 out("vrachi.html", pageDoctors());
 out("zapis.html", pageBooking());
 for (const s of services) out(`uslugi/${s.slug}.html`, pageService(s));
 for (const d of doctors) out(`vrachi/${d.id}.html`, pageDoctor(d));
-for (const f of readdirSync(path.join(root, "src", "assets"))) copyFileSync(path.join(root, "src", "assets", f), path.join(dist, "assets", f));
+for (const [f, code] of Object.entries(assets)) writeFileSync(path.join(dist, "assets", f), code);
+cpSync(path.join(root, "src", "fonts"), path.join(dist, "assets", "fonts"), { recursive: true });
 const nm = (p) => path.join(root, "node_modules", p);
 copyFileSync(nm("gsap/dist/gsap.min.js"), path.join(dist, "assets/vendor/gsap.min.js"));
 copyFileSync(nm("gsap/dist/ScrollTrigger.min.js"), path.join(dist, "assets/vendor/ScrollTrigger.min.js"));
 copyFileSync(nm("lenis/dist/lenis.min.js"), path.join(dist, "assets/vendor/lenis.min.js"));
-copyFileSync(nm("three/build/three.module.min.js"), path.join(dist, "assets/vendor/three.module.min.js"));
-writeFileSync(path.join(dist, "assets/vendor/RoomEnvironment.js"), readFileSync(nm("three/examples/jsm/environments/RoomEnvironment.js"), "utf8").replace("from 'three'", "from './three.module.min.js'"));
-if (existsSync(path.join(root, "src", "images"))) cpSync(path.join(root, "src", "images"), path.join(dist, "images"), { recursive: true });
-out("robots.txt", "User-agent: *\nDisallow: /\n");
+
+// картинки: в dist только те, на которые ссылаются страницы и стили; фото переводятся в WebP (с кэшем в node_modules/.cache)
+const refs = new Set(["images/brand/favicon.svg"]);
+for (const t of [...pages, assets["styles.css"]]) for (const m of t.matchAll(/images\/[\w./-]+?\.(?:jpe?g|png|webp|svg|avif|gif)\b/g)) refs.add(m[0]);
+const cache = path.join(root, "node_modules", ".cache", "umed-img");
+mkdirSync(cache, { recursive: true });
+const toWebp = async (from, to, width) => {
+  const buf = readFileSync(path.join(root, "src", from));
+  const key = path.join(cache, `${hash(buf)}-${width || 0}.webp`);
+  if (!existsSync(key)) {
+    let im = sharp(buf);
+    if (width) im = im.resize({ width, withoutEnlargement: true });
+    await im.webp({ quality: 82, effort: 5, smartSubsample: true }).toFile(key);
+  }
+  mkdirSync(path.dirname(to), { recursive: true });
+  copyFileSync(key, to);
+};
+const jobs = [];
+for (const rel of refs) {
+  const to = path.join(dist, rel), job = webpJobs.get(rel);
+  if (job) jobs.push(toWebp(job.from, to, job.width));
+  else if (rel.endsWith("apple-touch-icon.png")) continue;
+  else if (local(rel)) { mkdirSync(path.dirname(to), { recursive: true }); copyFileSync(path.join(root, "src", rel), to); }
+  else console.warn("нет картинки:", rel);
+}
+// значок для экрана «Домой» на iPhone из favicon.svg
+if (sharp) jobs.push(sharp(path.join(root, "src/images/brand/favicon.svg"), { density: 300 }).resize(180, 180).flatten({ background: "#ffffff" }).png().toFile(path.join(dist, "images/brand/apple-touch-icon.png")));
+await Promise.all(jobs);
+out("robots.txt", PUBLISH ? `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n` : "User-agent: *\nDisallow: /\n");
 out(".nojekyll", "");
 out("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["/", "/ceny", "/vrachi", "/zapis", ...services.map((s) => `/uslugi/${s.slug}`), ...doctors.map((d) => `/vrachi/${d.id}`)].map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>2026-10-15</lastmod></url>`).join("\n")}\n</urlset>\n`);
 console.log("Собрано страниц:", 3 + services.length + doctors.length, "→", dist);
