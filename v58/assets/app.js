@@ -402,9 +402,7 @@
     openM = m; if (id !== "offer") anyModal = true;
     root.classList.add("has-modal");
     lenis?.stop();
-    // окно услуги выезжает справа, как у Лава Дент (переход в CSS)
-    if (m.classList.contains("modal--svc")) { $(".svm", m).scrollTop = 0; m.offsetWidth; m.classList.add("is-in"); }
-    else if (anim) {
+    if (anim) {
       G.fromTo(m, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" });
       G.fromTo($(".modal__box", m), { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
     }
@@ -417,8 +415,7 @@
     if (!m) return;
     openM = null;
     const done = () => { if (openM === m) return; m.hidden = true; m.style.opacity = ""; if (!openM) { root.classList.remove("has-modal"); lenis?.start(); } };
-    if (m.classList.contains("modal--svc")) { m.classList.remove("is-in"); if (instant || reduce) done(); else setTimeout(done, 1000); }
-    else if (anim && !instant) G.to(m, { opacity: 0, duration: 0.25, ease: "power1.in", onComplete: done });
+    if (anim && !instant) G.to(m, { opacity: 0, duration: 0.25, ease: "power1.in", onComplete: done });
     else done();
     if (!instant) lastFocus?.focus?.({ preventScroll: true });
   }
