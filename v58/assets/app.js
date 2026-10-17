@@ -835,10 +835,13 @@
     fill();
     ST.addEventListener("refreshInit", fill);
     G.fromTo(row, { x: () => (d < 0 ? 0 : -dist()) }, { x: () => (d < 0 ? -dist() : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
+    // уход на ширину телефона: снять дозаполнение и копии, иначе скрытая лента копится и потом летит в сотни раз быстрее
+    return () => { ST.removeEventListener("refreshInit", fill); while (row.children.length > base.length) row.lastElementChild.remove(); };
   };
   // на телефоне вместо лент свой блок отзывов (assets/rvm.js)
-  mm.add("(min-width: 761px)", () => $$(".rv__row").forEach(ribbon));
-  mm.add("(min-width: 761px)", () => $$(".tour__row").forEach(ribbon));
+  const ribbons = (sel) => () => { const off = $$(sel).map(ribbon); return () => off.forEach((f) => f()); };
+  mm.add("(min-width: 761px)", ribbons(".rv__row"));
+  mm.add("(min-width: 761px)", ribbons(".tour__row"));
 
   // телефон: фото клиники двумя лентами. Ленты сами медленно плывут навстречу друг другу по времени, а не от прокрутки,
   // поэтому при прокрутке страницы не дрожат. Любую ленту можно листать пальцем вбок, вторая при этом крутится

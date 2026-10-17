@@ -16,7 +16,6 @@
     if (c === skip) return;
     c.style.zIndex = String(100 - i);
     c.style.opacity = i < DEPTH ? "1" : "0";
-    c.setAttribute("aria-hidden", i ? "true" : "false");
     pose(c, Math.min(i, DEPTH));
   });
   place();
@@ -41,22 +40,23 @@
   };
 
   // перетаскивание: по горизонтали карточка идёт за пальцем, по вертикали страница прокручивается как обычно
-  let x0 = 0, dx = 0, drag = false;
+  // карточку ведёт только палец, который её взял: второй палец (щипок) её не трогает
+  let x0 = 0, dx = 0, drag = false, pid = null;
   deck.addEventListener("pointerdown", (e) => {
     if (busy || !e.isPrimary || !cards[0].contains(e.target)) return;
-    drag = true; x0 = e.clientX; dx = 0;
+    drag = true; pid = e.pointerId; x0 = e.clientX; dx = 0;
     cards[0].classList.add("is-drag"); cards[1].classList.add("is-drag");
     try { deck.setPointerCapture(e.pointerId); } catch (_) {}
   });
   deck.addEventListener("pointermove", (e) => {
-    if (!drag) return;
+    if (!drag || e.pointerId !== pid) return;
     dx = e.clientX - x0;
     cards[0].style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`;
     const k = Math.min(1, Math.abs(dx) / 170);
     pose(cards[1], 1 - k);
   });
-  const up = () => {
-    if (!drag) return;
+  const up = (e) => {
+    if (!drag || e.pointerId !== pid) return;
     drag = false;
     cards[0].classList.remove("is-drag"); cards[1].classList.remove("is-drag");
     if (Math.abs(dx) > 70) fly(Math.sign(dx)); else place();
