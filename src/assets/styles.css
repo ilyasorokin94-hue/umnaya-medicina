@@ -1996,7 +1996,7 @@ html:not(.js-intro) .intro { display: none; }
 .svl-card__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--sv-ease) var(--delay, 0s), scale .5s var(--sv-ease); }
 .svl-card__in { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: var(--sv-s-m); background: rgba(12, 36, 16, .5); }
 .svl-card__top { display: flex; justify-content: space-between; align-items: flex-start; }
-.svl-card__title { margin-top: auto; font: 500 min(var(--fs-2), 9.6cqi)/1.3 var(--display); letter-spacing: -.02em; overflow-wrap: normal; }
+.svl-card__title { margin-top: auto; font: 500 min(var(--fs-2), 9.1cqi)/1.3 var(--display); letter-spacing: -.02em; overflow-wrap: normal; }
 .svl-nw { white-space: nowrap; }
 .svl-nr { font: 500 var(--fs-1)/1.4 var(--display); font-variant-numeric: tabular-nums; }
 .svl-go { flex: none; display: grid; place-items: center; width: clamp(2rem, 1.3636rem + 2.8283vw, 3.75rem); aspect-ratio: 1; border-radius: 50%; background: var(--sage-2); color: var(--ink); transition: scale .5s var(--sv-ease-4), rotate .5s var(--sv-ease-4); }
@@ -2024,7 +2024,7 @@ html:not(.js-intro) .intro { display: none; }
   .svl-row:hover .svl-go { rotate: 45deg; scale: 1; }
 }
 /* узкие карточки: «Протезирование» целиком помещается в строку */
-@media (max-width: 999px) { .svl-card__title { font-size: min(var(--fs-2), 9cqi); } }
+@media (max-width: 999px) { .svl-card__title { font-size: min(var(--fs-2), 8.6cqi); } }
 @media (max-width: 719px) {
   .svl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(.75rem, .6818rem + .303vw, .9375rem); }
   .svl-row { grid-template-columns: auto minmax(0, 1fr) auto; }

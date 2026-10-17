@@ -444,8 +444,8 @@ function place() {
 // Пять главных направлений карточками (первая во всю ширину), остальные строками. Клик открывает окно услуги
 // с описанием, ценами «от» и записью, как у Лава Дент; без скриптов ссылка ведёт на страницу услуги.
 const svlGo = '<span class="svl-go" aria-hidden="true"><svg viewBox="0 0 60 60"><path d="M24 36 36 24M27 24h9v9"/></svg></span>';
-// «All-on-4» не рвётся по дефису
-const svlTitle = (t) => esc(t).replace(/\S+-\S+/g, (w) => `<span class="svl-nw">${w}</span>`);
+// «All-on-4» не рвётся по дефису, короткий предлог не остаётся в конце строки («под микроскопом»)
+const svlTitle = (t) => esc(t).replace(/ (под|для|без|на|по|за|в|с|к|о|у|и) /gi, " $1\u00a0").replace(/\S+-\S+/g, (w) => `<span class="svl-nw">${w}</span>`);
 const svlItems = () => [...v2.lava.cards, ...v2.lava.list].map((it, i) => ({ ...it, nr: pad(i + 1) }));
 function svlBlock(p, depth) {
   const items = svlItems(), n = v2.lava.cards.length;
