@@ -985,25 +985,19 @@
   });
 
   // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте и открывается из-под неё.
-  // На компьютере он сначала во всю ширину (масштаб --fl-s), в конце отрезка уменьшается до левой колонки и дальше
-  // липнет под шапкой, а справа проезжают контакты. Само движение задано в CSS (на компьютере view-timeline, на телефоне
-  // sticky), здесь только масштаб; в браузерах без view-timeline на компьютере то же движение повторяет GSAP
+  // На компьютере он сначала во всю ширину (масштаб 1,74), в конце отрезка уменьшается до левой колонки и дальше
+  // липнет под шапкой, а справа проезжают контакты. Движение целиком в CSS (на компьютере view-timeline, на телефоне
+  // sticky); только в браузерах без view-timeline на компьютере его повторяет GSAP
   const fst = $(".fstage");
   if (fst) {
-    const pin = $(".fstage__pin", fst), logo = $(".fstage__logo", fst);
+    const logo = $(".fstage__logo", fst);
     const cssTL = !!window.CSS?.supports?.("animation-timeline: scroll()") && CSS.supports("animation-range: 0% 100%");
     const vmin = () => Math.min(innerWidth, innerHeight);
-    const setS = () => fst.style.setProperty("--fl-s", (fst.clientWidth / pin.clientWidth).toFixed(4));
-    mm.add("(min-width: 1025px)", () => {
-      setS();
-      addEventListener("resize", setS);
-      return () => { removeEventListener("resize", setS); fst.style.removeProperty("--fl-s"); };
-    });
     // компьютер без view-timeline (Firefox): прокрутку там ведёт Lenis, поэтому GSAP успевает за ней
     if (!cssTL) mm.add("(min-width: 1025px)", () => {
       const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: fst, start: "top bottom", end: () => "+=" + Math.round(vmin() * 1.5), scrub: true, invalidateOnRefresh: true } })
         .fromTo(logo, { y: () => -Math.round(vmin() * 1.5) }, { y: 0, duration: 1 }, 0)
-        .fromTo(logo, { scale: () => fst.clientWidth / pin.clientWidth }, { scale: 1, duration: 0.25, immediateRender: true }, 0.75);
+        .fromTo(logo, { scale: 1.74 }, { scale: 1, duration: 0.25, immediateRender: true }, 0.75);
       return () => { tl.scrollTrigger?.kill(); tl.kill(); G.set(logo, { clearProps: "transform" }); };
     });
   }

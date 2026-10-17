@@ -1613,15 +1613,17 @@ html:not(.js-intro) .intro { display: none; }
    потом уменьшается до левой колонки и липнет под шапкой, а справа проезжают контакты. Сдвиг и масштаб задаёт app.js ---------- */
 .footer__in { padding-top: 0; }
 .footer__cta { position: relative; z-index: 2; background: var(--ink); padding-top: clamp(70px, 9vw, 120px); }
-.fstage { --fpin: calc(var(--header-h) + 14px + 40px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; padding: clamp(44px, 5vw, 72px) 0 clamp(48px, 5vw, 80px); }
+.fstage { --fpin: clamp(8rem, 7.2727rem + 3.2323vw, 10rem); display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; padding: clamp(44px, 5vw, 72px) 0 clamp(48px, 5vw, 80px); }
 .js-anim .fstage { padding-top: 75vmin; }
 .fstage__pin { position: relative; z-index: 1; min-width: 0; }
-.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 50%; will-change: transform, translate, scale; }
+.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 50%; }
 /* как у Лава Дент: движение ведёт сама прокрутка средствами CSS (view-timeline), без скрипта, поэтому логотип
    стоит на месте и на телефоне, где прокрутку двигает палец. За первые 150vmin после появления блока сдвиг
    вверх ровно гасит прокрутку; масштаб держится до 75% и к концу отрезка уходит в 1. Где CSS этого не умеет,
    то же делает app.js */
-@keyframes fstage-logo { 0% { translate: 0 -150vmin; scale: var(--fl-s, 1); } 75% { scale: var(--fl-s, 1); } 100% { translate: 0 0; scale: 1; } }
+/* масштаб в кадрах числом, как у Лава Дент (у них 1,75): var() внутри @keyframes Chrome на видеокарте не подхватывает,
+   и логотип оставался маленьким. 1,74 = ширина 12 колонок / ширина 7 колонок этой сетки */
+@keyframes fstage-logo { 0% { translate: 0 -150vmin; scale: 1.74; } 75% { scale: 1.74; } 100% { translate: 0 0; scale: 1; } }
 @media (min-width: 1025px) {
   @supports (animation-timeline: scroll()) and (animation-range: 0% 100%) {
     .js-anim .fstage { view-timeline-name: --fstage-tl; }
