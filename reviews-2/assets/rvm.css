@@ -1,0 +1,14 @@
+/* Отзывы на телефоне (до 760px). На компьютере блок скрыт, там прежние ленты. */
+@media (min-width: 761px) { .rvm { display: none !important; } }
+
+/* Вариант 2. Крупные цитаты, слова проявляются по мере прокрутки */
+@media (max-width: 760px) {
+  .reviews .rv__rows { display: none; }
+  .rvm--words { margin-top: 44px; padding-inline: var(--gutter); }
+  .rvw { margin: 0 0 52px; font: 500 30px/1.17 var(--display); letter-spacing: -.025em; color: var(--ink); text-wrap: pretty; }
+  .rvw--short { font-size: 38px; line-height: 1.08; letter-spacing: -.035em; }
+  .rvw--long { font-size: 25px; line-height: 1.24; letter-spacing: -.02em; }
+  .rvw em { font-style: normal; color: var(--green); }
+  .rvw__w { display: inline-block; will-change: opacity, transform; }
+  .rvw__more { margin-top: -12px; }
+}

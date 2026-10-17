@@ -1,0 +1,20 @@
+/* Отзывы на телефоне (до 760px). На компьютере блок скрыт, там прежние ленты. */
+@media (min-width: 761px) { .rvm { display: none !important; } }
+
+/* Вариант 5. Мозаика с маркером */
+@media (max-width: 760px) {
+  .reviews .rv__rows { display: none; }
+  .rvm--mosaic { margin-top: 18px; padding-inline: var(--gutter); }
+  .rvx { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: dense; gap: 10px; }
+  .rvx__card { --mk: rgba(76, 193, 72, .45); margin: 0; padding: 20px 16px 22px; border-radius: 18px; background: #fff; color: var(--ink); }
+  .rvx__card--wide { grid-column: 1 / -1; padding: 24px 22px 26px; }
+  .rvx__card[data-tone="ink"] { --mk: var(--green); background: var(--ink); color: #fff; }
+  .rvx__card[data-tone="green"] { --mk: rgba(12, 36, 16, .4); background: var(--green); color: #fff; }
+  .rvx__card[data-tone="sage"] { --mk: rgba(41, 153, 38, .35); background: var(--sage-2); }
+  .rvx__card blockquote { margin: 0; font: 500 18px/1.28 var(--display); letter-spacing: -.012em; text-wrap: pretty; overflow-wrap: break-word; hyphens: auto; }
+  .rvx__card--short blockquote { font-size: 21px; line-height: 1.18; letter-spacing: -.02em; }
+  .rvx__card--wide blockquote { font-size: 21px; line-height: 1.26; letter-spacing: -.018em; }
+  .rvx__card mark { padding: 0 .08em; margin: 0 -.08em; color: inherit; background: linear-gradient(transparent 56%, var(--mk) 56% 94%, transparent 94%) no-repeat 0 0 / 0% 100%; -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background-size 1s var(--ease) .35s; }
+  .rvx__card.is-in mark, .no-anim .rvx__card mark { background-size: 100% 100%; }
+  .rvx__more { margin-top: 20px; }
+}
