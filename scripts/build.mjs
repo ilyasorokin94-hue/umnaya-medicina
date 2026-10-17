@@ -344,7 +344,7 @@ const crumbsLd = (items) => ({
 });
 // ответ вопроса: [текст](окно) становится ссылкой, которая открывает окно записи, перезвона или снимка
 // «All-on-4» не рвём по дефису
-const nobr = (s) => s.replace(/All-on-4/g, '<span class="nobr">All-on-4</span>');
+const nobr = (s) => s.replace(/All-on-4/g, '<span class="nobr">All-on-4</span>').replace(/\+7[\s\u00a0]\d{3}[\s\u00a0]\d{3}-\d{2}-\d{2}/g, (m) => `<span class="nobr">${m}</span>`);
 const faqA = (a, p) => esc(a).replace(/\[([^\]]+)\]\((xray|call|book)\)/g, (m, t, k) => `<a href="${fallbackHref(k, p)}" data-modal="${k}">${t}</a>`);
 const faqLd = (faq) => ({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
 
