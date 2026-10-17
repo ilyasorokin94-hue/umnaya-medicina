@@ -664,7 +664,7 @@
     const mimg = $(".hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h).filter((el) => !conv || !el.closest(".hero__actions")), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
+      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h).filter((el) => !conv || !el.closest(".hero__actions")), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
     if (bar && !matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     if (conv) {
       tl.fromTo(conv, { letterSpacing: "0.5em", autoAlpha: 0, filter: "blur(6px)" }, { letterSpacing: "-0.055em", autoAlpha: 1, filter: "blur(0px)", duration: 2, ease: "expo.out", clearProps: "letterSpacing,filter" }, 0.45);
@@ -673,12 +673,6 @@
     }
     // на телефоне первая фраза приходит вслед за заголовком, на компьютере вместе с кнопкой, когда буквы собрались
     if (rot && h.contains(rot)) tl.call(rotStart, null, conv ? 1.0 : 0.6);
-    const pb = $(".hero__promo b", h), ps = $(".hero__promo s", h);
-    if (small && pb && ps) {
-      const orig = pb.textContent, to = +orig.replace(/\D/g, ""), o = { v: +ps.textContent.replace(/\D/g, "") };
-      if (to && o.v > to) pb.textContent = ps.textContent.trim();
-      if (to && o.v > to) tl.to(o, { v: to, duration: 1.4, ease: "power3.out", onUpdate: () => (pb.textContent = (Math.round(o.v / 100) * 100).toLocaleString("ru-RU").replace(/\s/g, "\u00a0") + "\u00a0₽"), onComplete: () => (pb.textContent = orig) }, 0.9);
-    }
     const trio = $(".slogan__more .hero__trio") || $(".hero__trio", h);
     if (trio && small) {
       const st = { trigger: trio, start: "top 92%", once: true };
