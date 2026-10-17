@@ -402,9 +402,7 @@
     openM = m; if (id !== "offer") anyModal = true;
     root.classList.add("has-modal");
     lenis?.stop();
-    // окно услуги выезжает справа, как у Лава Дент (переход в CSS)
-    if (m.classList.contains("modal--svc")) { $(".svm", m).scrollTop = 0; m.offsetWidth; m.classList.add("is-in"); }
-    else if (anim) {
+    if (anim) {
       G.fromTo(m, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" });
       G.fromTo($(".modal__box", m), { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
     }
@@ -417,8 +415,7 @@
     if (!m) return;
     openM = null;
     const done = () => { if (openM === m) return; m.hidden = true; m.style.opacity = ""; if (!openM) { root.classList.remove("has-modal"); lenis?.start(); } };
-    if (m.classList.contains("modal--svc")) { m.classList.remove("is-in"); if (instant || reduce) done(); else setTimeout(done, 1000); }
-    else if (anim && !instant) G.to(m, { opacity: 0, duration: 0.25, ease: "power1.in", onComplete: done });
+    if (anim && !instant) G.to(m, { opacity: 0, duration: 0.25, ease: "power1.in", onComplete: done });
     else done();
     if (!instant) lastFocus?.focus?.({ preventScroll: true });
   }
@@ -526,45 +523,8 @@
     m.addEventListener("mouseleave", () => m.classList.remove("is-active"));
   });
   document.addEventListener("pointerdown", (e) => { $$(".ctmap.is-active").forEach((m) => { if (!m.contains(e.target)) m.classList.remove("is-active"); }); });
-  // на телефоне своя карта: метка по центру, а не справа от карточки (вариант 5)
+  // на телефоне метка по центру карты, на компьютере справа от карточки
   if (matchMedia("(max-width: 1024px)").matches) $$("iframe[data-src-phone]").forEach((f) => { f.src = f.dataset.srcPhone; });
-  // вариант 2: карта по плитке «Показать карту», грузится при первом открытии и раскрывается из плитки во всю ширину экрана
-  const mapBtn = $("[data-map-toggle]"), mapWrap = $("#ct-map");
-  mapBtn?.addEventListener("click", () => {
-    const open = mapWrap.hidden, fr = $("iframe", mapWrap), box = $(".ctmap", mapWrap);
-    if (open && fr && !fr.src) fr.src = fr.dataset.src;
-    mapBtn.setAttribute("aria-expanded", String(open));
-    $("[data-map-label]", mapBtn).textContent = open ? "Скрыть карту" : "Показать карту";
-    if (open) {
-      mapWrap.hidden = false;
-      if (!anim) return ST?.refresh();
-      const b = mapBtn.getBoundingClientRect(), w = mapWrap.getBoundingClientRect();
-      G.timeline({ onComplete: () => ST.refresh() })
-        .from(mapWrap, { height: 0, duration: 0.9, ease: "power3.inOut", clearProps: "height" })
-        .fromTo(box, { clipPath: `inset(0px ${Math.max(0, w.right - b.right)}px 0px ${Math.max(0, b.left - w.left)}px)` }, { clipPath: "inset(0px 0px 0px 0px)", duration: 1, ease: "power3.inOut", clearProps: "clipPath" }, 0.15);
-      if (lenis) lenis.scrollTo(mapBtn, { offset: -($(".header")?.offsetHeight || headerH()) - 12, duration: 1.2 });
-    } else {
-      const fin = () => { mapWrap.hidden = true; if (G) G.set(mapWrap, { clearProps: "height" }); ST?.refresh(); };
-      if (anim) G.to(mapWrap, { height: 0, duration: 0.55, ease: "power2.in", onComplete: fin }); else fin();
-    }
-  });
-  // вариант 3: выбрали город и способ, карта строит маршрут, кнопка «Маршрут» открывает его в Яндекс Картах
-  const ct3 = $(".ct3");
-  if (ct3) {
-    const fr = $(".ct3__map iframe"), to = $(".ct3__map").dataset.to, ya = $("[data-route-ya]", ct3);
-    const towns = $$(".ct3__towns .chip", ct3), modes = $$(".ct3__mode button", ct3);
-    let from = towns[0]?.dataset.from, rtt = "auto";
-    const sub = (t) => (t ? "из " + t.dataset.of : "Яндекс Карты");
-    const go = () => {
-      const q = `rtext=${from}~${to}&rtt=${rtt}`;
-      fr.src = `https://yandex.ru/map-widget/v1/?${q}`;
-      ya.href = `https://yandex.ru/maps/?${q}`;
-      $("small", ya).textContent = sub(towns.find((t) => t.classList.contains("is-on")));
-    };
-    const pick = (list, el) => list.forEach((b) => { b.classList.toggle("is-on", b === el); b.setAttribute("aria-pressed", String(b === el)); });
-    towns.forEach((t) => t.addEventListener("click", () => { pick(towns, t); from = t.dataset.from; go(); }));
-    modes.forEach((m) => m.addEventListener("click", () => { pick(modes, m); rtt = m.dataset.rtt; go(); }));
-  }
   // отправить адрес себе или тому, кто повезёт
   const shareBtn = $("[data-share]");
   shareBtn?.addEventListener("click", async () => {
@@ -1000,14 +960,6 @@
       ST.removeEventListener("refresh", reglide);
       glider.remove(); dirTabs.classList.remove("has-glider"); dirRollStop = () => {};
     };
-  });
-
-  // контакты, вариант 4: узкая полоса карты при прокрутке раскрывается до краёв экрана
-  if ($(".ct4__map")) mm.add("(min-width: 0px)", () => {
-    const map = $(".ct4__map");
-    const inset = () => { const g = Math.round(innerWidth > 1024 ? innerWidth * 0.2 : Math.max(0, (innerWidth - $(".ct4").offsetWidth) / 2)), v = Math.round(map.offsetHeight * 0.16); return `inset(${v}px ${g}px ${v}px ${g}px)`; };
-    const tw = G.fromTo(map, { clipPath: inset }, { clipPath: "inset(0px 0px 0px 0px)", ease: "none", scrollTrigger: { trigger: map, start: "top 92%", end: "top 18%", scrub: true, invalidateOnRefresh: true } });
-    return () => { tw.scrollTrigger?.kill(); tw.kill(); G.set(map, { clearProps: "clipPath" }); };
   });
 
   // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте и открывается из-под неё.

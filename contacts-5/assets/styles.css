@@ -753,7 +753,13 @@ html:not(.js-intro) .intro { display: none; }
 /* ПроДокторов: официальная плашка «нас рекомендуют» с мегафоном (prodoctorov.ru/rating/widget/recommend/95133/200.png)
    в светлом круге с тонким кольцом на отступе 5px, размеры как у Зубной Гармонии: круг 164/148px, плашка 128/116px (Ilya 17.10).
    Если картинка не загрузилась, в круге наш логотип ПроДокторов (.is-fb) */
-.rt .rt-seal { flex: none; width: 164px; aspect-ratio: 1; margin: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fcfaf5; outline: 1px solid rgba(201, 189, 140, .55); outline-offset: 5px; }
+.rt .rt-seal { position: relative; flex: none; width: 164px; aspect-ratio: 1; margin: 7px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fcfaf5; }
+/* кольцо на отступе 5px заполняется золотом до 4,9 из 5 (98%): на компьютере один раз при появлении, на телефоне вслед за прокруткой (app.js) */
+.rt-seal__ring { position: absolute; inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); transform: rotate(-90deg); overflow: visible; pointer-events: none; }
+.rt-seal__ring circle { fill: none; }
+.rt-seal__track { stroke: rgba(201, 189, 140, .3); stroke-width: .6; }
+.rt-seal__fill { stroke: var(--gold); stroke-width: 1.15; stroke-linecap: round; stroke-dasharray: 100 100; stroke-dashoffset: 2; }
+.js-anim .rt-seal__fill { stroke-dashoffset: 100; }
 .rt-seal__link { display: block; width: 128px; line-height: 0; border-radius: 8px; transition: transform .24s cubic-bezier(.16, 1, .3, 1); }
 @media (prefers-reduced-motion: reduce) { .rt-seal__link { transition: none; } }
 .rt-seal__link:hover { transform: translateY(-2px); }
@@ -1469,7 +1475,7 @@ html:not(.js-intro) .intro { display: none; }
   .faqt > summary, .faqq > summary { gap: 18px; }
 }
 
-/* ---------- контакты: адрес, часы, маршрут и Яндекс Карта, без фото (Ilya 17.10). Пять вариантов, .ct--1…5 ---------- */
+/* ---------- контакты «карточка на карте» (Ilya 17.10): адрес, часы, маршрут и Яндекс Карта, без фото ---------- */
 .way { padding: clamp(56px, 7vw, 110px) 0 clamp(64px, 8vw, 120px); background: var(--sage-2); }
 .way__addr { margin-top: 18px; font-size: var(--fs-4); letter-spacing: -.035em; line-height: 1.05; }
 .way__where { margin-top: 14px; font-size: var(--fs-0); color: var(--muted); }
@@ -1497,113 +1503,35 @@ html:not(.js-intro) .intro { display: none; }
 .ctmap .place__unlock { display: inline-flex; align-items: center; }
 .ctmap.is-active .place__unlock { display: none; }
 
-/* 1. карта рядом */
-.ct1__info { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: clamp(32px, 4.4vw, 80px); align-items: start; justify-items: start; }
-.ct1__info > * { grid-column: 1; }
-.ct1__info > .ct1__map { grid-column: 2; grid-row: 1 / span 8; align-self: stretch; justify-self: stretch; min-height: 560px; }
+/* компьютер: карта на весь экран, контакты на белой карточке, как карточка места в Картах */
+.ct { position: relative; padding: 0; overflow: hidden; }
+.ct__mapbox { position: absolute; inset: 0; }
+.ct__map { position: absolute; inset: 0; }
+.ct__map .place__unlock { left: auto; right: 16px; }
+.ct__layer { position: relative; z-index: 1; display: flex; align-items: center; min-height: max(100svh, 780px); padding: calc(var(--hdr-d, 96px) + 24px) 0 48px; pointer-events: none; }
+.ct__card { pointer-events: auto; display: flex; flex-direction: column; align-items: flex-start; width: min(500px, 100%); padding: clamp(28px, 2.6vw, 44px); border-radius: var(--radius); background: var(--white); box-shadow: 0 24px 70px -28px rgba(12, 36, 16, .4); }
+.ct .way__addr { margin-top: 14px; }
+.ct .way__now { margin-top: 24px; }
+.ct .way__facts { margin-top: 18px; }
+.ct .way__apps { padding-top: 24px; }
+.ct .way__app { background: var(--paper); }
+.ct .way__app:hover { background: var(--sage-2); }
 
-/* 2. карта по кнопке: третья плитка рядом с маршрутами раскрывает карту во всю ширину экрана */
-.ct2 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 1.7vw, 28px); align-items: end; }
-.ct2__head { grid-column: 1 / 8; }
-.ct2__side { grid-column: 8 / 13; padding-bottom: 8px; }
-.ct2__side .way__now { margin-top: 0; }
-.ct--2 .way__addr { font-size: var(--fs-5); letter-spacing: -.045em; line-height: .98; }
-.ct2__bar { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: clamp(40px, 4.4vw, 72px); }
-.ct2__toggle { width: 100%; background: var(--ink); color: #fff; cursor: pointer; }
-.ct2__toggle:hover { background: var(--ink-3); }
-.ct2__toggle small { color: var(--muted-on-dark); }
-.ct2__plus { position: relative; flex: none; width: 46px; height: 46px; border-radius: 12px; background: rgba(255, 255, 255, .1); transition: rotate .5s var(--ease); }
-.ct2__plus i { position: absolute; left: 50%; top: 50%; width: 16px; height: 2px; margin: -1px 0 0 -8px; background: currentColor; transition: rotate .5s var(--ease); }
-.ct2__plus i:last-child { rotate: 90deg; }
-.ct2__toggle[aria-expanded="true"] .ct2__plus { rotate: 180deg; }
-.ct2__toggle[aria-expanded="true"] .ct2__plus i:last-child { rotate: 0deg; }
-.ct2__mapwrap { overflow: hidden; }
-.ct2__map { height: min(78svh, 760px); margin-top: clamp(24px, 3vw, 40px); }
-
-/* 3. маршрут из вашего города */
-.ct3 { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 4.4vw, 80px); align-items: stretch; }
-.ct3__info { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
-.ct3__from { display: grid; gap: 12px; margin-top: clamp(26px, 3vw, 40px); }
-.ct3__q { font: 500 var(--fs-1)/1.2 var(--display); letter-spacing: -.02em; }
-.ct3__towns { gap: 6px; }
-.ct3__towns .chip { min-height: 40px; padding: 0 14px; font-size: var(--fs--1); }
-.ct3__towns .chip:not(.is-on) { background: var(--white); border-color: transparent; }
-.ct3__mode { display: inline-flex; width: max-content; padding: 4px; border-radius: 999px; border: 1px solid var(--line); }
-.ct3__mode button { min-height: 34px; padding: 0 16px; border: 0; border-radius: 999px; background: none; font-size: var(--fs--1); transition: background .3s; }
-.ct3__mode .is-on { background: var(--sage); }
-.ct3__mapbox { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 14px; min-width: 0; }
-.ct3__map { min-height: 560px; }
-.ct3__note { font-size: var(--fs--1); line-height: 1.5; color: var(--muted); }
-
-/* 4. карта растёт: полоса в ширину сетки раскрывается до краёв экрана при прокрутке */
-.ct4 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 1.7vw, 28px); align-items: end; }
-.ct4__head { grid-column: 1 / 8; }
-.ct4__now { grid-column: 8 / 13; padding-bottom: 8px; }
-.ct4__now .way__now { margin-top: 0; }
-.ct--4 .way__addr { font-size: var(--fs-5); letter-spacing: -.045em; line-height: .98; }
-.ct4__go { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px; margin-top: clamp(32px, 3.4vw, 56px); }
-.ct4__go .way__apps { padding-top: 0; }
-.ct4__go .way__more { margin-top: 0; }
-.ct4__stage { margin-top: clamp(32px, 3.4vw, 56px); }
-.ct4__map { height: min(86svh, 820px); }
-.ct4__towns { margin-top: 18px; font-size: var(--fs--1); line-height: 1.5; color: var(--muted); }
-
-/* 5. карточка на карте: карта на весь экран, контакты на белой карточке, как карточка места в Картах */
-.ct--5 { position: relative; padding: 0; overflow: hidden; }
-.ct5__mapbox { position: absolute; inset: 0; }
-.ct5__map { position: absolute; inset: 0; }
-.ct5__map .place__unlock { left: auto; right: 16px; }
-.ct5__layer { position: relative; z-index: 1; display: flex; align-items: center; min-height: max(100svh, 780px); padding: calc(var(--hdr-d, 96px) + 24px) 0 48px; pointer-events: none; }
-.ct5__card { pointer-events: auto; display: flex; flex-direction: column; align-items: flex-start; width: min(500px, 100%); padding: clamp(28px, 2.6vw, 44px); border-radius: var(--radius); background: var(--white); box-shadow: 0 24px 70px -28px rgba(12, 36, 16, .4); }
-.ct--5 .way__addr { margin-top: 14px; }
-.ct--5 .way__now { margin-top: 24px; }
-.ct--5 .way__facts { margin-top: 18px; }
-.ct--5 .way__apps { padding-top: 24px; }
-.ct--5 .way__app { background: var(--paper); }
-.ct--5 .way__app:hover { background: var(--sage-2); }
-
+/* телефон и планшет: контакты сверху, карта под ними во всю ширину (Ilya 17.10) */
 @media (max-width: 1024px) {
   .way__apps { max-width: none; }
-  /* 1: карта под телефоном, во всю ширину экрана */
-  .ct1__info { display: flex; flex-direction: column; align-items: flex-start; }
-  .ct1__map { align-self: stretch; height: clamp(320px, 92vw, 460px); min-height: 0 !important; margin: 28px calc(-1 * var(--gutter)) 0; }
-  /* 2 и 4: всё одной колонкой */
-  .ct2, .ct4 { display: flex; flex-direction: column; align-items: stretch; }
-  .ct2__side, .ct4__now { padding-bottom: 0; }
-  .ct2__side .way__now, .ct4__now .way__now { margin-top: clamp(26px, 3vw, 40px); }
-  .ct2__bar { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 28px; }
-  .ct2__toggle { grid-column: 1 / -1; }
-  .ct2__map { height: 72svh; margin-top: 20px; }
-  .ct4__go { flex-direction: column; align-items: stretch; margin-top: 4px; }
-  .ct4__go .way__apps { padding-top: 24px; }
-  .ct4__map { height: 74svh; }
-  .ct4__towns { width: var(--wrap); }
-  /* 3: выбор города, под ним карта во всю ширину, потом кнопки */
-  .ct3, .ct3__info, .ct3__mapbox { display: contents; }
-  .ct3 { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
-  .ct3__info > *, .ct3__mapbox > * { order: 1; }
-  .ct3__info > .way__apps, .ct3__info > .way__more { order: 3; }
-  .ct3__map { order: 2; align-self: stretch; height: clamp(360px, 110vw, 520px); min-height: 0; margin: 20px calc(-1 * var(--gutter)) 0; }
-  .ct3__note { order: 2; margin-top: 12px; }
-  .ct3__from { width: 100%; }
-  .ct3__towns { flex-wrap: nowrap; overflow-x: auto; margin: 0 calc(-1 * var(--gutter)); padding: 0 var(--gutter); scrollbar-width: none; }
-  .ct3__towns::-webkit-scrollbar { display: none; }
-  .ct3__towns .chip { flex: none; }
-  /* 5: карта сверху, карточка выезжает на неё снизу, как в приложении Карт */
-  .ct--5 { padding-bottom: 48px; background: var(--sage-2); }
-  .ct5__mapbox { position: relative; height: 64svh; min-height: 420px; }
-  .ct5__map .place__unlock { bottom: 64px; }
-  .ct5__layer { display: block; min-height: 0; margin-top: -40px; padding: 0; }
-  .ct5__card { width: auto; margin: 0 calc(-1 * var(--gutter)); padding: 28px var(--gutter) 8px; border-radius: var(--radius) var(--radius) 0 0; box-shadow: none; background: var(--sage-2); }
-  .ct--5 .way__app { background: var(--white); }
+  .ct { padding-top: clamp(48px, 7vw, 80px); background: var(--sage-2); }
+  .ct__layer { display: block; min-height: 0; padding: 0; }
+  .ct__card { width: auto; padding: 0; border-radius: 0; box-shadow: none; background: none; }
+  .ct .way__app { background: var(--white); }
+  .ct__mapbox { position: relative; height: 64svh; min-height: 420px; margin-top: 32px; }
 }
 @media (max-width: 760px) {
-  .way { padding: 48px 0 56px; }
-  .ct--5 { padding: 0 0 48px; }
+  .ct { padding-top: 48px; }
   .way__addr { margin-top: 14px; }
   .way__now { margin-top: 22px; }
   .way__app { min-height: 60px; padding: 8px 12px 8px 8px; gap: 10px; font-size: 15px; border-radius: 16px; }
-  .way__app .rt-mark, .ct2__plus { width: 42px; height: 42px; border-radius: 11px; }
+  .way__app .rt-mark { width: 42px; height: 42px; border-radius: 11px; }
   .way__more { gap: 2px 22px; }
 }
 
@@ -2103,42 +2031,7 @@ html:not(.js-intro) .intro { display: none; }
   .svl-row { grid-template-columns: auto minmax(0, 1fr) auto; }
   .svl-row__title { grid-column: 2; padding-right: 0; font-size: min(var(--fs-2), 6.6vw); }
   .svl-row__act { grid-column: 3; }
-  .modal__box.svm { padding-bottom: calc(clamp(8rem, 7.2727rem + 3.2323vw, 10rem) + env(safe-area-inset-bottom)); }
 }
-
-/* окно услуги, как у Лава Дент: на весь экран шалфейного цвета, выезжает справа за 1 с,
-   сверху круглая тёмная кнопка закрытия, текст колонкой по центру; цены только стартовые «от» */
-.modal--svc { padding: 0; background: none; place-items: stretch; }
-.modal__box.svm { width: 100%; max-height: none; height: 100%; padding: 0 0 clamp(8rem, 7.2727rem + 3.2323vw, 10rem); border-radius: 0; background: #779e91; color: var(--ink); translate: 100% 0; transition: translate 1s cubic-bezier(.1, .75, .25, 1); }
-.modal--svc.is-in .svm { translate: 0 0; }
-.svm__bar { position: sticky; top: 0; z-index: 1; display: flex; justify-content: flex-end; padding: clamp(2rem, 1.3636rem + 2.8283vw, 3.75rem) 0; }
-.svm__x { display: grid; place-items: center; width: clamp(56px, 3rem + 1.5vw, 76px); aspect-ratio: 1; border: 0; border-radius: 50%; background: var(--ink); color: var(--sage-2); cursor: pointer; transition: scale .5s cubic-bezier(.1, .75, .25, 1); }
-.svm__x:hover { scale: 1.1; }
-.svm__x svg { width: 34%; height: 34%; fill: currentColor; }
-.svm__body { max-width: 640px; margin-inline: auto; opacity: 0; transition: opacity 1s cubic-bezier(1, 0, .47, .93); }
-.modal--svc.is-in .svm__body { opacity: 1; }
-.svm .svm__title { padding-right: 0; letter-spacing: 0; font: 500 var(--fs-1)/1.4 var(--display); margin-bottom: clamp(1.5rem, 1.3636rem + .6061vw, 1.875rem); }
-.svm .svm__title:focus { outline: none; }
-.svm__lead { font-size: var(--fs-0); line-height: 1.4; }
-.svm__list { display: grid; gap: clamp(.75rem, .6818rem + .303vw, .9375rem); margin: clamp(1rem, .9091rem + .404vw, 1.25rem) 0 0; padding: 0; list-style: none; font-size: var(--fs-0); line-height: 1.4; }
-.svm__list li { position: relative; padding-left: 1.1em; }
-.svm__list li::before { content: "–"; position: absolute; left: 0; }
-.svm__promo { margin-top: clamp(2rem, 1.8182rem + .8081vw, 2.5rem); padding: 22px 26px; border-radius: var(--radius-sm); background: var(--ink); color: var(--sage-2); }
-.svm__tag { font: 500 12px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
-.svm__offer { margin: 10px 0 6px; font: 500 var(--fs-1)/1.25 var(--display); }
-.svm__offer span { white-space: nowrap; }
-.svm__offer s { font: 400 16px/1 var(--body); opacity: .6; white-space: nowrap; }
-.svm__promo p:last-child { font-size: var(--fs--1); line-height: 1.45; opacity: .86; }
-.svm__prices { display: grid; gap: clamp(.75rem, .6818rem + .303vw, .9375rem); margin-top: clamp(2rem, 1.8182rem + .8081vw, 2.5rem); }
-.svm__row { display: flex; justify-content: space-between; align-items: center; gap: clamp(2rem, 1.8182rem + .8081vw, 2.5rem); }
-.svm__row h3 { font: 500 var(--fs-0)/1.4 var(--body); }
-.svm__row p { flex: none; font: 500 var(--fs-1)/1.4 var(--display); white-space: nowrap; }
-.svm__row s { margin-left: 8px; font: 400 15px/1 var(--body); opacity: .6; }
-.svm__note { margin-top: 18px; font-size: var(--fs--1); opacity: .75; }
-.svm__act { display: flex; gap: var(--gutter); margin-top: clamp(2rem, 1.8182rem + .8081vw, 2.5rem); }
-.svm__act .btn { flex: 1 1 50%; max-width: 50%; }
-.svm__act .btn:not(.btn--ghost) { --bg: var(--ink); --fg: var(--sage-2); }
-@media (max-width: 640px) { .svm__row { flex-direction: column; align-items: flex-start; gap: 4px; } .svm__act { flex-wrap: wrap; } .svm__act .btn { max-width: none; } }
 
 /* ---------- первый экран без перегруза (Ilya 17.10): заголовок, одна строка, кнопка и акция строкой.
    Без кикера, фактов и пометок; картинка одна и стоит на месте, без анимации ---------- */
