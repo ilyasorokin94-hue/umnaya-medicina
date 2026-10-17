@@ -1,2 +1,15 @@
 /* Отзывы на телефоне (до 760px). На компьютере блок скрыт, там прежние ленты. */
 @media (min-width: 761px) { .rvm { display: none !important; } }
+
+/* Вариант 3. Переписка */
+@media (max-width: 760px) {
+  .reviews .rv__rows { display: none; }
+  .rvm--chat { margin-top: 14px; padding-inline: var(--gutter); }
+  .rvc { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 22px 14px 18px; border-radius: var(--radius); background: var(--sage-2); }
+  .rvc__day { align-self: center; margin: 0 0 8px; padding: 6px 14px; border-radius: 999px; background: rgba(12, 36, 16, .08); font: 500 13px/1.2 var(--body); color: var(--muted); }
+  .rvc__msg { position: relative; max-width: 88%; margin: 0; padding: 13px 16px 14px; border-radius: 20px 20px 20px 6px; background: #fff; color: var(--ink); font: 400 17px/1.4 var(--body); box-shadow: 0 1px 1px rgba(12, 36, 16, .08); transform-origin: 0 100%; }
+  .rvc__msg--short { font: 500 21px/1.22 var(--display); letter-spacing: -.015em; }
+  .rvc__msg b { font-weight: 600; color: var(--green-deep); }
+  .rvc__msg:nth-of-type(3n + 2) { max-width: 80%; }
+  .rvc__more { align-self: center; margin-top: 10px; }
+}

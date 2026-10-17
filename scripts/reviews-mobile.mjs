@@ -11,12 +11,20 @@ export const KEYS = {
   12: "легким движением руки", 13: "ни разу не пришлось ждать", 14: "Меня вели два доктора", 15: "Чисто, аккуратно и быстро.",
   16: "аккуратно и безболезненно", 17: "безболезненно",
 };
-// «цитата» с главной фразой в <mark> (tag задаёт обёртку)
-export const quote = (reviews, i, esc, tag = "mark") => {
+// «цитата» с главной фразой в <mark> (tag задаёт обёртку, open и close кавычки)
+export const quote = (reviews, i, esc, tag = "mark", open = "«", close = "»") => {
   const q = reviews[i], k = KEYS[i], at = k ? q.indexOf(k) : -1;
-  if (at < 0) return `«${esc(q)}»`;
-  return `«${esc(q.slice(0, at))}<${tag}>${esc(k)}</${tag}>${esc(q.slice(at + k.length))}»`;
+  if (at < 0) return `${open}${esc(q)}${close}`;
+  return `${open}${esc(q.slice(0, at))}<${tag}>${esc(k)}</${tag}>${esc(q.slice(at + k.length))}${close}`;
 };
 export const size = (q) => (q.length > 110 ? "long" : q.length < 60 ? "short" : "mid");
 
-export const reviewsMobile = () => "";
+// Вариант 3. Переписка: отзывы приходят сообщениями, как в мессенджере, по мере прокрутки
+const SHOW = 7;
+export const reviewsMobile = (reviews, esc) => `<div class="rvm rvm--chat">
+    <div class="rvc">
+      <p class="rvc__day">Пишут пациенты</p>
+      ${ORDER.map((i, n) => `<p class="rvc__msg rvc__msg--${size(reviews[i])}"${n >= SHOW ? " hidden" : ""}>${quote(reviews, i, esc, "b", "", "")}</p>`).join("\n      ")}
+      <button class="btn btn--sm rvc__more" type="button">Ещё отзывы</button>
+    </div>
+  </div>`;
