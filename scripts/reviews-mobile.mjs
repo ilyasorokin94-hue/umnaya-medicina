@@ -19,4 +19,9 @@ export const quote = (reviews, i, esc, tag = "mark") => {
 };
 export const size = (q) => (q.length > 110 ? "long" : q.length < 60 ? "short" : "mid");
 
-export const reviewsMobile = () => "";
+// Вариант 2. Крупные цитаты: слова проявляются по мере прокрутки, главная фраза зелёная
+const SHOW = 6;
+export const reviewsMobile = (reviews, esc) => `<div class="rvm rvm--words">
+    ${ORDER.map((i, n) => `<blockquote class="rvw rvw--${size(reviews[i])}"${n >= SHOW ? " hidden" : ""}>${quote(reviews, i, esc, "em")}</blockquote>`).join("\n    ")}
+    <button class="btn btn--ghost rvw__more" type="button">Ещё отзывы</button>
+  </div>`;
