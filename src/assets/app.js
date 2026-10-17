@@ -615,7 +615,7 @@
   G.defaults({ ease: "power3.out" });
   ST.config({ ignoreMobileResize: true });
 
-  const heroIn = () => {
+  const heroIn = ({ bar = true } = {}) => {
     // шапка компьютера въезжает сверху и проявляется, линия под разделами убегает влево, как у Лава Дент (CSS);
     // класс ставим через кадр, чтобы браузер успел нарисовать начальное положение
     requestAnimationFrame(() => requestAnimationFrame(() => header?.classList.add("is-loaded")));
@@ -630,7 +630,7 @@
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
       .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
-    if (!matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
+    if (bar && !matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     const pb = $(".hero__promo b", h), ps = $(".hero__promo s", h);
     if (small && pb && ps) {
       const orig = pb.textContent, to = +orig.replace(/\D/g, ""), o = { v: +ps.textContent.replace(/\D/g, "") };
@@ -652,13 +652,82 @@
   if (intro && root.classList.contains("js-intro")) {
     lenis?.stop();
     try { sessionStorage.setItem("um2-intro", "1"); } catch (e) { /* приватный режим */ }
-    G.timeline({ onComplete: () => { intro.remove(); lenis?.start(); root.classList.remove("js-intro"); } })
-      .from(".intro__logo", { autoAlpha: 0, y: 16, duration: 0.8 })
-      .from(".intro__word", { autoAlpha: 0, duration: 0.8 }, 0.15)
-      .to(".intro__bar i", { scaleX: 1, duration: 0.9, ease: "power2.inOut" }, 0.15)
-      .to(".intro__in", { autoAlpha: 0, y: -20, duration: 0.4, ease: "power2.in" }, "+=0.05")
-      .to(intro, { yPercent: -100, duration: 1, ease: "power4.inOut" }, "-=0.1")
-      .add(heroIn, "-=0.7");
+    const done = () => { intro.remove(); lenis?.start(); root.classList.remove("js-intro"); };
+    const tl = G.timeline({ onComplete: done });
+    const v = +intro.dataset.v || 0;
+    const W = innerWidth, H = innerHeight;
+    if (v === 1) {
+      // клевер рисуется контуром, заливается знаком, потом знак гаснет, а клевер того же размера становится окном и растёт
+      const emb = $(".intro__emb", intro), hole = $(".intro__hole", intro);
+      const k0 = emb.getBoundingClientRect().width / 19978, cy = emb.getBoundingClientRect().top + emb.getBoundingClientRect().height / 2;
+      const o = { k: k0 };
+      const put = () => hole.setAttribute("transform", `translate(${W / 2} ${cy}) scale(${o.k}) translate(-9989 -9989)`);
+      const draw = $(".intro__draw", intro), len = draw.getTotalLength();
+      G.set(draw, { strokeDasharray: len, strokeDashoffset: len });
+      tl.to(draw, { strokeDashoffset: 0, duration: 1.1, ease: "power2.inOut" })
+        .to(".intro__ring", { opacity: 1, duration: 0.6 }, 0.35)
+        .to(".intro__name", { opacity: 1, duration: 0.6 }, 0.45)
+        .to(".intro__fill", { opacity: 1, duration: 0.35 }, 1)
+        .to(".intro__name", { opacity: 0, duration: 0.3 }, 1.4)
+        .add(() => { put(); $(".intro__in", intro).style.visibility = "hidden"; }, 1.55)
+        .to(o, { k: (Math.hypot(W, H) / 19978) * 9, duration: 1.1, ease: "power3.in", onUpdate: put }, 1.55)
+        .add(heroIn, 2.1);
+    } else if (v === 2) {
+      // буквы подгоняем под ширину экрана, поднимаем по одной, потом половины разъезжаются вверх и вниз
+      const big = $$(".intro__big", intro), avail = W - 2 * Math.min(Math.max(16, W * 0.04), 56);
+      const wide = Math.max(...big.map((b) => b.scrollWidth));
+      big.forEach((b) => (b.style.fontSize = (parseFloat(getComputedStyle(b).fontSize) * avail) / wide + "px"));
+      tl.to($$(".intro__w i", intro), { y: 0, duration: 0.9, stagger: 0.035, ease: "power4.out" })
+        .to(".intro--v2 .intro__word", { opacity: 1, duration: 0.6 }, 0.6)
+        .to(".intro__half--t", { yPercent: -100, duration: 1, ease: "power4.inOut" }, 1.6)
+        .to(".intro__half--b", { yPercent: 100, duration: 1, ease: "power4.inOut" }, 1.6)
+        .add(heroIn, 1.95);
+    } else if (v === 3) {
+      // хирург, ортопед, терапевт по очереди, потом полосы уходят вверх одна за другой
+      tl.to($$(".intro__col b", intro), { y: 0, duration: 0.9, stagger: 0.14, ease: "power4.out" })
+        .to($$(".intro__col small", intro), { y: 0, duration: 0.9, stagger: 0.14, ease: "power4.out" }, 0.12)
+        .to($$(".intro__col", intro), { yPercent: -100, duration: 0.95, stagger: 0.1, ease: "power4.inOut" }, 1.75)
+        .add(heroIn, 2.1);
+    } else if (v === 4) {
+      // фото кабинета открывается снизу вверх в рамке, рамка вырастает на весь экран, всё уезжает вверх
+      const fr = $(".intro__frame", intro), im = $("img", fr);
+      // размеры рамки те же, что в CSS (--fw, --fh)
+      const ph = W <= 760, fw = ph ? Math.min(W * 0.78, 360) : Math.min(W * 0.44, 640), fh = ph ? Math.min(H * 0.52, 460) : Math.min(H * 0.44, 400);
+      const x = (W - fw) / 2, y = (H - fh) / 2;
+      const ins = (t, r, b, l) => `inset(${t}px ${r}px ${b}px ${l}px)`;
+      tl.pause();
+      Promise.race([im.decode ? im.decode().catch(() => {}) : 0, new Promise((r) => setTimeout(r, 1200))]).then(() => tl.play());
+      tl.fromTo(fr, { clipPath: ins(H - y + 2, x, y, x) }, { clipPath: ins(y, x, y, x), duration: 1, ease: "power3.inOut", immediateRender: true })
+        .to(im, { scale: 1.08, duration: 2.2, ease: "power2.out" }, 0)
+        .to(".intro--v4 .intro__mark", { opacity: 1, duration: 0.5 }, 0.45)
+        .to(".intro--v4 .intro__mark", { opacity: 0, duration: 0.25 }, 1.2)
+        .fromTo(fr, { clipPath: ins(y, x, y, x) }, { clipPath: ins(0, 0, 0, 0), duration: 0.85, ease: "power3.inOut", immediateRender: false }, 1.25)
+        .to(im, { scale: 1, duration: 0.85, ease: "power3.inOut" }, 1.25)
+        .to(intro, { yPercent: -100, duration: 1, ease: "power4.inOut" }, 2.05)
+        .add(heroIn, 2.35);
+    } else if (v === 5) {
+      // логотип проявляется слева направо и перелетает в шапку; шапку ставим на место заранее, под заставкой
+      const mk = $(".intro__mark", intro), dst = $(".header .logo__img"), logo = dst?.closest(".logo");
+      header?.classList.add("is-loaded");
+      if (logo) logo.style.visibility = "hidden";
+      const fly = () => {
+        const a = mk.getBoundingClientRect(), b = dst?.getBoundingClientRect();
+        return b && b.width ? { x: b.left - a.left, y: b.top - a.top, scale: b.width / a.width } : { autoAlpha: 0 };
+      };
+      tl.fromTo(mk, { y: 14 }, { clipPath: "inset(0 0% 0 0)", y: 0, duration: 1.1, ease: "power3.inOut" })
+        .add(() => { tl.to(mk, { ...fly(), duration: 1, ease: "power3.inOut" }, 1.45); }, 1.44)
+        .add(() => heroIn({ bar: false }), 1.4)
+        .to(".intro__bg", { autoAlpha: 0, duration: 0.9, ease: "power2.inOut" }, 1.6)
+        .add(() => { if (logo) logo.style.visibility = ""; }, 2.45)
+        .from(".header .logo__unit", { autoAlpha: 0, duration: 0.5 }, 2.45);
+    } else {
+      tl.from(".intro__logo", { autoAlpha: 0, y: 16, duration: 0.8 })
+        .from(".intro__word", { autoAlpha: 0, duration: 0.8 }, 0.15)
+        .to(".intro__bar i", { scaleX: 1, duration: 0.9, ease: "power2.inOut" }, 0.15)
+        .to(".intro__in", { autoAlpha: 0, y: -20, duration: 0.4, ease: "power2.in" }, "+=0.05")
+        .to(intro, { yPercent: -100, duration: 1, ease: "power4.inOut" }, "-=0.1")
+        .add(heroIn, "-=0.7");
+    }
   } else {
     intro?.remove();
     heroIn();

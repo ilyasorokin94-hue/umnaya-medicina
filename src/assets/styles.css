@@ -95,6 +95,50 @@ p { margin: 0; }
 .intro__word { font: 500 13px/1 var(--body); letter-spacing: .3em; text-transform: uppercase; color: var(--muted-on-dark); }
 html:not(.js-intro) .intro { display: none; }
 
+/* варианты заставки (Ilya 17.10): начальный кадр задан здесь, движение в app.js */
+.intro__emb { width: min(220px, 42vw); height: auto; overflow: visible; }
+/* 1. знак-окно: светлый фон, зелёный клевер рисуется и становится окном в сайт */
+.intro--v1 { background: none; color: var(--paper); }
+.intro--v1 .intro__win { position: absolute; inset: 0; color: var(--paper); }
+.intro--v1 .intro__in { position: relative; gap: 28px; }
+.intro__draw { fill: none; stroke: var(--green); stroke-width: 260; stroke-dasharray: 0 100000; }
+.intro__ring { fill: var(--green); fill-rule: evenodd; opacity: 0; }
+.intro__fill { fill: var(--green); fill-rule: evenodd; opacity: 0; }
+.intro__name { margin: 0; font: 700 var(--fs-0)/1 var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); opacity: 0; }
+/* 2. большое имя: зелёный фон, белые буквы на всю ширину, шов между словами */
+.intro--v2 { display: block; background: none; }
+.intro__half { position: absolute; left: 0; right: 0; height: 50%; background: var(--green); display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+.intro__half--t { top: 0; justify-content: flex-end; }
+.intro__half--b { bottom: 0; justify-content: flex-start; }
+.intro__big { font: 800 var(--big, 16vw)/.86 var(--display); text-transform: uppercase; letter-spacing: -.02em; white-space: nowrap; color: #fff; }
+.intro__half--t .intro__big { padding-bottom: .04em; }
+.intro__half--b .intro__big { padding-top: .04em; }
+.intro__w > span { display: inline-block; overflow: hidden; vertical-align: top; padding: .02em 0; }
+.intro__w i { display: inline-block; font-style: normal; transform: translateY(105%); }
+.intro--v2 .intro__word { margin: clamp(16px, 2.4vw, 32px) 0 0; color: rgba(255, 255, 255, .78); opacity: 0; }
+/* 3. три врача: три полосы оттенков бренда, на телефоне строками, на компьютере колонками */
+.intro--v3 { display: grid; place-items: stretch; grid-template-rows: repeat(3, 1fr); background: none; }
+.intro__col { display: flex; align-items: flex-end; padding: 0 var(--gutter) clamp(20px, 3vw, 44px); background: var(--ink-2); }
+.intro__col:nth-child(2) { background: var(--ink-3); }
+.intro__col:nth-child(3) { background: var(--green-deep); }
+.intro__col p { margin: 0; display: grid; gap: 6px; }
+.intro__col p > span { display: block; overflow: hidden; }
+.intro__col b, .intro__col small { display: block; transform: translateY(110%); }
+.intro__col b { font: 600 var(--fs-4)/1.05 var(--display); letter-spacing: -.02em; }
+.intro__col small { font: 400 var(--fs-0)/1.3 var(--body); color: var(--muted-on-dark); }
+@media (min-width: 761px) { .intro--v3 { grid-template-rows: none; grid-template-columns: repeat(3, 1fr); } }
+/* 4. кадр кабинета: фото в рамке с прямыми углами, подпись-логотип под ним */
+.intro--v4 { --fw: min(78vw, 360px); --fh: min(52vh, 460px); }
+@media (min-width: 761px) { .intro--v4 { --fw: min(44vw, 640px); --fh: min(44vh, 400px); } }
+.intro__frame { position: absolute; inset: 0; clip-path: inset(100% 0 0 0); }
+.intro__frame img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.25); }
+.intro__cap { position: absolute; left: 0; right: 0; top: calc(50% + var(--fh) / 2 + 22px); display: flex; justify-content: center; }
+.intro--v4 .intro__mark { height: 34px; width: auto; opacity: 0; }
+/* 5. логотип в шапку: тёмный фон тает, логотип перелетает на своё место */
+.intro--v5 { background: none; }
+.intro__bg { position: absolute; inset: 0; background: var(--ink); }
+.intro--v5 .intro__mark { position: relative; width: min(560px, 80vw); height: auto; clip-path: inset(0 100% 0 0); transform-origin: 0 0; }
+
 /* ---------- логотип ---------- */
 .logo { --lh: 44px; position: relative; flex: none; display: inline-flex; align-items: center; gap: 14px; text-decoration: none; color: inherit; }
 .logo__img { height: var(--lh); width: auto; object-fit: contain; }

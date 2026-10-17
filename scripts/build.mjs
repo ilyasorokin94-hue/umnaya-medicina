@@ -101,10 +101,10 @@ const navLine = {
 // меню телефона и шапка компьютера как у Лава Дент: разделы в порядке страницы (Ilya 17.10: после слогана клиника и «5 минут, 0 ₽, 3 врача», потом услуги), «Цены» рядом с услугами
 const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi"], ["Цены", `${p}ceny.html`], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
-function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
+function head({ title, desc, canonical, depth, page = "inner", jsonld = [], lab = false }) {
   const p = pre(depth);
   return `<!doctype html>
-<html lang="ru" data-page="${page}">
+<html lang="ru" data-page="${page}"${lab ? ' data-lab="1"' : ""}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -122,7 +122,7 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 ${fontPreload.map((f) => `<link rel="preload" href="${p}assets/fonts/${f}.woff2" as="font" type="font/woff2" crossorigin>`).join("\n")}
 <link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
-(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
+(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&(d.dataset.lab||!sessionStorage.getItem("um2-intro")))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
 window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
 window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big,.intro__logo");if(p)p.classList.add("is-fallback");i.style.display="none"};
@@ -138,12 +138,37 @@ ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</sc
 ${PUBLISH ? "" : `<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». Заявки из форм пока никуда не отправляются.</div>`}`;
 }
 
-function intro(depth) {
-  return `<div class="intro" aria-hidden="true"><div class="intro__in">
+// заставка: v0 нынешняя (логотип и полоска), v1–v5 варианты на выбор (Ilya 17.10), смотрятся на zastavka-N.html.
+// Без декоративных линий, точек и вращения: только знак клиники, название, три врача или фото кабинета
+const EMB = {
+  ring: "M9989 0c5517,0 9989,4472 9989,9989 0,5517 -4472,9989 -9989,9989 -5517,0 -9989,-4472 -9989,-9989 0,-5517 4472,-9989 9989,-9989zM9989 641c5163,0 9348,4185 9348,9348 0,5163 -4185,9348 -9348,9348 -5163,0 -9349,-4185 -9349,-9348 0,-5163 4186,-9348 9349,-9348z",
+  clover: "M11910 9000c327,-749 787,-1520 1430,-1991 578,-424 1278,-571 1954,-297 1264,514 1814,2190 1076,3286 142,209 242,445 295,703 97,481 17,988 -191,1429 -240,509 -654,944 -1180,1157 -676,275 -1376,127 -1954,-296 -643,-472 -1103,-1242 -1430,-1991 -197,22 -397,68 -521,165 -183,142 -288,471 -350,778 734,325 1482,776 1952,1399 429,570 598,1275 330,1954 -503,1270 -2159,1757 -3332,1121 -1173,636 -2830,149 -3332,-1121 -268,-679 -100,-1384 330,-1954 470,-623 1218,-1074 1952,-1399 -63,-307 -167,-636 -350,-778 -124,-97 -324,-143 -521,-165 -327,749 -787,1519 -1430,1991 -578,423 -1278,571 -1954,296 -1264,-513 -1815,-2189 -1076,-3286 -142,-208 -242,-445 -295,-702 -98,-481 -17,-988 191,-1430 240,-509 654,-943 1180,-1157 676,-274 1376,-127 1954,297 643,471 1103,1242 1430,1991 197,-22 397,-68 521,-165 183,-142 287,-471 350,-779 -733,-325 -1480,-778 -1941,-1407 -423,-578 -571,-1278 -296,-1954 513,-1264 2189,-1815 3286,-1076 208,-142 444,-243 702,-295 481,-98 988,-17 1430,191 508,240 943,654 1156,1180 275,676 127,1376 -296,1954 -461,629 -1208,1082 -1941,1407 62,308 167,637 350,779 124,97 324,143 521,165z",
+  full: "M9989 0c5517,0 9989,4472 9989,9989 0,5517 -4472,9989 -9989,9989 -5517,0 -9989,-4472 -9989,-9989 0,-5517 4472,-9989 9989,-9989zM11910 9000c327,-749 787,-1520 1430,-1991 578,-424 1278,-571 1954,-297 1264,514 1814,2190 1076,3286 142,209 242,445 295,703 97,481 17,988 -191,1429 -240,509 -654,944 -1180,1157 -676,275 -1376,127 -1954,-296 -643,-472 -1103,-1242 -1430,-1991 -197,22 -397,68 -521,165 -183,142 -288,471 -350,778 734,325 1482,776 1952,1399 429,570 598,1275 330,1954 -503,1270 -2159,1757 -3332,1121 -1173,636 -2830,149 -3332,-1121 -268,-679 -100,-1384 330,-1954 470,-623 1218,-1074 1952,-1399 -63,-307 -167,-636 -350,-778 -124,-97 -324,-143 -521,-165 -327,749 -787,1519 -1430,1991 -578,423 -1278,571 -1954,296 -1264,-513 -1815,-2189 -1076,-3286 -142,-208 -242,-445 -295,-702 -98,-481 -17,-988 191,-1430 240,-509 654,-943 1180,-1157 676,-274 1376,-127 1954,297 643,471 1103,1242 1430,1991 197,-22 397,-68 521,-165 183,-142 287,-471 350,-779 -733,-325 -1480,-778 -1941,-1407 -423,-578 -571,-1278 -296,-1954 513,-1264 2189,-1815 3286,-1076 208,-142 444,-243 702,-295 481,-98 988,-17 1430,191 508,240 943,654 1156,1180 275,676 127,1376 -296,1954 -461,629 -1208,1082 -1941,1407 62,308 167,637 350,779 124,97 324,143 521,165zM9649 7656l0 0c-196,1613 -671,2001 -2004,2004 -1917,-5038 -5042,-938 -3142,340 -1900,1277 1225,5378 3142,340 1333,2 1808,391 2004,2004 -4661,1773 -1651,4591 130,3454l210 -312 210 312c1781,1137 4790,-1681 130,-3454l0 0c196,-1613 671,-2002 2004,-2004l0 0c1917,5038 5042,937 3142,-340 1900,-1278 -1225,-5378 -3142,-340l0 0c-1333,-3 -1808,-391 -2004,-2004l0 0c5038,-1917 938,-5042 -340,-3142 -1278,-1900 -5378,1225 -340,3142zM9989 1281c4809,0 8708,3899 8708,8708 0,4809 -3899,8708 -8708,8708 -4809,0 -8708,-3899 -8708,-8708 0,-4809 3899,-8708 8708,-8708zM9989 641c5163,0 9348,4185 9348,9348 0,5163 -4185,9348 -9348,9348 -5163,0 -9349,-4185 -9349,-9348 0,-5163 4186,-9348 9349,-9348z",
+};
+const embSvg = (cls) => `<svg class="${cls}" viewBox="0 0 19978 19978" aria-hidden="true">`;
+const INTRO_DOCS = [["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]];
+function intro(depth, v = 0) {
+  const p = pre(depth);
+  const wrap = (inner, cls = "") => `<div class="intro intro--v${v}${cls}" data-v="${v}" aria-hidden="true">${inner}</div>`;
+  // 1. Знак-окно: на светлом фоне рисуется клевер из логотипа, потом он становится окном, через которое открывается сайт
+  if (v === 1) return wrap(`<svg class="intro__win" width="100%" height="100%"><defs><mask id="umw" maskUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%"><rect width="100%" height="100%" fill="#fff"/><path class="intro__hole" d="${EMB.clover}" fill="#000" transform="scale(0)"/></mask></defs><rect width="100%" height="100%" fill="currentColor" mask="url(#umw)"/></svg>
+  <div class="intro__in">${embSvg("intro__emb")}<path class="intro__draw" d="${EMB.clover}"/><path class="intro__ring" d="${EMB.ring}"/><path class="intro__fill" d="${EMB.full}"/></svg><p class="intro__name">Умная Медицина</p></div>`);
+  // 2. Большое имя: название на всю ширину, экран разъезжается по шву между словами
+  if (v === 2) {
+    const word = (w) => `<span class="intro__w">${[...w].map((c) => `<span><i>${c}</i></span>`).join("")}</span>`;
+    return wrap(`<div class="intro__half intro__half--t"><div class="intro__big">${word("Умная")}</div></div><div class="intro__half intro__half--b"><div class="intro__big">${word("Медицина")}</div><p class="intro__word">Стоматология в Удельной</p></div>`);
+  }
+  // 3. Три врача: три полосы с хирургом, ортопедом и терапевтом уходят вверх по очереди, за ними «Три врача. Один план лечения.»
+  if (v === 3) return wrap(INTRO_DOCS.map(([id, role]) => `<div class="intro__col"><p><span><b>${role}</b></span><span><small>${esc(docById[id].short)}</small></span></p></div>`).join(""));
+  // 4. Кадр кабинета: фото открывается в рамке, рамка вырастает на весь экран и уезжает вверх. Подпись под фото, не поверх
+  if (v === 4) { const { src } = pick(pics.tourFrame, depth); return wrap(`<div class="intro__frame"><img src="${src}" alt="" fetchpriority="high" decoding="async"></div><div class="intro__cap"><img class="intro__mark" src="${p}images/brand/header-logo-light.svg" alt=""></div>`); }
+  // 5. Логотип в шапку: логотип проявляется по центру и перелетает на своё место в шапке, фон тает
+  if (v === 5) return wrap(`<div class="intro__bg"></div><img class="intro__mark" src="${p}images/brand/header-logo-light.svg" alt="">`);
+  return wrap(`<div class="intro__in">
   <div class="intro__logo">${logoImg(depth)}<span class="logo__text">Умная Медицина</span></div>
   <div class="intro__bar"><i></i></div>
   <p class="intro__word">Стоматология</p>
-</div></div>`;
+</div>`);
 }
 
 // кнопки-действия: открывают окно на сайте, без скриптов ведут на запись, телефон или Telegram
@@ -489,7 +514,7 @@ function svlBlock(p, depth) {
 // ---------- главная: порядок блоков Тридента ----------
 // первый экран, услуги и цены вкладками, клиника и оборудование, путь пациента, врачи, отзывы, три вопроса, контакты
 
-function pageHome() {
+function pageHome(pv = 0) {
   const depth = 0, p = "";
   const { rating } = home;
   const star = icon.star;
@@ -498,8 +523,8 @@ function pageHome() {
   const heroTrio = `<ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>`;
   const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 
-  return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq.flatMap(([, qs]) => qs).map(([q, a]) => [q, a.replace(/\[([^\]]+)\]\((\w+)\)/g, "$1")]))] })
-  + intro(depth) + header(depth, true) + `
+  return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", lab: !!pv, jsonld: [dentistLd, faqLd(D.faq.flatMap(([, qs]) => qs).map(([q, a]) => [q, a.replace(/\[([^\]]+)\]\((\w+)\)/g, "$1")]))] })
+  + intro(depth, pv) + header(depth, true) + `
 <main id="main">
 
 <div class="opening">
@@ -844,6 +869,7 @@ const typo = (html) => html.replace(/(<(script|style)\b[\s\S]*?<\/\2>)|>([^<]+)<
 const pages = [];
 const out = (f, html) => { if (f.endsWith(".html")) pages.push((html = typo(html))); writeFileSync(path.join(dist, f), html); };
 out("index.html", pageHome());
+if (process.env.INTRO_LAB) for (const n of [1, 2, 3, 4, 5]) out(`zastavka-${n}.html`, pageHome(n));
 out("ceny.html", pagePrices());
 out("vrachi.html", pageDoctors());
 out("zapis.html", pageBooking());
