@@ -15,8 +15,8 @@
 <meta name="theme-color" content="#0c2410">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Manrope:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="../assets/styles.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Golos+Text:wght@400;500;600&family=Inter+Tight:wght@450&family=Manrope:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="../assets/styles.css?v=f185e442">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
@@ -26,7 +26,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <script src="../assets/vendor/gsap.min.js" defer></script>
 <script src="../assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="../assets/vendor/lenis.min.js" defer></script>
-<script src="../assets/app.js" defer></script>
+<script src="../assets/app.js?v=c6e76155" defer></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"https://umnaya-stomatologiya.ru"},{"@type":"ListItem","position":2,"name":"Врачи","item":"https://umnaya-stomatologiya.ru/vrachi"},{"@type":"ListItem","position":3,"name":"Екатерина Каштанова","item":"https://umnaya-stomatologiya.ru/vrachi/kashtanova"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Каштанова Екатерина Константиновна","jobTitle":"Врач-стоматолог-терапевт, стоматолог-ортодонт","worksFor":{"@type":"Dentist","name":"Умная Медицина"},"url":"https://umnaya-stomatologiya.ru/vrachi/kashtanova"}</script>
 </head>
@@ -34,7 +34,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <a class="skip" href="#main">К содержанию</a>
 <div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». Заявки из форм пока никуда не отправляются.</div>
 <header class="header"><div class="header__bar">
-  <a class="logo" href="../index.html" aria-label="Умная Медицина. Стоматология, на главную"><img class="logo__img" src="../images/brand/header-logo.svg" data-fb="https://um-med.com/assets/template/img/header-logo.svg" alt="" referrerpolicy="no-referrer" onerror="umLogo(this)"><span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
+  <a class="logo" href="../index.html" aria-label="Умная Медицина. Стоматология, на главную"><picture><source media="(max-width: 760px) and (forced-colors: none)" srcset="../images/brand/header-logo-light.svg"><img class="logo__img" src="../images/brand/header-logo.svg" data-fb="https://um-med.com/assets/template/img/header-logo.svg" alt="" referrerpolicy="no-referrer" onerror="umLogo(this)"></picture><span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
   <nav class="nav" aria-label="Разделы">
     <div class="nav__drop"><a href="../index.html#services">Услуги</a><div class="nav__panel"><a href="../uslugi/diagnostika.html"><span>КТ и снимки</span><small>от 500 ₽</small></a><a href="../uslugi/gigiena.html"><span>Профгигиена</span><small>от 4 500 ₽</small></a><a href="../uslugi/lechenie-zubov.html"><span>Лечение зубов</span><small>от 4 000 ₽</small></a><a href="../uslugi/implantaciya.html"><span>Имплантация</span><small>от 17 500 ₽</small></a><a href="../uslugi/all-on-4.html"><span>All-on-4</span><small>от 110 000 ₽</small></a><a href="../uslugi/mikroskop.html"><span>Под микроскопом</span><small>Цена после осмотра</small></a><a href="../uslugi/protezirovanie.html"><span>Протезирование</span><small>от 26 400 ₽</small></a><a href="../uslugi/hirurgiya.html"><span>Удаление зубов</span><small>от 2 100 ₽</small></a><a href="../uslugi/ortodontiya.html"><span>Брекеты и элайнеры</span><small>от 28 500 ₽</small></a><a href="../uslugi/detskaya.html"><span>Детская стоматология</span><small>от 450 ₽</small></a></div></div>
     <a href="../ceny.html">Цены</a><a href="../vrachi.html">Врачи</a><a href="../index.html#clinic">О клинике</a><a href="../index.html#reviews">Отзывы</a><a href="../index.html#contacts">Контакты</a>
@@ -46,12 +46,15 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   </div>
 </div></header>
 <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Меню" data-lenis-prevent>
-  <div class="menu__top"><a class="logo logo--white" href="../index.html"><img class="logo__img" src="../images/brand/header-logo.svg" data-fb="https://um-med.com/assets/template/img/header-logo.svg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="umLogo(this)"><span class="logo__text">Умная Медицина<small>стоматология</small></span></a><button class="menu__close" type="button" aria-label="Закрыть меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg></button></div>
+  <div class="menu__top"><a class="logo logo--white" href="../index.html"><picture><source media="(max-width: 760px) and (forced-colors: none)" srcset="../images/brand/header-logo-ink.svg"><img class="logo__img" src="../images/brand/header-logo.svg" data-fb="https://um-med.com/assets/template/img/header-logo.svg" alt="" referrerpolicy="no-referrer" onerror="umLogo(this)"></picture><span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a><button class="menu__close" type="button" aria-label="Закрыть меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg></button></div>
   <nav aria-label="Разделы">
     <details class="menu__svc"><summary>Услуги</summary><div class="menu__list"><a href="../uslugi/diagnostika.html">КТ и снимки</a><a href="../uslugi/gigiena.html">Профгигиена</a><a href="../uslugi/lechenie-zubov.html">Лечение зубов</a><a href="../uslugi/implantaciya.html">Имплантация</a><a href="../uslugi/all-on-4.html">All-on-4</a><a href="../uslugi/mikroskop.html">Под микроскопом</a><a href="../uslugi/protezirovanie.html">Протезирование</a><a href="../uslugi/hirurgiya.html">Удаление зубов</a><a href="../uslugi/ortodontiya.html">Брекеты и элайнеры</a><a href="../uslugi/detskaya.html">Детская стоматология</a></div></details>
     <a href="../ceny.html">Цены</a><a href="../vrachi.html">Врачи</a><a href="../index.html#clinic">О клинике</a><a href="../index.html#reviews">Отзывы</a><a href="../index.html#contacts">Контакты</a>
   </nav>
   <div class="menu__foot"><a class="footer__phone" href="tel:+74951503615">+7 495 150-36-15</a><span class="note">Ежедневно с 9:00 до 21:00. Перезвоним за 5 минут.</span><a class="btn btn--wide btn--lg" href="../zapis.html" data-modal="book">Записаться</a></div>
+  <nav class="mnav" aria-label="Разделы">
+    <ul class="mnav__list"><li><a class="mnav__link" href="../index.html#services" data-dir="uslugi">Услуги</a></li><li><a class="mnav__link" href="../ceny.html">Цены</a></li><li><a class="mnav__link" href="../index.html#clinic">О клинике</a></li><li><a class="mnav__link" href="../vrachi.html" data-dir="vrachi">Врачи</a></li><li><a class="mnav__link" href="../index.html#reviews">Отзывы</a></li><li><a class="mnav__link" href="../index.html#faq">Вопросы</a></li><li><a class="mnav__link" href="../index.html#contacts">Контакты</a></li></ul>
+  </nav>
 </div>
 <main id="main">
 <section class="page-hero doc-hero on-dark">

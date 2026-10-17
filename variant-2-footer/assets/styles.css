@@ -95,6 +95,10 @@ html:not(.js-intro) .intro { display: none; }
 /* подпись стоит под словами «Умная Медицина»: слева отступ на ширину эмблемы, по высоте ниже надписи (замерено по header-logo.svg) */
 .logo__unit { position: absolute; left: calc(var(--lh) * 1.285); top: calc(var(--lh) * .72); font: 600 max(9px, calc(var(--lh) * .21))/1 var(--body); letter-spacing: .32em; text-transform: uppercase; white-space: nowrap; opacity: .72; pointer-events: none; }
 .logo--white .logo__img { filter: brightness(0) invert(1); }
+/* в шапке логотип в <picture>: на телефоне светлая надпись; сама обёртка в раскладке не участвует */
+.logo picture { display: contents; }
+.logo source { display: none; }
+.menu .logo__unit { display: none; }
 
 /* ---------- шапка ---------- */
 .header { position: fixed; z-index: 100; left: 0; right: 0; top: var(--hdr-top, 0px); padding-top: 14px; }
@@ -735,22 +739,17 @@ html:not(.js-intro) .intro { display: none; }
 .pd-word b { color: #e5312f; font-weight: 700; }
 .pd-word span { color: #1a5dd0; }
 .rt-pd { grid-column: 2; display: flex; align-items: center; gap: clamp(20px, 3vw, 40px); }
-.rt .rt-seal { position: relative; flex: none; width: clamp(176px, 15vw, 220px); aspect-ratio: 1; margin: 18px; display: grid; place-items: center; border-radius: 50%; background: var(--paper); color: var(--ink); text-align: center; transition: transform .5s var(--ease); }
-.rt-seal:hover { transform: scale(1.04); }
-.rt-seal__in { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.rt-seal__num { font: 500 clamp(46px, 4.4vw, 62px)/1 var(--display); letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
-.rt-seal__cap { font-size: 13px; line-height: 1.25; color: var(--muted); }
-.rt-seal__stars { display: flex; gap: 3px; color: #d9a521; }
-.rt-seal__stars svg { width: 14px; height: 14px; fill: currentColor; }
-.rt-seal__logo { width: clamp(92px, 8vw, 116px); height: auto; margin-top: 4px; }
-/* кольцо вокруг печати: 4,9 из 5 = 98% окружности, заполняется при прокрутке */
-.rt-seal__ring { position: absolute; inset: -16px; width: calc(100% + 32px); height: calc(100% + 32px); transform: rotate(-90deg); overflow: visible; pointer-events: none; }
-.rt-seal__ring circle { fill: none; stroke-width: 2.4; }
-.rt-seal__track { stroke: rgba(230, 201, 138, .2); }
-.rt-seal__fill { stroke: var(--gold); stroke-linecap: round; stroke-dasharray: 100 100; stroke-dashoffset: 2; }
-.js-anim .rt-seal__fill { stroke-dashoffset: 100; }
+/* ПроДокторов: светлый круг с тонким кольцом на отступе, внутри плашка «нас рекомендуют», рядом фраза курсивом (Ilya 16.10, по образцу) */
+.rt .rt-seal { position: relative; flex: none; width: clamp(200px, 17vw, 250px); aspect-ratio: 1; margin: 16px; display: grid; place-items: center; border-radius: 50%; background: #f7f6f0; outline: 1.5px solid rgba(201, 189, 140, .7); outline-offset: 13px; transition: transform .5s var(--ease); }
+.rt-seal:hover { transform: scale(1.03); }
+.rt-badge { width: 70%; display: grid; gap: 10px; padding: 14px 12px 12px; border-radius: 14px; background: linear-gradient(160deg, #eef4fd, #dfe9f8); box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 8px 18px -12px rgba(30, 60, 110, .45); text-align: left; }
+.rt-badge__t { display: grid; font: 500 12px/1.2 var(--body); color: #3a4658; }
+.rt-badge__t b { font: 600 clamp(13px, 1.2vw, 17px)/1.15 var(--display); letter-spacing: -.01em; white-space: nowrap; color: #1d2735; }
+.rt-badge__logo { display: grid; place-items: center; padding: 8px 6px; border-radius: 8px; background: #fff; }
+.rt-badge__logo img { width: 100%; height: auto; }
 .rt-pd__text { display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
-.rt-pd__quote { max-width: 560px; font: 400 clamp(20px, 1.9vw, 26px)/1.35 var(--display); letter-spacing: -.01em; color: var(--paper); }
+.rt-pd__quote { max-width: 16em; font: italic 400 clamp(30px, 3.1vw, 46px)/1.18 "Cormorant Garamond", Georgia, serif; letter-spacing: 0; color: var(--paper); }
+.rt-pd__link { font-size: 15px; color: var(--muted-on-dark); }
 .rt .rt-btn { color: var(--paper); }
 
 .tour__title .btn { margin-top: 22px; }
@@ -1169,6 +1168,20 @@ html:not(.js-intro) .intro { display: none; }
   .dirs__tabs::-webkit-scrollbar, .team__tabs::-webkit-scrollbar { display: none; }
   .dirs__tabs.is-end, .team__tabs.is-end { -webkit-mask-image: none; mask-image: none; }
   .dirs__tabs .chip, .team__tabs .chip { flex: none; white-space: nowrap; scroll-snap-align: center; }
+  /* направления: первыми имплантация, протезирование, удаление; края гаснут там, где есть ещё вкладки;
+     выбранную вкладку подсвечивает подложка, которая переезжает от вкладки к вкладке */
+  .dirs__tabs .chip:nth-child(2) { order: -3; }
+  .dirs__tabs .chip:nth-child(3) { order: -2; }
+  .dirs__tabs .chip:nth-child(4) { order: -1; }
+  .dirs__tabs:not(.is-start) { -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 48px), transparent); mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 48px), transparent); }
+  .dirs__tabs.is-end:not(.is-start) { -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px); mask-image: linear-gradient(90deg, transparent, #000 40px); }
+  .dirs__tabs.is-rolling { scroll-snap-type: none; }
+  .dirs__tabs.has-glider { position: relative; }
+  .dirs__tabs.has-glider .chip { position: relative; z-index: 1; background: transparent; transition: color .35s, border-color .35s; }
+  .dirs__tabs.has-glider .chip:hover { border-color: var(--line); }
+  .dirs__tabs.has-glider .chip[aria-selected="true"] { border-color: transparent; }
+  .dirs__glider { position: absolute; left: 0; top: 0; z-index: 0; border-radius: 999px; background: var(--ink); pointer-events: none; }
+  .dir { touch-action: pan-y pinch-zoom; }
   .dir { gap: 0; }
   .dir__body { display: contents; }
   .dir__title { order: 1; }
@@ -1195,6 +1208,9 @@ html:not(.js-intro) .intro { display: none; }
   .tour__frame::after { background: linear-gradient(180deg, rgba(12, 36, 16, 0) 50%, rgba(12, 36, 16, .78)); }
   .tour__lead { display: block; padding-top: 36px; color: rgba(255, 255, 255, .82); font-size: 16px; line-height: 1.5; }
   .tour__rows { padding: 32px 0 44px; }
+  /* тур: кадр раскрывается без закрепления экрана (см. app.js); ленты фото листаются пальцем вбок, страница при этом прокручивается как обычно */
+  .tour__frame { border-radius: 22px; will-change: transform; }
+  .tour__row { touch-action: pan-y pinch-zoom; }
 
   /* путь пациента: колода, каждая следующая карточка накрывает предыдущую */
   .foil { overflow: clip; }
@@ -1211,6 +1227,11 @@ html:not(.js-intro) .intro { display: none; }
   .fcard__big { font-size: 54px; }
   .fcard h3 { font-size: 26px; }
   .fcard p { font-size: 16px; }
+  /* путь: карточки по очереди тёмно-зелёная и светлая; механика стопки та же */
+  .feat__track > .fcard:nth-child(odd):not(.fcard--intro) { background: linear-gradient(165deg, #f7f6f0, #dfe8dc); border-color: rgba(12, 36, 16, .1); color: var(--ink); }
+  .feat__track > .fcard:nth-child(odd):not(.fcard--intro) .fcard__big { color: var(--green-deep); }
+  .feat__track > .fcard:nth-child(odd):not(.fcard--intro) h3 { color: var(--ink); }
+  .feat__track > .fcard:nth-child(odd):not(.fcard--intro) p { color: var(--muted); }
   .cta-strip { padding-top: 40px; }
 
   /* врачи: лента начинается с отступом, врач в фокусе крупнее, соседи тише */
@@ -1224,9 +1245,11 @@ html:not(.js-intro) .intro { display: none; }
   .rt-avg { grid-template-columns: auto 1fr; align-items: center; column-gap: 16px; row-gap: 12px; }
   .rt-avg__num { grid-row: auto; font-size: 84px; }
   .rt-avg__cap { grid-column: 1 / -1; max-width: none; font-size: 15px; }
-  .rt-pd { align-items: stretch; gap: 22px; }
-  .rt .rt-seal { align-self: center; width: min(60vw, 230px); margin: 22px auto 18px; }
-  .rt-pd__quote { font-size: 18px; }
+  .rt-pd { align-items: center; gap: 26px; text-align: center; }
+  .rt .rt-seal { align-self: center; width: min(58vw, 230px); margin: 22px auto 10px; }
+  .rt-badge__t b { font-size: 16px; }
+  .rt-pd__text { align-items: center; }
+  .rt-pd__quote { font-size: clamp(28px, 8vw, 34px); }
   .rt .rt-btn { align-self: stretch; }
   .rt-site__link { display: block; grid-column: 2; margin-top: 2px; font-size: 14px; }
   .rv__rows { -webkit-mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent); mask-image: linear-gradient(90deg, transparent, #000 18px, #000 calc(100% - 18px), transparent); }
@@ -1333,7 +1356,6 @@ html:not(.js-intro) .intro { display: none; }
 .hero__3d { position: relative; align-self: stretch; min-height: 460px; height: min(calc(100svh - var(--header-h) - 80px), 780px); }
 .hero__3d canvas { position: absolute; left: 0; top: -10%; width: 100%; height: 120%; display: block; pointer-events: none; }
 /* мягкое свечение под моделью, как от лампы */
-.hero__3d::before { content: ""; position: absolute; left: 18%; right: 18%; bottom: 6%; height: 16%; border-radius: 50%; background: radial-gradient(closest-side, rgba(76, 193, 72, .3), transparent); }
 .js-anim .hero__3d canvas { opacity: 0; }
 .hero__3d.is-live canvas { opacity: 1; transition: opacity 1s var(--ease); }
 .hero__3d.is-static, html:not(.js) .hero__3d { background: url("../images/implant/l/f000.webp") 50% 50% / 100% auto no-repeat; }
@@ -1413,52 +1435,36 @@ html:not(.js-intro) .intro { display: none; }
 .team__more { display: flex; justify-content: center; margin-top: clamp(28px, 3vw, 44px); }
 @media (max-width: 760px) { .team__more .btn { width: 100%; } }
 
-/* ---------- вопросы (16.10, 11:20): темы слева, ответы карточками справа ---------- */
-.faqv__in { display: grid; grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr); gap: clamp(28px, 5vw, 90px); align-items: start; }
-.faqv__side { position: sticky; top: calc(var(--header-h) + 34px); display: grid; justify-items: start; }
-.faqv__side .section__title { margin-top: 18px; }
-.faqv__intro { max-width: 40ch; margin-top: 16px; color: var(--muted); text-wrap: pretty; }
-.faqv__tabs { display: grid; width: 100%; margin-top: clamp(24px, 3vw, 36px); border-top: 1px solid var(--line); }
-.faqv__tabs button { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 15px 0; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; font: 500 clamp(18px, 1.5vw, 22px)/1.2 var(--display); letter-spacing: -.02em; color: var(--muted); cursor: pointer; transition: color .3s, padding .45s var(--ease); }
-.faqv__tabs button small { font: 500 14px/1 var(--body); letter-spacing: 0; color: var(--muted); }
-.faqv__tabs button:hover { color: var(--text); }
-.faqv__tabs button[aria-selected="true"] { padding-left: 14px; color: var(--text); box-shadow: inset 3px 0 0 var(--green); }
-.faqv__tabs button[aria-selected="true"] small { color: var(--green-deep); }
-.faqv__ask { display: grid; gap: 10px; justify-items: start; width: 100%; margin-top: clamp(24px, 3vw, 36px); padding: clamp(20px, 2.2vw, 28px); border-radius: var(--radius); background: var(--sage-2); }
+/* ---------- вопросы (16.10, 14:00): раскладка и механика Lava Dental. Заголовок сверху, темы на всю ширину,
+   тема раскрывается плюсом, внутри свои вопросы со своим плюсом; пункты открываются независимо ---------- */
+.faqv__title { max-width: 15.5em; font-size: clamp(34px, 4.1vw, 60px); line-height: 1.12; letter-spacing: -.035em; text-wrap: balance; }
+.faqv__main { display: grid; gap: clamp(40px, 4.6vw, 80px); margin-top: clamp(56px, 6.6vw, 96px); }
+.faqt > summary, .faqq > summary { list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 24px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.faqt > summary::-webkit-details-marker, .faqq > summary::-webkit-details-marker { display: none; }
+.faqt h3 { margin: 0; font: 500 clamp(25px, 2.5vw, 36px)/1.4 var(--display); letter-spacing: -.025em; color: var(--muted); transition: color .5s cubic-bezier(.33, 0, .11, 1); }
+.faqt[open]:not(.is-off) h3 { color: var(--text); }
+.faqt > summary > i, .faqq > summary > i { flex: none; position: relative; width: clamp(28px, 2.8vw, 40px); height: clamp(28px, 2.8vw, 40px); color: var(--text); }
+.faqq > summary > i { width: clamp(22px, 2.1vw, 30px); height: clamp(22px, 2.1vw, 30px); }
+.faqt > summary > i::before, .faqt > summary > i::after, .faqq > summary > i::before, .faqq > summary > i::after { content: ""; position: absolute; left: 17%; right: 17%; top: 50%; height: 2px; margin-top: -1px; border-radius: 1px; background: currentColor; transition: transform .5s cubic-bezier(.1, .75, .25, 1); }
+.faqq > summary > i::before, .faqq > summary > i::after { height: 1.6px; margin-top: -.8px; }
+.faqt > summary > i::after, .faqq > summary > i::after { transform: rotate(90deg); }
+.faqt[open]:not(.is-off) > summary > i::after, .faqq[open]:not(.is-off) > summary > i::after { transform: rotate(180deg); }
+.faqt__body, .faqq__a { overflow: hidden; }
+.faqt__list { padding-top: clamp(14px, 1.6vw, 22px); }
+.faqq { border-bottom: 1px solid var(--line); }
+.faqq > summary { padding: clamp(16px, 2.1vw, 30px) 0; font: 400 clamp(19px, 1.85vw, 26px)/1.4 var(--body); letter-spacing: -.01em; color: var(--muted); transition: color .5s cubic-bezier(.33, 0, .11, 1); }
+.faqq[open]:not(.is-off) > summary { color: var(--text); }
+.faqq__a p { padding: 0 0 clamp(18px, 2.1vw, 30px); font-size: clamp(16px, 1.25vw, 18px); line-height: 1.65; color: var(--muted); text-wrap: pretty; }
+.faqq__a a { color: var(--green-deep); font-weight: 500; text-underline-offset: 3px; }
+.faqt > summary:focus-visible, .faqq > summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; border-radius: 6px; }
+.faqv__ask { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; margin-top: clamp(48px, 5.5vw, 80px); padding: clamp(20px, 2.2vw, 28px) clamp(20px, 2.6vw, 36px); border-radius: var(--radius); background: var(--sage-2); }
 .faqv__ask b { font: 500 clamp(19px, 1.5vw, 22px)/1.2 var(--display); letter-spacing: -.02em; }
-.faqv__ask p { color: var(--muted); }
+.faqv__ask p { margin-top: 6px; color: var(--muted); }
 .faqv__ask a:not(.btn) { color: var(--text); font-weight: 500; text-decoration: none; white-space: nowrap; }
-.faqv__ask .btn { margin-top: 6px; }
-.faqv__ttl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.faqv__panel { display: grid; gap: 10px; }
-.faqv__panel[hidden] { display: none; }
-.faqv__qa { border: 0; border-radius: 18px; background: var(--white); box-shadow: 0 0 0 1px var(--line); transition: box-shadow .3s; }
-.faqv__qa:hover { box-shadow: 0 0 0 1px rgba(12, 36, 16, .28); }
-.faqv__qa[open] { box-shadow: 0 0 0 1px rgba(12, 36, 16, .2), 0 18px 40px -26px rgba(12, 36, 16, .4); }
-.faqv__qa summary { padding: 20px 22px 20px 26px; font-size: clamp(17px, 1.3vw, 20px); }
-.faqv__qa .qa__a p { padding: 0 72px 24px 26px; font-size: 16px; line-height: 1.6; }
-.faqv__qa .qa__a a { color: var(--green-deep); font-weight: 500; text-underline-offset: 3px; }
-@media (max-width: 1024px) {
-  .faqv__in { grid-template-columns: minmax(0, 1fr); }
-  .faqv__side { position: static; }
-  .faqv__tabs { display: flex; gap: 8px; margin: 22px calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter); border: 0; overflow-x: auto; scrollbar-width: none; }
-  .faqv__tabs::-webkit-scrollbar { display: none; }
-  .faqv__tabs button { flex: none; align-items: center; gap: 8px; min-height: 42px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; font: 500 15px/1 var(--body); letter-spacing: 0; white-space: nowrap; }
-  .faqv__tabs button small { font-size: 13px; }
-  .faqv__tabs button[aria-selected="true"] { padding-left: 16px; box-shadow: none; border-color: var(--ink); background: var(--ink); color: #fff; }
-  .faqv__tabs button[aria-selected="true"] small { color: var(--green-hi); }
-  .faqv__ask { order: 3; }
-  .faqv__in > .faqv__side { display: contents; }
-  .faqv__side > .label { order: 0; } .faqv__side > .section__title { order: 0; } .faqv__intro { order: 0; } .faqv__tabs { order: 1; } .faqv__main { order: 2; }
-  .faqv__ask { margin-top: 16px; }
-  .faqv__in { gap: 0; }
-  .faqv__main { margin-top: 20px; }
-}
+.faqv__ask .btn { flex: none; }
 @media (max-width: 760px) {
-  .faqv__qa { border-radius: 16px; }
-  .faqv__qa summary { padding: 16px 16px 16px 18px; gap: 14px; font-size: 16.5px; }
-  .faqv__qa summary i { width: 32px; height: 32px; }
-  .faqv__qa .qa__a p { padding: 0 18px 18px; font-size: 15px; }
+  .faqt > summary, .faqq > summary { gap: 18px; }
+  .faqv__ask { flex-direction: column; align-items: flex-start; }
 }
 
 /* ---------- контакты «дорога до двери» и заявка одной строкой (16.10, 11:21) ---------- */
@@ -1573,6 +1579,36 @@ html:not(.js-intro) .intro { display: none; }
   .cb__alt .btn { width: 100%; }
 }
 
+/* ---------- врачи как у Лава Дент ----------
+   Две колонки вразбежку по 12-колоночной сетке: левая ниже на отступ, правая выше.
+   От 961px левая колонка едет при прокрутке (--k из app.js), фото плывёт внутри рамки. На телефоне без движения. */
+.team__grid.team__grid--lava { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2.2vw, 32px); row-gap: 0; margin-inline: 0; padding: 0; overflow: visible; scroll-snap-type: none; }
+.team__grid--lava .doc { grid-column-end: span 6; min-width: 0; align-self: start; }
+.team__grid--lava .doc[data-col="l"] { grid-column-start: 1; padding-top: clamp(48px, 2.73rem + 1.21vw, 60px); }
+.team__grid--lava .doc[data-col="r"] { grid-column-start: 7; }
+.team__grid.team__grid--lava .doc > * { opacity: 1; translate: 0 calc(var(--k, 0) * var(--shift, 0vmin)); }
+.team__grid--lava .doc[data-col="l"] { --shift: 20vmin; }
+.team__grid.team__grid--lava .doc__photo { scale: none; margin-bottom: 14px; }
+.team__grid.team__grid--lava .doc__photo img { scale: 1.1; translate: 0 calc(var(--k, 0) * 10%); transition: transform .5s cubic-bezier(.33, 0, .11, 1); }
+.team__grid.team__grid--lava .doc:hover .doc__photo img { transform: scale(1.05); }
+.team__grid--lava + .team__more { margin-top: clamp(48px, 6vw, 96px); }
+@media (min-width: 721px) {
+  .team__grid--lava .doc { grid-column-end: span 4; }
+  .team__grid--lava .doc[data-col="l"] { grid-column-start: 2; padding-top: clamp(64px, 2.73rem + 5.66vw, 120px); }
+  .team__grid--lava .doc[data-col="r"] { grid-column-start: 7; }
+  .team__grid--lava .doc h3 { font-size: clamp(21px, 1.75vw, 26px); }
+}
+@media (min-width: 961px) {
+  .team__grid--lava .doc { grid-column-end: span 3; }
+  .team__grid--lava .doc[data-col="l"] { grid-column-start: 3; }
+  .team__grid--lava .doc[data-col="r"] { grid-column-start: 8; }
+}
+/* круглая стрелка на фото, как у Лава Дент: ведёт на страницу врача, при наведении на карточку поворачивается вправо */
+.doc__go { position: absolute; z-index: 3; top: clamp(8px, 5.45px + .71vw, 15px); right: clamp(8px, 5.45px + .71vw, 15px); width: clamp(32px, 22.7px + 2.59vw, 60px); aspect-ratio: 1; border-radius: 50%; background: var(--sage-2); color: var(--ink); display: grid; place-items: center; transition: scale .5s cubic-bezier(.33, 0, .11, 1), rotate .5s cubic-bezier(.1, .75, .25, 1); }
+.doc__go svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.doc:hover .doc__go, .doc__go:focus-visible { rotate: 45deg; scale: 1.1; }
+.doc__go:focus-visible { outline: 2px solid var(--green-deep); outline-offset: 3px; }
+
 /* ---------- подвал по механике Лава Дент: большой логотип стоит на месте, пока форма уезжает вверх и открывает его,
    потом уменьшается до левой колонки и липнет под шапкой, а справа проезжают контакты. Сдвиг и масштаб задаёт app.js ---------- */
 .footer__in { padding-top: 0; }
@@ -1580,7 +1616,26 @@ html:not(.js-intro) .intro { display: none; }
 .fstage { --fpin: calc(var(--header-h) + 14px + 40px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; padding: clamp(44px, 5vw, 72px) 0 clamp(48px, 5vw, 80px); }
 .js-anim .fstage { padding-top: 75vmin; }
 .fstage__pin { position: relative; z-index: 1; min-width: 0; }
-.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 50%; will-change: transform; }
+.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 50%; will-change: transform, translate, scale; }
+/* как у Лава Дент: движение ведёт сама прокрутка средствами CSS (view-timeline), без скрипта, поэтому логотип
+   стоит на месте и на телефоне, где прокрутку двигает палец. За первые 150vmin после появления блока сдвиг
+   вверх ровно гасит прокрутку; масштаб держится до 75% и к концу отрезка уходит в 1. Где CSS этого не умеет,
+   то же делает app.js */
+@keyframes fstage-logo { 0% { translate: 0 -150vmin; scale: var(--fl-s, 1); } 75% { scale: var(--fl-s, 1); } 100% { translate: 0 0; scale: 1; } }
+@media (min-width: 1025px) {
+  @supports (animation-timeline: scroll()) and (animation-range: 0% 100%) {
+    .js-anim .fstage { view-timeline-name: --fstage-tl; }
+    .js-anim .fstage__logo { animation: fstage-logo linear forwards; animation-timeline: --fstage-tl; animation-range: 0 150vmin; }
+  }
+}
+/* телефон и планшет: масштаба нет, поэтому то же движение даёт обычный sticky, он плавный в любом браузере.
+   Обёртка поднята на 150vmin и на столько же вытянута вниз: логотип стоит на высоте «экран минус 75vmin»
+   ровно те 150vmin прокрутки, что и у Лава Дент, а потом уходит вверх вместе с контактами */
+@media (max-width: 1024px) {
+  .js-anim .fstage__pin { margin-top: -150vmin; }
+  .js-anim .fstage__pin::after { content: ""; display: block; height: 150vmin; }
+  .js-anim .fstage__logo { position: sticky; top: calc(100svh - 75vmin); }
+}
 .fstage__logo img { display: block; width: 100%; max-width: none; height: auto; max-height: none; aspect-ratio: 106548 / 19978; object-fit: contain; filter: brightness(0) invert(1); opacity: .96; }
 .fstage__logo .footer__word { text-align: left; font-size: clamp(44px, 10vw, 180px); }
 .fstage__info { display: grid; gap: clamp(36px, 4vw, 56px); align-content: start; }
@@ -1603,8 +1658,10 @@ html:not(.js-intro) .intro { display: none; }
 }
 /* компьютер: логотип в левой колонке, контакты справа; логотип липнет под шапкой, пока колонка контактов не кончится */
 @media (min-width: 1025px) {
-  .fstage { grid-template-columns: minmax(0, 1fr) minmax(0, 440px); column-gap: clamp(64px, 8vw, 150px); }
-  .fstage__pin { position: sticky; top: var(--fpin); align-self: start; }
+  /* сетка Лава Дент: 12 колонок, логотип в первых семи, контакты в 9–12 */
+  .fstage { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 1.7vw, 28px); }
+  .fstage__pin { grid-column: 1 / span 7; position: sticky; top: var(--fpin); align-self: start; }
+  .fstage__info { grid-column: 9 / span 4; padding-left: clamp(0px, 1.4vw, 24px); }
 }
 @media (max-width: 760px) {
   .fstage { gap: 36px; padding: 36px 0 40px; }
@@ -1614,3 +1671,220 @@ html:not(.js-intro) .intro { display: none; }
   .fstage__links, .fstage__list { font-size: 14px; gap: 2px 16px; }
   .fstage__list--2 { gap: 0 16px; }
 }
+/* «Все врачи» под сеткой: текстовая ссылка без рамки */
+.team__more .btn--ghost { box-shadow: none; min-height: 44px; padding: 0 6px; font-size: 17px; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 6px; transition: color .3s; }
+.team__more .btn--ghost::before { display: none; }
+.team__more .btn--ghost:hover { color: var(--green-deep); }
+@media (max-width: 760px) { .team__more .btn--ghost { width: auto; } }
+
+/* телефон: раскрытие кадра «Здесь вас ждут» анимацией от прокрутки, без JS: идёт ровно вместе с пальцем, только transform */
+@supports (animation-timeline: view()) {
+  @media (max-width: 760px) {
+    /* overflow: hidden у секции делает её контейнером прокрутки, и шкала прокрутки замирает; clip так же обрезает, но не мешает */
+    .tour { overflow: clip; }
+    .tour__pin { view-timeline: --tour block; }
+    .tour__frame { animation: tour-open linear both; animation-timeline: --tour; animation-range: entry 5% entry 95%; }
+    .tour__frame img { animation: tour-zoom linear both; animation-timeline: --tour; animation-range: entry 5% entry 95%; }
+    .tour__title { animation: tour-title linear both; animation-timeline: --tour; animation-range: entry 70% entry 100%; }
+  }
+}
+@keyframes tour-open { from { transform: scale(.86); } to { transform: none; } }
+@keyframes tour-zoom { from { transform: scale(1.14); } to { transform: none; } }
+@keyframes tour-title { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: none; } }
+
+/* шапка на телефоне как у Лава Дент (Ilya 16.10): на всю ширину, сверху тёмная дымка сходит на нет,
+   под шапкой всё размыто, как под матовым стеклом; логотип и бургер светлые, бургер без круга */
+@media (max-width: 760px) {
+  .header { padding-top: 0; color: #fff; }
+  .header__bar, .header.is-scrolled .header__bar { width: 100%; height: calc(var(--header-h) + 22px); padding: 0 calc(var(--gutter) - 9px) 8px var(--gutter); border-radius: 0; background: linear-gradient(180deg, rgba(12, 36, 16, .88), rgba(12, 36, 16, .66) 60%, rgba(12, 36, 16, 0)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: none; }
+  .header .logo__unit, .menu .logo__unit { display: block; opacity: .92; text-shadow: 0 1px 3px rgba(12, 36, 16, .6); }
+  .burger { position: relative; width: 44px; height: 44px; background: none; }
+  .burger svg { display: none; }
+  .burger::before, .burger::after { content: ""; position: absolute; left: 9px; right: 9px; height: 1.5px; border-radius: 1px; background: currentColor; }
+  .burger::before { top: 17px; }
+  .burger::after { bottom: 17px; }
+  /* меню открывается, а логотип и кнопка стоят там же, где были в шапке, как у Лава Дент */
+  .menu { padding-top: calc(var(--hdr-top, 0px) + 14px); }
+  .menu__top { height: 44px; }
+  .menu__close { width: 44px; height: 44px; margin-right: -9px; border: 0; border-radius: 0; }
+  .menu__close svg { width: 26px; height: 26px; }
+}
+@media (max-width: 760px) and (forced-colors: none) {
+  .menu .logo--white .logo__img { filter: none; }
+}
+/* в режиме высокой контрастности фон псевдоэлементов убирается, линии бургера рисуем системным цветом */
+@media (max-width: 760px) and (forced-colors: active) {
+  .burger::before, .burger::after { forced-color-adjust: none; background: ButtonText; }
+}
+
+/* первый экран на телефоне уходит, как у Лава Дент (Ilya 16.10): он стоит на месте ровно в один экран,
+   снизу его закрывает тёмная шторка слогана; имплант за первые три четверти экрана сжимается в точку,
+   «Сначала думаем. Потом лечим.» всё время стоит в центре экрана и проявляется, пока шторка поднимается,
+   строки дополнительно загораются по очереди. Дальше под слоганом едут три врача и факты, слоган гаснет.
+   На компьютере обёртка .opening не участвует в раскладке, копии блоков скрыты */
+.opening { display: contents; }
+.slogan__head, .slogan__more { display: none; }
+@media (max-width: 760px) {
+  .opening { display: block; position: relative; timeline-scope: --um-slogan, --um-more; }
+  .opening .hero { position: sticky; top: 0; z-index: 0; display: flex; flex-direction: column; height: calc(100svh - var(--demo-h, 0px)); min-height: 520px; padding: calc(var(--header-h) + 28px) 0 22px; }
+  .opening .hero__in { flex: 1; min-height: 0; }
+  .opening .hero--3d .hero__3d { flex: 1 1 0; height: auto; min-height: 120px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  .opening .hero .hero__sub, .opening .hero .hero__facts, .opening .hero .hero__note, .opening .hero .hero__trio { display: none; }
+  .opening .slogan { position: relative; z-index: 1; overflow: clip; view-timeline: --um-slogan block; }
+  .opening .slogan .marquee { display: none; }
+  .slogan__head { display: flex; position: sticky; top: 0; min-height: 100svh; padding: 0 var(--gutter); align-items: center; justify-content: center; text-align: center; overflow: clip; }
+  .slogan__title { margin: 0; font: 500 clamp(38px, 10.6vw, 50px)/1.1 var(--display); letter-spacing: -.03em; color: #dfe8dc; text-wrap: balance; }
+  .slogan__title .line { display: block; }
+  .js-anim .slogan__title .line { opacity: 0; transition: opacity 2.5s cubic-bezier(.33, 0, .11, 1); }
+  .js-anim .slogan__head.is-visible .line { opacity: 1; }
+  .js-anim .slogan__head.is-visible .line:nth-child(1) { transition-delay: .5s; }
+  .js-anim .slogan__head.is-visible .line:nth-child(2) { transition-delay: 1s; }
+  .slogan__more { display: block; position: relative; z-index: 1; padding: 8px 0 56px; background: var(--ink); color: #fff; view-timeline: --um-more block; }
+  .slogan__more .hero__trio { margin-top: 0; }
+  .slogan__more .hero__trio b { color: #fff; }
+  .slogan__more .hero__trio a > span:last-child { color: rgba(255, 255, 255, .62); }
+  .slogan__more .hero__face { background: var(--ink-2); }
+  .slogan__more .hero__sub { margin-top: 30px; font-size: 16px; color: rgba(255, 255, 255, .74); }
+  .slogan__more .hero__facts li { border-top-color: var(--line-on-dark); color: rgba(255, 255, 255, .92); }
+  .slogan__more .hero__facts li:last-child { border-bottom-color: var(--line-on-dark); }
+  .slogan__more .hero__note { color: rgba(255, 255, 255, .58); }
+}
+/* сама механика на прокрутке, как у Лава Дент: CSS scroll-driven animations; где их нет, то же делает app.js */
+@supports (animation-timeline: view()) {
+  @media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
+    .opening .hero--3d .hero__3d { animation: um-hero-leave ease-in both; animation-timeline: --um-slogan; animation-range: 0 75svh; }
+    .js-anim .slogan__title { animation: um-slogan-enter linear both; animation-timeline: --um-slogan; animation-range: 0 100vh; }
+    .js-anim .slogan__head { animation: um-slogan-leave ease-in both; animation-timeline: --um-more; animation-range: 0 50vh; }
+  }
+}
+@keyframes um-hero-leave { to { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); } }
+@keyframes um-slogan-enter { from { transform: translateY(-100svh); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes um-slogan-leave { to { opacity: 0; } }
+
+/* меню телефона как у Лава Дент (Ilya 16.10): шалфейный фон #779e91 проявляется целиком за .5s,
+   логотип и кнопка стоят на месте шапки; бургер сразу становится крестиком, а цвет плавно темнеет;
+   разделы крупным гротеском (Inter Tight ближе всех к их PP Neue Montreal по ширине и весу), светлые наполовину, текущий раздел тёмный с точкой; языков и телефона внизу нет (Ilya убрал телефон) */
+.menu .mnav { display: none; }
+@media (max-width: 760px) {
+  .menu {
+    --mn-ease: cubic-bezier(.1, .75, .25, 1);
+    --mn-ease-c: cubic-bezier(.33, 0, .11, 1);
+    --mn-ink: #031c14;
+    --mn-pad: clamp(24px, 21.818px + .6061vw, 30px);
+    background: rgba(119, 158, 145, 0);
+    color: #fff;
+    padding-bottom: 0;
+  }
+  .menu.is-open { background: #779e91; color: var(--mn-ink); }
+  /* открывается сразу (иначе первый кадр пустой и фокус не попадает на крестик), гаснет за .5s и не ловит касания */
+  .menu { clip-path: none; pointer-events: none; transition: background-color .5s var(--mn-ease), color .5s var(--mn-ease-c), visibility .5s var(--mn-ease); }
+  .menu.is-open { clip-path: none; pointer-events: auto; transition: background-color .5s var(--mn-ease), color .5s var(--mn-ease-c), visibility 0s; }
+  .menu > nav:not(.mnav), .menu__foot { display: none; }
+  .menu .logo { color: var(--mn-ink); opacity: 0; transition: opacity .5s var(--mn-ease-c); }
+  .menu.is-open .logo { opacity: 1; }
+  .menu .logo__unit { text-shadow: none; }
+  /* кнопка: открыто крестик, при закрытии сразу две линии бургера ровно поверх бургера шапки */
+  .menu__close { position: relative; color: inherit; }
+  .menu__close svg { display: none; }
+  .menu__close::before, .menu__close::after { content: ""; position: absolute; left: 9px; right: 9px; height: 1.5px; border-radius: 1px; background: currentColor; }
+  .menu__close::before { top: 17px; }
+  .menu__close::after { bottom: 17px; }
+  .menu.is-open .menu__close::before, .menu.is-open .menu__close::after { left: 7.5px; right: 7.5px; top: calc(50% - .75px); bottom: auto; }
+  .menu.is-open .menu__close::before { transform: rotate(45deg); }
+  .menu.is-open .menu__close::after { transform: rotate(-45deg); }
+  html.menu-open .burger::before, html.menu-open .burger::after { opacity: 0; }
+  .burger, .menu__close, .mnav__link { -webkit-tap-highlight-color: transparent; }
+
+  .menu .mnav { display: block; margin: 0 calc(-1 * var(--gutter)); padding: calc(clamp(128px, 116.364px + 3.2323vw, 160px) - 58px) var(--mn-pad) clamp(64px, 58.182px + 1.6162vw, 80px) calc(var(--mn-pad) + clamp(32px, 29.091px + .8081vw, 40px)); opacity: 0; transition: opacity .5s var(--mn-ease); }
+  .menu.is-open .mnav { opacity: 1; }
+  .mnav__list { display: flex; flex-direction: column; gap: clamp(24px, 18.182px + 1.6162vw, 40px); margin: 0; padding: 0; list-style: none; }
+  .menu .mnav .mnav__link { display: inline-block; position: relative; font: 450 clamp(31.25px, 25.387px + 1.6285vw, 47.371px)/1.4 "Inter Tight", var(--body); letter-spacing: 0; color: rgba(3, 28, 20, .5); text-decoration: none; white-space: nowrap; transition: color .5s var(--mn-ease); }
+  .menu .mnav .mnav__link:hover, .menu .mnav .mnav__link.is-current { color: var(--mn-ink); }
+  .mnav__link.is-current::before { content: ""; position: absolute; top: 50%; left: calc(-1 * var(--mn-pad)); width: clamp(8px, 7.273px + .202vw, 10px); aspect-ratio: 1; border-radius: 50%; background: currentColor; transform: translateY(-50%); }
+}
+@media (max-width: 760px) and (forced-colors: active) {
+  .menu__close::before, .menu__close::after { forced-color-adjust: none; background: ButtonText; }
+  .mnav__link.is-current::before { forced-color-adjust: none; background: CanvasText; }
+}
+/* без анимаций общее правило растягивает и «мгновенные» переходы на .01ms: меню с крестиком оставалось скрытым в момент фокуса */
+@media (max-width: 760px) and (prefers-reduced-motion: reduce) {
+  .menu.is-open, .menu.is-open * { transition-property: none !important; }
+}
+
+/* тур на телефоне как вторая секция Лава Дент (Ilya 16.10, их .about-process-carousel и .about-process-gallery):
+   лента стоит на месте экрана, а карточки едут вбок, пока страницу листают на три экрана; карточка это фото
+   на весь экран, уменьшенное до 72.5% и обрезанное сверху и снизу. Затем кабинет раскрывается на весь экран
+   под тёмной дымкой, соседи разъезжаются, заголовок проявляется по словам; поверх проходят остальные фото
+   с подписями под ними (половина с параллаксом), в конце текст и маршрут. Без JS и при «уменьшить движение»
+   просто кабинет с заголовком, фото и текст. Компьютер и планшет не меняются. */
+.ptour { display: none; }
+@media (max-width: 760px) {
+  .tour { overflow: clip; }
+  .tour > .tour__pin, .tour > .tour__lead, .tour > .tour__rows { display: none; }
+  .ptour { display: block; position: relative; timeline-scope: --pt-end; }
+  .ptour__car { position: relative; height: 100svh; overflow-x: clip; }
+  .ptour__items { height: 100%; }
+  .ptour__item { display: none; }
+  .ptour__item--main { display: flex; position: relative; height: 100%; align-items: center; justify-content: center; overflow: clip; }
+  .ptour__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ptour__shade { position: absolute; inset: 0; background: rgba(12, 36, 16, .5); pointer-events: none; }
+  .ptour__cap { display: none; }
+  .ptour__slogan { position: relative; z-index: 1; width: 100%; padding: 0 var(--gutter); text-align: center; color: #dfe8dc; }
+  .ptour__slogan .label { justify-content: center; color: rgba(223, 232, 220, .82); }
+  .ptour__title { margin: 16px 0 0; font: 500 clamp(38px, 10.6vw, 50px)/1.1 var(--display); letter-spacing: -.03em; color: #dfe8dc; text-wrap: balance; }
+  .ptour__spacer { display: none; }
+  .ptour__after { position: relative; z-index: 1; padding-top: 56px; }
+  .ptour__grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 48px 12px; padding: 0 20px; }
+  .ptour__fig { margin: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-content: start; }
+  .ptour__fig:nth-child(1) { grid-column: 8 / span 5; grid-row: 1; padding-bottom: 64px; }
+  .ptour__fig:nth-child(2) { grid-column: 1 / span 4; grid-row: 1; align-self: end; }
+  .ptour__fig:nth-child(3) { grid-column: 7 / span 6; grid-row: 2; padding-bottom: 64px; }
+  .ptour__fig:nth-child(4) { grid-column: 2 / span 4; grid-row: 2; align-self: end; }
+  .ptour__fig:nth-child(5) { grid-column: 6 / span 5; grid-row: 3; }
+  .ptour__fig:nth-child(6) { grid-column: 1 / span 5; grid-row: 4; padding-top: 64px; }
+  .ptour__pic { display: block; aspect-ratio: var(--r); border-radius: 14px; overflow: clip; background: var(--ink-2); }
+  .ptour__pic img { width: 100%; height: 100%; object-fit: cover; scale: 1.1; }
+  /* подписи фото идут поверх затемнённого кабинета и заголовка: светлые, с тёмным ореолом, иначе не читаются */
+  .ptour__fig figcaption { font: 500 13px/1.35 var(--body); color: rgba(255, 255, 255, .92); text-shadow: 0 0 1px rgba(12, 36, 16, .95), 0 0 3px rgba(12, 36, 16, .95), 0 0 6px rgba(12, 36, 16, .9), 0 0 12px rgba(12, 36, 16, .9); }
+  .ptour__text { position: relative; margin-top: 56px; padding: 48px var(--gutter) 56px; background: var(--ink); }
+  .ptour__text p { margin: 0 0 24px; color: rgba(255, 255, 255, .82); font-size: 16px; line-height: 1.5; text-wrap: pretty; }
+
+  /* с анимацией: устройство как у Лава Дент. Карточки и подписи считаем от видимой высоты (--pt-s, 100svh):
+     в Safari с развёрнутой панелью 100vh уходит под неё, и подписи прятались под нижней панелью сайта */
+  .js-anim .ptour { --pt-s: 100vh; }
+  .js-anim .tour { scroll-margin-top: calc(-1 * (var(--header-h) + 12px)); }
+  /* лента листается шагами (Ilya 17.10: тянуть фото через весь экран тяжело): шаг ставит app.js по прокрутке или свайпу вбок,
+     фото доезжает само за .9s силами компоновщика; вертикаль отдаём браузеру, вбок ведёт палец */
+  .js-anim .ptour__car { position: sticky; top: 0; height: 100vh; width: 100vw; touch-action: pan-y pinch-zoom; }
+  .js-anim .ptour__items { display: flex; width: 500vw; margin-left: -50vw; transform: translate3d(calc(var(--pt-i, 0) * -75vw), 0, 0); transition: transform .9s cubic-bezier(.1, .75, .25, 1); will-change: transform; }
+  .js-anim .ptour__item { display: flex; position: relative; flex: 0 0 100vw; width: 100vw; height: 100vh; margin-left: -25vw; padding-bottom: calc(100vh - var(--pt-s)); align-items: center; justify-content: center; overflow: clip; }
+  .js-anim .ptour__img { transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(100vh - var(--pt-s) * .9) round 24px); }
+  .js-anim .ptour__shade { opacity: 0; }
+  .js-anim .ptour__cap { display: block; position: absolute; left: 13.75%; right: 13.75%; top: calc(var(--pt-s) * .79 + 12px); margin: 0; font: 400 14px/1.35 var(--body); color: var(--muted-on-dark); }
+  /* закреплённая лента занимает полтора экрана прокрутки (было три): шаг на 45vh, первый уже через 18vh */
+  .js-anim .ptour__spacer { display: block; height: 250vh; margin-top: -100vh; }
+  /* после раскрытия кабинета пауза, как у Лава Дент (их отступ 3xl), потом поднимаются фото и проявляется заголовок */
+  .js-anim .ptour__after { padding-top: calc(50vh + min(clamp(96px, 87.27px + 2.4242vw, 120px), 11.5vh)); view-timeline: --pt-end block; view-timeline-inset: 0px; }
+  .js-anim .ptour__text { margin-top: 40svh; }
+  .js-anim .ptour__slogan .w { opacity: 0; transition: opacity 2.5s cubic-bezier(.33, 0, .11, 1) calc(var(--i) * .2s); }
+  .js-anim .ptour.is-on .ptour__slogan .w { opacity: 1; }
+  /* телефон боком: под карточкой нет места до нижней панели сайта, подписи ленты прячем (они дублируют alt) */
+  @media (max-height: 540px) { .js-anim .ptour__cap { display: none; } }
+  .ptour__item--left { --pt-x: -20vw; }
+  .ptour__item--right { --pt-x: 20vw; }
+}
+@supports (height: 1svh) {
+  @media (max-width: 760px) { .js-anim .ptour { --pt-s: 100svh; } }
+}
+@supports (animation-timeline: view()) and (timeline-scope: --a) {
+  @media (max-width: 760px) {
+    .js-anim .ptour__item--main .ptour__img { animation: pt-zoom linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
+    .js-anim .ptour__item--main .ptour__shade { animation: pt-shade ease-in-out forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
+    .js-anim .ptour__item--left, .js-anim .ptour__item--right { animation: pt-out linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
+    .js-anim .ptour__fig[data-par] { animation: pt-par linear both; animation-timeline: view(block 0px); }
+  }
+}
+@keyframes pt-zoom { to { clip-path: inset(0 round 0); transform: scale(1.1); } }
+@keyframes pt-shade { to { opacity: 1; } }
+@keyframes pt-out { to { transform: translate(var(--pt-x)); } }
+@keyframes pt-par { from { transform: translateY(25svh); } to { transform: translateY(-25svh); } }
