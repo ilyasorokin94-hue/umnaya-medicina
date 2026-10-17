@@ -325,7 +325,7 @@ function footer(depth) {
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
   </div>
 </div></footer>
-<div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${clinic.telegram}" data-modal="write">Написать</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
+<div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
 ${modals(depth)}`;
 }
 const end = `\n</body>\n</html>\n`;
