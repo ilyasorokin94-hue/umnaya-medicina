@@ -122,8 +122,8 @@ const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""
 // кабинет раскрывается на весь экран, заголовок проявляется по словам, поверх проходят остальные фото, потом текст
 function phoneTour(depth) {
   const P = v2.clinic.phone;
-  // фото ленты и галереи декодируем сразу: иначе Chrome рисует пустую карточку, когда прокрутка сама (без JS) довозит её до экрана
-  const pic = (entry, alt) => img(entry, alt, depth, ' class="ptour__img"').replace('decoding="async"', 'decoding="sync"');
+  // фото ленты и галереи: в Chromium app.js переключает их на синхронное декодирование (иначе пустые карточки), в Safari остаётся фоновое
+  const pic = (entry, alt) => img(entry, alt, depth, ' class="ptour__img"');
   const card = ([f, cap], cls = "") => `<div class="ptour__item${cls}">${pic([f], cap)}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
   const words = (t, from) => t.split(" ").map((w, i) => `<span class="w" style="--i:${from + i}">${esc(w)}</span>`).join(" ");
   return `<div class="ptour">
@@ -136,7 +136,7 @@ function phoneTour(depth) {
     </div></div>
     <div class="ptour__spacer"></div>
     <div class="ptour__after">
-      <div class="ptour__grid">${P.gallery.map(([f, cap, r], i) => `<figure class="ptour__fig"${i % 2 ? " data-par" : ""} style="--r:${r}"><span class="ptour__pic">${img([f], cap, depth).replace('decoding="async"', 'decoding="sync"')}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>
+      <div class="ptour__grid">${P.gallery.map(([f, cap, r], i) => `<figure class="ptour__fig"${i % 2 ? " data-par" : ""} style="--r:${r}"><span class="ptour__pic">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>
       <div class="ptour__text"><p>${esc(v2.clinic.text)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>
     </div>
   </div>`;
