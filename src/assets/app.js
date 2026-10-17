@@ -10,6 +10,8 @@
   const G = window.gsap, ST = window.ScrollTrigger;
   const anim = !!(G && ST) && !reduce;
   window.__umReady = true;
+  // страховка: если первый экран так и не запустился (или скрипт ниже упал), шапка компьютера всё равно появляется
+  setTimeout(() => $(".header")?.classList.add("is-loaded"), 6000);
   if (!anim) { root.classList.remove("js-anim", "js-intro"); root.classList.add("no-anim"); }
 
   // ---------- разбивка текста для анимаций ----------
@@ -99,8 +101,6 @@
 
   // ---------- шапка: всегда на месте, уезжает вверх ровно вместе с демо-полосой ----------
   const header = $(".header");
-  // страховка: если первый экран так и не запустился, шапка компьютера всё равно появляется
-  setTimeout(() => header?.classList.add("is-loaded"), 6000);
   const demo = $(".demo-bar");
   let demoH = 0;
   const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; root.style.setProperty("--demo-h", demoH + "px"); hdrTop = null; onScrollHeader(); };
@@ -124,7 +124,9 @@
     const seen = new Set();
     const io = new IntersectionObserver((ents) => {
       ents.forEach((en) => (en.isIntersecting ? seen.add(en.target) : seen.delete(en.target)));
-      navSecs.forEach(([li, s]) => li.classList.toggle("is-active", seen.has(s)));
+      // светлый один раздел: на стыке двух берём нижний
+      const on = navSecs.filter(([, s]) => seen.has(s)).pop();
+      navSecs.forEach(([li]) => li.classList.toggle("is-active", li === on?.[0]));
     }, { rootMargin: "-45% 0px -50% 0px" });
     navSecs.forEach(([, s]) => io.observe(s));
   } else if (!navSecs.length) {
