@@ -498,11 +498,7 @@ function pageHome() {
   const { rating } = home;
   const star = icon.star;
   const D = v2;
-  // пояснение, факты и три врача первого экрана: на телефоне первый экран занимает ровно один экран и уходит под шторку
-  // со слоганом, как у Лава Дент, а эти блоки идут после слогана (копия в .slogan__more, на компьютере скрыта)
-  const heroSub = `<p class="hero__sub">${esc(D.sub)}</p>`;
-  const heroFacts = `<ul class="hero__facts">${D.facts.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`;
-  const heroNote = `<p class="hero__note">${D.note.map((t) => `<span>${esc(t)}</span>`).join("")}</p>`;
+  // три врача после слогана на телефоне (на компьютере скрыты); пояснение, факты и пометки оттуда убраны (Ilya 17.10)
   const heroTrio = `<ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>`;
   const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 
@@ -511,23 +507,18 @@ function pageHome() {
 <main id="main">
 
 <div class="opening">
-<section class="hero hero--3d on-dark" aria-labelledby="h1"><div class="wrap hero__in">
+<section class="hero hero--v hero--v1 on-dark" aria-labelledby="h1"><div class="wrap hero__in">
   <div class="hero__text">
-    <h1 id="h1"><span class="kicker">${esc(D.kicker)}</span> <span data-split>${esc(D.h1)}</span></h1>
-    ${heroSub}
-    <p class="hero__promo"><span class="hero__promo-tag">Акция</span><span>${esc(D.promo[0])} <b>${esc(D.promo[1])}</b> <s>${esc(D.promo[2])}</s></span></p>
-    <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
-    ${heroFacts}
-    ${heroNote}
-    ${heroTrio}
+    <h1 id="h1"><span data-split>Три врача.</span> <span class="hv__l2" data-split>Один план лечения.</span></h1>
+    <p class="hv__sub">Хирург, ортопед и терапевт смотрят ваш случай вместе. Цену плана записываем в договор.</p>
+    <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}<p class="hv__offer">${esc(D.promo[0])} <b>${esc(D.promo[1])}</b> <s>${esc(D.promo[2])}</s></p></div>
   </div>
-  <div class="hero__3d" aria-hidden="true" data-seq="images/implant/l/" data-frames="96" data-crop="1000,1200,288,118,426,926" data-seq-s="images/implant/s/" data-frames-s="24" data-crop-s="1000,1200,288,118,426,926"><canvas></canvas></div>
 </div></section>
 
 <section class="slogan on-dark" aria-label="Сначала думаем. Потом лечим.">
   ${marquee("Сначала думаем. <em>Потом лечим.</em>")}
   <div class="slogan__head" aria-hidden="true"><p class="slogan__title"><span class="line">Сначала думаем.</span> <span class="line">Потом лечим.</span></p></div>
-  <div class="slogan__more"><div class="wrap">${heroTrio}${heroSub}${heroFacts}${heroNote}</div></div>
+  <div class="slogan__more"><div class="wrap">${heroTrio}</div></div>
 </section>
 </div>
 
@@ -603,7 +594,6 @@ ${svlBlock(p, depth)}
 ${place()}
 </main>
 ${svlModals(p, depth)}` + footer(depth) + `
-<script type="module" src="assets/heroseq.js?v=${V.heroseq}"></script>
 <script src="assets/rvm.js?v=${V.rvm}" defer></script>` + end;
 }
 
