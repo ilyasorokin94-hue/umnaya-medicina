@@ -448,6 +448,13 @@
     allon: ["Спасибо!", "Администратор перезвонит за 5 минут и запишет к имплантологу на консультацию с КТ. Расчёт бесплатный."],
   };
   const defDone = $("#m-done [data-done-text]")?.textContent;
+  // номер в поле первого экрана сразу в виде +7 000 000-00-00, привычная 8 отбрасывается
+  $$("input[data-tel]").forEach((i) => {
+    const fmt = () => { let d = i.value.replace(/\D/g, ""); if (d[0] === "8" || d[0] !== "7") d = "7" + (d[0] === "8" || d[0] === "7" ? d.slice(1) : d); if (d === "78") d = "7"; const r = d.slice(1, 11); i.value = "+7 " + r.slice(0, 3) + (r.length > 3 ? " " + r.slice(3, 6) : "") + (r.length > 6 ? "-" + r.slice(6, 8) : "") + (r.length > 8 ? "-" + r.slice(8, 10) : ""); };
+    i.addEventListener("focus", () => { if (!i.value) i.value = "+7 "; });
+    i.addEventListener("blur", () => { if (i.value.replace(/\D/g, "").length <= 1) i.value = ""; });
+    i.addEventListener("input", fmt);
+  });
   $$("form[data-lead]").forEach((f) => {
     if (f.hasAttribute("data-quiz") || f.classList.contains("cb")) return;
     f.addEventListener("submit", (e) => {
@@ -629,7 +636,7 @@
     const mimg = $(".hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
+      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hd > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
     if (!matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     const pb = $(".hero__promo b", h), ps = $(".hero__promo s", h);
     if (small && pb && ps) {

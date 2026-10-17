@@ -1713,3 +1713,63 @@ html:not(.js-intro) .intro { display: none; }
 @media (max-width: 760px) {
   .hero--v1 h1 { margin: auto 0; font-size: clamp(54px, 17vw, 76px); letter-spacing: -.05em; line-height: .96; }
 }
+/* варианты первого экрана на компьютере (Ilya 17.10): без акции Osstem; на телефоне блок .hd скрыт, всё как было */
+.hd { display: none; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (min-width: 761px) {
+  [class*="hero--d"] .hv__sub, [class*="hero--d"] .hero__actions { display: none; }
+  .hero--v1[class*="hero--d"] .hero__in { align-items: stretch; }
+  .hero--v1[class*="hero--d"] .hero__text { display: flex; flex-direction: column; align-items: stretch; }
+  .hero--v1[class*="hero--d"] h1 { align-self: stretch; margin-block: auto; padding: 0; }
+  .hd { display: grid; gap: 14px 48px; align-items: end; }
+  .hd__sub { margin: 0; max-width: 34ch; font-size: var(--fs-0); line-height: 1.45; color: rgba(255, 255, 255, .72); text-wrap: pretty; }
+  .hd__small { font-size: var(--fs--1); line-height: 1.4; color: rgba(255, 255, 255, .6); }
+  .hd__tel { color: #fff; text-decoration: none; white-space: nowrap; }
+  .hd__tel:hover { color: var(--sage); }
+  .hd .btn::before, .hf .btn::before { background: var(--green-hi); }
+  /* поле с кнопкой одной капсулой */
+  .hf { display: grid; gap: 10px; justify-items: end; margin: 0; }
+  .hf__cap { display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 999px; background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); transition: box-shadow .3s; }
+  .hf__cap:focus-within { box-shadow: inset 0 0 0 1px var(--sage); }
+  .hf input { width: 11.5em; min-width: 0; padding: 0 8px 0 20px; border: 0; background: none; color: #fff; font: 500 var(--fs-0)/1 var(--body); font-variant-numeric: tabular-nums; outline: none; }
+  .hf input::placeholder { color: rgba(255, 255, 255, .45); }
+  .hf__note { font-size: var(--fs--1); color: rgba(255, 255, 255, .6); }
+
+  /* 1. Заявка в строке: заголовок как был, внизу слева описание, справа поле с кнопкой */
+  .hero--d1 .hd { grid-template-columns: minmax(0, 1fr) auto; }
+
+  /* 2. Три врача по именам: под заголовком хирург, ортопед и терапевт, справа кнопка */
+  .hero--d2 .hd { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
+  .hd__doc { display: grid; gap: 8px; color: #fff; text-decoration: none; }
+  .hd__doc span { font-size: var(--fs--1); letter-spacing: .02em; color: var(--sage); }
+  .hd__doc b { font: 500 var(--fs-1)/1.15 var(--display); letter-spacing: -.02em; transition: color .3s; }
+  .hd__doc:hover b { color: var(--sage); }
+  .hero--d2 .hd__go { display: grid; gap: 12px; justify-items: end; text-align: right; }
+  .hero--d2 .hd__go .hd__small { max-width: 30ch; }
+
+  /* 3. По центру: всё на оси, описание одной строкой, под кнопкой телефон */
+  .hero--v1.hero--d3 .hero__text { text-align: center; align-items: center; }
+  .hero--v1.hero--d3 h1 { margin: auto 0 0; }
+  .hero--d3 .hd { justify-items: center; gap: 22px; margin: clamp(32px, 5vh, 56px) 0 auto; }
+  .hero--d3 .hd__sub { max-width: 56ch; }
+
+  /* 4. Форма справа: заголовок и описание слева, карточка с телефоном справа */
+  .hero--v1.hero--d4 .hero__text { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); grid-template-rows: auto auto; column-gap: clamp(40px, 5vw, 96px); align-content: center; }
+  .hero--v1.hero--d4 h1 { grid-column: 1; grid-row: 1; align-self: end; margin: 0; font-size: clamp(56px, 6.6vw, 124px); }
+  .hero--d4 .hd { display: contents; }
+  .hero--d4 .hd__sub { grid-column: 1; grid-row: 2; align-self: start; margin-top: 32px; }
+  .hd__card { grid-column: 2; grid-row: 1 / 3; align-self: center; display: grid; gap: 14px; margin: 0; padding: clamp(24px, 2.4vw, 36px); border-radius: 24px; background: var(--ink-2); }
+  .hd__t { margin: 0; font: 500 var(--fs-2)/1.1 var(--display); letter-spacing: -.03em; color: #fff; }
+  .hd__card .hd__small { margin: 0 0 6px; }
+  .hd__f { display: grid; gap: 8px; font-size: var(--fs--1); color: rgba(255, 255, 255, .6); }
+  .hd__f input { height: 60px; padding: 0 22px; border: 0; border-radius: 999px; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); color: #fff; font: 500 var(--fs-0)/1 var(--body); outline: none; }
+  .hd__f input:focus { box-shadow: inset 0 0 0 1px var(--sage); }
+  .hd__f input::placeholder { color: rgba(255, 255, 255, .45); }
+  .hd__consent { font-size: 12px; line-height: 1.4; color: rgba(255, 255, 255, .45); }
+  .hd__consent a { color: inherit; }
+
+  /* 5. Заголовок внизу: сверху описание и поле с кнопкой, плакатный заголовок прижат к низу экрана */
+  .hero--d5 .hd { order: -1; grid-template-columns: minmax(0, 1fr) auto; align-items: start; }
+  .hero--d5 .hd__sub { font-size: var(--fs-1); line-height: 1.3; max-width: 32ch; color: rgba(255, 255, 255, .8); }
+  .hero--v1.hero--d5 h1 { margin: auto 0 0; font-size: clamp(64px, 9.2vw, 152px); }
+}
