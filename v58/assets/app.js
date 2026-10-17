@@ -101,10 +101,13 @@
   const header = $(".header");
   const demo = $(".demo-bar");
   let demoH = 0;
-  const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; root.style.setProperty("--demo-h", demoH + "px"); onScrollHeader(); };
+  const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; root.style.setProperty("--demo-h", demoH + "px"); hdrTop = null; onScrollHeader(); };
+  // переменную на корне пишем, только когда она меняется: иначе каждый кадр прокрутки Safari пересчитывает стили всей страницы
+  let hdrTop = null;
   const onScrollHeader = () => {
     const y = lenis ? lenis.scroll : scrollY;
-    root.style.setProperty("--hdr-top", Math.max(0, demoH - y) + "px");
+    const t = Math.max(0, demoH - y);
+    if (t !== hdrTop) { hdrTop = t; root.style.setProperty("--hdr-top", t + "px"); }
     header?.classList.toggle("is-scrolled", y > demoH + 10);
   };
   if (lenis) lenis.on("scroll", onScrollHeader); else addEventListener("scroll", onScrollHeader, { passive: true });
@@ -309,9 +312,11 @@
   // снизу вверх, правая стоит, фото плывёт внутри рамки от +10% к −10%. Прогресс --k от 1 до −1.
   const lavaDocs = $$(".team__grid--lava .doc");
   const lavaMQ = matchMedia("(min-width: 961px)");
+  let lavaOff = false;
   function lavaTeam() {
     if (!lavaDocs.length || !anim) return;
-    if (!lavaMQ.matches) { lavaDocs.forEach((c) => c.style.removeProperty("--k")); return; }
+    if (!lavaMQ.matches) { if (!lavaOff) { lavaOff = true; lavaDocs.forEach((c) => c.style.removeProperty("--k")); } return; }
+    lavaOff = false;
     const vh = innerHeight;
     lavaDocs.forEach((c) => {
       if (c.hidden) return;
@@ -579,7 +584,14 @@
   const pt = $(".ptour");
   if (pt) {
     // фото ленты стоят за краем экрана и обрезаны лентой, сами они загрузились бы, только въехав в кадр: грузим заранее
-    const near = new IntersectionObserver(([en]) => { if (!en.isIntersecting) return; $$("img", pt).forEach((im) => { im.loading = "eager"; }); near.disconnect(); }, { rootMargin: "150% 0px" });
+    // Chrome без синхронного декодирования оставляет пустыми карточки, которые довозит прокрутка; Safari наоборот
+    // декодирует крупные фото в фоне, а синхронное декодирование там тормозит ленту, поэтому sync только для Chromium.
+    // Заранее декодируем все фото, чтобы к ленте они были готовы
+    const near = new IntersectionObserver(([en]) => {
+      if (!en.isIntersecting) return;
+      $$("img", pt).forEach((im) => { if (window.chrome) im.decoding = "sync"; im.loading = "eager"; if (im.decode) im.decode().catch(() => {}); });
+      near.disconnect();
+    }, { rootMargin: "150% 0px" });
     near.observe(pt);
     // заголовок над раскрытым кабинетом проявляется по словам, когда снизу подходят фото, и гаснет, когда они ушли (как у Лава Дент)
     const grid = $(".ptour__grid", pt);
@@ -757,84 +769,8 @@
     G.fromTo($(".tour__title", tour), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, ease: "none", scrollTrigger: { trigger: tour, start: "top 30%", end: "top top", scrub: true } });
   });
   // тур на телефоне как у Лава Дент: всё делает CSS от прокрутки (animation-timeline), ниже то же самое для браузеров без неё
-  // лента тура на телефоне листается шагами (Ilya 17.10: тянуть каждое фото через весь экран тяжело).
-  // Шаг считаем от прокрутки закреплённой ленты: первое фото меняется уже через 18vh, дальше каждые 45vh,
-  // фото доезжает само (CSS-переход по --pt-i). Пальцем вбок лента едет за пальцем и перелистывается,
-  // а страница встаёт на прокрутку этого шага, чтобы вверх и вниз всё оставалось согласованным
-  if (pt) mm.add("(max-width: 760px)", () => {
-    const items = $(".ptour__items", pt), spacer = $(".ptour__spacer", pt), car = $(".ptour__car", pt);
-    if (!items || !spacer || !car) return;
-    const N = 3, STEP = 0.3, LEAD = 0.6, HB = 0.12;
-    let cur = 0, R = 1, tick = 0, drag = null, sx = 0, sy = 0, dx = 0, mode = 0, lx = 0, lt = 0, v = 0;
-    const set = (k) => { if (k !== cur) { cur = k; items.style.setProperty("--pt-i", k); } };
-    const measure = () => { R = Math.max(1, spacer.offsetHeight - car.offsetHeight); };
-    const past = () => -spacer.getBoundingClientRect().top;
-    const sync = () => {
-      tick = 0;
-      if (drag !== null) return;
-      const raw = Math.max(0, past()) / (STEP * R) + LEAD;
-      const up = Math.min(N, Math.floor(raw));
-      if (up > cur) set(up);
-      else if (raw < cur - HB) set(Math.max(0, Math.floor(raw + HB)));
-    };
-    const onScroll = () => { if (!tick) tick = requestAnimationFrame(sync); };
-    const onResize = () => { measure(); sync(); };
-    // на загрузке посреди ленты встаём на свой шаг без проезда
-    measure(); items.style.transition = "none"; sync(); items.style.setProperty("--pt-i", cur); void items.offsetWidth; items.style.transition = "";
-    addEventListener("scroll", onScroll, { passive: true });
-    addEventListener("resize", onResize);
-    const release = () => { items.style.transition = ""; items.style.transform = ""; };
-    const down = (e) => {
-      if (e.pointerType !== "touch" || drag !== null) return;
-      const p = past();
-      if (p < -1 || p > R) return; // вбок листаем, только пока лента закреплена и кабинет ещё не раскрывается
-      drag = e.pointerId; sx = lx = e.clientX; sy = e.clientY; lt = e.timeStamp; dx = 0; v = 0; mode = 0;
-    };
-    const move = (e) => {
-      if (e.pointerId !== drag) return;
-      const mx = e.clientX - sx, my = e.clientY - sy;
-      if (!mode) {
-        if (Math.abs(mx) < 8 && Math.abs(my) < 8) return;
-        mode = Math.abs(mx) > Math.abs(my) ? 1 : -1;
-        if (mode === 1) items.style.transition = "none";
-      }
-      if (mode !== 1) return;
-      dx = mx;
-      // скорость по последним движениям пальца: быстрый короткий взмах тоже перелистывает
-      const dt = e.timeStamp - lt;
-      if (dt > 0) { v = 0.6 * ((e.clientX - lx) / dt) + 0.4 * v; lx = e.clientX; lt = e.timeStamp; }
-      const edge = (cur === 0 && dx > 0) || (cur === N && dx < 0);
-      items.style.transform = `translate3d(${-cur * 0.75 * innerWidth + (edge ? dx * 0.3 : dx)}px, 0, 0)`;
-    };
-    const up = (e) => {
-      if (e.pointerId !== drag) return;
-      drag = null;
-      if (mode !== 1) return;
-      if (e.timeStamp - lt > 120) v = 0; // палец остановился перед тем, как отпустить
-      const far = innerWidth * 0.12;
-      let k = cur;
-      if (dx < -far || (dx < -12 && v < -0.25)) k = Math.min(N, cur + 1);
-      else if (dx > far || (dx > 12 && v > 0.25)) k = Math.max(0, cur - 1);
-      release(); set(k);
-      // страница встаёт туда, где прокрутка даёт этот же шаг: лента закреплена, сдвиг прокрутки не виден
-      const to = scrollY - past() + STEP * R * k;
-      if (lenis) lenis.scrollTo(to, { immediate: true, force: true }); else scrollTo(0, to);
-    };
-    const cancel = (e) => { if (e.pointerId !== drag) return; drag = null; if (mode === 1) release(); sync(); };
-    car.addEventListener("pointerdown", down);
-    car.addEventListener("pointermove", move);
-    car.addEventListener("pointerup", up);
-    car.addEventListener("pointercancel", cancel);
-    return () => {
-      removeEventListener("scroll", onScroll); removeEventListener("resize", onResize);
-      car.removeEventListener("pointerdown", down); car.removeEventListener("pointermove", move);
-      car.removeEventListener("pointerup", up); car.removeEventListener("pointercancel", cancel);
-      if (tick) cancelAnimationFrame(tick);
-      items.style.removeProperty("--pt-i"); release();
-    };
-  });
   if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
-    const after = $(".ptour__after", pt);
+    const items = $(".ptour__items", pt), spacer = $(".ptour__spacer", pt), after = $(".ptour__after", pt);
     const img = $(".ptour__item--main .ptour__img", pt), shade = $(".ptour__item--main .ptour__shade", pt);
     const sides = [[$(".ptour__item--left", pt), -0.2], [$(".ptour__item--right", pt), 0.2]];
     const pars = $$(".ptour__fig[data-par]", pt);
@@ -848,12 +784,13 @@
       // в процентах от кадра, как в CSS: при смене высоты окна без пересчёта ScrollTrigger окно не устаревает
       return `inset(${10 * k}% 0% ${100 - 90 * k}% 0% round 24px)`;
     };
+    G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
     const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
     zoom.fromTo(img, { clipPath: card, scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0% round 0px)", scale: 1.1 }, 0)
       .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
     sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
     pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
-    return () => G.set([img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" });
+    return () => G.set([items, img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" });
   });
   mm.add("(max-width: 760px)", () => {
     const track = $(".feat__track");
@@ -1035,22 +972,28 @@
     return () => { wayTrig = null; way.classList.remove("is-pinned"); G.set(wayShots, { clearProps: "clipPath" }); G.set(imgs, { clearProps: "transform" }); };
   });
 
-  // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте (сдвиг вверх
-  // ровно гасит прокрутку) и открывается из-под неё. На компьютере он сначала во всю ширину, в конце этого
-  // отрезка уменьшается до левой колонки и дальше липнет под шапкой, а справа проезжают контакты
+  // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте и открывается из-под неё.
+  // На компьютере он сначала во всю ширину (масштаб --fl-s), в конце отрезка уменьшается до левой колонки и дальше
+  // липнет под шапкой, а справа проезжают контакты. Само движение задано в CSS (на компьютере view-timeline, на телефоне
+  // sticky), здесь только масштаб; в браузерах без view-timeline на компьютере то же движение повторяет GSAP
   const fst = $(".fstage");
   if (fst) {
     const pin = $(".fstage__pin", fst), logo = $(".fstage__logo", fst);
+    const cssTL = !!window.CSS?.supports?.("animation-timeline: scroll()") && CSS.supports("animation-range: 0% 100%");
     const vmin = () => Math.min(innerWidth, innerHeight);
-    const reveal = (big) => {
-      const st = { trigger: fst, start: "top bottom", end: () => "+=" + Math.round(vmin() * 1.5), scrub: true, invalidateOnRefresh: true };
-      const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: st })
-        .fromTo(logo, { y: () => -Math.round(vmin() * 1.5) }, { y: 0, duration: 1 }, 0);
-      if (big) tl.fromTo(logo, { scale: () => fst.clientWidth / pin.clientWidth }, { scale: 1, duration: 0.4, ease: "power1.out", immediateRender: true }, 0.6);
+    const setS = () => fst.style.setProperty("--fl-s", (fst.clientWidth / pin.clientWidth).toFixed(4));
+    mm.add("(min-width: 1025px)", () => {
+      setS();
+      addEventListener("resize", setS);
+      return () => { removeEventListener("resize", setS); fst.style.removeProperty("--fl-s"); };
+    });
+    // компьютер без view-timeline (Firefox): прокрутку там ведёт Lenis, поэтому GSAP успевает за ней
+    if (!cssTL) mm.add("(min-width: 1025px)", () => {
+      const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: fst, start: "top bottom", end: () => "+=" + Math.round(vmin() * 1.5), scrub: true, invalidateOnRefresh: true } })
+        .fromTo(logo, { y: () => -Math.round(vmin() * 1.5) }, { y: 0, duration: 1 }, 0)
+        .fromTo(logo, { scale: () => fst.clientWidth / pin.clientWidth }, { scale: 1, duration: 0.25, immediateRender: true }, 0.75);
       return () => { tl.scrollTrigger?.kill(); tl.kill(); G.set(logo, { clearProps: "transform" }); };
-    };
-    mm.add("(min-width: 1025px)", () => reveal(true));
-    mm.add("(max-width: 1024px)", () => reveal(false));
+    });
   }
 
   // пересчитываем позиции, когда догрузились шрифты и картинки (до того, как пользователь доскроллил)
