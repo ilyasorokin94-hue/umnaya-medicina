@@ -46,7 +46,8 @@ export function parseServiceMd(src) {
   let cur = { intro: true, lines: [] };
   const intro = cur;
   for (const l of lines.slice(h1At + 1)) {
-    const h = /^(##|###) (.+?)(?:\s*\{#([\w-]+)\})?\s*$/.exec(l);
+    // «### 1. Консультация» → «Консультация»: нумерацию на сайте не показываем (правило Ilya)
+    const h = /^(##|###) (?:\d{1,2}\.\s+)?(.+?)(?:\s*\{#([\w-]+)\})?\s*$/.exec(l);
     if (h && h[1] === "##") { cur = { title: h[2], id: h[3], lines: [], subs: [] }; sections.push(cur); }
     else if (h && cur.subs) { const s = { title: h[2], id: h[3], lines: [] }; cur.subs.push(s); cur.cur = s; }
     else (cur.cur || cur).lines.push(l);

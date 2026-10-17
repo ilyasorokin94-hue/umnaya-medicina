@@ -3,6 +3,8 @@
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+  // ссылка меню с data-dir="uslugi implantaciya": текущая, если адрес страницы лежит в одном из этих разделов
+  const inDir = (d) => !!d && d.split(" ").some((x) => location.pathname.includes(`/${x}/`));
   const root = document.documentElement;
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = matchMedia("(pointer: fine)").matches;
@@ -72,7 +74,7 @@
       const above = tops.filter(([, y]) => y <= innerHeight / 2);
       cur = (above.length ? above.reduce((m, t) => (t[1] > m[1] ? t : m)) : tops.reduce((m, t) => (t[1] < m[1] ? t : m)))[0];
     } else {
-      cur = links.find((a) => !a.hash && a.pathname === location.pathname) || links.find((a) => a.dataset.dir && location.pathname.includes(`/${a.dataset.dir}/`));
+      cur = links.find((a) => !a.hash && a.pathname === location.pathname) || links.find((a) => inDir(a.dataset.dir));
     }
     links.forEach((a) => {
       a.classList.toggle("is-current", a === cur);
@@ -131,7 +133,7 @@
     navSecs.forEach(([, s]) => io.observe(s));
   } else if (!navSecs.length) {
     const cur = navItems.find((li) => { const a = $("a", li); return !a.hash && a.pathname === location.pathname; })
-      || navItems.find((li) => { const d = $("a", li).dataset.dir; return d && location.pathname.includes(`/${d}/`); });
+      || navItems.find((li) => inDir($("a", li).dataset.dir));
     cur?.classList.add("is-current");
   }
 
@@ -684,8 +686,9 @@
     if (media) tl.fromTo(media, { clipPath: small ? "inset(0% 0% 100% 0%)" : "inset(10% 6% 10% 6%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: small ? 1.4 : 1.6, ease: "power3.inOut" }, small ? 0.35 : 0);
     const mimg = $(".hero__media img, .sp-hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
-    tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav", h).filter((el) => !conv || !el.closest(".hero__actions")), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
+    tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1);
+    const rise = $$(".kicker, .label, .crumbs, .page-hero__lead, .hero__facts > *, .hero__actions > *, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav", h).filter((el) => !conv || !el.closest(".hero__actions"));
+    if (rise.length) tl.fromTo(rise, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
     if (bar && !matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     if (conv) {
       tl.fromTo(conv, { letterSpacing: "0.5em", autoAlpha: 0, filter: "blur(6px)" }, { letterSpacing: "-0.055em", autoAlpha: 1, filter: "blur(0px)", duration: 2, ease: "expo.out", clearProps: "letterSpacing,filter" }, 0.45);
@@ -737,8 +740,8 @@
   const hero = $(".hero");
   if (hero && $(".hero__media img", hero)) G.fromTo(".hero__media img", { yPercent: 0 }, { yPercent: -6, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
   mm.add("(min-width: 761px)", () => {
-    const ph = $(".page-hero");
-    if (ph) G.to($(".page-hero__in, .doc-hero__text", ph), { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
+    const ph = $(".page-hero"), pt = ph && $(".page-hero__in, .doc-hero__text", ph);
+    if (pt) G.to(pt, { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
   });
 
   // заголовки разделов: слова поднимаются из-под строки
@@ -1160,10 +1163,12 @@
     // предвыбор из ссылки: zapis.html?service=implantaciya&doctor=hludnevskiy
     renderDocs();
     const ps = params.get("service"), pd = params.get("doctor");
-    if (ps) { const b = $(`#b-services [data-v="${ps}"]`, box); if (b) { pick(svcBox, b); state.service = ps; setSum("service", $("b", b).textContent); renderDocs(); } }
-    if (pd) { const b = $(`#b-doctors [data-v="${pd}"]`, box); if (b) { pick($("#b-doctors", box), b); state.doctor = pd; setSum("doctor", $("b", b).textContent); } }
+    // неизвестная услуга или врач в ссылке: остаёмся на шаге выбора, а не прыгаем дальше с «не выбрано»
+    let okS = false, okD = false;
+    if (ps) { const b = $(`#b-services [data-v="${ps}"]`, box); if (b) { pick(svcBox, b); state.service = ps; setSum("service", $("b", b).textContent); renderDocs(); okS = true; } }
+    if (pd) { const b = $(`#b-doctors [data-v="${pd}"]`, box); if (b) { pick($("#b-doctors", box), b); state.doctor = pd; setSum("doctor", $("b", b).textContent); okD = true; } }
     // выбираем первый день, где есть окна
     const d0 = $("#b-days .day", box); if (d0) { pick($("#b-days", box), d0); state.date = days[0]; setSum("date", fmtDate.format(days[0])); renderSlots(); }
-    if (ps || pd) go(pd ? 3 : 2);
+    if (okS || okD) go(okD ? 3 : 2);
   }
 })();

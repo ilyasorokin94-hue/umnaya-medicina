@@ -72,13 +72,35 @@ const asWebp = (rel) => {
   return out;
 };
 function pick(entry, depth) {
-  const c = entry.filter(Boolean).filter((u) => /^https?:/.test(u) || local(u)).map((u) => (/^https?:/.test(u) ? u : pre(depth) + asWebp(u)));
-  return { src: c[0] || "", fb: c[1] || "" };
+  const ok = entry.filter(Boolean).filter((u) => /^https?:/.test(u) || local(u));
+  const c = ok.map((u) => (/^https?:/.test(u) ? u : pre(depth) + asWebp(u)));
+  return { src: c[0] || "", fb: c[1] || "", rel: ok[0] && !/^https?:/.test(ok[0]) ? ok[0] : "" };
 }
-const img = (entry, alt, depth, attrs = "") => {
-  const { src, fb } = pick(entry, depth);
+// уменьшенные копии крупных фото для srcset: телефон берёт 480 или 828 px вместо исходных 1440–1800
+const natW = {};
+if (sharp) {
+  const walkImg = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walkImg(path.join(d, e.name)) : [path.join(d, e.name)]));
+  await Promise.all(walkImg(path.join(root, "src", "images")).filter((f) => RASTER.test(f)).map(async (f) => { natW[path.relative(path.join(root, "src"), f).split(path.sep).join("/")] = (await sharp(f).metadata()).width; }));
+}
+const SRCSET_W = [480, 828, 1200];
+function srcset(rel, depth) {
+  const W = natW[rel];
+  if (!W || shrink[rel] || W < 700) return "";
+  const ws = SRCSET_W.filter((w) => w < W * 0.85);
+  if (!ws.length) return "";
+  const p = pre(depth);
+  return [...ws.map((w) => {
+    const out = rel.replace(RASTER, `-${w}w.webp`);
+    webpJobs.set(out, { from: rel, width: w });
+    return `${p}${out} ${w}w`;
+  }), `${p}${asWebp(rel)} ${W}w`].join(", ");
+}
+// sizes: «auto» — ширина по вёрстке для ленивых картинок (Chrome, Android); второе значение — для остальных браузеров
+const img = (entry, alt, depth, attrs = "", sizes = "auto, 100vw") => {
+  const { src, fb, rel } = pick(entry, depth);
   if (!src) return "";
-  return `<img src="${src}"${fb ? ` data-fb="${fb}"` : ""} alt="${esc(alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"${attrs}>`;
+  const set = rel ? srcset(rel, depth) : "";
+  return `<img src="${src}"${set ? ` srcset="${set}" sizes="${sizes}"` : ""}${fb ? ` data-fb="${fb}"` : ""} alt="${esc(alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"${attrs}>`;
 };
 const ph = (text = "Фото клиники") => `<span class="ph">${esc(text)}</span>`;
 const logoImg = (depth, eager = true) => {
@@ -113,7 +135,7 @@ const navLine = {
   "Вопросы": "animation-timeline:--tl-faq", "Контакты": "animation-timeline:--tl-contacts",
 };
 // меню телефона и шапка компьютера как у Лава Дент: разделы в порядке страницы (Ilya 17.10: после слогана клиника и «5 минут, 0 ₽, 3 врача», потом услуги), «Цены» рядом с услугами
-const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi"], ["Цены", `${p}ceny.html`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
+const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny.html`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
 function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
   const p = pre(depth);
@@ -144,7 +166,7 @@ ${fontPreload.map((f) => `<link rel="preload" href="${p}assets/fonts/${f}.woff2"
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
-window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
+window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.removeAttribute("srcset");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
 window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big");if(p)p.classList.add("is-fallback");i.style.display="none"};
 </script>
 <script src="${p}assets/vendor/gsap.min.js" defer></script>
@@ -167,7 +189,15 @@ function intro(depth) {
 const fallbackHref = (kind, p, o = {}) => kind === "call" ? clinic.phoneHref
   : kind === "xray" ? clinic.telegram
   : kind === "allon" ? `${p}zapis.html?service=all-on-4`
-  : `${p}zapis.html${o.service ? `?service=${o.service}` : o.doctor ? `?doctor=${o.doctor}` : ""}`;
+  : `${p}zapis.html${o.service ? `?service=${bookSlug(o.service)}` : o.doctor ? `?doctor=${o.doctor}` : ""}`;
+// услуга страницы нового формата → пункт списка на странице записи (там 10 направлений главной): All-on-6 и протез на имплантах
+// к All-on-4, остальные к своему разделу (коронки к протезированию)
+const bookSlug = (slug) => {
+  if (svc[slug]) return slug;
+  if ((slug === "all-on-6" || slug === "vsya-chelyust") && svc["all-on-4"]) return "all-on-4";
+  for (let x = servicePages.find((y) => y.slug === slug); x; x = servicePages.find((y) => y.slug === x.parent)) if (svc[x.slug]) return x.slug;
+  return slug;
+};
 const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""}" href="${fallbackHref(kind, p, o)}" data-modal="${kind}"${o.reason ? ` data-reason="${esc(o.reason)}"` : ""}${o.promo ? ` data-promo="${esc(o.promo)}"` : ""}${o.doctor ? ` data-doctor="${o.doctor}"` : ""}${o.magnet ? " data-magnet" : ""}>${esc(label)}</a>`;
 // тур на телефоне как вторая секция Лава Дент: лента карточек стоит на месте и едет вбок от прокрутки,
 // кабинет раскрывается на весь экран, заголовок проявляется по словам, поверх проходят остальные фото, потом текст
@@ -289,7 +319,7 @@ function offer(depth, consent) {
   return `<div class="modal modal--offer" id="m-offer" role="dialog" aria-modal="true" aria-labelledby="m-offer-t" hidden><div class="modal__box invite" data-lenis-prevent>
   <div class="invite__team">
     <p class="invite__cap">${esc(o.team)}</p>
-    <ul class="invite__docs">${o.who.map(([id, role]) => `<li><span class="invite__pic">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${esc(role)}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></li>`).join("")}</ul>
+    <ul class="invite__docs">${o.who.map(([id, role]) => `<li><span class="invite__pic">${img(docPhoto(docById[id]), docById[id].short, depth, "", "auto, 120px")}</span><b>${esc(role)}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></li>`).join("")}</ul>
   </div>
   <div class="invite__body">
     <button class="invite__x" type="button" data-close>Закрыть ${icon.close}</button>
@@ -400,7 +430,9 @@ const faqA = (a, p) => esc(a).replace(/\[([^\]]+)\]\((xray|call|book)\)/g, (m, t
 const faqLd = (faq) => ({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
 
 // ---------- блоки ----------
-const plist = (keys, limit = 99) => `<ul class="plist">${keys.flatMap((k) => prices[k].items).slice(0, limit).map(([n, v]) => `<li><span>${esc(n)}</span><b>${priceText(v)}</b></li>`).join("")}</ul>`;
+// спорные цены (servicePriceHold) и в общем прайсе плашкой, как на страницах услуг
+const plHeld = (n, v) => servicePriceHold.find(([re]) => { re.lastIndex = 0; return re.test(`${n} — ${priceText(v)}`); });
+const plist = (keys, limit = 99) => `<ul class="plist">${keys.flatMap((k) => prices[k].items).slice(0, limit).map(([n, v]) => { const h = plHeld(n, v); if (h) spPending.push(`прайс: ${h[1]}`); return `<li><span>${esc(n)}</span><b>${h ? `<mark class="todo-tag" title="${esc(h[1].replace(/\d{1,3}(?:[\s\u00a0]\d{3})+/g, "…"))}">цена уточняется</mark>` : priceText(v)}</b></li>`; }).join("")}</ul>`;
 
 // портрет врача: обработанный локальный файл, если он есть, иначе фото с ПроДокторов
 const docPhoto = (d) => [`images/doctors/${d.id}.jpg`, `images/doctors/${d.id}.png`, d.photo, d.photo && d.photo.replace("_square.jpg", "_square_small.jpg")];
@@ -415,7 +447,7 @@ const docById = Object.fromEntries(doctors.map((d) => [d.id, d]));
 function doctorCard(d, depth, o = {}) {
   const p = pre(depth);
   return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}"${o.lava ? ` data-col="${o.i % 2 ? "r" : "l"}"` : " data-reveal"}>
-  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth)}
+  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth, "", "auto, (max-width: 760px) 80vw, 30vw")}
     <a class="doc__cover" href="${docHref(d.id, p)}" tabindex="-1" aria-hidden="true"></a>${o.lava ? `
     <a class="doc__go" href="${docHref(d.id, p)}" aria-label="Страница врача: ${esc(d.short)}"><svg viewBox="0 0 60 60" aria-hidden="true"><path d="M24 36 36 24M27 24h9v9"/></svg></a>` : ""}</div>
   <h3><a href="${docHref(d.id, p)}">${esc(d.name)}</a></h3>
@@ -551,7 +583,7 @@ function pageHome() {
   const star = icon.star;
   const D = v2;
   // три врача после слогана на телефоне (на компьютере скрыты); пояснение, факты и пометки оттуда убраны (Ilya 17.10)
-  const heroTrio = `<ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="${docHref(id, "")}"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>`;
+  const heroTrio = `<ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="${docHref(id, "")}"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth, "", "auto, 120px")}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>`;
   const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 
   return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq.flatMap(([, qs]) => qs).map(([q, a]) => [q, a.replace(/\[([^\]]+)\]\((\w+)\)/g, "$1")]))] })
@@ -720,10 +752,12 @@ const warnText = "Имеются противопоказания. Необхо�
 const spWarn = `<p class="sp-warn">${warnText}</p>`;
 // тире не начинает строку
 const spDash = (t) => t.replace(/ — /g, "\u00a0— ");
+// акционная цена без слова «акция» рядом получает «по акции» (как 17 500 ₽ Osstem): на um-med.com она помечена «акция!»
+const promoMark = (t) => t.replace(/от 77 000 ₽(\*\*)?/g, (m, b, off) => (/акци/i.test(t.slice(Math.max(0, off - 70), off + m.length + 30).split(/\n/).slice(-2).join(" ")) ? m : `${m} по акции`));
 const spTexts = Object.fromEntries(servicePages.map((pg) => {
   const f = path.join(root, "src", "service-texts", `${pg.slug}.md`);
   if (!existsSync(f)) throw new Error(`Нет текста страницы услуги: src/service-texts/${pg.slug}.md`);
-  return [pg.slug, parseServiceMd(readFileSync(f, "utf8"))];
+  return [pg.slug, parseServiceMd(promoMark(readFileSync(f, "utf8")))];
 }));
 
 // адрес из текста (/implantaciya/all-on-4/, /vrachi/solodukhin/, /gigiena/) → ссылка на странице; ещё не сделанная страница → null
@@ -753,28 +787,45 @@ const spTag = (label, note, page) => {
 function spMd(text, page, p) {
   const keep = [];
   const put = (html) => `\u0001${keep.push(html) - 1}\u0002`;
-  let s = text.replace(/\[([А-ЯЁ][А-ЯЁ]{2,}[^\]]*|Кнопки:[^\]]*)\](?!\()/g, (m, note) => {
+  // места под кнопку записи («**[Записаться к врачу]**») и телефон — вёрстка, не текст: кнопка и телефон на странице свои
+  let s = text.replace(/(?:\*\*)?\[Записаться[^\]]*\](?!\()(?:\*\*)?|Телефон:\s*\[УТОЧНИТЬ У КЛИНИКИ: телефон\]|\s*·\s*кнопка «Записаться[^»]*»\.?/g, "");
+  s = s.replace(/\[([А-ЯЁ][А-ЯЁ]{2,}[^\]]*|Кнопки:[^\]]*)\](?!\()/g, (m, note) => {
     if (spDrop.test(note)) return put("");
     if (/^ССЫЛКА НА КАРТОЧКУ/.test(note)) return put(`<a href="${clinic.yandex}"${ext}>карточка клиники в Яндекс Картах</a>`);
     const [, label] = spAsk.find(([re]) => re.test(note)) || [null, "уточняем у клиники"];
     return put(spTag(label, note, page));
   });
-  for (const [re, note] of servicePriceHold) s = s.replace(re, (m, ...g) => (typeof g[0] === "string" && !/^\d/.test(g[0]) ? g[0] : "") + put(spTag("цена уточняется", note, page)));
+  for (const [re, note] of servicePriceHold) s = s.replace(re, (m) => m.replace(/(?:от )?\d{1,3}(?: \d{3})* ₽$/, () => put(spTag("цена уточняется", note, page))));
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, t, url) => {
     const h = spHref(url, p);
     return put(h ? `<a href="${h}">${esc(t)}</a>` : esc(t));
   });
-  s = esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\s*\n\s*/g, " ");
-  return s.replace(/\u0001(\d+)\u0002/g, (m, i) => keep[i]).replace(/(\s*·\s*)+$/, "").replace(/^(\s*·\s*)+/, "").trim();
+  // стрелки «КТ → 3D-план → шаблон» на сайте не показываем (правило Ilya): последовательность через запятую
+  s = esc(s.replace(/\s+→\s+/g, ", ")).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\s*\n\s*/g, " ");
+  return s.replace(/\u0001(\d+)\u0002/g, (m, i) => keep[i]).replace(/·(\s*·)+/g, "·").replace(/(\s*·\s*)+$/, "").replace(/^(\s*·\s*)+/, "").trim();
 }
-const spPlain = (t) => t.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*/g, "").replace(/\s*\n\s*/g, " ").trim();
+const spPlain = (t) => t.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*/g, "").replace(/\s+→\s+/g, ", ").replace(/\s*\n\s*/g, " ").trim();
 const spHasAsk = (t) => /\[[А-ЯЁ][А-ЯЁ]{2,}/.test(t) || servicePriceHold.some(([re]) => { re.lastIndex = 0; return re.test(t); });
+// точки-разделители «·» не показываем (правило Ilya: без декоративных точек). Строка плашек («Яндекс Карты 5,0 · рассрочка · налоговый вычет»)
+// убирается, как «Плашки:» на других страницах; «Проверил: … · Обновлено …» — через точку; в остальном тексте — запятая
+const spDots = (src, html) => {
+  if (!/·/.test(html)) return html;
+  const plain = spPlain(src).replace(/\[[^\]]*\]/g, "").trim();
+  const parts = plain.split(/\s*·\s*/).filter(Boolean);
+  if (parts.length >= 3 && parts.every((x) => x.length <= 60 && !/[.!?]$/.test(x))) return "";
+  if (/^(Текст )?[Пп]роверил/.test(plain)) return html.replace(/\s*·\s*/g, ". ");
+  return html.replace(/\s*·\s*/g, ", ");
+};
 const isWarn = (t) => spPlain(t).replace(/^>\s*/, "") === warnText;
 const isPriceTable = (n) => n.t === "table" && /^Услуга/.test(n.head[0]) && /^Цена/.test(n.head[1] || "");
 // первое предложение (для подзаголовка первого экрана), сокращения «пос.», «г.», «ул.» не обрывают
+// и не рвут кавычки: «Умная Медицина. Стоматология» — одно название
 const firstSentence = (t) => {
-  const m = /^[\s\S]+?(?<!(?:^|[\s(])(?:пос|г|ул|д|см|мм|др|им|т\.\s?е|т\.\s?к))[.!?](?=\s+[«А-ЯЁA-Z])/.exec(t);
-  return m ? [m[0], t.slice(m[0].length).trim()] : [t, ""];
+  for (const m of t.matchAll(/(?<!(?:^|[\s(])(?:пос|г|ул|д|см|мм|др|им|т\.\s?е|т\.\s?к))[.!?](?=\s+[«А-ЯЁA-Z])/g)) {
+    const head = t.slice(0, m.index + 1);
+    if ((head.match(/«/g) || []).length === (head.match(/»/g) || []).length) return [head, t.slice(head.length).trim()];
+  }
+  return [t, ""];
 };
 // цена из строки прайса для разметки: «от 19 300 ₽» → [19300, true]
 const spPriceNum = (v) => { const m = /^(от\s+)?(\d[\d\s\u00a0]*)\s?₽$/.exec(v.trim()); return m && [Number(m[2].replace(/\D/g, "")), !!m[1]]; };
@@ -786,7 +837,7 @@ function spNodes(nodes, page, p) {
     if (n.t === "p" || n.t === "quote") {
       if (isWarn(n.text)) { out.push(spWarn); last = ""; continue; }
       if (n.t === "quote" && /^\*\*(Плашки|Кнопки)/.test(n.text)) continue;
-      const html = spMd(n.text, page, p);
+      const html = spDots(n.text, spMd(n.text, page, p));
       if (!html) continue;
       // абзац из одной плашки (место под отзыв, пример работы): подряд одинаковые сливаются
       const only = /^<mark class="todo-tag sp-ask"[^>]*>([^<]+)<\/mark>$/.exec(html);
@@ -796,17 +847,25 @@ function spNodes(nodes, page, p) {
     } else if (n.t === "ul" || n.t === "ol") {
       last = "";
       const tag = n.t;
-      out.push(`<${tag} class="sp-points${tag === "ol" ? " sp-points--ol" : ""}">${n.items.map((t) => `<li>${spMd(t, page, p)}</li>`).join("")}</${tag}>`);
+      const lis = n.items.map((t) => spDots(t, spMd(t, page, p))).filter(Boolean);
+      if (lis.length) out.push(`<${tag} class="sp-points${tag === "ol" ? " sp-points--ol" : ""}">${lis.map((h) => `<li>${h}</li>`).join("")}</${tag}>`);
     } else if (n.t === "table") {
       last = "";
       out.push(isPriceTable(n) ? spPriceList(n, page, p) : `<div class="sp-table" data-reveal><table>
         <thead><tr>${n.head.map((h) => `<th scope="col">${spMd(h, page, p)}</th>`).join("")}</tr></thead>
-        <tbody>${n.rows.map((r) => `<tr>${r.map((c, i) => (i ? `<td>${spMd(c, page, p)}</td>` : `<th scope="row">${spMd(c, page, p)}</th>`)).join("")}</tr>`).join("")}</tbody>
+        <tbody>${n.rows.map((r) => `<tr>${r.map((c, i) => (i ? `<td>${spHeldCell(r[0], c, page) || spMd(c, page, p)}</td>` : `<th scope="row">${spMd(c, page, p)}</th>`)).join("")}</tr>`).join("")}</tbody>
       </table></div>`);
     }
   }
   return out.join("\n");
 }
+// цена в ячейке таблицы, спорная по названию строки («Консультация | 500 ₽») — плашкой
+const spHeldCell = (name, cell, page) => {
+  const v = spPlain(cell);
+  if (!/^(?:от )?\d[\d ]* ₽$/.test(v)) return "";
+  const held = servicePriceHold.find(([re]) => { re.lastIndex = 0; return re.test(`${spPlain(name)} — ${v}`); });
+  return held ? spTag("цена уточняется", held[1], page) : "";
+};
 // прайс: название (третья колонка — мелкой строкой под ним) и цена; спорная цена — плашкой
 function spPriceList(n, page, p) {
   return `<ul class="sp-plist" data-reveal>${n.rows.map(([name, price = "", note]) => {
@@ -855,8 +914,10 @@ function spSection(s, i, page, depth, ids) {
     case "steps": {
       const at = s.nodes.findIndex((n) => n.t === "ol");
       const items = s.nodes[at].items.map((x) => {
-        const m = /^\*\*(.+?)\*\*\s*(?:—\s*)?([\s\S]*)$/.exec(x);
-        return m ? [m[1].replace(/[.:]$/, ""), m[2]] : ["", x];
+        const m = /^\*\*(.+?)\*\*\s*(—\s*)?([\s\S]*)$/.exec(x);
+        // «**План лечения** со стоимостью…», «**Шаблон**, если нужен, —…»: жирное — начало фразы, а не заголовок; фраза целиком идёт текстом
+        if (m && !m[2] && m[3] && !/[.:!?]$/.test(m[1])) return [m[1], x.replace(/\*\*/g, "")];
+        return m ? [m[1].replace(/[.:]$/, ""), m[3].replace(/^[а-яё]/, (c) => c.toUpperCase())] : ["", x];
       });
       const rest = spNodes(s.nodes.slice(at + 1), page, p) + subs + after;
       return `<section class="foil on-dark sp-steps" id="${id}" aria-labelledby="${id}-t"><div class="feat">
@@ -877,7 +938,7 @@ function spSection(s, i, page, depth, ids) {
       }
       page.faq = qa.filter((x) => !x.a.some((n) => spHasAsk(n.text || JSON.stringify(n)))).map((x) => [spPlain(x.q), x.a.map((n) => spPlain(n.text || (n.items || []).join("; "))).join(" ")]);
       return sec(grid(`${h2}${spNodes(lead, page, p)}`, `<div class="sp-faq">${qa.map((x) => `<details class="faqq"><summary><span>${nobr(spMd(x.q, page, p))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${spNodes(x.a, page, p)}</div></details>`).join("")}</div>${subs}`)
-        + `<p class="sp-meta">Проверил: ${spMd(page.meta.reviewer || "[ВРАЧ — кто проверил текст]", page, p)} · Цены на ${esc(page.meta.updated || servicePriceDate)} · Обновлено ${esc(page.meta.updated || servicePriceDate)}</p>`);
+        + `<p class="sp-meta">Проверил: ${spMd(page.meta.reviewer || "[ВРАЧ — кто проверил текст]", page, p)}. Цены на ${esc(page.meta.updated || servicePriceDate)}. Обновлено ${esc(page.meta.updated || servicePriceDate)}</p>`);
     }
     case "reviews": return sec(`<div class="sp-head">${h2}</div>
       <div class="sp-rates">${[clinic.ratings[2], clinic.ratings[1], clinic.ratings[0]].map((r) => `<a class="sp-rate" href="${r.url}"${ext} data-reveal><b>${esc(r.value)}</b><span>${esc(r.site)}</span><small>${esc(r.count)}</small><span class="link">Смотреть отзывы</span></a>`).join("")}</div>
@@ -911,7 +972,7 @@ function pageSvc(page) {
   const chain = [];
   for (let x = page; x.parent; ) { x = servicePages.find((y) => y.slug === x.parent); chain.unshift([x.path, x.crumb]); }
   const crumbs = [["index.html", "Главная"], ...chain];
-  const heroImg = pick(page.hero, depth).src;
+  const heroImg = pick(page.hero, depth).src, heroSet = local(page.hero[0]) ? srcset(page.hero[0], depth) : "";
   if (!local(page.hero[0])) spPending.push(`${page.slug}: картинка первого экрана ${page.hero[0]}`);
   // подзаголовок первого экрана — первое предложение вступления, остальное вступление идёт следующим блоком
   const introP = T.intro.findIndex((n) => n.t === "p");
@@ -928,7 +989,9 @@ function pageSvc(page) {
     return m[1] ? { "@type": "Offer", name, priceSpecification: { "@type": "PriceSpecification", minPrice: m[0], priceCurrency: "RUB" } } : { "@type": "Offer", name, price: m[0], priceCurrency: "RUB" };
   }).filter(Boolean);
   const provider = dentistLd["@id"] ? { "@id": dentistLd["@id"] } : { "@type": "Dentist", name: dentistLd.name, url: SITE, telephone: dentistLd.telephone, address: dentistLd.address };
-  const title = spPlain(T.meta.title), desc = spPlain(T.meta.desc);
+  // в Title и Description плашку не поставить: предложение со спорной ценой выпадает
+  const noHeld = (t) => t.split(/(?<=[.!?])\s+/).filter((x) => !servicePriceHold.some(([re]) => { re.lastIndex = 0; return re.test(x); })).join(" ");
+  const title = spPlain(T.meta.title), desc = noHeld(spPlain(T.meta.desc));
   if (spHasAsk(title + desc)) spPending.push(`${page.slug}: пометка в Title или Description`);
   const jsonld = [
     crumbsLd([...chain, [page.path, page.crumb]]),
@@ -937,7 +1000,7 @@ function pageSvc(page) {
   ];
   const heroHtml = `<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
   <div class="sp-hero__top">
-    <div class="sp-hero__media">${heroImg ? `<img src="${heroImg}" alt="${esc(spPlain(T.meta.alt || page.crumb))}" decoding="async" fetchpriority="high">` : ""}</div>
+    <div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="${esc(spPlain(T.meta.alt || page.crumb))}" decoding="async" fetchpriority="high">` : ""}</div>
     <div class="sp-hero__text">
       <nav class="crumbs" aria-label="Хлебные крошки">${crumbs.map(([h, t]) => `<a href="${p}${h}">${esc(t)}</a>`).join("")}<span aria-current="page">${esc(page.crumb)}</span></nav>
       <h1 id="h1" data-split>${spDash(esc(T.meta.h1))}</h1>
@@ -1001,7 +1064,7 @@ function pageDoctor(d) {
         ${act("Записаться к врачу", "book", "../", { cls: "btn--lg", magnet: true, doctor: d.id })}
       </div>
     </div>
-    <figure class="doc-hero__photo" data-ph data-clip data-parallax><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth, ' fetchpriority="high"').replace(' loading="lazy"', "")}</figure>
+    <figure class="doc-hero__photo" data-ph data-clip data-parallax><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth, ' fetchpriority="high"', "(max-width: 760px) 92vw, 40vw").replace(' loading="lazy"', "")}</figure>
   </div>
 </section>
 
@@ -1113,7 +1176,7 @@ function pageDoc(d, page) {
   const faq = page.faq.filter(([, a]) => typeof a === "string");
   const heroHtml = `<section class="page-hero sp-hero dp-hero on-dark" aria-labelledby="h1">
   <div class="sp-hero__top">
-    <figure class="dp-hero__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), `${d.name}, ${page.spec.toLowerCase()}`, depth, ' fetchpriority="high"').replace(' loading="lazy"', "")}</figure>
+    <figure class="dp-hero__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), `${d.name}, ${page.spec.toLowerCase()}`, depth, ' fetchpriority="high"', "(max-width: 760px) 92vw, 36vw").replace(' loading="lazy"', "")}</figure>
     <div class="sp-hero__text">
       <nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><a href="${p}vrachi.html">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
       <p class="label label--light dp-hero__spec">${esc(page.spec)}</p>
@@ -1153,7 +1216,7 @@ ${dpBlock({ type: "text", id: "raboty", tone: "sage", title: "Работы вр�
 <section class="section sp-sec" id="otzyvy" aria-labelledby="otzyvy-t"><div class="wrap sp-grid">
   <div class="sp-grid__aside"><h2 id="otzyvy-t" data-split>Отзывы о враче</h2>${d.pd ? `<a class="link" href="${d.pd}"${ext}>Все отзывы о враче на ПроДокторов</a>` : ""}</div>
   <div>${quotes.length ? `<ul class="dp-quotes">${quotes.map((q) => `<li data-reveal><blockquote>«${esc(q)}»</blockquote></li>`).join("")}</ul>` : ""}
-  ${dpText(page.reviews || { todo: "3–6 отзывов, где пациенты называют врача, с ПроДокторов и Яндекс Карт; из облака эти сайты закрыты, снимем через браузер на компьютере Ilya" }, pg)}</div>
+  ${dpText(page.reviews || { todo: "3–6 отзывов, где пациенты называют врача, с ПроДокторов и Яндекс Карт" }, pg)}</div>
 </div></section>
 
 ${place({ title: "Где принимает врач", depth })}
@@ -1295,10 +1358,22 @@ mkdirSync(path.join(dist, "assets", "vendor"), { recursive: true });
 // типографика: после коротких слов (в, к, на, от, до…) неразрывный пробел, чтобы они не висели в конце строки.
 // Только в тексте между тегами, без скриптов и стилей.
 const typo = (html) => html.replace(/(<(script|style)\b[\s\S]*?<\/\2>)|>([^<]+)</g, (m, block, _t, text) => block || ">" + text.replace(/(?<=^|[\s(«])([А-Яа-яЁё]{1,2}) (?=\S|$)/g, "$1\u00a0") + "<");
+// правило сайта (Главная_концепция/контент_главной.md): в текстах нет длинных тире. После запятой тире просто уходит;
+// в определении и перед ценой («Коронка — несъёмный протез», «композит — от 148 500 ₽») становится двоеточием,
+// если в предложении уже есть двоеточие или тире — запятой
+const noDash = (html) => html.replace(/(<script(?![^>]*ld\+json)[\s\S]*?<\/script>|<style[\s\S]*?<\/style>)|([,;:])?[ \u00a0]*—[ \u00a0]*/g, (m, block, punct, off, all) => {
+  if (block) return block;
+  if (punct) return punct + " ";
+  const before = all.slice(Math.max(0, off - 400), off).replace(/<[^>]*>/g, "");
+  if (!before.trim()) return "";
+  const sent = before.split(/[.!?]\s+|"/).pop();
+  const rest = all.slice(off + m.length, off + m.length + 400).replace(/<[^>]*>/g, "").split(/[.!?](?:\s|$)|"/)[0];
+  return /[:—]/.test(sent) || /:/.test(rest) ? ", " : ": ";
+});
 const pages = [];
 const urls = new Map(); // адрес страницы на сайте → её html, для карты сайта
 const out = (f, html, map = true) => {
-  if (f.endsWith(".html")) { pages.push((html = typo(html))); if (map) urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
+  if (f.endsWith(".html")) { pages.push((html = typo(f === "vrachi/sikacheva.html" ? html : noDash(html)))); if (map) urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
   writeFileSync(path.join(dist, f), html);
 };
 out("index.html", pageHome());
@@ -1306,7 +1381,7 @@ out("ceny.html", pagePrices());
 out("vrachi.html", pageDoctors());
 out("zapis.html", pageBooking());
 // старые адреса услуг, переехавших в новый формат, ведут на новую страницу и в карту сайта не попадают
-for (const s of services) spBySlug[s.slug] ? writeFileSync(path.join(dist, `uslugi/${s.slug}.html`), spRedirect(spBySlug[s.slug])) : out(`uslugi/${s.slug}.html`, pageService(s));
+for (const s of services) spBySlug[s.slug] ? writeFileSync(path.join(dist, `uslugi/${s.slug}.html`), noDash(spRedirect(spBySlug[s.slug]))) : out(`uslugi/${s.slug}.html`, pageService(s));
 for (const page of servicePages) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}index.html`, pageSvc(page)); }
 // старая страница Сикачевой остаётся, но в карту сайта не идёт, пока Ilya не решит (17.10)
 for (const d of doctors) {
@@ -1315,7 +1390,8 @@ for (const d of doctors) {
   out(`vrachi/${d.id}/index.html`, pageDoc(d, doctorPages[d.id]));
 }
 if (spPending.length) {
-  if (PUBLISH) throw new Error("На страницах услуг и врачей остались пометки:\n" + spPending.join("\n"));
+  // боевая сборка с пометками не оставляет полусобранный dist с «index, follow»
+  if (PUBLISH) { rmSync(dist, { recursive: true, force: true }); throw new Error("На страницах услуг и врачей остались пометки:\n" + spPending.join("\n")); }
   console.log(`Страницы услуг и врачей: пометок на демо ${spPending.length} (тексты, картинки, ответы клиники)`);
 }
 for (const [f, code] of Object.entries(assets)) writeFileSync(path.join(dist, "assets", f), code);
