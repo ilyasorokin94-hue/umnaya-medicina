@@ -617,9 +617,12 @@
     if (!rot) return () => {};
     const ph = $$(":scope > [aria-hidden]", rot);
     let k = 0, seen = true, hold = false, timer = 0;
-    new IntersectionObserver(([en]) => (seen = en.isIntersecting)).observe(rot);
+    // после паузы отсчёт идёт заново, иначе фраза сменится сразу, как только убрали курсор или вернулись на вкладку
+    const rearm = () => { if (timer) { clearInterval(timer); timer = setInterval(next, 3600); } };
+    new IntersectionObserver(([en]) => { seen = en.isIntersecting; if (seen) rearm(); }).observe(rot);
     rot.addEventListener("pointerenter", () => (hold = true));
-    rot.addEventListener("pointerleave", () => (hold = false));
+    rot.addEventListener("pointerleave", () => { hold = false; rearm(); });
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) rearm(); });
     const next = () => {
       if (document.hidden || !seen || hold) return;
       const was = ph[k];

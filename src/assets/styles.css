@@ -1714,8 +1714,9 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
   .hv__rot { grid-column: 1; grid-row: 2; align-self: center; justify-self: start; }
   .hv__rot > [aria-hidden] { align-self: center; }
 }
-/* узкий компьютер и планшет: фраза отдельной строкой над кнопкой, иначе она рвётся на три строки */
-@media (min-width: 761px) and (max-width: 1023px) {
+/* узкий компьютер и планшет: фраза отдельной строкой над кнопкой, иначе она рвётся на три строки;
+   на телефоне боком экран низкий, там фраза и кнопка остаются рядом, чтобы кнопка не ушла за край */
+@media (min-width: 761px) and (max-width: 1023px) and (min-height: 600px) {
   .hero--v1 .hero__text { grid-template-rows: 1fr auto auto; row-gap: 28px; }
   .hv__rot { grid-column: 1 / -1; }
   .hero--v1 .hero__actions { grid-column: 1 / -1; grid-row: 3; align-items: flex-start; }
