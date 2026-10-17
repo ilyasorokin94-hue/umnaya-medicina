@@ -503,7 +503,6 @@ function pageHome() {
 <section class="hero hero--v hero--v1 on-dark" aria-labelledby="h1"><div class="wrap hero__in">
   <div class="hero__text">
     <h1 id="h1"><span data-split>Три врача.</span> <span class="hv__l2" data-split>Один план лечения.</span></h1>
-    <p class="hv__sub">${esc(D.heroLines.slice(0, 2).join(" "))}</p>
     <p class="hv__rot"><span class="sr">${esc(D.heroLines.join(" "))}</span>${D.heroLines.map((t) => `<span aria-hidden="true">${t.replace(/(^|\s)([А-Яа-яЁё]{1,2}) /g, "$1$2\u00a0").split(" ").map((w, i) => `<span class="sw"><span style="--i:${i}">${esc(w)}</span></span>`).join(" ")}</span>`).join("")}</p>
     <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
   </div>

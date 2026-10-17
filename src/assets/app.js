@@ -610,7 +610,7 @@
   // ---------- анимации ----------
   // Правило: прокрутку сглаживает только Lenis, поэтому все scrub = true (без второго сглаживания),
   // одно свойство одного элемента ведёт одна анимация, CSS-переходы на этих свойствах выключены.
-  // ---------- первый экран на компьютере: фразы пояснения сменяют друг друга ----------
+  // ---------- первый экран: фразы пояснения сменяют друг друга ----------
   // Слова уходят вверх и приходят снизу (CSS), пока экран на виду и вкладка открыта; наведение на фразу ставит смену на паузу
   const rot = $(".hv__rot");
   const rotStart = (() => {
@@ -621,7 +621,7 @@
     rot.addEventListener("pointerenter", () => (hold = true));
     rot.addEventListener("pointerleave", () => (hold = false));
     const next = () => {
-      if (document.hidden || !seen || hold || phoneMQ.matches) return;
+      if (document.hidden || !seen || hold) return;
       const was = ph[k];
       was.classList.replace("is-on", "is-out");
       setTimeout(() => was.classList.remove("is-out"), 1100);
@@ -637,7 +637,7 @@
     };
   })();
   // с анимацией первая фраза приходит после заголовка (запасной запуск, если заставка не доиграла), без неё всё сразу на месте
-  if (rot && anim && !phoneMQ.matches) setTimeout(rotStart, 6000);
+  if (rot && anim) setTimeout(rotStart, 6000);
   else rotStart();
 
   if (!anim) return;
@@ -667,8 +667,9 @@
       tl.fromTo(conv, { letterSpacing: "0.5em", autoAlpha: 0, filter: "blur(6px)" }, { letterSpacing: "-0.055em", autoAlpha: 1, filter: "blur(0px)", duration: 2, ease: "expo.out", clearProps: "letterSpacing,filter" }, 0.45);
       // кнопка приходит вместе с первой фразой, когда заголовок уже собрался
       tl.fromTo($$(".hero__actions > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1 }, 1.35);
-      if (rot) tl.call(rotStart, null, 1.0);
     }
+    // на телефоне первая фраза приходит вслед за заголовком, на компьютере вместе с кнопкой, когда буквы собрались
+    if (rot && h.contains(rot)) tl.call(rotStart, null, conv ? 1.0 : 0.6);
     const pb = $(".hero__promo b", h), ps = $(".hero__promo s", h);
     if (small && pb && ps) {
       const orig = pb.textContent, to = +orig.replace(/\D/g, ""), o = { v: +ps.textContent.replace(/\D/g, "") };
