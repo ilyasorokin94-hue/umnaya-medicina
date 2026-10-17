@@ -1881,14 +1881,16 @@ html:not(.js-intro) .intro { display: none; }
 @supports (animation-timeline: view()) and (timeline-scope: --a) {
   @media (max-width: 760px) {
     .js-anim .ptour__items { animation: pt-move linear forwards; animation-timeline: --pt-car; animation-range: contain 0% contain 100%; }
-    .js-anim .ptour__item--main .ptour__img { animation: pt-zoom linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
+    /* масштаб и обрезка кабинета двумя анимациями: transform тогда идёт на видеокарте вместе с лентой, иначе Chrome считает обе в основном потоке и кабинет отстаёт при быстром свайпе */
+    .js-anim .ptour__item--main .ptour__img { animation: pt-zoom-s linear forwards, pt-zoom-c linear forwards; animation-timeline: --pt-end, --pt-end; animation-range: 0 50vh, 0 50vh; }
     .js-anim .ptour__item--main .ptour__shade { animation: pt-shade ease-in-out forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
     .js-anim .ptour__item--left, .js-anim .ptour__item--right { animation: pt-out linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
     .js-anim .ptour__fig[data-par] { animation: pt-par linear both; animation-timeline: view(block 0px); }
   }
 }
 @keyframes pt-move { to { transform: translate(calc(-100% + 275vw)); } }
-@keyframes pt-zoom { to { clip-path: inset(0); transform: scale(1.1); } }
+@keyframes pt-zoom-s { to { transform: scale(1.1); } }
+@keyframes pt-zoom-c { to { clip-path: inset(0); } }
 @keyframes pt-shade { to { opacity: 1; } }
 @keyframes pt-out { to { transform: translate(var(--pt-x)); } }
 @keyframes pt-par { from { transform: translateY(25svh); } to { transform: translateY(-25svh); } }
