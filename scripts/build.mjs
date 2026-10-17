@@ -6,12 +6,13 @@ import path from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
+import { reviewsMobile } from "./reviews-mobile.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
 // метка версии у стилей и скриптов: после выкладки браузер берёт новые файлы, а не старые из кэша
 const ver = (f) => createHash("md5").update(readFileSync(path.join(root, "src/assets", f))).digest("hex").slice(0, 8);
-const V = { css: ver("styles.css"), app: ver("app.js"), heroseq: ver("heroseq.js") };
+const V = { css: ver("styles.css"), app: ver("app.js"), heroseq: ver("heroseq.js"), rvm: ver("rvm.js"), rvmCss: ver("rvm.css") };
 const SITE = process.env.SITE_URL || "https://umnaya-stomatologiya.ru"; // домен-пример для canonical и разметки
 
 // неразрывные пробелы в ценах и номерах: «КТ от 2 000 ₽» не переносится по частям
@@ -532,6 +533,7 @@ function pageHome() {
 </div></section>
 
 <section class="section reviews" id="reviews" aria-labelledby="rv-title">
+  <link rel="stylesheet" href="assets/rvm.css?v=${V.rvmCss}">
   <div class="wrap section__head"><div><span class="label">Отзывы</span><h2 id="rv-title" data-split>Что пишут пациенты</h2></div></div>
   <div class="wrap"><div class="rt" aria-label="Оценки клиники на площадках" data-reveal>
     <div class="rt-avg">
@@ -559,6 +561,7 @@ function pageHome() {
   <div class="rv__rows">
     ${[home.reviews.slice(0, 9), home.reviews.slice(9)].map((row, r) => `<div class="rv__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map((q, j) => `<figure class="rv${q.length > 110 ? " rv--long" : q.length < 60 ? " rv--short" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><blockquote>«${esc(q)}»</blockquote></figure>`).join("")}</div>`).join("")}
   </div>
+  ${reviewsMobile(home.reviews, esc)}
 </section>
 
 <section class="section faqv" id="faq" aria-labelledby="fq-title"><div class="wrap">
@@ -568,7 +571,7 @@ function pageHome() {
 </div></section>
 
 ${place()}
-</main>` + footer(depth) + `\n<script type="module" src="assets/heroseq.js?v=${V.heroseq}"></script>` + end;
+</main>` + footer(depth) + `\n<script type="module" src="assets/heroseq.js?v=${V.heroseq}"></script>\n<script src="assets/rvm.js?v=${V.rvm}" defer></script>` + end;
 }
 
 // ---------- страница услуги ----------

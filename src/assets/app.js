@@ -856,7 +856,8 @@
     ST.addEventListener("refreshInit", fill);
     G.fromTo(row, { x: () => (d < 0 ? 0 : -dist()) }, { x: () => (d < 0 ? -dist() : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
   };
-  $$(".rv__row").forEach(ribbon);
+  // на телефоне вместо лент свой блок отзывов (assets/rvm.js)
+  mm.add("(min-width: 761px)", () => $$(".rv__row").forEach(ribbon));
   mm.add("(min-width: 761px)", () => $$(".tour__row").forEach(ribbon));
 
   // телефон: фото клиники двумя лентами. Ленты сами медленно плывут навстречу друг другу по времени, а не от прокрутки,
