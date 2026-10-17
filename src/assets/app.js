@@ -207,6 +207,12 @@
     });
   }
 
+  // услуги на компьютере как у Лава Дент: карточки и строки появляются, когда сетка дошла до нижней четверти экрана, один раз
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("is-shown"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -25% 0px" });
+    $$("[data-svl]").forEach((el) => io.observe(el));
+  } else $$("[data-svl]").forEach((el) => el.classList.add("is-shown"));
+
   // «Показать ещё» в работах
   let worksOpen = false;
   $("[data-works-more]")?.addEventListener("click", (e) => {
@@ -396,7 +402,9 @@
     openM = m; if (id !== "offer") anyModal = true;
     root.classList.add("has-modal");
     lenis?.stop();
-    if (anim) {
+    // окно услуги выезжает справа, как у Лава Дент (переход в CSS)
+    if (m.classList.contains("modal--svc")) { $(".svm", m).scrollTop = 0; m.offsetWidth; m.classList.add("is-in"); }
+    else if (anim) {
       G.fromTo(m, { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" });
       G.fromTo($(".modal__box", m), { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
     }
@@ -408,8 +416,9 @@
     const m = openM;
     if (!m) return;
     openM = null;
-    const done = () => { m.hidden = true; m.style.opacity = ""; if (!openM) { root.classList.remove("has-modal"); lenis?.start(); } };
-    if (anim && !instant) G.to(m, { opacity: 0, duration: 0.25, ease: "power1.in", onComplete: done });
+    const done = () => { if (openM === m) return; m.hidden = true; m.style.opacity = ""; if (!openM) { root.classList.remove("has-modal"); lenis?.start(); } };
+    if (m.classList.contains("modal--svc")) { m.classList.remove("is-in"); if (instant || reduce) done(); else setTimeout(done, 1000); }
+    else if (anim && !instant) G.to(m, { opacity: 0, duration: 0.25, ease: "power1.in", onComplete: done });
     else done();
     if (!instant) lastFocus?.focus?.({ preventScroll: true });
   }

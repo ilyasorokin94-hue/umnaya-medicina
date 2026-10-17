@@ -442,6 +442,53 @@ function place() {
 </section>`;
 }
 
+// ---------- услуги на компьютере как у Лава Дент ----------
+// Пять главных направлений карточками (первая во всю ширину), остальные строками. Клик открывает окно услуги
+// с описанием, ценами «от» и записью, как у Лава Дент; без скриптов ссылка ведёт на страницу услуги.
+const svlGo = '<span class="svl-go" aria-hidden="true"><svg viewBox="0 0 60 60"><path d="M24 36 36 24M27 24h9v9"/></svg></span>';
+// «All-on-4» не рвётся по дефису
+const svlTitle = (t) => esc(t).replace(/\S+-\S+/g, (w) => `<span class="svl-nw">${w}</span>`);
+const svlItems = () => {
+  const dirs = Object.fromEntries(v2.dirs.map((d) => [d.tab, d]));
+  return [...v2.lava.cards, ...v2.lava.list].map((it, i) => {
+    const d = dirs[it.dir];
+    return { ...it, nr: pad(i + 1), lead: it.lead || d.lead, points: it.points || svc[it.slug].points, rows: it.rows || d.rows, promo: it.promo || d.promo, btn: it.btn || d.btn };
+  });
+};
+function svlBlock(p, depth) {
+  const items = svlItems(), n = v2.lava.cards.length;
+  const card = (s, i) => `<a class="svl-card" href="${p}uslugi/${s.slug}.html" data-modal="svc-${s.slug}" style="--delay:${(i * 0.3).toFixed(1)}s">
+      ${img(s.img, "", depth, ' class="svl-card__img"')}
+      <span class="svl-card__in"><span class="svl-card__top"><span class="svl-nr">${s.nr}</span>${svlGo}</span><h3 class="svl-card__title">${svlTitle(s.title)}</h3></span>
+    </a>`;
+  const row = (s, i) => `<a class="svl-row" href="${p}uslugi/${s.slug}.html" data-modal="svc-${s.slug}" style="--delay:${(i * 0.3).toFixed(1)}s"><span class="svl-nr">${s.nr}</span><h3 class="svl-row__title">${svlTitle(s.title)}</h3><span class="svl-row__act">${svlGo}</span></a>`;
+  return `<div class="svl">
+  <div class="svl__head"><div class="wrap"><h2 data-split>${esc(v2.lava.title)}</h2><a class="link" href="${p}ceny.html">Весь прайс</a></div></div>
+  <div class="svl__top"><div class="wrap"><div class="svl-grid" data-svl>
+    ${items.slice(0, n).map(card).join("\n    ")}
+  </div></div></div>
+  <div class="svl__bottom"><div class="wrap"><div class="svl-list" data-svl>
+    ${items.slice(n).map(row).join("\n    ")}
+  </div></div></div>
+</div>`;
+}
+function svlModals(p, depth) {
+  return `<div class="modals">${svlItems().map((s) => `
+<div class="modal modal--svc" id="m-svc-${s.slug}" role="dialog" aria-modal="true" aria-labelledby="m-svc-${s.slug}-t" hidden><div class="modal__box svm" data-lenis-prevent>
+  <div class="svm__bar wrap"><button class="svm__x" type="button" aria-label="Закрыть" data-close>${icon.close}</button></div>
+  <div class="svm__in wrap"><div class="svm__body">
+    <h2 class="svm__title" id="m-svc-${s.slug}-t" tabindex="-1">${esc(s.title)}</h2>
+    <p class="svm__lead">${esc(s.lead)}</p>
+    <ul class="svm__list">${s.points.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+    <div class="svm__promo"><span class="svm__tag">${esc(s.promo.tag)}</span><p class="svm__offer"><b>${esc(s.promo.title)}</b>${s.promo.price ? ` <span>${esc(s.promo.price)}</span>${s.promo.old ? ` <s>${esc(s.promo.old)}</s>` : ""}` : ""}</p><p>${esc(s.promo.text)}</p></div>
+    <div class="svm__prices">${s.rows.map((r) => `<div class="svm__row"><h3>${esc(r[0])}</h3><p>${rowPrice(r)}</p></div>`).join("")}</div>
+    <p class="svm__note">Стартовые цены. Точную стоимость врач назовёт после осмотра.</p>
+    <div class="svm__act">${act(s.btn[0], s.btn[1], p, { reason: s.btn[2] || undefined })}<a class="btn btn--ghost" href="${p}uslugi/${s.slug}.html">Подробнее об услуге</a></div>
+  </div></div>
+</div></div>`).join("")}
+</div>`;
+}
+
 // ---------- главная: порядок блоков Тридента ----------
 // первый экран, услуги и цены вкладками, клиника и оборудование, путь пациента, врачи, отзывы, три вопроса, контакты
 const rowPrice = ([, v, old]) => (v === 0 ? "Бесплатно" : typeof v === "number" ? rub(v) : priceText(v)) + (old ? ` <s>${rub(old)}</s>` : "");
@@ -506,7 +553,7 @@ function pageHome() {
   </div>
 </section>
 
-<section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
+<section class="section section--sage svs" id="services" aria-labelledby="sv-title"><div class="wrap svs__phone">
   <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><a class="link" href="ceny.html">Весь прайс</a></div></div>
   <div class="ptabs dirs__tabs" role="tablist" aria-label="Направления" data-tabs="dir">${D.dirs.map((d, i) => `<button class="chip" type="button" role="tab" data-tab="d${i}" aria-selected="${i === 0}">${esc(d.tab)}</button>`).join("")}</div>
   ${D.dirs.map((d, i) => `<div class="dir" data-panel="dir" data-key="d${i}"${i ? " hidden" : ""}>
@@ -524,7 +571,9 @@ function pageHome() {
       <div class="dir__links">${d.links.map(([t, k]) => `<a class="link" href="uslugi/${k}.html">${esc(t)}</a>`).join("")}</div>
     </div>
   </div>`).join("")}
-</div></section>
+</div>
+${svlBlock(p, depth)}
+</section>
 
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>
@@ -571,7 +620,10 @@ function pageHome() {
 </div></section>
 
 ${place()}
-</main>` + footer(depth) + `\n<script type="module" src="assets/heroseq.js?v=${V.heroseq}"></script>\n<script src="assets/rvm.js?v=${V.rvm}" defer></script>` + end;
+</main>
+${svlModals(p, depth)}` + footer(depth) + `
+<script type="module" src="assets/heroseq.js?v=${V.heroseq}"></script>
+<script src="assets/rvm.js?v=${V.rvm}" defer></script>` + end;
 }
 
 // ---------- страница услуги ----------

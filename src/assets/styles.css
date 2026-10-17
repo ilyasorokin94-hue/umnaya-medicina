@@ -1986,3 +1986,93 @@ html:not(.js-intro) .intro { display: none; }
   .nav__fill, .nav__list::after { forced-color-adjust: none; background: CanvasText; }
 }
 @keyframes nav-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- услуги на компьютере как у Лава Дент (Ilya 17.10) ----------
+   Светлая шапка «Услуги», под ней пять карточек: первая во всю ширину, четыре портретом 300/410. Тёмный низ блока
+   начинается за 2xl до нижнего края карточек, поэтому карточки стоят на стыке светлого и тёмного. Ниже на тёмном
+   строки 06–10. Номера, названия и круглая стрелка поверх фото, фото под тёмно-зелёной вуалью 50%, как у Лава Дент.
+   Появление: карточки и строки поднимаются по очереди через 0,3 с, фото сжимается с 1,2, номер вырастает из точки.
+   Клик открывает окно услуги: выезжает справа на весь экран. На телефоне прежние вкладки с ценами. */
+.svl { display: none; }
+@media (min-width: 761px) {
+  .svs.section { padding: 0; }
+  .svs__phone { display: none; }
+  .svl {
+    --sv-s-m: clamp(1rem, .6818rem + 1.4141vw, 1.875rem);
+    --sv-gutter: var(--sv-s-m);
+    --sv-2xl: clamp(4rem, 3.6364rem + 1.6162vw, 5rem);
+    --sv-ease: cubic-bezier(.33, 0, .11, 1);
+    --sv-ease-4: cubic-bezier(.1, .75, .25, 1);
+    display: block;
+  }
+  .svl__head .wrap { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; padding: clamp(6rem, 5.4545rem + 2.4242vw, 7.5rem) 0; }
+  .svl__head h2 { font-size: clamp(36px, 5.6vw, 84px); letter-spacing: -.04em; }
+  .svl__top { position: relative; z-index: 1; }
+  .svl__bottom { position: relative; background: var(--ink); color: var(--sage-2); margin-top: calc(-1 * var(--sv-2xl)); padding-bottom: clamp(8rem, 7.2727rem + 3.2323vw, 10rem); }
+
+  .svl-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sv-gutter); }
+  .svl-card { container-type: inline-size; position: relative; z-index: 1; display: block; min-width: 0; aspect-ratio: 300 / 410; overflow: hidden; overflow: clip; background: var(--ink); color: var(--sage-2); text-decoration: none; cursor: pointer; }
+  .svl-card:first-child { grid-column: 1 / -1; aspect-ratio: auto; height: clamp(12.5rem, 10.4167rem + 9.2593vw, 18.75rem); }
+  .svl-card__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 1s var(--sv-ease) var(--delay, 0s), scale .5s var(--sv-ease); }
+  .svl-card:hover .svl-card__img { scale: 1.05; }
+  .svl-card__in { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; padding: var(--sv-s-m); background: rgba(12, 36, 16, .5); }
+  .svl-card__top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .svl-card__title { margin-top: auto; font: 500 min(clamp(1.375rem, 1.05rem + 1.2vw, 2rem), 9.6cqi)/1.3 var(--display); letter-spacing: -.02em; overflow-wrap: normal; }
+  .svl-nw { white-space: nowrap; }
+  .svl-nr { font: 500 clamp(1.25rem, 1.0986rem + .6727vw, 1.6663rem)/1.4 var(--display); font-variant-numeric: tabular-nums; }
+  .svl-go { flex: none; display: grid; place-items: center; width: clamp(2rem, 1.3636rem + 2.8283vw, 3.75rem); aspect-ratio: 1; border-radius: 50%; background: var(--sage-2); color: var(--ink); transition: scale .5s var(--sv-ease-4), rotate .5s var(--sv-ease-4); }
+  .svl-go svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .svl-card:hover .svl-go { rotate: 45deg; scale: 1.1; }
+
+  .svl-list { padding-top: clamp(6rem, 4.5455rem + 6.4646vw, 10rem); }
+  .svl-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: center; gap: var(--sv-gutter); padding: clamp(.75rem, .6818rem + .303vw, .9375rem) 0; border-bottom: 1px solid rgba(223, 232, 220, .2); color: rgba(223, 232, 220, .8); text-decoration: none; cursor: pointer; transition: color .5s var(--sv-ease-4); }
+  .svl-row:hover { color: var(--sage-2); }
+  .svl-row__title { grid-column: 2 / 4; grid-row: 1; padding-right: 90px; font: 500 clamp(1.5625rem, 1.323rem + 1.0644vw, 2.2211rem)/1.4 var(--display); letter-spacing: -.02em; }
+  .svl-row__act { grid-column: 3; grid-row: 1; justify-self: end; }
+  .svl-row .svl-go { display: inline-grid; vertical-align: middle; }
+  .svl-row:hover .svl-go { rotate: 45deg; scale: 1; }
+  .svl-card:focus-visible, .svl-row:focus-visible { outline: 2px solid var(--green-hi); outline-offset: 4px; }
+
+  /* появление, как у Лава Дент: класс ставит скрипт, когда сетка дошла до нижней четверти экрана */
+  .js-anim .svl-card { opacity: 0; translate: 0 clamp(1.5rem, 1.1364rem + 1.6162vw, 2.5rem); transition: translate 1s var(--sv-ease) var(--delay, 0s), opacity 1s var(--sv-ease) var(--delay, 0s); }
+  .js-anim .svl-card__img { transform: scale(1.2); }
+  .js-anim .svl-card .svl-nr { display: inline-block; scale: 0; transition: scale 1s var(--sv-ease) var(--delay, 0s); }
+  .js-anim .svl-row { opacity: 0; translate: 0 clamp(3rem, 2.2727rem + 3.2323vw, 5rem); transition: translate 1s var(--sv-ease) var(--delay, 0s), opacity 1s var(--sv-ease) var(--delay, 0s), color .5s var(--sv-ease-4) 0s; }
+  .js-anim .is-shown .svl-card, .js-anim .is-shown .svl-row { opacity: 1; translate: 0 0; }
+  .js-anim .is-shown .svl-card__img { transform: scale(1); }
+  .js-anim .is-shown .svl-card .svl-nr { scale: 1; }
+}
+
+/* окно услуги, как у Лава Дент: на весь экран шалфейного цвета, выезжает справа за 1 с,
+   сверху круглая тёмная кнопка закрытия, текст колонкой по центру; цены только стартовые «от» */
+.modal--svc { padding: 0; background: none; place-items: stretch; }
+.modal__box.svm { width: 100%; max-height: none; height: 100%; padding: 0 0 clamp(8rem, 7.2727rem + 3.2323vw, 10rem); border-radius: 0; background: #779e91; color: var(--ink); translate: 100% 0; transition: translate 1s cubic-bezier(.1, .75, .25, 1); }
+.modal--svc.is-in .svm { translate: 0 0; }
+.svm__bar { position: sticky; top: 0; z-index: 1; display: flex; justify-content: flex-end; padding: clamp(2rem, 1.3636rem + 2.8283vw, 3.75rem) 0; }
+.svm__x { display: grid; place-items: center; width: clamp(56px, 3rem + 1.5vw, 76px); aspect-ratio: 1; border: 0; border-radius: 50%; background: var(--ink); color: var(--sage-2); cursor: pointer; transition: scale .5s cubic-bezier(.1, .75, .25, 1); }
+.svm__x:hover { scale: 1.1; }
+.svm__x svg { width: 34%; height: 34%; fill: currentColor; }
+.svm__body { max-width: 640px; margin-inline: auto; opacity: 0; transition: opacity 1s cubic-bezier(1, 0, .47, .93); }
+.modal--svc.is-in .svm__body { opacity: 1; }
+.svm .svm__title { padding-right: 0; letter-spacing: 0; font: 500 clamp(1.25rem, 1.0986rem + .6727vw, 1.6663rem)/1.4 var(--display); margin-bottom: clamp(1.5rem, 1.3636rem + .6061vw, 1.875rem); }
+.svm .svm__title:focus { outline: none; }
+.svm__lead { font-size: clamp(1rem, .9091rem + .404vw, 1.25rem); line-height: 1.4; }
+.svm__list { display: grid; gap: clamp(.75rem, .6818rem + .303vw, .9375rem); margin: clamp(1rem, .9091rem + .404vw, 1.25rem) 0 0; padding: 0; list-style: none; font-size: clamp(1rem, .9091rem + .404vw, 1.25rem); line-height: 1.4; }
+.svm__list li { position: relative; padding-left: 1.1em; }
+.svm__list li::before { content: "–"; position: absolute; left: 0; }
+.svm__promo { margin-top: clamp(2rem, 1.8182rem + .8081vw, 2.5rem); padding: 22px 26px; border-radius: var(--radius-sm); background: var(--ink); color: var(--sage-2); }
+.svm__tag { font: 500 12px/1 var(--body); letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
+.svm__offer { margin: 10px 0 6px; font: 500 22px/1.25 var(--display); }
+.svm__offer span { white-space: nowrap; }
+.svm__offer s { font: 400 16px/1 var(--body); opacity: .6; white-space: nowrap; }
+.svm__promo p:last-child { font-size: 15px; line-height: 1.45; opacity: .86; }
+.svm__prices { display: grid; gap: clamp(.75rem, .6818rem + .303vw, .9375rem); margin-top: clamp(2rem, 1.8182rem + .8081vw, 2.5rem); }
+.svm__row { display: flex; justify-content: space-between; align-items: center; gap: clamp(2rem, 1.8182rem + .8081vw, 2.5rem); }
+.svm__row h3 { font: 500 clamp(1.05rem, .95rem + .4vw, 1.3rem)/1.4 var(--body); }
+.svm__row p { flex: none; font: 500 clamp(1.25rem, 1.0986rem + .6727vw, 1.6663rem)/1.4 var(--display); white-space: nowrap; }
+.svm__row s { margin-left: 8px; font: 400 15px/1 var(--body); opacity: .6; }
+.svm__note { margin-top: 18px; font-size: 14px; opacity: .75; }
+.svm__act { display: flex; gap: var(--gutter); margin-top: clamp(2rem, 1.8182rem + .8081vw, 2.5rem); }
+.svm__act .btn { flex: 1 1 50%; max-width: 50%; }
+.svm__act .btn:not(.btn--ghost) { --bg: var(--ink); --fg: var(--sage-2); }
+@media (max-width: 640px) { .svm__row { flex-direction: column; align-items: flex-start; gap: 4px; } .svm__act { flex-wrap: wrap; } .svm__act .btn { max-width: none; } }
