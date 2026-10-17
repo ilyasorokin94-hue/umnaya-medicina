@@ -645,7 +645,7 @@
   G.defaults({ ease: "power3.out" });
   ST.config({ ignoreMobileResize: true });
 
-  const heroIn = () => {
+  const heroIn = ({ bar = true } = {}) => {
     // шапка компьютера въезжает сверху и проявляется, линия под разделами убегает влево, как у Лава Дент (CSS);
     // класс ставим через кадр, чтобы браузер успел нарисовать начальное положение
     requestAnimationFrame(() => requestAnimationFrame(() => header?.classList.add("is-loaded")));
@@ -662,7 +662,7 @@
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
       .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h).filter((el) => !conv || !el.closest(".hero__actions")), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
-    if (!matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
+    if (bar && !matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     if (conv) {
       tl.fromTo(conv, { letterSpacing: "0.5em", autoAlpha: 0, filter: "blur(6px)" }, { letterSpacing: "-0.055em", autoAlpha: 1, filter: "blur(0px)", duration: 2, ease: "expo.out", clearProps: "letterSpacing,filter" }, 0.45);
       // кнопка приходит вместе с первой фразой, когда заголовок уже собрался
@@ -690,13 +690,23 @@
   if (intro && root.classList.contains("js-intro")) {
     lenis?.stop();
     try { sessionStorage.setItem("um2-intro", "1"); } catch (e) { /* приватный режим */ }
-    G.timeline({ onComplete: () => { intro.remove(); lenis?.start(); root.classList.remove("js-intro"); } })
-      .from(".intro__logo", { autoAlpha: 0, y: 16, duration: 0.8 })
-      .from(".intro__word", { autoAlpha: 0, duration: 0.8 }, 0.15)
-      .to(".intro__bar i", { scaleX: 1, duration: 0.9, ease: "power2.inOut" }, 0.15)
-      .to(".intro__in", { autoAlpha: 0, y: -20, duration: 0.4, ease: "power2.in" }, "+=0.05")
-      .to(intro, { yPercent: -100, duration: 1, ease: "power4.inOut" }, "-=0.1")
-      .add(heroIn, "-=0.7");
+    // логотип проявляется и перелетает на своё место в шапке; шапку ставим на место заранее, под заставкой,
+    // первый экран начинает появляться до того, как растает фон, чтобы его текст не мелькнул готовым
+    const mk = $(".intro__mark", intro), logo = $(".header .logo"), dst = $(".logo__img", logo || document);
+    const tl = G.timeline({ onComplete: () => { intro.remove(); lenis?.start(); root.classList.remove("js-intro"); } });
+    header?.classList.add("is-loaded");
+    if (logo) logo.style.visibility = "hidden";
+    const fly = () => {
+      const a = mk.getBoundingClientRect(), b = dst?.getBoundingClientRect();
+      return b && b.width && a.width ? { x: b.left - a.left, y: b.top - a.top, scale: b.width / a.width } : { autoAlpha: 0 };
+    };
+    tl.fromTo(mk, { y: 14 }, { clipPath: "inset(0 0% 0 0)", y: 0, duration: 1.1, ease: "power3.inOut" })
+      .add(() => { tl.to(mk, { ...fly(), duration: 1, ease: "power3.inOut" }, 1.45); }, 1.44)
+      .add(() => heroIn({ bar: false }), 1.4)
+      .to(".intro__bg", { autoAlpha: 0, duration: 0.9, ease: "power2.inOut" }, 1.6)
+      .add(() => { if (logo) logo.style.visibility = ""; }, 2.45)
+      .from(".header .logo__unit", { autoAlpha: 0, duration: 0.5 }, 2.45)
+      .to(mk, { autoAlpha: 0, duration: 0.25 }, 2.45);
   } else {
     intro?.remove();
     heroIn();

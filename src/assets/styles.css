@@ -86,13 +86,10 @@ p { margin: 0; }
 .demo-bar { position: relative; z-index: 60; background: var(--sage-2); color: var(--ink); font-size: 13px; line-height: 1.4; padding: 8px var(--gutter); text-align: center; }
 
 /* ---------- заставка ---------- */
-.intro { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; background: var(--ink); color: #fff; pointer-events: none; }
-.intro__in { display: grid; justify-items: center; gap: 22px; }
-.intro__logo { width: min(320px, 70vw); height: 72px; display: grid; place-items: center; }
-.intro__logo img { max-height: 72px; width: auto; filter: brightness(0) invert(1); }
-.intro__bar { width: min(240px, 50vw); height: 2px; background: var(--line-on-dark); overflow: hidden; }
-.intro__bar i { display: block; height: 100%; background: var(--green-hi); transform-origin: left; transform: scaleX(0); }
-.intro__word { font: 500 13px/1 var(--body); letter-spacing: .3em; text-transform: uppercase; color: var(--muted-on-dark); }
+/* логотип проявляется слева направо, перелетает в шапку, фон тает (app.js) */
+.intro { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; pointer-events: none; }
+.intro__bg { position: absolute; inset: 0; background: var(--ink); }
+.intro__mark { position: relative; width: min(560px, 80vw); height: auto; clip-path: inset(0 100% 0 0); transform-origin: 0 0; }
 html:not(.js-intro) .intro { display: none; }
 
 /* ---------- логотип ---------- */
@@ -417,8 +414,6 @@ html:not(.js-intro) .intro { display: none; }
 .js-anim [data-split] { visibility: hidden; }
 .js-anim [data-split][aria-label] { visibility: visible; }
 .header__cta { display: flex; align-items: center; gap: 16px; }
-.intro__logo .logo__text { display: none; color: #fff; font-size: 28px; }
-.intro__logo.is-fallback .logo__text { display: block; }
 .section__title { font-size: var(--fs-4); line-height: 1.1; letter-spacing: -.035em; }
 .faq > *, .place > *, .split > * { min-width: 0; }
 
