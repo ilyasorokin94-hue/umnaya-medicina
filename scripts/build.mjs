@@ -567,7 +567,7 @@ ${svlBlock(p, depth)}
 
 ${place()}
 </main>` + footer(depth) + `
-<script src="assets/rvm.js?v=${V.rvm}" defer></script>` + end;
+<script src="assets/rvm.js?v=${V.rvm}" async></script>` + end;
 }
 
 // ---------- страница услуги ----------

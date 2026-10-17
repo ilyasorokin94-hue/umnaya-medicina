@@ -22,7 +22,7 @@ export const size = (q) => (q.length > 110 ? "long" : q.length < 60 ? "short" : 
 // Вариант 1. Стопка карточек: верхнюю смахивают пальцем, она улетает и уходит под низ стопки
 const TONES = ["ink", "green", "sage", "white"];
 export const reviewsMobile = (reviews, esc) => `<div class="rvm rvm--stack">
-    <div class="rvs" aria-label="Отзывы пациентов">
+    <div class="rvs" role="group" aria-label="Отзывы пациентов">
       ${ORDER.map((i, n) => `<figure class="rvs__card rvs__card--${size(reviews[i])}" data-tone="${TONES[n % TONES.length]}"><blockquote>${quote(reviews, i, esc, "b")}</blockquote></figure>`).join("\n      ")}
     </div>
     <div class="rvs__bar"><p class="rvs__hint">Смахните отзыв, чтобы прочитать следующий</p><button class="btn btn--sm rvs__next" type="button">Следующий</button></div>
