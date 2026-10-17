@@ -27,6 +27,12 @@ const SITE = process.env.SITE_URL || "https://umnaya-stomatologiya.ru"; // до�
 // PUBLISH=1 SITE_URL=https://… npm run build — сборка для боевого домена: страницы открыты поисковикам, robots.txt
 // с картой сайта, без полосы «демонстрационный макет». По умолчанию собирается демо: noindex и полоса сверху
 const PUBLISH = process.env.PUBLISH === "1";
+if (PUBLISH && !process.env.SITE_URL) throw new Error("PUBLISH=1 собирается только с SITE_URL боевого домена");
+// один постоянный @id клиники: на него ссылаются разметка главной и подвал на всех страницах
+const CLINIC_ID = `${SITE}/#clinic`;
+// картинка для превью ссылок (Telegram, VK, мессенджеры): ресепшен с вывеской, 1200×630, её делает сборка из old-9
+const OG_IMAGE = "images/og/clinic.jpg";
+const OG_FROM = "images/old/old-9.jpg";
 
 // неразрывные пробелы в ценах и номерах: «КТ от 2 000 ₽» не переносится по частям
 const nb = (t) => t.replace(/(\d) (?=\d{3}(?!\d))/g, "$1\u00a0").replace(/ ₽/g, "\u00a0₽").replace(/(^|\s)(от|до) (?=\d)/g, "$1$2\u00a0");
@@ -113,9 +119,15 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <meta name="robots" content="${PUBLISH ? "index, follow" : "noindex, nofollow"}">
 <link rel="canonical" href="${SITE}${canonical}">
 <link rel="icon" type="image/svg+xml" href="${p}images/brand/favicon.svg">
-<meta property="og:type" content="website">
+<meta property="og:type" content="${/^\/vrachi\/[^/]+$/.test(canonical) ? "profile" : "website"}">
+<meta property="og:site_name" content="Умная Медицина. Стоматология">
+<meta property="og:url" content="${SITE}${canonical}">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
+<meta property="og:image" content="${SITE}/${OG_IMAGE}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Ресепшен стоматологии «Умная Медицина» в Удельной">
 <meta property="og:locale" content="ru_RU">
 <meta name="theme-color" content="#0c2410">
 <link rel="apple-touch-icon" href="${p}images/brand/apple-touch-icon.png">
@@ -309,20 +321,20 @@ function footer(depth) {
   </div>
   <div class="fstage">
     <div class="fstage__pin" aria-hidden="true"><div class="fstage__logo footer__big">${logoImg(depth, false).replace('class="logo__img"', 'class="footer__logo"')}<span class="footer__word">Умная Медицина</span></div></div>
-    <div class="fstage__info">
+    <div class="fstage__info" itemscope itemtype="https://schema.org/Dentist" itemid="${CLINIC_ID}">
       <div class="fstage__group">
         <h3>Контакты</h3>
-        <a class="fstage__big" href="${clinic.phoneHref}">${esc(clinic.phone)}</a>
-        <a class="fstage__big fstage__big--mail" href="mailto:${clinic.email}">${esc(clinic.email)}</a>
+        <a class="fstage__big" href="${clinic.phoneHref}"><span itemprop="telephone">${esc(clinic.phone)}</span></a>
+        <a class="fstage__big fstage__big--mail" href="mailto:${clinic.email}"><span itemprop="email">${esc(clinic.email)}</span></a>
       </div>
       <div class="fstage__group">
         <h3>Адрес</h3>
-        <p class="fstage__addr">${esc(clinic.address)}</p>
+        <p class="fstage__addr" itemprop="address" itemscope itemtype="https://schema.org/PostalAddress"><span itemprop="addressRegion">${esc(A.region)}</span>, ${esc(A.district)}, <span itemprop="addressLocality">${esc(A.locality)}</span>, <span itemprop="streetAddress">${esc(A.street)}</span><meta itemprop="postalCode" content="${A.postal}"><meta itemprop="addressCountry" content="RU"></p>
         <p class="fstage__links"><a href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}>Маршрут в Яндекс Картах</a><a href="${clinic.gis}"${ext}>Открыть в 2ГИС</a></p>
       </div>
       <div class="fstage__group">
         <h3>Часы работы</h3>
-        <p class="fstage__text">${esc(clinic.hours)}</p>
+        <p class="fstage__text"><meta itemprop="openingHours" content="Mo-Su 09:00-21:00"><span itemprop="geo" itemscope itemtype="https://schema.org/GeoCoordinates"><meta itemprop="latitude" content="${lat}"><meta itemprop="longitude" content="${lon}"></span>${esc(clinic.hours)}</p>
       </div>
       <nav class="fstage__group" aria-label="Услуги">
         <h3>Услуги</h3>
@@ -340,6 +352,7 @@ function footer(depth) {
           <a href="https://um-med.com/vacancies.html"${ext}>Вакансии</a>
         </p>
       </div>
+      <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="${SITE}/">
     </div>
   </div>
   <div class="footer__legal">
@@ -353,11 +366,19 @@ ${modals(depth)}`;
 const end = `\n</body>\n</html>\n`;
 
 // ---------- разметка schema.org ----------
+// данные совпадают с видимым текстом (подвал, «Контакты») и карточками клиники; без aggregateRating и review
+const A = clinic.addr;
+if ([A.region, A.district, A.locality, A.street].join(", ") !== clinic.address) throw new Error("clinic.addr не совпадает с clinic.address");
 const dentistLd = {
-  "@context": "https://schema.org", "@type": "Dentist", name: "Умная Медицина. Стоматология", telephone: clinic.phone, email: clinic.email, url: SITE,
-  address: { "@type": "PostalAddress", streetAddress: "ул. Громова, 10/2", addressLocality: "пгт Удельная", addressRegion: "Московская область", postalCode: "140140", addressCountry: "RU" },
+  "@context": "https://schema.org", "@type": "Dentist", "@id": CLINIC_ID, name: "Умная Медицина. Стоматология", url: `${SITE}/`,
+  telephone: clinic.phone, email: clinic.email, image: `${SITE}/${OG_IMAGE}`,
+  address: { "@type": "PostalAddress", streetAddress: A.street, addressLocality: A.locality, addressRegion: A.region, postalCode: A.postal, addressCountry: "RU" },
   geo: { "@type": "GeoCoordinates", latitude: clinic.geo.lat, longitude: clinic.geo.lon },
+  hasMap: clinic.yandex,
   openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], opens: "09:00", closes: "21:00" }],
+  // откуда ездят: те же места, что в строке «К нам ездят из …» блока «Контакты» (v2.way.towns)
+  areaServed: ["Удельная", "Жуковский", "Раменское", "Быково", "Ильинский", "Красково", "Малаховка", "Островцы", "Люберцы", "Балашиха"],
+  sameAs: [clinic.yandex, clinic.gis, clinic.prodoctorov, clinic.vk],
   priceRange: "₽₽",
 };
 const crumbsLd = (items) => ({
@@ -795,7 +816,7 @@ function pageBooking() {
     services: homeOrder.map((k) => ({ slug: k, title: svc[k].title, short: svc[k].short, from: svc[k].from })),
     doctors: doctors.map((d) => ({ id: d.id, short: d.short, role: d.role, tags: d.tags, photo: pick(docPhoto(d), 0).src || null, initials: initialsOf(d) })),
   };
-  return head({ title: "Записаться на приём | Умная Медицина. Стоматология", desc: "Онлайн-запись в стоматологию «Умная Медицина»: выберите услугу, врача и удобное время.", canonical: "/zapis", depth, page: "booking" }) + `
+  return head({ title: "Записаться на приём | Умная Медицина. Стоматология", desc: "Онлайн-запись в стоматологию «Умная Медицина»: выберите услугу, врача и удобное время.", canonical: "/zapis", depth, page: "booking", jsonld: [crumbsLd([["zapis", "Записаться на приём"]])] }) + `
 <div class="booking" id="booking">
   <main class="booking__main" id="main">
     <div class="booking__top">
@@ -847,15 +868,16 @@ function pageBooking() {
       </section>
     </div>
   </main>
-  <aside class="booking__aside on-dark" aria-label="Ваша запись">
+  <aside class="booking__aside on-dark" aria-label="Ваша запись" itemscope itemtype="https://schema.org/Dentist" itemid="${CLINIC_ID}">
     <span class="label label--light">Ваша запись</span>
     <dl class="summary">
       <div><dt>Услуга</dt><dd data-sum="service" class="is-empty">не выбрано</dd></div>
       <div><dt>Врач</dt><dd data-sum="doctor" class="is-empty">не выбрано</dd></div>
       <div><dt>Дата и время</dt><dd data-sum="date" class="is-empty">не выбрано</dd></div>
-      <div><dt>Адрес</dt><dd>${esc(clinic.addressShort)}</dd></div>
+      <div><dt>Адрес</dt><dd itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">${esc(clinic.addressShort)}<meta itemprop="streetAddress" content="${esc(clinic.addr.street)}"><meta itemprop="addressLocality" content="${esc(clinic.addr.locality)}"><meta itemprop="addressRegion" content="${esc(clinic.addr.region)}"><meta itemprop="postalCode" content="${clinic.addr.postal}"><meta itemprop="addressCountry" content="RU"></dd></div>
     </dl>
-    <p class="note">Есть вопросы? Позвоните: <a href="${clinic.phoneHref}" style="color:#fff">${esc(clinic.phone)}</a>, ежедневно с 9:00 до 21:00.</p>
+    <p class="note">Есть вопросы? Позвоните: <a href="${clinic.phoneHref}" style="color:#fff"><span itemprop="telephone">${esc(clinic.phone)}</span></a>, ежедневно с 9:00 до 21:00.<meta itemprop="openingHours" content="Mo-Su 09:00-21:00"></p>
+    <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="${SITE}/">
   </aside>
 </div>
 <script type="application/json" id="bdata">${JSON.stringify(bdata).replace(/</g, "\\u003c")}</script>` + end;
@@ -870,7 +892,11 @@ mkdirSync(path.join(dist, "assets", "vendor"), { recursive: true });
 // Только в тексте между тегами, без скриптов и стилей.
 const typo = (html) => html.replace(/(<(script|style)\b[\s\S]*?<\/\2>)|>([^<]+)</g, (m, block, _t, text) => block || ">" + text.replace(/(?<=^|[\s(«])([А-Яа-яЁё]{1,2}) (?=\S|$)/g, "$1\u00a0") + "<");
 const pages = [];
-const out = (f, html) => { if (f.endsWith(".html")) pages.push((html = typo(html))); writeFileSync(path.join(dist, f), html); };
+const urls = new Map(); // адрес страницы на сайте → её html, для карты сайта
+const out = (f, html) => {
+  if (f.endsWith(".html")) { pages.push((html = typo(html))); urls.set("/" + f.replace(/(^|\/)index\.html$/, "").replace(/\.html$/, ""), html); }
+  writeFileSync(path.join(dist, f), html);
+};
 out("index.html", pageHome());
 out("ceny.html", pagePrices());
 out("vrachi.html", pageDoctors());
@@ -904,14 +930,57 @@ const jobs = [];
 for (const rel of refs) {
   const to = path.join(dist, rel), job = webpJobs.get(rel);
   if (job) jobs.push(toWebp(job.from, to, job.width));
-  else if (rel.endsWith("apple-touch-icon.png")) continue;
+  else if (rel.endsWith("apple-touch-icon.png") || rel === OG_IMAGE) continue;
   else if (local(rel)) { mkdirSync(path.dirname(to), { recursive: true }); copyFileSync(path.join(root, "src", rel), to); }
   else console.warn("нет картинки:", rel);
 }
 // значок для экрана «Домой» на iPhone из favicon.svg
 if (sharp) jobs.push(sharp(path.join(root, "src/images/brand/favicon.svg"), { density: 300 }).resize(180, 180).flatten({ background: "#ffffff" }).png().toFile(path.join(dist, "images/brand/apple-touch-icon.png")));
+// картинка для превью ссылок: 1200×630 из фото ресепшена (без sharp копируется как есть)
+mkdirSync(path.join(dist, path.dirname(OG_IMAGE)), { recursive: true });
+if (sharp) jobs.push(sharp(path.join(root, "src", OG_FROM)).resize(1200, 630, { fit: "cover" }).jpeg({ quality: 82, mozjpeg: true }).toFile(path.join(dist, OG_IMAGE)));
+else copyFileSync(path.join(root, "src", OG_FROM), path.join(dist, OG_IMAGE));
 await Promise.all(jobs);
-out("robots.txt", PUBLISH ? `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n` : "User-agent: *\nDisallow: /\n");
+
+// robots.txt: демо закрыто целиком. Боевой сайт открыт всем; YandexAdditional и YandexAdditionalBot (ответы Алисы и Нейропоиска)
+// не слушают группы «*» и «Yandex», поэтому у них своя группа. Отдельных разрешений и запретов для других нейросетей нет
+out("robots.txt", PUBLISH ? `User-agent: *\nAllow: /\n\nUser-agent: Yandex\nAllow: /\n\nUser-agent: YandexAdditional\nUser-agent: YandexAdditionalBot\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n` : "User-agent: *\nDisallow: /\n");
 out(".nojekyll", "");
-out("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${["/", "/ceny", "/vrachi", "/zapis", ...services.map((s) => `/uslugi/${s.slug}`), ...doctors.map((d) => `/vrachi/${d.id}`)].map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>2026-10-15</lastmod></url>`).join("\n")}\n</urlset>\n`);
+
+// карта сайта с честной датой: lastmod меняется, только когда меняется содержание страницы (заголовок, описание, разметка, текст),
+// а не вёрстка или версии файлов. Отпечатки и даты хранятся в scripts/seo-state.json, обновляет их только боевая сборка:
+// она же складывает новые, изменённые и удалённые адреса в indexnow-pending.json, их после выкладки отправляет scripts/indexnow.mjs
+const stateFile = path.join(root, "scripts", "seo-state.json");
+const state = existsSync(stateFile) ? JSON.parse(readFileSync(stateFile, "utf8")) : {};
+// домен вырезаем, чтобы сборка на другой адрес не сбрасывала даты; данные в application/json (списки страницы записи) учитываем
+const fingerprint = (page) => {
+  const html = page.split(SITE).join("");
+  const ld = [...html.matchAll(/<script type="application\/(?:ld\+)?json"[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join("");
+  const meta = [...html.matchAll(/<(?:title>([^<]*)|meta name="description" content="([^"]*))/g)].map((m) => m[1] ?? m[2]).join("|");
+  const text = html.slice(html.indexOf("<body")).replace(/<div class="demo-bar">[\s\S]*?<\/div>/, "").replace(/<(script|style)\b[\s\S]*?<\/\1>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return hash(meta + ld + text);
+};
+const today = process.env.BUILD_DATE || new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Moscow" });
+const fresh = {}, changed = [];
+for (const [u, html] of urls) {
+  const fp = fingerprint(html), was = state[u];
+  fresh[u] = was && was.fp === fp ? was : { fp, lastmod: today };
+  if (fresh[u] !== was) changed.push(u);
+}
+const removed = Object.keys(state).filter((u) => !urls.has(u));
+out("sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...urls.keys()].map((u) => `  <url><loc>${SITE}${u}</loc>${PUBLISH || state[u] ? `<lastmod>${(PUBLISH ? fresh : state)[u].lastmod}</lastmod>` : ""}</url>`).join("\n")}\n</urlset>\n`);
+if (PUBLISH) {
+  writeFileSync(stateFile, JSON.stringify(fresh, null, 1) + "\n");
+  const pend = path.join(root, "indexnow-pending.json");
+  const was = existsSync(pend) ? JSON.parse(readFileSync(pend, "utf8")) : null;
+  // IndexNow принимает адреса только своего домена: ожидающие от другого домена выбрасываем
+  const prev = was && was.site === SITE ? was.urls : [];
+  const list = [...new Set([...prev, ...[...changed, ...removed].map((u) => SITE + u)])];
+  if (list.length) writeFileSync(pend, JSON.stringify({ site: SITE, urls: list }, null, 1) + "\n");
+  else if (was) rmSync(pend);
+  // ключ IndexNow лежит в корне сайта файлом <ключ>.txt
+  const key = process.env.INDEXNOW_KEY;
+  if (key) { if (!/^[a-zA-Z0-9-]{8,128}$/.test(key)) throw new Error("INDEXNOW_KEY: 8–128 символов a-z, A-Z, 0-9, «-»"); out(`${key}.txt`, key); }
+  console.log(`Карта сайта: изменились ${changed.length}, удалены ${removed.length}; для IndexNow ждут отправки ${list.length}`);
+}
 console.log("Собрано страниц:", 3 + services.length + doctors.length, "→", dist);

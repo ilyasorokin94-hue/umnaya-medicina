@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "preview": "node scripts/serve.mjs"
+    "preview": "node scripts/serve.mjs",
+    "indexnow": "node scripts/indexnow.mjs"
   },
   "dependencies": {
     "gsap": "^3.13.0",
