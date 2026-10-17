@@ -10,6 +10,8 @@
   const G = window.gsap, ST = window.ScrollTrigger;
   const anim = !!(G && ST) && !reduce;
   window.__umReady = true;
+  // страховка: если первый экран так и не запустился (или скрипт ниже упал), шапка компьютера всё равно появляется
+  setTimeout(() => $(".header")?.classList.add("is-loaded"), 6000);
   if (!anim) { root.classList.remove("js-anim", "js-intro"); root.classList.add("no-anim"); }
 
   // ---------- разбивка текста для анимаций ----------
@@ -99,8 +101,6 @@
 
   // ---------- шапка: всегда на месте, уезжает вверх ровно вместе с демо-полосой ----------
   const header = $(".header");
-  // страховка: если первый экран так и не запустился, шапка компьютера всё равно появляется
-  setTimeout(() => header?.classList.add("is-loaded"), 6000);
   const demo = $(".demo-bar");
   let demoH = 0;
   const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; root.style.setProperty("--demo-h", demoH + "px"); hdrTop = null; onScrollHeader(); };
@@ -124,7 +124,9 @@
     const seen = new Set();
     const io = new IntersectionObserver((ents) => {
       ents.forEach((en) => (en.isIntersecting ? seen.add(en.target) : seen.delete(en.target)));
-      navSecs.forEach(([li, s]) => li.classList.toggle("is-active", seen.has(s)));
+      // светлый один раздел: на стыке двух берём нижний
+      const on = navSecs.filter(([, s]) => seen.has(s)).pop();
+      navSecs.forEach(([li]) => li.classList.toggle("is-active", li === on?.[0]));
     }, { rootMargin: "-45% 0px -50% 0px" });
     navSecs.forEach(([, s]) => io.observe(s));
   } else if (!navSecs.length) {
@@ -817,6 +819,15 @@
     pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
     return () => { ro.disconnect(); G.set([items, img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" }); };
   });
+  // то же для старых браузеров: окно ведёт по широким фото ленты (вход, ресепшен, врачи) в тех же отрезках прокрутки, что в CSS
+  if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px) and (max-aspect-ratio: 4 / 5)", () => {
+    const spacer = $(".ptour__spacer", pt);
+    const at = (k) => () => `top+=${k * (spacer.offsetHeight - innerHeight)} top`;
+    const ranges = [[() => `top bottom-=${0.4 * innerHeight}`, at(0.25)], [at(0.11), at(0.56)], [at(0.44), at(0.89)]];
+    const rails = $$(".ptour__items > .ptour__item", pt).slice(1, 4).map((it) => $(".ptour__rail", it));
+    rails.forEach((r, i) => r && G.fromTo(r, { xPercent: 0 }, { xPercent: -100, ease: "none", scrollTrigger: { trigger: spacer, start: ranges[i][0], end: ranges[i][1], scrub: true, invalidateOnRefresh: true } }));
+    return () => G.set(rails.filter(Boolean), { clearProps: "transform" });
+  });
   mm.add("(max-width: 760px)", () => {
     const track = $(".feat__track");
     if (!track) return;
@@ -854,7 +865,8 @@
     ST.addEventListener("refreshInit", fill);
     G.fromTo(row, { x: () => (d < 0 ? 0 : -dist()) }, { x: () => (d < 0 ? -dist() : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
   };
-  $$(".rv__row").forEach(ribbon);
+  // на телефоне вместо лент свой блок отзывов (assets/rvm.js)
+  mm.add("(min-width: 761px)", () => $$(".rv__row").forEach(ribbon));
   mm.add("(min-width: 761px)", () => $$(".tour__row").forEach(ribbon));
 
   // телефон: фото клиники двумя лентами. Ленты сами медленно плывут навстречу друг другу по времени, а не от прокрутки,
