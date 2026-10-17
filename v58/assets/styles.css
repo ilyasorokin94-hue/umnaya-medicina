@@ -1800,7 +1800,7 @@ html:not(.js-intro) .intro { display: none; }
 @media (max-width: 760px) {
   .tour { overflow: clip; }
   .tour > .tour__pin, .tour > .tour__lead, .tour > .tour__rows { display: none; }
-  .ptour { display: block; position: relative; timeline-scope: --pt-car, --pt-end; }
+  .ptour { display: block; position: relative; timeline-scope: --pt-end; }
   .ptour__car { position: relative; height: 100svh; overflow-x: clip; }
   .ptour__items { height: 100%; }
   .ptour__item { display: none; }
@@ -1832,14 +1832,16 @@ html:not(.js-intro) .intro { display: none; }
      в Safari с развёрнутой панелью 100vh уходит под неё, и подписи прятались под нижней панелью сайта */
   .js-anim .ptour { --pt-s: 100vh; }
   .js-anim .tour { scroll-margin-top: calc(-1 * (var(--header-h) + 12px)); }
-  .js-anim .ptour__car { position: sticky; top: 0; height: 100vh; width: 100vw; }
-  .js-anim .ptour__items { display: flex; width: 500vw; margin-left: -50vw; will-change: transform; }
+  /* лента листается шагами (Ilya 17.10: тянуть фото через весь экран тяжело): шаг ставит app.js по прокрутке или свайпу вбок,
+     фото доезжает само за .9s силами компоновщика; вертикаль отдаём браузеру, вбок ведёт палец */
+  .js-anim .ptour__car { position: sticky; top: 0; height: 100vh; width: 100vw; touch-action: pan-y pinch-zoom; }
+  .js-anim .ptour__items { display: flex; width: 500vw; margin-left: -50vw; transform: translate3d(calc(var(--pt-i, 0) * -75vw), 0, 0); transition: transform .9s cubic-bezier(.1, .75, .25, 1); will-change: transform; }
   .js-anim .ptour__item { display: flex; position: relative; flex: 0 0 100vw; width: 100vw; height: 100vh; margin-left: -25vw; padding-bottom: calc(100vh - var(--pt-s)); align-items: center; justify-content: center; overflow: clip; }
   .js-anim .ptour__img { transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(100vh - var(--pt-s) * .9) round 24px); }
   .js-anim .ptour__shade { opacity: 0; }
   .js-anim .ptour__cap { display: block; position: absolute; left: 13.75%; right: 13.75%; top: calc(var(--pt-s) * .79 + 12px); margin: 0; font: 400 14px/1.35 var(--body); color: var(--muted-on-dark); }
-  /* отступ шапки (scroll-padding) не должен сдвигать шкалы: лента едет ровно с момента, как встала */
-  .js-anim .ptour__spacer { display: block; height: 400vh; margin-top: -100vh; view-timeline: --pt-car block; view-timeline-inset: 0px; }
+  /* закреплённая лента занимает полтора экрана прокрутки (было три): шаг на 45vh, первый уже через 18vh */
+  .js-anim .ptour__spacer { display: block; height: 250vh; margin-top: -100vh; }
   /* после раскрытия кабинета пауза, как у Лава Дент (их отступ 3xl), потом поднимаются фото и проявляется заголовок */
   .js-anim .ptour__after { padding-top: calc(50vh + min(clamp(96px, 87.27px + 2.4242vw, 120px), 11.5vh)); view-timeline: --pt-end block; view-timeline-inset: 0px; }
   .js-anim .ptour__text { margin-top: 40svh; }
@@ -1855,14 +1857,12 @@ html:not(.js-intro) .intro { display: none; }
 }
 @supports (animation-timeline: view()) and (timeline-scope: --a) {
   @media (max-width: 760px) {
-    .js-anim .ptour__items { animation: pt-move linear forwards; animation-timeline: --pt-car; animation-range: contain 0% contain 100%; }
     .js-anim .ptour__item--main .ptour__img { animation: pt-zoom linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
     .js-anim .ptour__item--main .ptour__shade { animation: pt-shade ease-in-out forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
     .js-anim .ptour__item--left, .js-anim .ptour__item--right { animation: pt-out linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
     .js-anim .ptour__fig[data-par] { animation: pt-par linear both; animation-timeline: view(block 0px); }
   }
 }
-@keyframes pt-move { to { transform: translate(calc(-100% + 275vw)); } }
 @keyframes pt-zoom { to { clip-path: inset(0 round 0); transform: scale(1.1); } }
 @keyframes pt-shade { to { opacity: 1; } }
 @keyframes pt-out { to { transform: translate(var(--pt-x)); } }
