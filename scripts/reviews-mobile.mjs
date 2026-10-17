@@ -19,4 +19,12 @@ export const quote = (reviews, i, esc, tag = "mark") => {
 };
 export const size = (q) => (q.length > 110 ? "long" : q.length < 60 ? "short" : "mid");
 
-export const reviewsMobile = () => "";
+// Вариант 5. Мозаика: карточки разного размера и цвета в две колонки, главная фраза подчёркнута маркером
+const TONES = ["ink", "green", "sage", "white"];
+const SHOW = 10;
+export const reviewsMobile = (reviews, esc) => `<div class="rvm rvm--mosaic">
+    <div class="rvx">
+      ${ORDER.map((i, n) => `<figure class="rvx__card rvx__card--${size(reviews[i])}${reviews[i].length > 110 ? " rvx__card--wide" : ""}" data-tone="${TONES[n % TONES.length]}"${n >= SHOW ? " hidden" : ""}><blockquote>${quote(reviews, i, esc)}</blockquote></figure>`).join("\n      ")}
+    </div>
+    <button class="btn btn--ghost rvx__more" type="button">Ещё отзывы</button>
+  </div>`;
