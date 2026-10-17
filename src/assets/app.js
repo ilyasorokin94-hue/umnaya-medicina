@@ -1035,22 +1035,28 @@
     return () => { wayTrig = null; way.classList.remove("is-pinned"); G.set(wayShots, { clearProps: "clipPath" }); G.set(imgs, { clearProps: "transform" }); };
   });
 
-  // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте (сдвиг вверх
-  // ровно гасит прокрутку) и открывается из-под неё. На компьютере он сначала во всю ширину, в конце этого
-  // отрезка уменьшается до левой колонки и дальше липнет под шапкой, а справа проезжают контакты
+  // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте и открывается из-под неё.
+  // На компьютере он сначала во всю ширину (масштаб --fl-s), в конце отрезка уменьшается до левой колонки и дальше
+  // липнет под шапкой, а справа проезжают контакты. Само движение задано в CSS (на компьютере view-timeline, на телефоне
+  // sticky), здесь только масштаб; в браузерах без view-timeline на компьютере то же движение повторяет GSAP
   const fst = $(".fstage");
   if (fst) {
     const pin = $(".fstage__pin", fst), logo = $(".fstage__logo", fst);
+    const cssTL = !!window.CSS?.supports?.("animation-timeline: scroll()") && CSS.supports("animation-range: 0% 100%");
     const vmin = () => Math.min(innerWidth, innerHeight);
-    const reveal = (big) => {
-      const st = { trigger: fst, start: "top bottom", end: () => "+=" + Math.round(vmin() * 1.5), scrub: true, invalidateOnRefresh: true };
-      const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: st })
-        .fromTo(logo, { y: () => -Math.round(vmin() * 1.5) }, { y: 0, duration: 1 }, 0);
-      if (big) tl.fromTo(logo, { scale: () => fst.clientWidth / pin.clientWidth }, { scale: 1, duration: 0.4, ease: "power1.out", immediateRender: true }, 0.6);
+    const setS = () => fst.style.setProperty("--fl-s", (fst.clientWidth / pin.clientWidth).toFixed(4));
+    mm.add("(min-width: 1025px)", () => {
+      setS();
+      addEventListener("resize", setS);
+      return () => { removeEventListener("resize", setS); fst.style.removeProperty("--fl-s"); };
+    });
+    // компьютер без view-timeline (Firefox): прокрутку там ведёт Lenis, поэтому GSAP успевает за ней
+    if (!cssTL) mm.add("(min-width: 1025px)", () => {
+      const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: fst, start: "top bottom", end: () => "+=" + Math.round(vmin() * 1.5), scrub: true, invalidateOnRefresh: true } })
+        .fromTo(logo, { y: () => -Math.round(vmin() * 1.5) }, { y: 0, duration: 1 }, 0)
+        .fromTo(logo, { scale: () => fst.clientWidth / pin.clientWidth }, { scale: 1, duration: 0.25, immediateRender: true }, 0.75);
       return () => { tl.scrollTrigger?.kill(); tl.kill(); G.set(logo, { clearProps: "transform" }); };
-    };
-    mm.add("(min-width: 1025px)", () => reveal(true));
-    mm.add("(max-width: 1024px)", () => reveal(false));
+    });
   }
 
   // пересчитываем позиции, когда догрузились шрифты и картинки (до того, как пользователь доскроллил)
