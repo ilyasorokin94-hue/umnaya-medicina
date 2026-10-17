@@ -8,7 +8,7 @@ import { transformSync } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 import { reviewsMobile } from "./reviews-mobile.mjs";
-import { servicePages, servicePriceDate, servicePriceHold } from "../src/service-pages.mjs";
+import { servicePages, servicePriceDate, servicePriceHold, geoHold } from "../src/service-pages.mjs";
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
@@ -509,7 +509,7 @@ function place(o = {}) {
       ${o.title ? `<h2 id="ct-title" class="way__h">${esc(o.title)}</h2>
       <p class="way__addr">${esc(W.title)}</p>` : `<span class="label way__label">${esc(W.label)}</span>
       <h2 id="ct-title" class="way__addr" data-split>${esc(W.title)}</h2>`}
-      <p class="way__where">${esc(W.where)}</p>
+      <p class="way__where">${esc(o.where || W.where)}</p>
       <div class="way__now"><p class="way__status" data-open-status>${esc(clinic.hours)}</p><a class="way__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a></div>
       <ul class="way__facts">${W.facts.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
       <p class="way__towns">${esc(W.towns)}</p>
@@ -779,7 +779,7 @@ function spHref(url, p) {
 
 // пометки в квадратных скобках: места под вёрстку убираем, вопросы к клинике показываем плашкой
 const spDrop = /^(КНОПК|Кнопк|ТЕЛЕФОН|ФОРМА|МЕССЕНДЖЕР|КАРТА|КВИЗ|ОГЛАВЛЕНИЕ|СЛУЖЕБНОЕ|ВИДЕО|ФОТО ВРАЧ)/;
-const spAsk = [[/^(УТОЧНИТЬ|ДАТА)/, "уточняем у клиники"], [/^СОГЛАСОВАТЬ/, "согласуем с врачом"], [/^ОТЗЫВ/, "отзыв пациента"], [/^КЕЙС/, "пример работы"], [/^(ФОТО|СХЕМА|ИЛЛЮСТРАЦ)/, "фото или схема"], [/^ВРАЧ/, "врач клиники"]];
+const spAsk = [[/^ТЕКСТ/, "текст в работе"], [/^(УТОЧНИТЬ|ДАТА)/, "уточняем у клиники"], [/^СОГЛАСОВАТЬ/, "согласуем с врачом"], [/^ОТЗЫВ/, "отзыв пациента"], [/^КЕЙС/, "пример работы"], [/^(ФОТО|СХЕМА|ИЛЛЮСТРАЦ)/, "фото или схема"], [/^ВРАЧ/, "врач клиники"]];
 // суммы в подсказке плашки не показываем: там бывают спорные цены и итоги «под ключ»
 const spTag = (label, note, page) => {
   spPending.push(`${page.slug}: ${note}`);
@@ -797,6 +797,7 @@ function spMd(text, page, p) {
     return put(spTag(label, note, page));
   });
   for (const [re, note] of servicePriceHold) s = s.replace(re, (m) => m.replace(/(?:от )?\d{1,3}(?: \d{3})* ₽$/, () => put(spTag("цена уточняется", note, page))));
+  if (page.geo) s = geoMask(s, () => put(spTag("уточняем", geoHold.note, page)));
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, t, url) => {
     const h = spHref(url, p);
     return put(h ? `<a href="${h}">${esc(t)}</a>` : esc(t));
@@ -806,6 +807,15 @@ function spMd(text, page, p) {
   return s.replace(/\u0001(\d+)\u0002/g, (m, i) => keep[i]).replace(/·(\s*·)+/g, "·").replace(/(\s*·\s*)+$/, "").replace(/^(\s*·\s*)+/, "").trim();
 }
 const spPlain = (t) => t.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*/g, "").replace(/\s+→\s+/g, ", ").replace(/\s*\n\s*/g, " ").trim();
+// карточка адреса на гео-странице без «5 минут от Жуковского», пока время в пути не подтвердил Ilya
+const geoWhere = v2.way.where.replace(/\s*\d+ минут[^.]*\./, "").trim();
+// гео-страницы: километры всегда, минуты — когда рядом речь о дороге (правило в src/service-pages.mjs)
+const geoMask = (t, to) => t.replace(geoHold.km, to).replace(geoHold.min, (m, off, str) => {
+  const end = str.slice(off + m.length).search(/[.!?;\n]/);
+  const sentence = str.slice(Math.max(str.lastIndexOf(".", off), str.lastIndexOf("\n", off)) + 1, end < 0 ? str.length : off + m.length + end);
+  return geoHold.road.test(sentence) ? to() : m;
+});
+const geoHeld = (t) => geoMask(t, () => "\u0003") !== t;
 const spHasAsk = (t) => /\[[А-ЯЁ][А-ЯЁ]{2,}/.test(t) || servicePriceHold.some(([re]) => { re.lastIndex = 0; return re.test(t); });
 // точки-разделители «·» не показываем (правило Ilya: без декоративных точек). Строка плашек («Яндекс Карты 5,0 · рассрочка · налоговый вычет»)
 // убирается, как «Плашки:» на других страницах; «Проверил: … · Обновлено …» — через точку; в остальном тексте — запятая
@@ -889,10 +899,11 @@ function spSection(s, i, page, depth, ids) {
   const kind = s.nodes.some(isPriceTable) && !ids.has("ceny") ? "prices"
     : /^(Вопросы|Частые вопросы)/.test(t) ? "faq"
     : /этап/i.test(t) && s.nodes.some((n) => n.t === "ol" && n.items.every((x) => x.length <= 520)) ? "steps"
-    : /^Как добраться/.test(t) ? "place"
+    : /^Как добраться/.test(t) || (page.geo && /добраться|дорог|маршрут|ехать/i.test(t)) ? "place"
     : /отзыв/i.test(t) ? "reviews"
     : /врач|имплантолог|ортопед/i.test(t) && /\(\/vrachi\//.test(JSON.stringify(s.nodes)) ? "doctors"
     : "text";
+  s.kind = kind;
   const id = s.id || { prices: "ceny", faq: "voprosy", steps: "etapy", place: "kak-dobratsya", reviews: "otzyvy", doctors: "vrachi" }[kind] || `r${i + 1}`;
   if (ids.has(id)) throw new Error(`${page.slug}: два раздела с якорем #${id}`);
   ids.add(id);
@@ -937,7 +948,7 @@ function spSection(s, i, page, depth, ids) {
         else if (qa.length) qa[qa.length - 1].a.push(n);
         else lead.push(n);
       }
-      page.faq = qa.filter((x) => !x.a.some((n) => spHasAsk(n.text || JSON.stringify(n)))).map((x) => [spPlain(x.q), x.a.map((n) => spPlain(n.text || (n.items || []).join("; "))).join(" ")]);
+      page.faq = qa.filter((x) => ![x.q, ...x.a.map((n) => n.text || JSON.stringify(n))].some((t) => spHasAsk(t) || (page.geo && geoHeld(t)))).map((x) => [spPlain(x.q), x.a.map((n) => spPlain(n.text || (n.items || []).join("; "))).join(" ")]);
       return sec(grid(`${h2}${spNodes(lead, page, p)}`, `<div class="sp-faq">${qa.map((x) => `<details class="faqq"><summary><span>${nobr(spMd(x.q, page, p))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${spNodes(x.a, page, p)}</div></details>`).join("")}</div>${subs}`)
         + `<p class="sp-meta">Проверил: ${spMd(page.meta.reviewer || "[ВРАЧ — кто проверил текст]", page, p)}. Цены на ${esc(page.meta.updated || servicePriceDate)}. Обновлено ${esc(page.meta.updated || servicePriceDate)}</p>`);
     }
@@ -952,13 +963,15 @@ function spSection(s, i, page, depth, ids) {
     }
     case "place": {
       const call = s.nodes.find((n) => n.t === "p" && /^\*\*Запишитесь[^*]+\*\*$/.test(n.text.trim()));
-      const nodes = s.nodes.filter((n) => n !== call);
-      return `<section class="section section--dark on-dark sp-cta"><div class="wrap sp-cta__in">
+      // посреди страницы (дорога на гео-странице) — только текст и карта, призыв записаться — в конце страницы
+      const cta = i === page.sectionCount - 1;
+      const nodes = cta ? s.nodes.filter((n) => n !== call) : s.nodes;
+      return `${cta ? `<section class="section section--dark on-dark sp-cta"><div class="wrap sp-cta__in">
       <p class="sp-cta__t">${call ? spMd(call.text.replace(/\*\*/g, ""), page, p) : "Запишитесь на консультацию: план лечения с ценой по этапам"}</p>
       <div class="sp-cta__act">${act("Записаться на консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true, service: page.slug })}${spWarn}</div>
-    </div></section>
+    </div></section>` : ""}
 ${sec(grid(h2, spNodes(nodes, page, p) + subs))}
-${place({ depth })}`;
+${place({ depth, where: page.geo ? geoWhere : undefined })}`;
     }
     default:
       return sec(wide ? `<div class="sp-head">${h2}</div><div class="sp-body sp-body--wide">${spNodes(s.nodes, page, p)}${subs}</div>` : grid(h2, spNodes(s.nodes, page, p) + subs));
@@ -980,7 +993,19 @@ function pageSvc(page) {
   const [lead, leadRest] = firstSentence(T.intro[introP].text);
   const intro = T.intro.map((n, i) => (i === introP ? (leadRest ? { t: "p", text: leadRest } : null) : n)).filter(Boolean);
   const ids = new Set();
-  const body = T.sections.map((s, i) => spSection(s, i, page, depth, ids)).join("\n");
+  page.sectionCount = T.sections.length;
+  const parts = T.sections.map((s, i) => spSection(s, i, page, depth, ids));
+  // гео-страница не пересказывает страницы услуг, а ведёт на них: блок ссылок перед вопросами (или перед дорогой)
+  if (page.links) {
+    const faqAt = T.sections.findIndex((s) => s.kind === "faq");
+    const last = T.sections.length - 1;
+    const at = faqAt >= 0 ? faqAt : T.sections[last].kind === "place" ? last : parts.length;
+    parts.splice(at, 0, `<section class="section section--dark on-dark geo-links" aria-labelledby="geo-links-t"><div class="wrap">
+  <div class="sp-head"><h2 id="geo-links-t" data-split>Подробно об услугах</h2></div>
+  <div class="geo-links__list">${page.links.map(([t, h]) => `<a class="geo-link" href="${p}${h}" data-reveal><span>${esc(t)}</span>${svlGo}</a>`).join("")}</div>
+</div></section>`);
+  }
+  const body = parts.join("\n");
   // разметка: крошки, услуга с ценами из прайсов страницы (без спорных), вопросы с готовыми ответами
   const rows = T.sections.flatMap((s) => [...s.nodes, ...s.subs.flatMap((x) => x.nodes)]).filter(isPriceTable).flatMap((n) => n.rows);
   const offers = rows.filter(([n, v = ""]) => !spHasAsk(`${n} — ${v}`)).map(([n, v = ""]) => {
@@ -992,16 +1017,25 @@ function pageSvc(page) {
   const provider = dentistLd["@id"] ? { "@id": dentistLd["@id"] } : { "@type": "Dentist", name: dentistLd.name, url: SITE, telephone: dentistLd.telephone, address: dentistLd.address };
   // в Title и Description плашку не поставить: предложение со спорной ценой выпадает
   const noHeld = (t) => t.split(/(?<=[.!?])\s+/).filter((x) => !servicePriceHold.some(([re]) => { re.lastIndex = 0; return re.test(x); })).join(" ");
-  const title = spPlain(T.meta.title), desc = noHeld(spPlain(T.meta.desc));
+  // на гео-странице расстояние и время в пути до подтверждения выпадают из Title и Description
+  const geoCut = (t) => (page.geo ? geoMask(t, () => "\u0003").replace(/\s*[,—–]?\s*\u0003/g, "").replace(/\(\s*\)/g, "").replace(/\s{2,}/g, " ").trim() : t);
+  if (page.geo && geoHeld(spPlain(T.meta.title) + " " + spPlain(T.meta.desc))) spPending.push(`${page.slug}: расстояние или время в пути в Title или Description`);
+  const title = geoCut(spPlain(T.meta.title)), desc = geoCut(noHeld(spPlain(T.meta.desc)));
   if (spHasAsk(title + desc)) spPending.push(`${page.slug}: пометка в Title или Description`);
   const jsonld = [
     crumbsLd([...chain, [page.path, page.crumb]]),
-    { "@context": "https://schema.org", "@type": ["Service", "MedicalProcedure"], name: page.procedure, description: desc, url: `${SITE}/${page.path}`, provider, areaServed: ["Удельная", "Раменский городской округ", "Жуковский"], offers },
+    { "@context": "https://schema.org", "@type": ["Service", "MedicalProcedure"], name: page.procedure, description: desc, url: `${SITE}/${page.path}`, provider, areaServed: page.geo ? [page.geo] : ["Удельная", "Раменский городской округ", "Жуковский"], offers },
     ...(page.faq && page.faq.length ? [faqLd(page.faq)] : []),
   ];
-  const heroHtml = `<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
+  const introHtml = spNodes(intro, page, p);
+  const heroAlt = esc(spPlain(T.meta.alt || page.crumb));
+  // гео-страница: вместо иллюстрации услуги — настоящее фото входа в клинику, ровные углы, подпись под фото
+  const heroMedia = page.geo
+    ? `<figure class="geo-hero__photo"><span class="geo-hero__img"><img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 92vw, 44vw"` : ""} alt="${heroAlt}" decoding="async" fetchpriority="high"${page.heroPos ? ` style="object-position:${page.heroPos}"` : ""}></span><figcaption>${esc(page.heroCap)}</figcaption></figure>`
+    : `<div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="${heroAlt}" decoding="async" fetchpriority="high">` : ""}</div>`;
+  const heroHtml = `<section class="page-hero sp-hero${page.geo ? " geo-hero" : ""} on-dark" aria-labelledby="h1">
   <div class="sp-hero__top">
-    <div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="${esc(spPlain(T.meta.alt || page.crumb))}" decoding="async" fetchpriority="high">` : ""}</div>
+    ${heroMedia}
     <div class="sp-hero__text">
       <nav class="crumbs" aria-label="Хлебные крошки">${crumbs.map(([h, t]) => `<a href="${p}${h}">${esc(t)}</a>`).join("")}<span aria-current="page">${esc(page.crumb)}</span></nav>
       <h1 id="h1" data-split>${spDash(esc(T.meta.h1))}</h1>
@@ -1015,7 +1049,7 @@ function pageSvc(page) {
     ${page.nav ? `<nav class="sp-nav" aria-label="В разделе «${esc(page.crumb)}»"><span class="label">В разделе</span>${page.nav.map(([t, h]) => `<a class="sp-pill" href="${p}${h}">${esc(t)}</a>`).join("")}</nav>` : ""}
   </div>
 </section>
-<section class="section sp-sec sp-intro" aria-label="Коротко об услуге"><div class="wrap">${spNodes(intro, page, p)}</div></section>`;
+${introHtml ? `<section class="section sp-sec sp-intro" aria-label="Коротко об услуге"><div class="wrap">${introHtml}</div></section>` : ""}`;
   if (!ids.has("ceny")) throw new Error(`${page.slug}: в тексте нет прайса (таблица «Услуга | Цена»)`);
   return head({ title, desc, canonical: `/${page.path}`, depth, jsonld })
   + header(depth) + `
