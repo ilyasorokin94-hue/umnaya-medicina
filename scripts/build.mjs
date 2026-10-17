@@ -131,8 +131,8 @@ const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""
 function phoneTour(depth) {
   const P = v2.clinic.phone;
   // фото ленты и галереи: в Chromium app.js переключает их на синхронное декодирование (иначе пустые карточки), в Safari остаётся фоновое
-  const pic = (entry, alt) => img(entry, alt, depth, ' class="ptour__img"');
-  const card = ([f, cap], cls = "") => `<div class="ptour__item${cls}">${pic([f], cap)}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
+  const pic = (entry, alt, x) => img(entry, alt, depth, ` class="ptour__img"${x ? ` style="object-position:${x} 50%"` : ""}`);
+  const card = ([f, cap, x], cls = "") => `<div class="ptour__item${cls}">${pic([f], cap, x)}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
   const words = (t, from) => t.split(" ").map((w, i) => `<span class="w" style="--i:${from + i}">${esc(w)}</span>`).join(" ");
   return `<div class="ptour">
     <div class="ptour__car"><div class="ptour__items">
