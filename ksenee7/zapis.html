@@ -9,8 +9,14 @@
 <link rel="canonical" href="https://umnaya-stomatologiya.ru/zapis">
 <link rel="icon" type="image/svg+xml" href="images/brand/favicon.svg">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Умная Медицина. Стоматология">
+<meta property="og:url" content="https://umnaya-stomatologiya.ru/zapis">
 <meta property="og:title" content="Записаться на приём | Умная Медицина. Стоматология">
 <meta property="og:description" content="Онлайн-запись в стоматологию «Умная Медицина»: выберите услугу, врача и удобное время.">
+<meta property="og:image" content="https://umnaya-stomatologiya.ru/images/og/clinic.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Ресепшен стоматологии «Умная Медицина» в Удельной">
 <meta property="og:locale" content="ru_RU">
 <meta name="theme-color" content="#0c2410">
 <link rel="apple-touch-icon" href="images/brand/apple-touch-icon.png">
@@ -29,7 +35,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <script src="assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="assets/vendor/lenis.min.js" defer></script>
 <script src="assets/app.js?v=67dfadff" defer></script>
-
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"https://umnaya-stomatologiya.ru"},{"@type":"ListItem","position":2,"name":"Записаться на приём","item":"https://umnaya-stomatologiya.ru/zapis"}]}</script>
 </head>
 <body class="booking-page">
 <a class="skip" href="#main">К содержанию</a>
@@ -85,15 +91,16 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
       </section>
     </div>
   </main>
-  <aside class="booking__aside on-dark" aria-label="Ваша запись">
+  <aside class="booking__aside on-dark" aria-label="Ваша запись" itemscope itemtype="https://schema.org/Dentist" itemid="https://umnaya-stomatologiya.ru/#clinic">
     <span class="label label--light">Ваша запись</span>
     <dl class="summary">
       <div><dt>Услуга</dt><dd data-sum="service" class="is-empty">не выбрано</dd></div>
       <div><dt>Врач</dt><dd data-sum="doctor" class="is-empty">не выбрано</dd></div>
       <div><dt>Дата и время</dt><dd data-sum="date" class="is-empty">не выбрано</dd></div>
-      <div><dt>Адрес</dt><dd>Удельная, ул. Громова, 10/2</dd></div>
+      <div><dt>Адрес</dt><dd itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">Удельная, ул. Громова, 10/2<meta itemprop="streetAddress" content="ул. Громова, 10/2"><meta itemprop="addressLocality" content="пгт Удельная"><meta itemprop="addressRegion" content="Московская обл."><meta itemprop="postalCode" content="140140"><meta itemprop="addressCountry" content="RU"></dd></div>
     </dl>
-    <p class="note">Есть вопросы? Позвоните: <a href="tel:+74951503615" style="color:#fff">+7 495 150-36-15</a>, ежедневно с 9:00 до 21:00.</p>
+    <p class="note">Есть вопросы? Позвоните: <a href="tel:+74951503615" style="color:#fff"><span itemprop="telephone">+7 495 150-36-15</span></a>, ежедневно с 9:00 до 21:00.<meta itemprop="openingHours" content="Mo-Su 09:00-21:00"></p>
+    <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="https://umnaya-stomatologiya.ru/">
   </aside>
 </div>
 <script type="application/json" id="bdata">{"services":[{"slug":"diagnostika","title":"КТ и снимки","short":"3D-снимок, ОПТГ, прицельный снимок","from":"от 500 ₽"},{"slug":"gigiena","title":"Профгигиена Air-Flow","short":"Air-Flow, ультразвук","from":"от 4 500 ₽"},{"slug":"lechenie-zubov","title":"Лечение зубов","short":"Кариес, пульпит, реставрация","from":"от 4 000 ₽"},{"slug":"implantaciya","title":"Имплантация зубов","short":"Straumann, Dentium, OSSTEM","from":"от 17 500 ₽"},{"slug":"all-on-4","title":"All-on-4 и All-on-6","short":"Вся челюсть на 4–8 имплантах","from":"от 114 000 ₽"},{"slug":"mikroskop","title":"Лечение под микроскопом","short":"Каналы, перфорации, трещины","from":"Цена после осмотра"},{"slug":"protezirovanie","title":"Протезирование","short":"Коронки, виниры, протезы","from":"от 26 400 ₽"},{"slug":"hirurgiya","title":"Удаление зубов","short":"Зубы мудрости, пьезохирургия","from":"от 2 100 ₽"},{"slug":"ortodontiya","title":"Брекеты и элайнеры","short":"Damon, 3M, элайнеры","from":"от 28 500 ₽"},{"slug":"detskaya","title":"Детская стоматология","short":"Лечение молочных зубов","from":"от 450 ₽"}],"doctors":[{"id":"solodukhin","short":"Евгений Солодухин","role":"Главный врач, ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/solodukhin.webp","initials":"ЕС"},{"id":"hludnevskiy","short":"Михаил Хлудневский","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/hludnevskiy.webp","initials":"МХ"},{"id":"radzhabov","short":"Азамат Раджабов","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/radzhabov.webp","initials":"АР"},{"id":"chitaykin","short":"Артём Читайкин","role":"Терапевт, эндодонтист, гигиенист","tags":["lechenie-zubov","mikroskop","gigiena"],"photo":"images/doctors/chitaykin.webp","initials":"АЧ"},{"id":"kashtanova","short":"Екатерина Каштанова","role":"Терапевт, ортодонт, гигиенист","tags":["lechenie-zubov","ortodontiya","gigiena","mikroskop"],"photo":"images/doctors/kashtanova.webp","initials":"ЕК"},{"id":"alikhanova","short":"Светлана Алиханова","role":"Ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/alikhanova.webp","initials":"СА"},{"id":"sikacheva","short":"Мария Сикачева","role":"Ортодонт","tags":["ortodontiya"],"photo":"images/doctors/sikacheva.webp","initials":"МС"},{"id":"troitskiy","short":"Даниил Троицкий","role":"Детский стоматолог","tags":["detskaya"],"photo":"images/doctors/troitskiy.webp","initials":"ДТ"}]}</script>
