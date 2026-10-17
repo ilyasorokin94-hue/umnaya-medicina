@@ -489,17 +489,21 @@ function svlBlock(p, depth) {
 // ---------- главная: порядок блоков Тридента ----------
 // первый экран, услуги и цены вкладками, клиника и оборудование, путь пациента, врачи, отзывы, три вопроса, контакты
 
-// варианты первого экрана на компьютере (Ilya 17.10): блок .hd виден от 761px, на телефоне всё как было
+// варианты первого экрана на компьютере (Ilya 17.10, вторая серия): заголовок как есть, без акции Osstem и имён врачей,
+// работаем с консультацией и пояснением. Блок .hd виден от 761px, на телефоне только убрана строка Osstem
 const HD_SUB = "Хирург, ортопед и терапевт смотрят ваш случай вместе. Цену плана записываем в договор.";
-const hdForm = (id, btn, note) => `<form class="hf" data-lead="hero"><label class="sr" for="${id}">Ваш телефон</label><span class="hf__cap"><input id="${id}" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 ___ ___-__-__" minlength="16" required data-tel><button class="btn btn--lg" type="submit">${btn}</button></span>${note ? `<span class="hf__note">${note}</span>` : ""}</form>`;
 function heroDesk(hv, p) {
-  const call = `<a class="hd__tel" href="${clinic.phoneHref}">${esc(clinic.phone)}</a>`;
-  const book = act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true });
-  if (hv === 1) return `<div class="hd"><p class="hd__sub">${HD_SUB}</p>${hdForm("hd-ph", "Записаться бесплатно", "Консультация трёх врачей бесплатно. Перезвоним за 5 минут.")}</div>`;
-  if (hv === 2) return `<div class="hd">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<a class="hd__doc" href="vrachi/${id}.html"><span>${role}</span><b>${esc(docById[id].short)}</b></a>`).join("")}<div class="hd__go">${book}<span class="hd__small">Смотрят ваш случай вместе. Цену плана записываем в договор.</span></div></div>`;
-  if (hv === 3) return `<div class="hd"><p class="hd__sub">${HD_SUB}</p>${book}<span class="hd__small">или позвоните ${call}</span></div>`;
-  if (hv === 4) return `<div class="hd"><p class="hd__sub">${HD_SUB}</p><form class="hd__card" data-lead="hero"><p class="hd__t">Бесплатная консультация</p><p class="hd__small">Оставьте номер. Администратор перезвонит за 5 минут и подберёт время у трёх врачей.</p><label class="hd__f"><span>Телефон</span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 ___ ___-__-__" minlength="16" required data-tel></label><button class="btn btn--lg btn--wide" type="submit">Жду звонка</button><span class="hd__consent">Отправляя номер, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</span></form></div>`;
-  return `<div class="hd"><p class="hd__sub">${HD_SUB}</p>${hdForm("hd-ph", "Записаться бесплатно", "Консультация бесплатно. Перезвоним за 5 минут.")}</div>`;
+  const book = (label = "Записаться на бесплатную консультацию") => act(label, "book", p, { cls: "btn--lg", magnet: true });
+  // 1. только кнопка: пояснения на первом экране нет
+  if (hv === 1) return `<div class="hd">${book()}</div>`;
+  // 2. кнопка в пустом месте справа от «Три врача.»
+  if (hv === 2) return `<div class="hd">${book("Бесплатная консультация")}</div>`;
+  // 3. пояснение одной строкой, фразы сменяют друг друга
+  if (hv === 3) return `<div class="hd"><p class="hd__rot"><span class="sr">${HD_SUB} Консультация бесплатная.</span>${["Хирург, ортопед и терапевт смотрят ваш случай вместе.", "Цену плана записываем в договор.", "Консультация бесплатная."].map((t, i) => `<span${i ? "" : ' class="is-on"'} aria-hidden="true">${t}</span>`).join("")}</p>${book()}</div>`;
+  // 4. пояснение бледное и проявляется по словам, пока экран стоит при прокрутке
+  if (hv === 4) return `<div class="hd"><p class="hd__say">${HD_SUB.split(" ").map((w) => `<span>${w}</span>`).join(" ")}</p>${book()}</div>`;
+  // 5. «Один план лечения.» собирается из разлетевшихся букв, потом пояснение и кнопка
+  return `<div class="hd"><p class="hd__sub">${HD_SUB}</p>${book()}</div>`;
 }
 
 function pageHome(hv = 0) {
@@ -519,8 +523,8 @@ function pageHome(hv = 0) {
 <section class="hero hero--v hero--v1${hv ? ` hero--d${hv}` : ""} on-dark" aria-labelledby="h1"><div class="wrap hero__in">
   <div class="hero__text">
     <h1 id="h1"><span data-split>Три врача.</span> <span class="hv__l2" data-split>Один план лечения.</span></h1>
-    <p class="hv__sub">Хирург, ортопед и терапевт смотрят ваш случай вместе. Цену плана записываем в договор.</p>
-    <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}<p class="hv__offer">${esc(D.promo[0])} <b>${esc(D.promo[1])}</b> <s>${esc(D.promo[2])}</s></p></div>${hv ? heroDesk(hv, p) : ""}
+    <p class="hv__sub">${HD_SUB}</p>
+    <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}${hv ? "" : `<p class="hv__offer">${esc(D.promo[0])} <b>${esc(D.promo[1])}</b> <s>${esc(D.promo[2])}</s></p>`}</div>${hv ? heroDesk(hv, p) : ""}
   </div>
 </div></section>
 

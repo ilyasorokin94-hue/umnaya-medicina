@@ -448,13 +448,6 @@
     allon: ["Спасибо!", "Администратор перезвонит за 5 минут и запишет к имплантологу на консультацию с КТ. Расчёт бесплатный."],
   };
   const defDone = $("#m-done [data-done-text]")?.textContent;
-  // номер в поле первого экрана сразу в виде +7 000 000-00-00, привычная 8 отбрасывается
-  $$("input[data-tel]").forEach((i) => {
-    const fmt = () => { let d = i.value.replace(/\D/g, ""); if (d[0] === "8" || d[0] !== "7") d = "7" + (d[0] === "8" || d[0] === "7" ? d.slice(1) : d); if (d === "78") d = "7"; const r = d.slice(1, 11); i.value = "+7 " + r.slice(0, 3) + (r.length > 3 ? " " + r.slice(3, 6) : "") + (r.length > 6 ? "-" + r.slice(6, 8) : "") + (r.length > 8 ? "-" + r.slice(8, 10) : ""); };
-    i.addEventListener("focus", () => { if (!i.value) i.value = "+7 "; });
-    i.addEventListener("blur", () => { if (i.value.replace(/\D/g, "").length <= 1) i.value = ""; });
-    i.addEventListener("input", fmt);
-  });
   $$("form[data-lead]").forEach((f) => {
     if (f.hasAttribute("data-quiz") || f.classList.contains("cb")) return;
     f.addEventListener("submit", (e) => {
@@ -617,6 +610,21 @@
   // ---------- анимации ----------
   // Правило: прокрутку сглаживает только Lenis, поэтому все scrub = true (без второго сглаживания),
   // одно свойство одного элемента ведёт одна анимация, CSS-переходы на этих свойствах выключены.
+  // вариант 3 первого экрана: фразы пояснения сменяют друг друга
+  const rot = $(".hd__rot");
+  if (rot) {
+    const ph = $$("span[aria-hidden]", rot);
+    let k = 0;
+    setInterval(() => {
+      if (document.hidden) return;
+      ph[k].classList.replace("is-on", "is-out");
+      const was = ph[k];
+      setTimeout(() => was.classList.remove("is-out"), 900);
+      k = (k + 1) % ph.length;
+      ph[k].classList.add("is-on");
+    }, 3800);
+  }
+
   if (!anim) return;
   G.registerPlugin(ST);
   G.defaults({ ease: "power3.out" });
@@ -628,7 +636,9 @@
     requestAnimationFrame(() => requestAnimationFrame(() => header?.classList.add("is-loaded")));
     const h = $(".hero, .page-hero");
     if (!h) return;
-    const words = $$("[data-split] .sw > span", h);
+    // вариант 5 первого экрана: вторая строка собирается из букв, слова не поднимаются
+    const conv = !phoneMQ.matches && h.classList.contains("hero--d5");
+    const words = $$("[data-split] .sw > span", h).filter((w) => !conv || !w.closest(".hv__l2"));
     const tl = G.timeline();
     const media = h.classList.contains("hero") && $(".hero__media", h);
     const small = phoneMQ.matches;
@@ -636,8 +646,19 @@
     const mimg = $(".hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hd > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
+      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
     if (!matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
+    // варианты первого экрана на компьютере: у каждого своё появление кнопки и пояснения
+    const hd = !small && $(".hd", h);
+    if (hd) {
+      const btn = $(".btn", hd), rest = [...hd.children].filter((x) => x !== btn);
+      if (h.classList.contains("hero--d1")) tl.fromTo(btn, { clipPath: "inset(0% 0% 0% 84% round 999px)" }, { clipPath: "inset(0% 0% 0% 0% round 999px)", duration: 1.2, ease: "expo.inOut", clearProps: "clipPath" }, 0.9).from(btn, { autoAlpha: 0, duration: 0.4 }, 0.9);
+      else if (h.classList.contains("hero--d2")) tl.from(btn, { x: 80, autoAlpha: 0, duration: 1.3, ease: "expo.out" }, 0.55);
+      else if (conv) {
+        tl.fromTo($(".hv__l2", h), { letterSpacing: "0.5em", autoAlpha: 0 }, { letterSpacing: "-0.055em", autoAlpha: 1, duration: 2, ease: "expo.out" }, 0.45)
+          .from(hd.children, { autoAlpha: 0, y: 24, duration: 1, stagger: 0.1 }, 1.5);
+      } else tl.from([...rest, btn], { autoAlpha: 0, y: 24, duration: 1, stagger: 0.12 }, 0.7);
+    }
     const pb = $(".hero__promo b", h), ps = $(".hero__promo s", h);
     if (small && pb && ps) {
       const orig = pb.textContent, to = +orig.replace(/\D/g, ""), o = { v: +ps.textContent.replace(/\D/g, "") };
@@ -677,6 +698,9 @@
   const hero = $(".hero");
   if (hero && $(".hero__media img", hero)) G.fromTo(".hero__media img", { yPercent: 0 }, { yPercent: -6, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
   mm.add("(min-width: 761px)", () => {
+    // вариант 4 первого экрана: экран стоит, пока пояснение проявляется по словам
+    const say = $(".hero--d4 .hd__say");
+    if (say) G.fromTo($$("span", say), { opacity: 0.16 }, { opacity: 1, stagger: 0.4, ease: "none", scrollTrigger: { trigger: say.closest(".hero"), start: "top top", end: "+=90%", pin: true, scrub: true } });
     const ph = $(".page-hero");
     if (ph) G.to($(".page-hero__in, .doc-hero__text", ph), { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
   });
