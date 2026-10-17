@@ -10,6 +10,7 @@ import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } f
 import { reviewsMobile } from "./reviews-mobile.mjs";
 import { servicePages, servicePriceDate, servicePriceHold } from "../src/service-pages.mjs";
 import { parseServiceMd } from "./service-md.mjs";
+import { doctorPages } from "../src/doctor-pages.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
@@ -51,6 +52,8 @@ const svc = Object.fromEntries(services.map((s) => [s.slug, s]));
 const spBySlug = Object.fromEntries(servicePages.map((x) => [x.old || x.slug, x]));
 const svcHref = (k, p) => (spBySlug[k] ? p + spBySlug[k].path : `${p}uslugi/${k}.html`);
 const pre = (depth) => "../".repeat(depth);
+// врач с новой страницей живёт по адресу vrachi/<id>/, остальные пока на vrachi/<id>.html
+const docHref = (id, p) => (doctorPages[id] ? `${p}vrachi/${id}/` : `${p}vrachi/${id}.html`);
 
 // ---------- картинки: локальный файл, если он есть, иначе запасной адрес ----------
 // Фото (jpg, png) уходят на сайт в WebP того же размера: на 40–60% легче, на вид то же. Без sharp (не сделан npm install)
@@ -124,7 +127,7 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <meta name="robots" content="${PUBLISH ? "index, follow" : "noindex, nofollow"}">
 <link rel="canonical" href="${SITE}${canonical}">
 <link rel="icon" type="image/svg+xml" href="${p}images/brand/favicon.svg">
-<meta property="og:type" content="${/^\/vrachi\/[^/]+$/.test(canonical) ? "profile" : "website"}">
+<meta property="og:type" content="${/^\/vrachi\/[^/]+\/?$/.test(canonical) ? "profile" : "website"}">
 <meta property="og:site_name" content="Умная Медицина. Стоматология">
 <meta property="og:url" content="${SITE}${canonical}">
 <meta property="og:title" content="${esc(title)}">
@@ -413,9 +416,9 @@ function doctorCard(d, depth, o = {}) {
   const p = pre(depth);
   return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}"${o.lava ? ` data-col="${o.i % 2 ? "r" : "l"}"` : " data-reveal"}>
   <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth)}
-    <a class="doc__cover" href="${p}vrachi/${d.id}.html" tabindex="-1" aria-hidden="true"></a>${o.lava ? `
-    <a class="doc__go" href="${p}vrachi/${d.id}.html" aria-label="Страница врача: ${esc(d.short)}"><svg viewBox="0 0 60 60" aria-hidden="true"><path d="M24 36 36 24M27 24h9v9"/></svg></a>` : ""}</div>
-  <h3><a href="${p}vrachi/${d.id}.html">${esc(d.name)}</a></h3>
+    <a class="doc__cover" href="${docHref(d.id, p)}" tabindex="-1" aria-hidden="true"></a>${o.lava ? `
+    <a class="doc__go" href="${docHref(d.id, p)}" aria-label="Страница врача: ${esc(d.short)}"><svg viewBox="0 0 60 60" aria-hidden="true"><path d="M24 36 36 24M27 24h9v9"/></svg></a>` : ""}</div>
+  <h3><a href="${docHref(d.id, p)}">${esc(d.name)}</a></h3>
   <p class="doc__role${d.chief ? " doc__role--chief" : ""}">${esc(d.role)}</p>
   ${d.focus ? `<p class="doc__focus">${esc(d.focus)}</p>` : ""}
   ${act("Записаться к врачу", "book", p, { cls: "btn--ghost btn--sm doc__cta", doctor: d.id })}
@@ -548,7 +551,7 @@ function pageHome() {
   const star = icon.star;
   const D = v2;
   // три врача после слогана на телефоне (на компьютере скрыты); пояснение, факты и пометки оттуда убраны (Ilya 17.10)
-  const heroTrio = `<ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="vrachi/${id}.html"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>`;
+  const heroTrio = `<ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="${docHref(id, "")}"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth)}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>`;
   const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 
   return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq.flatMap(([, qs]) => qs).map(([q, a]) => [q, a.replace(/\[([^\]]+)\]\((\w+)\)/g, "$1")]))] })
@@ -734,7 +737,7 @@ function spHref(url, p) {
   const page = servicePages.find((x) => x.path === u + "/");
   if (page) return p + page.path;
   const doc = /^vrachi\/([\w-]+)$/.exec(u);
-  if (doc) return docById[doc[1]] ? `${p}vrachi/${doc[1]}.html` : null;
+  if (doc) return docById[doc[1]] ? docHref(doc[1], p) : null;
   const old = spOld[u] || spOld[u.split("/")[0]];
   return old && svc[old] ? `${p}uslugi/${old}.html` : null;
 }
@@ -1033,11 +1036,148 @@ ${d.courses.length ? `<section class="section section--sage"><div class="wrap">
 </main>` + footer(depth) + end;
 }
 
+// ---------- страница врача нового формата (Ilya 17.10): вид страниц услуг, блоки по ТЗ «врачи_семантика_и_ТЗ» ----------
+// Данные в src/doctor-pages.mjs. Портрет справа без маски: лицо не тает. Стаж и оценки ПроДокторов не показываем.
+// Помощники страниц врачей: у услуг тексты теперь из markdown, у врачей данные полями в src/doctor-pages.mjs
+// ссылка из плана сайта (implantaciya/all-on-4/, hirurgiya/): новая страница услуги или старая uslugi/*.html; ещё не сделанная даёт null
+function dpHref(target, p) {
+  if (servicePages.some((x) => x.path === target)) return p + target;
+  const m = /^([\w-]+)\/$/.exec(target);
+  return m && svc[m[1]] ? `${p}uslugi/${m[1]}.html` : null;
+}
+// текст поля: строка или пометка «Ждём: …» (на демо видна, с PUBLISH=1 сборка остановится)
+function dpText(v, page, tag = "p", cls = "") {
+  const c = (x) => (x ? ` class="${x}"` : "");
+  if (v && v.todo) { spPending.push(`${page.slug}: ${v.todo}`); return `<${tag}${c(("todo " + cls).trim())}>${esc(v.todo)}</${tag}>`; }
+  return v == null ? "" : `<${tag}${c(cls)}>${esc(v)}</${tag}>`;
+}
+const dpInline = (v, page) => (v && v.todo ? dpText(v, page, "span", "todo--in") : esc(priceText(v)));
+const dpLink = (text, target, p, cls = "") => {
+  const h = dpHref(target, p);
+  return h ? `<a${cls ? ` class="${cls}"` : ""} href="${h}">${esc(text)}</a>` : `<span class="sp-soon${cls ? " " + cls : ""}">${esc(text)}<small>страница в работе</small></span>`;
+};
+function dpBlock(b, page, depth) {
+  const p = pre(depth);
+  const tone = b.tone === "sage" ? " section--sage" : "";
+  const h2 = () => `<h2 id="${b.id}-t" data-split>${spDash(esc(b.title))}</h2>`;
+  const sec = (body) => `<section class="section sp-sec${tone}" id="${b.id}" aria-labelledby="${b.id}-t"><div class="wrap">${body}</div></section>`;
+  switch (b.type) {
+    case "links": return `<section class="section section--dark on-dark sp-sec sp-links" id="${b.id}" aria-labelledby="${b.id}-t"><div class="wrap">
+      <div class="sp-head">${h2()}${dpText(b.text, page, "p", "sp-head__lead")}</div>
+      <div class="svl"><div class="svl-list" data-svl>${b.items.map(([t, h, price], i) => {
+        const href = dpHref(h, p), title = `<h3 class="svl-row__title">${svlTitle(t)}${price ? ` <small class="sp-links__price">${esc(price)}</small>` : ""}</h3>`;
+        return href ? `<a class="svl-row" href="${href}" style="--delay:${(i * 0.3).toFixed(1)}s">${title}<span class="svl-row__act">${svlGo}</span></a>`
+          : `<div class="svl-row is-soon" style="--delay:${(i * 0.3).toFixed(1)}s">${title}<span class="sp-soon"><small>страница в работе</small></span></div>`;
+      }).join("")}</div></div>
+    </div></section>`;
+    case "text": return sec(`<div class="sp-grid"><div class="sp-grid__aside">${h2()}</div><div>${dpText(b.text, page)}</div></div>`);
+    case "faq": return sec(`<div class="sp-grid"><div class="sp-grid__aside">${h2()}</div>
+      <div class="sp-faq">${b.items.map(([q, a]) => `<details class="faqq"><summary><span>${nobr(esc(q))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${typeof a === "string" ? `<p>${nobr(faqA(a, p))}</p>` : dpText(a, page)}</div></details>`).join("")}</div>
+    </div>`);
+  }
+}
+const eduKind = (t) => (t.startsWith("Ординатура") ? "Ординатура" : t.startsWith("Повышение") ? "Квалификация" : "Образование");
+const eduName = (t) => cap(t.replace(/^(Ординатура|Повышение квалификации): /, ""));
+function pageDoc(d, page) {
+  const depth = 2;
+  const p = pre(depth);
+  const pg = { slug: `vrachi/${d.id}`, noMeta: true };
+  const [last, ...given] = d.name.split(" ");
+  const url = `${SITE}/vrachi/${d.id}/`;
+  const photo = pick(docPhoto(d), 0).src;
+  const edu = [...d.edu, ...(page.extraEdu || [])];
+  const timeline = [
+    ...edu.map(([y, place, t, check]) => ({ y, sort: +y, kind: eduKind(t), t: eduName(t), place, check })),
+    ...d.work.map(([y, place, t]) => ({ y, sort: +y.match(/\d{4}/)[0], kind: "Работа", t, place })),
+  ].sort((a, b) => a.sort - b.sort);
+  edu.filter((e) => e[3]).forEach(([y, place, , check]) => spPending.push(`${pg.slug}: ${place} ${y}: ${check}`));
+  (page.facts || []).filter((f) => f[2]).forEach(([big]) => spPending.push(`${pg.slug}: сверить «${big}»`));
+  const diploma = d.edu.find(([, , t]) => eduKind(t) === "Образование");
+  const residency = d.edu.find(([, , t]) => eduKind(t) === "Ординатура");
+  const n = d.courses.length;
+  // ссылки «Ведёт» в первом экране: одна на страницу
+  const pills = page.does.filter(([, h], i, a) => a.findIndex(([, h2]) => h2 === h) === i);
+  const quotes = home.reviews.filter((r) => r.includes(last));
+  const others = doctors.filter((x) => x.id !== d.id && x.id !== "sikacheva");
+  const org = (name) => ({ "@type": "EducationalOrganization", name });
+  const ld = {
+    "@context": "https://schema.org", "@type": "Person", "@id": `${url}#person`, name: d.name, givenName: given.join(" "), familyName: last,
+    jobTitle: d.title, url, image: /^https?:/.test(photo) ? photo : `${SITE}/${photo}`,
+    // та же клиника, что в JSON-LD Dentist главной (@id из ksenee7 6c80492)
+    worksFor: { "@type": "Dentist", "@id": `${SITE}/#clinic`, name: dentistLd.name, url: SITE },
+    alumniOf: [...new Set(d.edu.map(([, place]) => place))].map(org),
+    hasCredential: d.edu.map(([y, place, t]) => ({ "@type": "EducationalOccupationalCredential", name: t.startsWith("Ординатура") || t.startsWith("Повышение") ? t : `Диплом: ${t.toLowerCase()}`, credentialCategory: eduKind(t) === "Образование" ? "диплом" : eduKind(t).toLowerCase(), recognizedBy: org(place), dateCreated: y })),
+    knowsAbout: page.knowsAbout,
+    ...(d.pd ? { sameAs: [d.pd] } : {}),
+  };
+  const faq = page.faq.filter(([, a]) => typeof a === "string");
+  const heroHtml = `<section class="page-hero sp-hero dp-hero on-dark" aria-labelledby="h1">
+  <div class="sp-hero__top">
+    <figure class="dp-hero__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), `${d.name}, ${page.spec.toLowerCase()}`, depth, ' fetchpriority="high"').replace(' loading="lazy"', "")}</figure>
+    <div class="sp-hero__text">
+      <nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><a href="${p}vrachi.html">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
+      <p class="label label--light dp-hero__spec">${esc(page.spec)}</p>
+      <h1 id="h1"><span data-split>${esc(last)}</span> <span data-split>${esc(given.join(" "))}</span></h1>
+      ${dpText(page.lead, pg, "p", "page-hero__lead")}
+    </div>
+    <div class="sp-hero__act">${act("Записаться к врачу", "book", p, { cls: "btn--lg", magnet: true, doctor: d.id })}${timeline.length ? `<a class="link" href="#obrazovanie">Образование и курсы</a>` : `<a class="link" href="#uslugi">Что делает врач</a>`}${spWarn}</div>
+  </div>
+  <div class="wrap sp-hero__bottom">
+    <ul class="sp-facts">
+      <li><b>${dpInline(page.consult, pg)}</b><span>${esc(page.consultName.toLowerCase())}</span></li>
+      ${diploma ? `<li><b>${esc(diploma[0])}</b><span>диплом стоматолога, ${esc(diploma[1])}</span></li>` : ""}
+      ${residency ? `<li><b>${esc(residency[0])}</b><span>ординатура: ${esc(eduName(residency[2]).toLowerCase())}, ${esc(residency[1]).replace(/([А-ЯЁ]\.) (?=[А-ЯЁ]\.)/g, "$1\u00a0")}</span></li>` : ""}
+      ${n ? `<li><b>${n}</b><span>${plural(n, "курс", "курса", "курсов")} и конгрессов для врачей</span></li>` : ""}
+      ${(page.facts || []).map(([big, t, check]) => `<li><b>${esc(big)}</b><span>${esc(t)}${check ? ` <mark class="todo-tag">${esc(check)}</mark>` : ""}</span></li>`).join("")}
+    </ul>
+    <nav class="sp-nav" aria-label="Что делает врач"><span class="label">Ведёт</span>${pills.map(([t, h]) => dpLink(t, h, p, "sp-pill")).join("")}</nav>
+  </div>
+</section>`;
+  return head({ title: page.seoTitle, desc: page.seoDesc, canonical: `/vrachi/${d.id}/`, depth, jsonld: [crumbsLd([["vrachi", "Врачи"], [`vrachi/${d.id}/`, d.short]]), ld, ...(faq.length ? [faqLd(faq)] : [])] })
+  + header(depth) + `
+<main id="main" class="sp-page dp-page">
+${heroHtml}
+
+<section class="section sp-sec" id="obrazovanie" aria-labelledby="obrazovanie-t"><div class="wrap">
+  <div class="sp-head"><h2 id="obrazovanie-t" data-split>Образование и квалификация</h2>${timeline.length ? `<p class="sp-head__lead">По открытым анкетам врача на ПроДокторов, сайте клиники и медицинских порталах.</p>` : ""}</div>
+  ${page.eduTodo ? dpText(page.eduTodo, pg) : ""}
+  ${timeline.length ? `<ol class="doc-path dp-path">${timeline.map((r) => `<li data-reveal><span class="doc-path__y">${esc(r.y)}</span><span class="doc-path__k">${esc(r.kind)}</span><div><b>${esc(r.t)}${r.check ? ` <mark class="todo-tag">${esc(r.check)}</mark>` : ""}</b><span>${esc(r.place)}</span></div></li>`).join("")}</ol>` : ""}
+  ${n ? `<div class="sp-sub" data-reveal><h3>Курсы и конгрессы</h3><ul class="sp-plist dp-courses">${d.courses.map(([y, t]) => `<li><span>${esc(t)}</span><b>${esc(y)}</b></li>`).join("")}</ul></div>` : ""}
+  <div class="sp-more">${dpText(page.docs, pg)}</div>
+</div></section>
+
+${dpBlock({ type: "links", id: "uslugi", title: "Что делает врач в клинике", text: `${page.spec} в Удельной. Цены по прайсу клиники на ${servicePriceDate}, точную стоимость врач называет после осмотра и снимков.`, items: page.does }, pg, depth)}
+
+${dpBlock({ type: "text", id: "raboty", tone: "sage", title: "Работы врача", text: page.cases }, pg, depth)}
+
+<section class="section sp-sec" id="otzyvy" aria-labelledby="otzyvy-t"><div class="wrap sp-grid">
+  <div class="sp-grid__aside"><h2 id="otzyvy-t" data-split>Отзывы о враче</h2>${d.pd ? `<a class="link" href="${d.pd}"${ext}>Все отзывы о враче на ПроДокторов</a>` : ""}</div>
+  <div>${quotes.length ? `<ul class="dp-quotes">${quotes.map((q) => `<li data-reveal><blockquote>«${esc(q)}»</blockquote></li>`).join("")}</ul>` : ""}
+  ${dpText(page.reviews || { todo: "3–6 отзывов, где пациенты называют врача, с ПроДокторов и Яндекс Карт; из облака эти сайты закрыты, снимем через браузер на компьютере Ilya" }, pg)}</div>
+</div></section>
+
+${place({ title: "Где принимает врач", depth })}
+
+${dpBlock({ type: "faq", id: "voprosy", title: "Вопросы о приёме", items: page.faq }, pg, depth)}
+
+<section class="section section--dark on-dark sp-cta"><div class="wrap sp-cta__in">
+  <p class="sp-cta__t">${esc(page.cta || "Запишитесь на консультацию: врач осмотрит, посмотрит снимки и предложит план лечения с ценой.")}</p>
+  <div class="sp-cta__act">${act("Записаться к врачу", "book", p, { cls: "btn--light btn--lg", magnet: true, doctor: d.id })}${spWarn}</div>
+</div></section>
+
+<section class="section section--sage"><div class="wrap">
+  <div class="section__head"><div><span class="label">Команда</span><h2 data-split>Другие врачи</h2></div></div>
+  <div class="team__grid team__grid--six">${others.map((x) => doctorCard(x, depth)).join("")}</div>
+</div></section>
+</main>` + footer(depth) + end;
+}
+// старого файла vrachi/<id>.html рядом с папкой нет: GitHub Pages отдаёт его и по адресу vrachi/<id>/; перенаправление настроим на сервере
+
 // ---------- прайс ----------
 // ---------- все врачи ----------
 function pageDoctors() {
   const depth = 0;
-  const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: doctors.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/vrachi/${d.id}`, name: d.name })) };
+  const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: doctors.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + docHref(d.id, "/"), name: d.name })) };
   return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты | Умная Медицина", desc: "Врачи стоматологии «Умная Медицина» в Удельной: имплантологи, ортопеды, терапевты, ортодонты и детский стоматолог. Опыт, образование, запись к врачу.", canonical: "/vrachi", depth, jsonld: [crumbsLd([["vrachi", "Врачи"]]), ld] })
   + header(depth) + `
 <main id="main">
@@ -1157,8 +1297,8 @@ mkdirSync(path.join(dist, "assets", "vendor"), { recursive: true });
 const typo = (html) => html.replace(/(<(script|style)\b[\s\S]*?<\/\2>)|>([^<]+)</g, (m, block, _t, text) => block || ">" + text.replace(/(?<=^|[\s(«])([А-Яа-яЁё]{1,2}) (?=\S|$)/g, "$1\u00a0") + "<");
 const pages = [];
 const urls = new Map(); // адрес страницы на сайте → её html, для карты сайта
-const out = (f, html) => {
-  if (f.endsWith(".html")) { pages.push((html = typo(html))); urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
+const out = (f, html, map = true) => {
+  if (f.endsWith(".html")) { pages.push((html = typo(html))); if (map) urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
   writeFileSync(path.join(dist, f), html);
 };
 out("index.html", pageHome());
@@ -1168,11 +1308,16 @@ out("zapis.html", pageBooking());
 // старые адреса услуг, переехавших в новый формат, ведут на новую страницу и в карту сайта не попадают
 for (const s of services) spBySlug[s.slug] ? writeFileSync(path.join(dist, `uslugi/${s.slug}.html`), spRedirect(spBySlug[s.slug])) : out(`uslugi/${s.slug}.html`, pageService(s));
 for (const page of servicePages) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}index.html`, pageSvc(page)); }
-if (spPending.length) {
-  if (PUBLISH) throw new Error("На страницах услуг остались пометки:\n" + spPending.join("\n"));
-  console.log(`Страницы услуг: пометок на демо ${spPending.length} (тексты, картинки, ответы клиники)`);
+// старая страница Сикачевой остаётся, но в карту сайта не идёт, пока Ilya не решит (17.10)
+for (const d of doctors) {
+  if (!doctorPages[d.id]) { out(`vrachi/${d.id}.html`, pageDoctor(d), d.id !== "sikacheva"); continue; }
+  mkdirSync(path.join(dist, "vrachi", d.id), { recursive: true });
+  out(`vrachi/${d.id}/index.html`, pageDoc(d, doctorPages[d.id]));
 }
-for (const d of doctors) out(`vrachi/${d.id}.html`, pageDoctor(d));
+if (spPending.length) {
+  if (PUBLISH) throw new Error("На страницах услуг и врачей остались пометки:\n" + spPending.join("\n"));
+  console.log(`Страницы услуг и врачей: пометок на демо ${spPending.length} (тексты, картинки, ответы клиники)`);
+}
 for (const [f, code] of Object.entries(assets)) writeFileSync(path.join(dist, "assets", f), code);
 cpSync(path.join(root, "src", "fonts"), path.join(dist, "assets", "fonts"), { recursive: true });
 const nm = (p) => path.join(root, "node_modules", p);
