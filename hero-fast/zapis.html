@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru" data-page="booking">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Записаться на приём | Умная Медицина. Стоматология</title>
+<meta name="description" content="Онлайн-запись в стоматологию «Умная Медицина»: выберите услугу, врача и удобное время.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://umnaya-stomatologiya.ru/zapis">
+<link rel="icon" type="image/svg+xml" href="images/brand/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Записаться на приём | Умная Медицина. Стоматология">
+<meta property="og:description" content="Онлайн-запись в стоматологию «Умная Медицина»: выберите услугу, врача и удобное время.">
+<meta property="og:locale" content="ru_RU">
+<meta name="theme-color" content="#0c2410">
+<link rel="apple-touch-icon" href="images/brand/apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/golos-text-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/styles.css?v=7df6d0a1">
+<script>
+(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
+setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
+window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
+window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big");if(p)p.classList.add("is-fallback");i.style.display="none"};
+</script>
+<script src="assets/vendor/gsap.min.js" defer></script>
+<script src="assets/vendor/ScrollTrigger.min.js" defer></script>
+<script src="assets/vendor/lenis.min.js" defer></script>
+<script src="assets/app.js?v=c2d61424" defer></script>
+
+</head>
+<body class="booking-page">
+<a class="skip" href="#main">К содержанию</a>
+<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». Заявки из форм пока никуда не отправляются.</div>
+<div class="booking" id="booking">
+  <main class="booking__main" id="main">
+    <div class="booking__top">
+      <a class="logo" href="index.html" aria-label="На главную"><img class="logo__img" src="images/brand/header-logo.svg" data-fb="https://um-med.com/assets/template/img/header-logo.svg" alt="" referrerpolicy="no-referrer" onerror="umLogo(this)"><span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
+      <a class="btn btn--ghost btn--sm" href="index.html">Отменить</a>
+    </div>
+    <div>
+      <section class="bstep bstart" data-step="0">
+        <span class="label">Онлайн-запись</span>
+        <h1 tabindex="-1">Записаться на приём</h1>
+        <p>Выберите услугу, врача и удобное время, а администратор подтвердит запись. Консультация с планом лечения бесплатная.</p>
+        <button class="btn btn--lg" type="button" data-start data-magnet>Перейти к записи</button>
+      </section>
+      <section class="bstep" data-step="1" hidden>
+        <div class="bsteps" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
+        <h2 tabindex="-1">Что нужно сделать?</h2>
+        <div class="opts" id="b-services"></div>
+      </section>
+      <section class="bstep" data-step="2" hidden>
+        <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
+        <h2 tabindex="-1">К какому врачу?</h2>
+        <div class="opts" id="b-doctors"></div>
+        <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button></div>
+      </section>
+      <section class="bstep" data-step="3" hidden>
+        <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span><span><i></i></span></div>
+        <h2 tabindex="-1">Когда удобно?</h2>
+        <div class="days" id="b-days"></div>
+        <div class="slots" id="b-slots"></div>
+        <p class="note" style="margin-top:14px">Пример расписания. В рабочей версии здесь живые окна врачей из МИС клиники.</p>
+        <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn btn--sm" type="button" data-next-time disabled>Дальше</button></div>
+      </section>
+      <section class="bstep" data-step="4" hidden>
+        <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span></div>
+        <h2 tabindex="-1">Как с вами связаться?</h2>
+        <form class="form" id="b-form">
+          <label>Имя<input name="name" required autocomplete="name"></label>
+          <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
+          <label>Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
+          <label class="check"><input type="checkbox" required> Согласен на обработку персональных данных</label>
+          <div class="bnav" style="margin-top:6px"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn">Записаться</button></div>
+        </form>
+      </section>
+      <section class="bstep bdone" data-step="5" hidden>
+        <div class="bdone__ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 16.2-4.2-4.2-1.4 1.4 5.6 5.6 11-11-1.4-1.4z"/></svg></div>
+        <h2 tabindex="-1">Заявка отправлена</h2>
+        <p class="muted">Это демонстрация. На рабочем сайте запись попадёт в расписание клиники и в amoCRM с меткой источника, а пациенту придёт подтверждение.</p>
+        <div class="bnav"><a class="btn" href="index.html">На главную</a></div>
+      </section>
+    </div>
+  </main>
+  <aside class="booking__aside on-dark" aria-label="Ваша запись">
+    <span class="label label--light">Ваша запись</span>
+    <dl class="summary">
+      <div><dt>Услуга</dt><dd data-sum="service" class="is-empty">не выбрано</dd></div>
+      <div><dt>Врач</dt><dd data-sum="doctor" class="is-empty">не выбрано</dd></div>
+      <div><dt>Дата и время</dt><dd data-sum="date" class="is-empty">не выбрано</dd></div>
+      <div><dt>Адрес</dt><dd>Удельная, ул. Громова, 10/2</dd></div>
+    </dl>
+    <p class="note">Есть вопросы? Позвоните: <a href="tel:+74951503615" style="color:#fff">+7 495 150-36-15</a>, ежедневно с 9:00 до 21:00.</p>
+  </aside>
+</div>
+<script type="application/json" id="bdata">{"services":[{"slug":"diagnostika","title":"КТ и снимки","short":"3D-снимок, ОПТГ, прицельный снимок","from":"от 500 ₽"},{"slug":"gigiena","title":"Профгигиена Air-Flow","short":"Air-Flow, ультразвук","from":"от 4 500 ₽"},{"slug":"lechenie-zubov","title":"Лечение зубов","short":"Кариес, пульпит, реставрация","from":"от 4 000 ₽"},{"slug":"implantaciya","title":"Имплантация зубов","short":"Straumann, Dentium, OSSTEM","from":"от 17 500 ₽"},{"slug":"all-on-4","title":"All-on-4 и All-on-6","short":"Вся челюсть на 4–8 имплантах","from":"от 110 000 ₽"},{"slug":"mikroskop","title":"Лечение под микроскопом","short":"Каналы, перфорации, трещины","from":"Цена после осмотра"},{"slug":"protezirovanie","title":"Протезирование","short":"Коронки, виниры, протезы","from":"от 26 400 ₽"},{"slug":"hirurgiya","title":"Удаление зубов","short":"Зубы мудрости, пьезохирургия","from":"от 2 100 ₽"},{"slug":"ortodontiya","title":"Брекеты и элайнеры","short":"Damon, 3M, элайнеры","from":"от 28 500 ₽"},{"slug":"detskaya","title":"Детская стоматология","short":"Лечение молочных зубов","from":"от 450 ₽"}],"doctors":[{"id":"solodukhin","short":"Евгений Солодухин","role":"Главный врач, ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/solodukhin.webp","initials":"ЕС"},{"id":"hludnevskiy","short":"Михаил Хлудневский","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/hludnevskiy.webp","initials":"МХ"},{"id":"radzhabov","short":"Азамат Раджабов","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/radzhabov.webp","initials":"АР"},{"id":"chitaykin","short":"Артём Читайкин","role":"Терапевт, эндодонтист, гигиенист","tags":["lechenie-zubov","mikroskop","gigiena"],"photo":"images/doctors/chitaykin.webp","initials":"АЧ"},{"id":"kashtanova","short":"Екатерина Каштанова","role":"Терапевт, ортодонт, гигиенист","tags":["lechenie-zubov","ortodontiya","gigiena","mikroskop"],"photo":"images/doctors/kashtanova.webp","initials":"ЕК"},{"id":"alikhanova","short":"Светлана Алиханова","role":"Ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/alikhanova.webp","initials":"СА"},{"id":"sikacheva","short":"Мария Сикачева","role":"Ортодонт","tags":["ortodontiya"],"photo":"images/doctors/sikacheva.webp","initials":"МС"},{"id":"troitskiy","short":"Даниил Троицкий","role":"Детский стоматолог","tags":["detskaya"],"photo":"images/doctors/troitskiy.webp","initials":"ДТ"}]}</script>
+</body>
+</html>
