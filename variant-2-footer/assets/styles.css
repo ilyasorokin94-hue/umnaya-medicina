@@ -1613,15 +1613,17 @@ html:not(.js-intro) .intro { display: none; }
    потом уменьшается до левой колонки и липнет под шапкой, а справа проезжают контакты. Сдвиг и масштаб задаёт app.js ---------- */
 .footer__in { padding-top: 0; }
 .footer__cta { position: relative; z-index: 2; background: var(--ink); padding-top: clamp(70px, 9vw, 120px); }
-.fstage { --fpin: calc(var(--header-h) + 14px + 40px); display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; padding: clamp(44px, 5vw, 72px) 0 clamp(48px, 5vw, 80px); }
+.fstage { --fpin: clamp(8rem, 7.2727rem + 3.2323vw, 10rem); display: grid; grid-template-columns: minmax(0, 1fr); gap: 44px; padding: clamp(44px, 5vw, 72px) 0 clamp(48px, 5vw, 80px); }
 .js-anim .fstage { padding-top: 75vmin; }
 .fstage__pin { position: relative; z-index: 1; min-width: 0; }
-.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 50%; will-change: transform, translate, scale; }
+.footer__big.fstage__logo { display: block; padding: 0; transform-origin: 0 50%; }
 /* как у Лава Дент: движение ведёт сама прокрутка средствами CSS (view-timeline), без скрипта, поэтому логотип
    стоит на месте и на телефоне, где прокрутку двигает палец. За первые 150vmin после появления блока сдвиг
    вверх ровно гасит прокрутку; масштаб держится до 75% и к концу отрезка уходит в 1. Где CSS этого не умеет,
    то же делает app.js */
-@keyframes fstage-logo { 0% { translate: 0 -150vmin; scale: var(--fl-s, 1); } 75% { scale: var(--fl-s, 1); } 100% { translate: 0 0; scale: 1; } }
+/* масштаб в кадрах числом, как у Лава Дент (у них 1,75): var() внутри @keyframes Chrome на видеокарте не подхватывает,
+   и логотип оставался маленьким. 1,74 = ширина 12 колонок / ширина 7 колонок этой сетки */
+@keyframes fstage-logo { 0% { translate: 0 -150vmin; scale: 1.74; } 75% { scale: 1.74; } 100% { translate: 0 0; scale: 1; } }
 @media (min-width: 1025px) {
   @supports (animation-timeline: scroll()) and (animation-range: 0% 100%) {
     .js-anim .fstage { view-timeline-name: --fstage-tl; }
@@ -1821,7 +1823,7 @@ html:not(.js-intro) .intro { display: none; }
 @media (max-width: 760px) {
   .tour { overflow: clip; }
   .tour > .tour__pin, .tour > .tour__lead, .tour > .tour__rows { display: none; }
-  .ptour { display: block; position: relative; timeline-scope: --pt-end; }
+  .ptour { display: block; position: relative; timeline-scope: --pt-car, --pt-end; }
   .ptour__car { position: relative; height: 100svh; overflow-x: clip; }
   .ptour__items { height: 100%; }
   .ptour__item { display: none; }
@@ -1853,16 +1855,14 @@ html:not(.js-intro) .intro { display: none; }
      в Safari с развёрнутой панелью 100vh уходит под неё, и подписи прятались под нижней панелью сайта */
   .js-anim .ptour { --pt-s: 100vh; }
   .js-anim .tour { scroll-margin-top: calc(-1 * (var(--header-h) + 12px)); }
-  /* лента листается шагами (Ilya 17.10: тянуть фото через весь экран тяжело): шаг ставит app.js по прокрутке или свайпу вбок,
-     фото доезжает само за .9s силами компоновщика; вертикаль отдаём браузеру, вбок ведёт палец */
-  .js-anim .ptour__car { position: sticky; top: 0; height: 100vh; width: 100vw; touch-action: pan-y pinch-zoom; }
-  .js-anim .ptour__items { display: flex; width: 500vw; margin-left: -50vw; transform: translate3d(calc(var(--pt-i, 0) * -75vw), 0, 0); transition: transform .9s cubic-bezier(.1, .75, .25, 1); will-change: transform; }
+  .js-anim .ptour__car { position: sticky; top: 0; height: 100vh; width: 100vw; }
+  .js-anim .ptour__items { display: flex; width: 500vw; margin-left: -50vw; will-change: transform; }
   .js-anim .ptour__item { display: flex; position: relative; flex: 0 0 100vw; width: 100vw; height: 100vh; margin-left: -25vw; padding-bottom: calc(100vh - var(--pt-s)); align-items: center; justify-content: center; overflow: clip; }
   .js-anim .ptour__img { transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(100vh - var(--pt-s) * .9) round 24px); }
   .js-anim .ptour__shade { opacity: 0; }
   .js-anim .ptour__cap { display: block; position: absolute; left: 13.75%; right: 13.75%; top: calc(var(--pt-s) * .79 + 12px); margin: 0; font: 400 14px/1.35 var(--body); color: var(--muted-on-dark); }
-  /* закреплённая лента занимает полтора экрана прокрутки (было три): шаг на 45vh, первый уже через 18vh */
-  .js-anim .ptour__spacer { display: block; height: 250vh; margin-top: -100vh; }
+  /* отступ шапки (scroll-padding) не должен сдвигать шкалы: лента едет ровно с момента, как встала */
+  .js-anim .ptour__spacer { display: block; height: 400vh; margin-top: -100vh; view-timeline: --pt-car block; view-timeline-inset: 0px; }
   /* после раскрытия кабинета пауза, как у Лава Дент (их отступ 3xl), потом поднимаются фото и проявляется заголовок */
   .js-anim .ptour__after { padding-top: calc(50vh + min(clamp(96px, 87.27px + 2.4242vw, 120px), 11.5vh)); view-timeline: --pt-end block; view-timeline-inset: 0px; }
   .js-anim .ptour__text { margin-top: 40svh; }
@@ -1878,13 +1878,69 @@ html:not(.js-intro) .intro { display: none; }
 }
 @supports (animation-timeline: view()) and (timeline-scope: --a) {
   @media (max-width: 760px) {
+    .js-anim .ptour__items { animation: pt-move linear forwards; animation-timeline: --pt-car; animation-range: contain 0% contain 100%; }
     .js-anim .ptour__item--main .ptour__img { animation: pt-zoom linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
     .js-anim .ptour__item--main .ptour__shade { animation: pt-shade ease-in-out forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
     .js-anim .ptour__item--left, .js-anim .ptour__item--right { animation: pt-out linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
     .js-anim .ptour__fig[data-par] { animation: pt-par linear both; animation-timeline: view(block 0px); }
   }
 }
+@keyframes pt-move { to { transform: translate(calc(-100% + 275vw)); } }
 @keyframes pt-zoom { to { clip-path: inset(0 round 0); transform: scale(1.1); } }
 @keyframes pt-shade { to { opacity: 1; } }
 @keyframes pt-out { to { transform: translate(var(--pt-x)); } }
 @keyframes pt-par { from { transform: translateY(25svh); } to { transform: translateY(-25svh); } }
+
+/* шапка на компьютере как у Лава Дент (Ilya 17.10): на всю ширину, прозрачная, сверху тёмная дымка сходит на нет,
+   под шапкой всё чуть размыто. Логотип слева, разделы по центру в порядке страницы, справа телефон (у Лава Дент там язык).
+   Под разделами тонкая линия из отрезков: отрезок раздела заполняется, пока этот раздел проходит по экрану (view-timeline).
+   При загрузке шапка въезжает сверху и проявляется, а светлая линия под разделами убегает влево */
+@media (min-width: 1025px) {
+  body { timeline-scope: --tl-services, --tl-clinic, --tl-team, --tl-reviews, --tl-faq, --tl-contacts; }
+  #services { view-timeline: --tl-services block; }
+  #clinic { view-timeline: --tl-clinic block; }
+  #team { view-timeline: --tl-team block; }
+  #reviews { view-timeline: --tl-reviews block; }
+  #faq { view-timeline: --tl-faq block; }
+  #contacts { view-timeline: --tl-contacts block; }
+
+  .header { --hc: 223, 232, 220; --hgap: clamp(1.5rem, 1.1364rem + 1.6162vw, 2.5rem); --hease: cubic-bezier(.33, 0, .11, 1); --hease-4: cubic-bezier(.1, .75, .25, 1);
+    padding-top: 0; color: rgb(var(--hc)); background-image: linear-gradient(180deg, var(--ink) -43.3%, rgba(12, 36, 16, 0)); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    transform: translateY(0); opacity: 1; transition: color .5s var(--hease), opacity 1s var(--hease), transform 1s var(--hease); }
+  .js-anim .header:not(.is-loaded) { opacity: 0; transform: translateY(-50px); transition: none; }
+  .header .header__bar, .header.is-scrolled .header__bar { width: var(--wrap); height: auto; display: grid; grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr); align-items: center; gap: 24px; padding: var(--hgap) 0; border-radius: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; }
+  .header .header__bar .logo { --lh: 40px; justify-self: start; }
+
+  .header .nav { display: block; justify-self: center; margin: 0; }
+  .nav__list { position: relative; display: inline-flex; align-items: center; gap: var(--hgap); margin: 0; padding: 0; list-style: none; }
+  .nav__item { position: relative; display: flex; padding: clamp(.5rem, .4545rem + .202vw, .625rem) 0; }
+  .header .nav a.nav__link { display: inline-block; padding: 0; border-radius: 0; background: none; font-size: clamp(.8rem, .7499rem + .2226vw, .9377rem); font-weight: 400; line-height: 1.4; color: rgba(var(--hc), .8); transition: color .5s var(--hease-4); }
+  .header .nav a.nav__link:hover, .header .nav .is-active > a.nav__link, .header .nav .is-current > a.nav__link { background: none; color: rgb(var(--hc)); }
+  .nav__progress { position: absolute; left: 0; bottom: 0; width: calc(100% + var(--hgap)); height: 1px; background: rgba(var(--hc), .2); pointer-events: none; }
+  .nav__item:last-child .nav__progress { width: 100%; }
+  .nav__fill { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: rgb(var(--hc)); transform: scaleX(0); transform-origin: 0 50%; }
+  .nav__item.is-current .nav__fill { transform: scaleX(1); width: calc(100% - var(--hgap)); }
+  .nav__item:last-child .nav__fill { width: 100%; }
+  .nav__list::after { content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 1px; background: rgb(var(--hc)); transform: scaleX(0); transform-origin: 0 50%; pointer-events: none; transition: transform 2s var(--hease); }
+  .js-anim .header:not(.is-loaded) .nav__list::after { transform: scaleX(1); }
+
+  .header .header__cta { justify-self: end; gap: 0; }
+  .header .header__cta .btn, .header .header__cta .burger, .header .header__phone small { display: none; }
+  .header .header__cta .header__phone { display: inline-block; padding: clamp(.5rem, .4545rem + .202vw, .625rem) 0; color: rgb(var(--hc)); text-decoration: none; }
+  .header .header__phone b { font-size: clamp(.8rem, .7499rem + .2226vw, .9377rem); font-weight: 400; line-height: 1.4; }
+  .header .logo__unit { opacity: .8; }
+}
+/* узкий компьютер: разделы и телефон остаются, как у Лава Дент, логотип чуть меньше, чтобы всё встало в строку */
+@media (min-width: 1025px) and (max-width: 1180px) {
+  .header .header__bar { gap: 16px; }
+  .header .header__bar .logo { --lh: 32px; }
+}
+@supports (animation-timeline: scroll()) {
+  @media (min-width: 1025px) {
+    .nav__fill { animation-name: nav-grow; animation-duration: auto; animation-timing-function: linear; animation-fill-mode: forwards; animation-range: cover 0% entry-crossing 100%; }
+  }
+}
+@supports not (animation-timeline: scroll()) {
+  @media (min-width: 1025px) { .nav__item.is-active .nav__fill { transform: scaleX(1); width: calc(100% - var(--hgap)); } }
+}
+@keyframes nav-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
