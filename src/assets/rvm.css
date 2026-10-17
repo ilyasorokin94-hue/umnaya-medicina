@@ -10,9 +10,9 @@
   .rvs__card[data-tone="ink"] { background: var(--ink); color: #fff; }
   .rvs__card[data-tone="green"] { background: var(--green); color: #fff; }
   .rvs__card[data-tone="sage"] { background: var(--sage-2); }
-  .rvs__card blockquote { margin: 0; font: 500 27px/1.2 var(--display); letter-spacing: -.02em; text-wrap: pretty; }
-  .rvs__card--short blockquote { font-size: 35px; line-height: 1.1; letter-spacing: -.03em; }
-  .rvs__card--long blockquote { font-size: 23px; line-height: 1.26; }
+  .rvs__card blockquote { margin: 0; font: 500 var(--fs-2)/1.2 var(--display); letter-spacing: -.02em; text-wrap: pretty; }
+  .rvs__card--short blockquote { font-size: var(--fs-3); line-height: 1.1; letter-spacing: -.03em; }
+  .rvs__card--long blockquote { font-size: var(--fs-1); line-height: 1.26; }
   .rvs__card b { font-weight: inherit; color: var(--green); }
   .rvs__card[data-tone="ink"] b { color: var(--green-hi); }
   .rvs__card[data-tone="green"] b { color: var(--ink); }
@@ -22,6 +22,6 @@
   .rvs--on .rvs__card.is-drag { transition: none; }
   .rvs__bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; }
   .rvs:not(.rvs--on) + .rvs__bar { display: none; }
-  .rvs__hint { margin: 0; max-width: 15em; font-size: 14px; line-height: 1.35; color: var(--muted); }
+  .rvs__hint { margin: 0; max-width: 15em; font-size: var(--fs--1); line-height: 1.35; color: var(--muted); }
   .rvs__next { flex: none; }
 }

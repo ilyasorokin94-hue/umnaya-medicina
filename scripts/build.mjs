@@ -94,7 +94,7 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
 <meta name="theme-color" content="#0c2410">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Golos+Text:wght@400;500;600&family=Inter+Tight:wght@450&family=Manrope:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Inter+Tight:wght@450&family=Manrope:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
@@ -572,7 +572,7 @@ ${svlBlock(p, depth)}
     </div>
     <div class="rt-pd">
       <div class="rt-seal"><a class="rt-seal__link" href="${clinic.prodoctorov}?utm_source=widget&amp;utm_medium=referral&amp;utm_campaign=recommend#otzivi"${ext} data-goal="reviews_prodoctorov" aria-label="Нас рекомендуют на сайте ПроДокторов: рейтинг 4,9, 199 отзывов">
-        <img class="rt-seal__img" src="https://prodoctorov.ru/rating/widget/recommend/95133/200.png" srcset="https://prodoctorov.ru/rating/widget/recommend/95133/200.png 1x, https://prodoctorov.ru/rating/widget/recommend/95133/300.png 2x" width="200" height="134" alt="Нас рекомендуют на сайте ПроДокторов" title="ПроДокторов — Стоматология «Умная медицина», Жуковский" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${pick(["images/brand/prodoctorov.svg"], depth).src}';this.closest('.rt-seal').classList.add('is-fb')">
+        <img class="rt-seal__img" src="https://prodoctorov.ru/rating/widget/recommend/95133/200.png" srcset="https://prodoctorov.ru/rating/widget/recommend/95133/200.png 1x, https://prodoctorov.ru/rating/widget/recommend/95133/300.png 2x" width="200" height="134" alt="Нас рекомендуют на сайте ПроДокторов" title="ПроДокторов: стоматология «Умная медицина», Жуковский" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${pick(["images/brand/prodoctorov.svg"], depth).src}';this.closest('.rt-seal').classList.add('is-fb')">
       </a></div>
       <div class="rt-pd__text">
         <p class="rt-pd__quote">${esc(rating.pdText)}</p>
