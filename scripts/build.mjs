@@ -89,17 +89,17 @@ const icon = {
 
 // ---------- общие куски ----------
 // меню сайта, как у Тридента: «Услуги» раскрываются списком направлений, остальное разделы и страницы
-const menuItems = (p, href) => [["Цены", `${p}ceny.html`], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
+const menuItems = (p, href) => [["Цены", `${p}ceny.html`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
 // шапка компьютера как у Лава Дент: под каждым разделом отрезок линии, он заполняется, пока этот раздел проходит
 // по экрану (CSS view-timeline блока). «Цены» отдельной страницей, поэтому блок услуг с ценами «от» делят пополам «Услуги» и «Цены»
 const navLine = {
   "Услуги": "animation-timeline:--tl-services;animation-range:entry-crossing 0% entry-crossing 50%",
   "Цены": "animation-timeline:--tl-services;animation-range:entry-crossing 50% entry-crossing 100%",
-  "О клинике": "animation-timeline:--tl-clinic", "Врачи": "animation-timeline:--tl-team", "Отзывы": "animation-timeline:--tl-reviews",
+  "О клинике": "animation-timeline:--tl-clinic", "Акции": "animation-timeline:--tl-akcii", "Врачи": "animation-timeline:--tl-team", "Отзывы": "animation-timeline:--tl-reviews",
   "Вопросы": "animation-timeline:--tl-faq", "Контакты": "animation-timeline:--tl-contacts",
 };
 // меню телефона и шапка компьютера как у Лава Дент: разделы в порядке страницы (Ilya 17.10: после слогана клиника и «5 минут, 0 ₽, 3 врача», потом услуги), «Цены» рядом с услугами
-const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi"], ["Цены", `${p}ceny.html`], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
+const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi"], ["Цены", `${p}ceny.html`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
 function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
   const p = pre(depth);
@@ -148,7 +148,7 @@ const fallbackHref = (kind, p, o = {}) => kind === "call" ? clinic.phoneHref
   : kind === "xray" ? clinic.telegram
   : kind === "allon" ? `${p}zapis.html?service=all-on-4`
   : `${p}zapis.html${o.service ? `?service=${o.service}` : o.doctor ? `?doctor=${o.doctor}` : ""}`;
-const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""}" href="${fallbackHref(kind, p, o)}" data-modal="${kind}"${o.reason ? ` data-reason="${esc(o.reason)}"` : ""}${o.doctor ? ` data-doctor="${o.doctor}"` : ""}${o.magnet ? " data-magnet" : ""}>${esc(label)}</a>`;
+const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""}" href="${fallbackHref(kind, p, o)}" data-modal="${kind}"${o.reason ? ` data-reason="${esc(o.reason)}"` : ""}${o.promo ? ` data-promo="${esc(o.promo)}"` : ""}${o.doctor ? ` data-doctor="${o.doctor}"` : ""}${o.magnet ? " data-magnet" : ""}>${esc(label)}</a>`;
 // тур на телефоне как вторая секция Лава Дент: лента карточек стоит на месте и едет вбок от прокрутки,
 // кабинет раскрывается на весь экран, заголовок проявляется по словам, поверх проходят остальные фото, потом текст
 function phoneTour(depth) {
@@ -218,6 +218,8 @@ function modals(depth) {
   const consent = `Отправляя заявку, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.`;
   const phone = `<label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>`;
   const name = `<label>Имя<input name="name" autocomplete="given-name" required></label>`;
+  // строка «Акция: …», если окно открыли кнопкой из блока акций; уходит в заявку скрытым полем promo
+  const promoLine = `<p class="modal__promo" hidden></p>`;
   const msgr = `<div class="modal__msgr"><a class="btn btn--ghost" href="${clinic.telegram}"${ext}>Отправить в Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>Отправить в MAX</a></div>`;
   const box = (id, title, inner, wide = false) => `<div class="modal modal--${id}" id="m-${id}" role="dialog" aria-modal="true" aria-labelledby="m-${id}-t" hidden><div class="modal__box${wide ? " modal__box--wide" : ""}" data-lenis-prevent>
   <button class="modal__x" type="button" aria-label="Закрыть" data-close>${icon.close}</button>
@@ -227,9 +229,9 @@ function modals(depth) {
 <script type="application/json" id="um-docs">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, d.short])))}</script>
 <div class="modals">
 ${box("book", "Запишитесь на бесплатную консультацию", `<p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
-  <p class="modal__doc" hidden></p>
+  <p class="modal__doc" hidden></p>${promoLine}
   <form class="form lead" data-lead="book">
-    <input type="hidden" name="doctor">${name}${phone}
+    <input type="hidden" name="doctor"><input type="hidden" name="promo">${name}${phone}
     <fieldset class="reasons"><legend>Что беспокоит <span>необязательно</span></legend><div class="chips">${home.reasons.map((r) => `<label class="chip chip--pick"><input type="radio" name="reason" value="${esc(r)}"><span>${esc(r)}</span></label>`).join("")}</div></fieldset>
     <button class="btn btn--lg btn--wide">Жду звонка</button>
     <p class="modal__note">Перезвоним за 5 минут. Заявки после 21:00 перезваниваем с 9:00 утра. ${consent}</p>
@@ -247,7 +249,8 @@ ${box("xray", "Пришлите снимок, и врач скажет, можн
     <p class="modal__note">Если зуб можно спасти, скажем, как и сколько это стоит. ${consent}</p>
   </form>`)}
 ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная, стоимость лечения врач назовёт после осмотра.</p>
-  <form class="form lead" data-lead="allon">${name}${phone}
+  ${promoLine}
+  <form class="form lead" data-lead="allon"><input type="hidden" name="promo">${name}${phone}
     <fieldset class="reasons"><legend>Одна или обе челюсти</legend><div class="chips">${["Одна челюсть", "Обе челюсти"].map((r, i) => `<label class="chip chip--pick"><input type="radio" name="jaws" value="${r}"${i ? "" : " checked"}><span>${r}</span></label>`).join("")}</div></fieldset>
     <fieldset class="reasons"><legend>Носите ли съёмный протез</legend><div class="chips">${["Да, ношу", "Нет"].map((r) => `<label class="chip chip--pick"><input type="radio" name="denture" value="${r}"><span>${r}</span></label>`).join("")}</div></fieldset>
     <button class="btn btn--lg btn--wide">Записаться на консультацию</button>
@@ -483,6 +486,32 @@ function svlBlock(p, depth) {
 </div>`;
 }
 
+// ---------- акции и выгодные условия: «Стопка» (Ilya 17.10) ----------
+// Блок после услуг, перед врачами. Светлые карточки акций наплывают друг на друга при прокрутке, ниже «Выгодно всегда».
+// Кнопка открывает окно записи с поводом и строкой «Акция: …», акция уходит в заявку скрытым полем promo.
+// Если у акции нет картинки, вместо неё тёмная плитка с крупной ценой
+// слова через дефис (Air-Flow, 3D-снимок, All-on-4) не рвутся по строкам
+const prNw = (t) => esc(t).replace(/\S+-\S+/g, (w) => `<span class="nobr">${w}</span>`);
+const prBtn = (d, p) => act(d.btn, d.modal, p, { reason: d.reason, cls: "btn--lg", promo: d.promo });
+const prPrice = (d) => `<p class="pr-price"><b>${esc(d.price)}</b>${d.old ? `<s aria-label="вместо ${esc(d.old)}">${esc(d.old)}</s>` : ""}${d.sub ? `<span>${esc(d.sub)}</span>` : ""}</p>`;
+function promoBlock(p, depth) {
+  const A = v2.akcii;
+  return `<section class="section pr on-dark" id="akcii" aria-labelledby="pr-title"><div class="wrap">
+  <div class="section__head"><div><span class="label label--light">${esc(A.label)}</span><h2 id="pr-title" data-split>${esc(A.title)}</h2></div><p>${esc(A.text)}</p></div>
+  <div class="pr4">${A.deals.map((d, i) => `<article class="pr4-card" style="--i:${i}">
+    ${d.img ? `<span class="pr4-card__pic">${img(d.img, d.alt, depth)}</span>` : `<span class="pr4-card__pic pr4-card__pic--type" aria-hidden="true"><b>${esc(d.price)}</b></span>`}
+    <div class="pr4-card__text">
+      <span class="label pr-tag">${esc(d.tag)}</span>
+      <h3 class="pr-title">${prNw(d.title)}</h3>
+      ${prPrice(d)}
+      <p class="pr-gift">${prNw(d.gift)}</p>
+      ${prBtn(d, p)}
+    </div>
+  </article>`).join("")}</div>
+  <div class="pr-al"><h3 class="pr-al__title">${esc(A.alwaysTitle)}</h3><ul class="pr-al__list">${A.always.map(([t, d]) => `<li data-reveal><b>${prNw(t)}</b><span>${prNw(d)}</span></li>`).join("")}</ul></div>
+</div></section>`;
+}
+
 // ---------- главная: порядок блоков Тридента ----------
 // первый экран, услуги и цены вкладками, клиника и оборудование, путь пациента, врачи, отзывы, три вопроса, контакты
 
@@ -540,6 +569,8 @@ function pageHome() {
 <section class="section section--sage svs" id="services" aria-labelledby="sv-title">
 ${svlBlock(p, depth)}
 </section>
+
+${promoBlock(p, depth)}
 
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>

@@ -403,6 +403,17 @@
       info.textContent = doc ? "Врач: " + (docs[doc] || doc) : "";
       $$('input[name="reason"]', m).forEach((r) => (r.checked = !!reason && r.value === reason));
     }
+    // акция из блока «Акции»: показываем строкой в окне и отправляем вместе с заявкой
+    const pl = $(".modal__promo", m);
+    if (pl) {
+      const promo = from?.dataset.promo || "";
+      pl.hidden = !promo;
+      pl.textContent = promo ? "Акция: " + promo : "";
+      $('input[name="promo"]', m).value = promo;
+      // заголовок «бесплатная консультация» не подходит к платной акции (Air-Flow): по акции свой заголовок
+      const h = id === "book" && $("h2", m);
+      if (h) { h.dataset.title ??= h.textContent; h.textContent = promo ? "Запишитесь по акции" : h.dataset.title; }
+    }
     m.hidden = false;
     openM = m; if (id !== "offer") anyModal = true;
     root.classList.add("has-modal");
@@ -737,6 +748,12 @@
       els.filter((el) => !live.includes(el)).forEach(revealed);
       if (live.length) G.to(live, { opacity: 1, y: 0, scale: 1, duration: 0.9, stagger: Math.min(0.07, 0.35 / live.length), overwrite: true, onComplete: () => live.forEach(revealed) });
     },
+  });
+
+  // акции «Стопка»: карточка уходит чуть вглубь, когда на неё наплывает следующая (на низком экране стопки нет, см. styles.css)
+  mm.add("(min-height: 601px)", () => {
+    const pr4 = $$(".pr4-card");
+    pr4.slice(0, -1).forEach((c, i) => G.to(c, { scale: 0.94, ease: "none", scrollTrigger: { trigger: pr4[i + 1], start: "top bottom", end: "top 30%", scrub: true } }));
   });
 
   // картинки раскрываются шторкой
