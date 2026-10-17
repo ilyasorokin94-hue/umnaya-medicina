@@ -448,20 +448,14 @@ function place() {
 const svlGo = '<span class="svl-go" aria-hidden="true"><svg viewBox="0 0 60 60"><path d="M24 36 36 24M27 24h9v9"/></svg></span>';
 // «All-on-4» не рвётся по дефису
 const svlTitle = (t) => esc(t).replace(/\S+-\S+/g, (w) => `<span class="svl-nw">${w}</span>`);
-const svlItems = () => {
-  const dirs = Object.fromEntries(v2.dirs.map((d) => [d.tab, d]));
-  return [...v2.lava.cards, ...v2.lava.list].map((it, i) => {
-    const d = dirs[it.dir];
-    return { ...it, nr: pad(i + 1), lead: it.lead || d.lead, points: it.points || svc[it.slug].points, rows: it.rows || d.rows, promo: it.promo || d.promo, btn: it.btn || d.btn };
-  });
-};
+const svlItems = () => [...v2.lava.cards, ...v2.lava.list].map((it, i) => ({ ...it, nr: pad(i + 1) }));
 function svlBlock(p, depth) {
   const items = svlItems(), n = v2.lava.cards.length;
-  const card = (s, i) => `<a class="svl-card" href="${p}uslugi/${s.slug}.html" data-modal="svc-${s.slug}" style="--delay:${(i * 0.3).toFixed(1)}s">
+  const card = (s, i) => `<a class="svl-card" href="${p}uslugi/${s.slug}.html" style="--delay:${(i * 0.3).toFixed(1)}s">
       ${img(s.img, "", depth, ' class="svl-card__img"')}
       <span class="svl-card__in"><span class="svl-card__top"><span class="svl-nr">${s.nr}</span>${svlGo}</span><h3 class="svl-card__title">${svlTitle(s.title)}</h3></span>
     </a>`;
-  const row = (s, i) => `<a class="svl-row" href="${p}uslugi/${s.slug}.html" data-modal="svc-${s.slug}" style="--delay:${(i * 0.3).toFixed(1)}s"><span class="svl-nr">${s.nr}</span><h3 class="svl-row__title">${svlTitle(s.title)}</h3><span class="svl-row__act">${svlGo}</span></a>`;
+  const row = (s, i) => `<a class="svl-row" href="${p}uslugi/${s.slug}.html" style="--delay:${(i * 0.3).toFixed(1)}s"><span class="svl-nr">${s.nr}</span><h3 class="svl-row__title">${svlTitle(s.title)}</h3><span class="svl-row__act">${svlGo}</span></a>`;
   return `<div class="svl">
   <div class="svl__head"><div class="wrap"><h2 id="sv-title" data-split>${esc(v2.lava.title)}</h2><a class="link" href="${p}ceny.html">Весь прайс</a></div></div>
   <div class="svl__top"><div class="wrap"><div class="svl-grid" data-svl>
@@ -472,26 +466,9 @@ function svlBlock(p, depth) {
   </div></div></div>
 </div>`;
 }
-function svlModals(p, depth) {
-  return `<div class="modals">${svlItems().map((s) => `
-<div class="modal modal--svc" id="m-svc-${s.slug}" role="dialog" aria-modal="true" aria-labelledby="m-svc-${s.slug}-t" hidden><div class="modal__box svm" data-lenis-prevent>
-  <div class="svm__bar wrap"><button class="svm__x" type="button" aria-label="Закрыть" data-close>${icon.close}</button></div>
-  <div class="svm__in wrap"><div class="svm__body">
-    <h2 class="svm__title" id="m-svc-${s.slug}-t" tabindex="-1">${esc(s.title)}</h2>
-    <p class="svm__lead">${esc(s.lead)}</p>
-    <ul class="svm__list">${s.points.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
-    <div class="svm__promo"><span class="svm__tag">${esc(s.promo.tag)}</span><p class="svm__offer"><b>${esc(s.promo.title)}</b>${s.promo.price ? ` <span>${esc(s.promo.price)}</span>${s.promo.old ? ` <s>${esc(s.promo.old)}</s>` : ""}` : ""}</p><p>${esc(s.promo.text)}</p></div>
-    <div class="svm__prices">${s.rows.map((r) => `<div class="svm__row"><h3>${esc(r[0])}</h3><p>${rowPrice(r)}</p></div>`).join("")}</div>
-    <p class="svm__note">Стартовые цены. Точную стоимость врач назовёт после осмотра.</p>
-    <div class="svm__act">${act(s.btn[0], s.btn[1], p, { reason: s.btn[2] || undefined })}<a class="btn btn--ghost" href="${p}uslugi/${s.slug}.html">Подробнее об услуге</a></div>
-  </div></div>
-</div></div>`).join("")}
-</div>`;
-}
 
 // ---------- главная: порядок блоков Тридента ----------
 // первый экран, услуги и цены вкладками, клиника и оборудование, путь пациента, врачи, отзывы, три вопроса, контакты
-const rowPrice = ([, v, old]) => (v === 0 ? "Бесплатно" : typeof v === "number" ? rub(v) : priceText(v)) + (old ? ` <s>${rub(old)}</s>` : "");
 
 function pageHome() {
   const depth = 0, p = "";
@@ -592,8 +569,7 @@ ${svlBlock(p, depth)}
 </div></section>
 
 ${place()}
-</main>
-${svlModals(p, depth)}` + footer(depth) + `
+</main>` + footer(depth) + `
 <script src="assets/rvm.js?v=${V.rvm}" defer></script>` + end;
 }
 
