@@ -414,7 +414,7 @@ function marquee(text) {
 // ---------- контакты: пять вариантов без фото, с Яндекс Картой (Ilya 17.10) ----------
 // CT=1…5 при сборке выбирает вариант: 1 карта рядом, 2 карта по кнопке, 3 маршрут из вашего города, 4 карта растёт при прокрутке, 5 карточка на карте.
 // Карта: виджет Яндекса без ключа; до нажатия не ловит прокрутку (кнопка «Нажмите, чтобы двигать карту»)
-const CT = Number(process.env.CT || 1);
+const CT = Number(process.env.CT || 3);
 const ymap = (q) => `https://yandex.ru/map-widget/v1/?${q}`;
 const ymapPin = (z = 16, dx = 0) => ymap(`ll=${(clinic.geo.lon + dx).toFixed(6)}%2C${clinic.geo.lat}&z=${z}&pt=${clinic.geo.lon},${clinic.geo.lat},pm2grm`);
 const ctMap = (src, o = {}) => `<div class="ctmap${o.cls ? " " + o.cls : ""}"${o.attrs || ""}><iframe title="Карта: стоматология на Громова, 10/2"${o.frame || ""} ${o.lazy === false ? "data-src" : 'loading="lazy" src'}="${src}"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button></div>`;
