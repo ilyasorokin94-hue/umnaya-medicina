@@ -548,7 +548,7 @@ ${svlBlock(p, depth)}
       </a>`).join("")}
     </div>
     <div class="rt-pd">
-      <div class="rt-seal"><a class="rt-seal__link" href="${clinic.prodoctorov}?utm_source=widget&amp;utm_medium=referral&amp;utm_campaign=recommend#otzivi"${ext} data-goal="reviews_prodoctorov" aria-label="Нас рекомендуют на сайте ПроДокторов: рейтинг 4,9, 199 отзывов">
+      <div class="rt-seal"><svg class="rt-seal__ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="rt-seal__track" cx="50" cy="50" r="49.4"/><circle class="rt-seal__fill" cx="50" cy="50" r="49.4" pathLength="100"/></svg><a class="rt-seal__link" href="${clinic.prodoctorov}?utm_source=widget&amp;utm_medium=referral&amp;utm_campaign=recommend#otzivi"${ext} data-goal="reviews_prodoctorov" aria-label="Нас рекомендуют на сайте ПроДокторов: рейтинг 4,9, 199 отзывов">
         <img class="rt-seal__img" src="https://prodoctorov.ru/rating/widget/recommend/95133/200.png" srcset="https://prodoctorov.ru/rating/widget/recommend/95133/200.png 1x, https://prodoctorov.ru/rating/widget/recommend/95133/300.png 2x" width="200" height="134" alt="Нас рекомендуют на сайте ПроДокторов" title="ПроДокторов: стоматология «Умная медицина», Жуковский" loading="lazy" decoding="async" onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${pick(["images/brand/prodoctorov.svg"], depth).src}';this.closest('.rt-seal').classList.add('is-fb')">
       </a></div>
       <div class="rt-pd__text">
