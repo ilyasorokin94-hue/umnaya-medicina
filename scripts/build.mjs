@@ -8,7 +8,8 @@ import { transformSync } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 import { reviewsMobile } from "./reviews-mobile.mjs";
-import { servicePages, servicePriceDate, todo } from "../src/service-pages.mjs";
+import { servicePages, servicePriceDate, servicePriceHold } from "../src/service-pages.mjs";
+import { parseServiceMd } from "./service-md.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
@@ -707,166 +708,262 @@ ${docs.length ? `<section class="section"><div class="wrap">
 </main>` + footer(depth) + end;
 }
 
-// ---------- страница услуги нового формата (Ilya 17.10): первый экран со своей картинкой, блоки по ТЗ ----------
-// Данные в src/service-pages.mjs. todo() и draft() видны на демо пометками; с PUBLISH=1 сборка на них останавливается.
+// ---------- страница услуги нового формата (Ilya 17.10): первый экран со своей картинкой, тексты SEO-треда ----------
+// Шапка страницы (адрес, крошки, картинка, цифры первого экрана) в src/service-pages.mjs, текст в src/service-texts/<slug>.md
+// (раскладывает scripts/import-service-texts.mjs). Пометки [УТОЧНИТЬ …], [ОТЗЫВ …] и спорные цены на демо видны плашками,
+// с PUBLISH=1 сборка на них останавливается.
 const spPending = [];
 const warnText = "Имеются противопоказания. Необходима консультация специалиста.";
 const spWarn = `<p class="sp-warn">${warnText}</p>`;
 // тире не начинает строку
 const spDash = (t) => t.replace(/ — /g, "\u00a0— ");
-// ссылка на страницу из плана сайта: новая страница, старая uslugi/*.html или прайс; ещё не сделанная даёт null
-function spHref(target, p) {
-  if (!target) return null;
-  if (target === "ceny") return `${p}ceny.html`;
-  if (servicePages.some((x) => x.path === target)) return p + target;
-  const m = /^([\w-]+)\/$/.exec(target);
-  return m && svc[m[1]] ? `${p}uslugi/${m[1]}.html` : null;
-}
-// текст поля: строка, черновик из ТЗ или пометка «что здесь будет»
-function spText(v, page, tag = "p", cls = "") {
-  const c = (x) => (x ? ` class="${x}"` : "");
-  if (v && v.todo) { spPending.push(`${page.slug}: ${v.todo}`); return `<${tag}${c(("todo " + cls).trim())}>${esc(v.todo)}</${tag}>`; }
-  if (v && v.draft) { spPending.push(`${page.slug}: черновик «${v.draft.slice(0, 40)}…»`); return `<${tag}${c(("is-draft " + cls).trim())}>${esc(v.draft)} <mark class="todo-tag">черновик</mark></${tag}>`; }
-  return v == null ? "" : `<${tag}${c(cls)}>${esc(v)}</${tag}>`;
-}
-const spInline = (v, page) => (v && (v.todo || v.draft) ? spText(v, page, "span", "todo--in") : esc(priceText(v)));
-const spList = (items, cls = "sp-points") => `<ul class="${cls}">${items.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>`;
-// quiet: внутри прайса, таблиц и карточек ещё не сделанная страница просто текст, без пометки
-const spLink = (text, target, p, cls = "", quiet = false) => {
-  const h = spHref(target, p);
-  return h ? `<a${cls ? ` class="${cls}"` : ""} href="${h}">${esc(text)}</a>` : quiet ? esc(text) : `<span class="sp-soon${cls ? " " + cls : ""}">${esc(text)}<small>страница в работе</small></span>`;
-};
-function spSubs(subs = [], page) {
-  return subs.map(([t, body]) => {
-    const inner = Array.isArray(body) ? spList(body)
-      : body && body.pros ? `<div class="sp-pc"><div><p class="label">Плюсы</p>${spList(body.pros)}</div><div><p class="label">Ограничения</p>${spList(body.cons)}</div></div>`
-      : spText(body, page);
-    return `<div class="sp-sub" data-reveal><h3>${esc(t)}</h3>${inner}</div>`;
-  }).join("");
-}
-const spAfter = (after = [], p) => (after.length ? `<p class="sp-after">${after.map(([t, h]) => spLink(t, h, p, "link")).join("")}</p>` : "");
+const spTexts = Object.fromEntries(servicePages.map((pg) => {
+  const f = path.join(root, "src", "service-texts", `${pg.slug}.md`);
+  if (!existsSync(f)) throw new Error(`Нет текста страницы услуги: src/service-texts/${pg.slug}.md`);
+  return [pg.slug, parseServiceMd(readFileSync(f, "utf8"))];
+}));
 
-function spBlock(b, page, depth) {
-  const p = pre(depth);
-  const tone = b.tone === "sage" ? " section--sage" : b.tone === "dark" ? " section--dark on-dark" : "";
-  const h2 = (cls = "") => `<h2 id="${b.id}-t"${cls ? ` class="${cls}"` : ""} data-split>${spDash(esc(b.title))}</h2>`;
-  const sec = (body, cls = "") => `<section class="section sp-sec${tone}${cls}" id="${b.id}" aria-labelledby="${b.id}-t"><div class="wrap">${body}</div></section>`;
-  const head = (extra = "") => `<div class="sp-head">${h2()}${extra}</div>`;
-  switch (b.type) {
-    case "prices": return sec(`<div class="sp-grid">
-      <div class="sp-grid__aside">${h2()}<p class="note sp-date">Цены по прайсу клиники на ${servicePriceDate}. Не являются публичной офертой. Точная стоимость — по плану лечения после консультации и КТ.</p>${act("Записаться на консультацию", "book", p, { cls: "btn--lg", service: page.slug })}</div>
-      <div><ul class="sp-plist" data-reveal>${b.rows.map(([n, v, h]) => `<li><span>${spLink(n, h, p, "", true)}</span><b>${spInline(v, page)}</b></li>`).join("")}</ul>
-      ${spWarn}${spSubs(b.sub, page)}</div>
-    </div>`);
-    case "rows": return sec(`${head(b.lead ? `<p class="sp-head__lead">${esc(b.lead)}</p>` : "")}
-      <div class="sp-rows">${b.items.map((it) => {
-        const [t, h] = Array.isArray(it) ? it : [it];
-        const href = spHref(h, p);
-        return href ? `<a class="sp-row" href="${href}" data-reveal><span>${esc(t)}</span>${svlGo}</a>` : `<p class="sp-row" data-reveal><span>${esc(t)}</span></p>`;
-      }).join("")}</div>
-      ${b.sub ? `<div class="sp-subs">${spSubs(b.sub, page)}</div>` : ""}`);
-    case "cards": return sec(`${head()}
-      <div class="sp-cards sp-cards--${b.cols || 3}">${b.items.map(([t, d, h]) => `<article class="sp-card" data-reveal><h3>${spLink(t, h, p, "", true)}</h3>${spText(d, page)}</article>`).join("")}</div>
-      ${b.text ? `<div class="sp-more">${spText(b.text, page)}</div>` : ""}${spAfter(b.after, p)}`);
-    case "steps": return `<section class="foil on-dark sp-steps" id="${b.id}" aria-labelledby="${b.id}-t"><div class="feat">
-    <div class="feat__pin"><div class="feat__track">
-      <div class="fcard fcard--intro">${h2()}${spText(b.intro, page)}</div>
-      ${b.items.map(([big, t, d]) => `<article class="fcard"><div class="fcard__body"><b class="fcard__big">${esc(big)}</b><h3>${esc(t)}</h3>${spText(d, page)}</div></article>`).join("")}
-    </div><div class="wrap cta-strip"><p>${esc(b.note)}</p>${act("Записаться на консультацию", "book", p, { cls: "btn--light btn--lg", service: page.slug })}</div></div>
-  </div>${b.sub ? `<div class="wrap sp-steps__sub">${spSubs(b.sub, page)}</div>` : ""}</section>`;
-    case "split": return sec(`<div class="sp-split">
-      <figure class="sp-split__fig" data-ph><span class="sp-split__img" data-clip data-parallax>${img(b.img, b.alt, depth)}${ph(b.alt)}</span>${b.cap ? `<figcaption>${esc(b.cap)}</figcaption>` : ""}</figure>
-      <div class="sp-split__text">${h2()}${spText(b.text, page, "p", "sp-lead")}${b.items ? spList(b.items) : ""}${spSubs(b.sub, page)}</div>
-    </div>`);
-    case "compare": return sec(`${head()}
-      <div class="sp-table" data-reveal${b.draft ? ' data-draft' : ""}><table>
-        <thead><tr>${b.head.map((c, i) => `<th scope="col">${Array.isArray(c) ? spLink(c[0], c[1], p, "", true) : esc(c)}</th>`).join("")}</tr></thead>
-        <tbody>${b.rows.map(([n, ...cs]) => `<tr><th scope="row">${esc(n)}</th>${cs.map((c) => `<td>${spInline(c, page)}</td>`).join("")}</tr>`).join("")}</tbody>
-      </table>${b.draft ? `<mark class="todo-tag">черновик, сверить с врачом</mark>` : ""}</div>
-      ${b.text ? `<div class="sp-more">${spText(b.text, page, "p", "sp-lead")}</div>` : ""}`);
-    case "links": return `<section class="section section--dark on-dark sp-sec sp-links" id="${b.id}" aria-labelledby="${b.id}-t"><div class="wrap">
-      ${head(spText(b.text, page, "p", "sp-head__lead"))}
-      <div class="svl"><div class="svl-list" data-svl>${b.items.map(([t, h, price], i) => {
-        const href = spHref(h, p), title = `<h3 class="svl-row__title">${svlTitle(t)}${price ? ` <small class="sp-links__price">${esc(price)}</small>` : ""}</h3>`;
-        return href ? `<a class="svl-row" href="${href}" style="--delay:${(i * 0.3).toFixed(1)}s">${title}<span class="svl-row__act">${svlGo}</span></a>`
-          : `<div class="svl-row is-soon" style="--delay:${(i * 0.3).toFixed(1)}s">${title}<span class="sp-soon"><small>страница в работе</small></span></div>`;
-      }).join("")}</div></div>
-    </div></section>`;
-    case "doctors": return sec(`${head()}<div class="team__grid">${page.doctors.map((id) => doctorCard(docById[id], depth)).join("")}</div>
-      <div class="team__more"><a class="btn btn--ghost" href="${p}vrachi.html">Все врачи клиники</a></div>`);
-    case "reviews": return sec(`${head()}
-      <div class="sp-rates">${[clinic.ratings[2], clinic.ratings[1], clinic.ratings[0]].map((r) => `<a class="sp-rate" href="${r.url}"${ext} data-reveal><b>${esc(r.value)}</b><span>${esc(r.site)}</span><small>${esc(r.count)}</small><span class="link">Смотреть отзывы</span></a>`).join("")}</div>
-      <div class="sp-more">${spText(b.text, page)}</div>`);
-    case "text": return sec(`<div class="sp-grid"><div class="sp-grid__aside">${h2()}</div><div>
-      ${(b.lists || []).map(([t, items]) => `<div class="sp-sub" data-reveal><h3>${esc(t)}</h3>${spList(items)}</div>`).join("")}${b.text ? spText(b.text, page) : ""}${b.sub ? spSubs(b.sub, page) : ""}
-    </div></div>`);
-    case "faq": return sec(`<div class="sp-grid"><div class="sp-grid__aside">${h2()}</div>
-      <div class="sp-faq">${b.items.map(([q, a]) => `<details class="faqq"><summary><span>${nobr(esc(q))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${typeof a === "string" ? `<p>${nobr(faqA(a, p))}</p>` : spText(a, page)}</div></details>`).join("")}</div>
-    </div>
-    <p class="sp-meta">Проверил: ${spInline(page.reviewer || todo("кто из врачей проверил текст и когда"), page)} · Цены на ${servicePriceDate} · Обновлено ${servicePriceDate}</p>`);
-    case "cta": return `<section class="section section--dark on-dark sp-cta"><div class="wrap sp-cta__in">
-      <p class="sp-cta__t">${esc(b.title)}</p>
-      <div class="sp-cta__act">${act("Записаться на консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true, service: page.slug })}${spWarn}</div>
-    </div></section>`;
-    case "place": return place({ title: b.title, depth });
+// адрес из текста (/implantaciya/all-on-4/, /vrachi/solodukhin/, /gigiena/) → ссылка на странице; ещё не сделанная страница → null
+const spOld = { lechenie: "lechenie-zubov", "lechenie/pod-mikroskopom": "mikroskop", diagnostika: "diagnostika", hirurgiya: "hirurgiya", gigiena: "gigiena", ortodontiya: "ortodontiya", detskaya: "detskaya" };
+function spHref(url, p) {
+  if (/^#/.test(url)) return url;
+  const u = url.replace(/^\/|\/$/g, "");
+  if (u === "") return `${p}index.html`;
+  if (u === "ceny") return `${p}ceny.html`;
+  if (u === "konsultaciya") return `${p}zapis.html`;
+  const page = servicePages.find((x) => x.path === u + "/");
+  if (page) return p + page.path;
+  const doc = /^vrachi\/([\w-]+)$/.exec(u);
+  if (doc) return docById[doc[1]] ? `${p}vrachi/${doc[1]}.html` : null;
+  const old = spOld[u] || spOld[u.split("/")[0]];
+  return old && svc[old] ? `${p}uslugi/${old}.html` : null;
+}
+
+// пометки в квадратных скобках: места под вёрстку убираем, вопросы к клинике показываем плашкой
+const spDrop = /^(КНОПК|Кнопк|ТЕЛЕФОН|ФОРМА|МЕССЕНДЖЕР|КАРТА|КВИЗ|ОГЛАВЛЕНИЕ|СЛУЖЕБНОЕ|ВИДЕО|ФОТО ВРАЧ)/;
+const spAsk = [[/^(УТОЧНИТЬ|ДАТА)/, "уточняем у клиники"], [/^СОГЛАСОВАТЬ/, "согласуем с врачом"], [/^ОТЗЫВ/, "отзыв пациента"], [/^КЕЙС/, "пример работы"], [/^(ФОТО|СХЕМА|ИЛЛЮСТРАЦ)/, "фото или схема"], [/^ВРАЧ/, "врач клиники"]];
+// суммы в подсказке плашки не показываем: там бывают спорные цены и итоги «под ключ»
+const spTag = (label, note, page) => {
+  spPending.push(`${page.slug}: ${note}`);
+  return `<mark class="todo-tag sp-ask" title="${esc(note.replace(/\d{1,3}(?:[\s\u00a0]\d{3})+/g, "…"))}">${label}</mark>`;
+};
+function spMd(text, page, p) {
+  const keep = [];
+  const put = (html) => `\u0001${keep.push(html) - 1}\u0002`;
+  let s = text.replace(/\[([А-ЯЁ][А-ЯЁ]{2,}[^\]]*|Кнопки:[^\]]*)\](?!\()/g, (m, note) => {
+    if (spDrop.test(note)) return put("");
+    if (/^ССЫЛКА НА КАРТОЧКУ/.test(note)) return put(`<a href="${clinic.yandex}"${ext}>карточка клиники в Яндекс Картах</a>`);
+    const [, label] = spAsk.find(([re]) => re.test(note)) || [null, "уточняем у клиники"];
+    return put(spTag(label, note, page));
+  });
+  for (const [re, note] of servicePriceHold) s = s.replace(re, (m, ...g) => (typeof g[0] === "string" && !/^\d/.test(g[0]) ? g[0] : "") + put(spTag("цена уточняется", note, page)));
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, t, url) => {
+    const h = spHref(url, p);
+    return put(h ? `<a href="${h}">${esc(t)}</a>` : esc(t));
+  });
+  s = esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/\s*\n\s*/g, " ");
+  return s.replace(/\u0001(\d+)\u0002/g, (m, i) => keep[i]).replace(/(\s*·\s*)+$/, "").replace(/^(\s*·\s*)+/, "").trim();
+}
+const spPlain = (t) => t.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*/g, "").replace(/\s*\n\s*/g, " ").trim();
+const spHasAsk = (t) => /\[[А-ЯЁ][А-ЯЁ]{2,}/.test(t) || servicePriceHold.some(([re]) => { re.lastIndex = 0; return re.test(t); });
+const isWarn = (t) => spPlain(t).replace(/^>\s*/, "") === warnText;
+const isPriceTable = (n) => n.t === "table" && /^Услуга/.test(n.head[0]) && /^Цена/.test(n.head[1] || "");
+// первое предложение (для подзаголовка первого экрана), сокращения «пос.», «г.», «ул.» не обрывают
+const firstSentence = (t) => {
+  const m = /^[\s\S]+?(?<!(?:^|[\s(])(?:пос|г|ул|д|см|мм|др|им|т\.\s?е|т\.\s?к))[.!?](?=\s+[«А-ЯЁA-Z])/.exec(t);
+  return m ? [m[0], t.slice(m[0].length).trim()] : [t, ""];
+};
+// цена из строки прайса для разметки: «от 19 300 ₽» → [19300, true]
+const spPriceNum = (v) => { const m = /^(от\s+)?(\d[\d\s\u00a0]*)\s?₽$/.exec(v.trim()); return m && [Number(m[2].replace(/\D/g, "")), !!m[1]]; };
+
+function spNodes(nodes, page, p) {
+  const out = [];
+  let last = "";
+  for (const n of nodes) {
+    if (n.t === "p" || n.t === "quote") {
+      if (isWarn(n.text)) { out.push(spWarn); last = ""; continue; }
+      if (n.t === "quote" && /^\*\*(Плашки|Кнопки)/.test(n.text)) continue;
+      const html = spMd(n.text, page, p);
+      if (!html) continue;
+      // абзац из одной плашки (место под отзыв, пример работы): подряд одинаковые сливаются
+      const only = /^<mark class="todo-tag sp-ask"[^>]*>([^<]+)<\/mark>$/.exec(html);
+      if (only) { if (last !== only[1]) out.push(`<p class="sp-slot">${html}</p>`); last = only[1]; continue; }
+      last = "";
+      out.push(n.t === "quote" ? `<blockquote class="sp-quote"><p>${html}</p></blockquote>` : `<p>${html}</p>`);
+    } else if (n.t === "ul" || n.t === "ol") {
+      last = "";
+      const tag = n.t;
+      out.push(`<${tag} class="sp-points${tag === "ol" ? " sp-points--ol" : ""}">${n.items.map((t) => `<li>${spMd(t, page, p)}</li>`).join("")}</${tag}>`);
+    } else if (n.t === "table") {
+      last = "";
+      out.push(isPriceTable(n) ? spPriceList(n, page, p) : `<div class="sp-table" data-reveal><table>
+        <thead><tr>${n.head.map((h) => `<th scope="col">${spMd(h, page, p)}</th>`).join("")}</tr></thead>
+        <tbody>${n.rows.map((r) => `<tr>${r.map((c, i) => (i ? `<td>${spMd(c, page, p)}</td>` : `<th scope="row">${spMd(c, page, p)}</th>`)).join("")}</tr>`).join("")}</tbody>
+      </table></div>`);
+    }
   }
-  throw new Error(`Неизвестный блок ${b.type} на ${page.slug}`);
+  return out.join("\n");
+}
+// прайс: название (третья колонка — мелкой строкой под ним) и цена; спорная цена — плашкой
+function spPriceList(n, page, p) {
+  return `<ul class="sp-plist" data-reveal>${n.rows.map(([name, price = "", note]) => {
+    const held = servicePriceHold.find(([re]) => { re.lastIndex = 0; return re.test(`${spPlain(name)} — ${price}`); });
+    const v = held ? spTag("цена уточняется", held[1], page) : spMd(price, page, p);
+    return `<li${!held && spPlain(price).length > 16 ? ' class="is-long"' : ""}><span>${spMd(name, page, p)}${note ? `<small>${spMd(note, page, p)}</small>` : ""}</span><b>${v}</b></li>`;
+  }).join("")}</ul>`;
+}
+// три и больше коротких подраздела из абзацев — карточками во всю ширину под разделом, остальное стопкой в колонке текста
+const subsAsCards = (subs) => subs.length >= 3 && subs.every((s) => s.nodes.every((n) => n.t === "p") && s.nodes.reduce((a, n) => a + n.text.length, 0) <= 650);
+const spSubsHtml = (subs, page, p) => {
+  if (!subs.length) return "";
+  if (subsAsCards(subs)) return `<div class="sp-cards sp-cards--${subs.length % 3 === 0 ? 3 : 2}">${subs.map((s) => `<article class="sp-card" data-reveal><h3>${spMd(s.title, page, p)}</h3>${spNodes(s.nodes, page, p)}</article>`).join("")}</div>`;
+  return `<div class="sp-subs-flow">${subs.map((s) => `<div class="sp-sub"${s.id ? ` id="${s.id}"` : ""} data-reveal><h3>${spMd(s.title, page, p)}</h3>${spNodes(s.nodes, page, p)}</div>`).join("")}</div>`;
+};
+
+function spSection(s, i, page, depth, ids) {
+  const p = pre(depth);
+  const t = s.title;
+  const kind = s.nodes.some(isPriceTable) && !ids.has("ceny") ? "prices"
+    : /^(Вопросы|Частые вопросы)/.test(t) ? "faq"
+    : /этап/i.test(t) && s.nodes.some((n) => n.t === "ol" && n.items.every((x) => x.length <= 520)) ? "steps"
+    : /^Как добраться/.test(t) ? "place"
+    : /отзыв/i.test(t) ? "reviews"
+    : /врач|имплантолог|ортопед/i.test(t) && /\(\/vrachi\//.test(JSON.stringify(s.nodes)) ? "doctors"
+    : "text";
+  const id = s.id || { prices: "ceny", faq: "voprosy", steps: "etapy", place: "kak-dobratsya", reviews: "otzyvy", doctors: "vrachi" }[kind] || `r${i + 1}`;
+  if (ids.has(id)) throw new Error(`${page.slug}: два раздела с якорем #${id}`);
+  ids.add(id);
+  // фон чередуется: светлый, шалфей; прайс всегда светлый
+  const tone = kind === "prices" || ids.tone === " section--sage" ? "" : " section--sage";
+  ids.tone = kind === "steps" ? "" : tone;
+  const h2 = `<h2 id="${id}-t" data-split>${spDash(spMd(t, page, p))}</h2>`;
+  const sec = (body, cls = "") => `<section class="section sp-sec${tone}${cls}" id="${id}" aria-labelledby="${id}-t"><div class="wrap">${body}${after}</div></section>`;
+  const cards = subsAsCards(s.subs);
+  const subs = cards ? "" : spSubsHtml(s.subs, page, p);
+  const after = cards ? spSubsHtml(s.subs, page, p) : "";
+  const wide = s.nodes.some((n) => n.t === "table" && !isPriceTable(n) && n.head.length >= 4);
+  const grid = (aside, body) => `<div class="sp-grid"><div class="sp-grid__aside">${aside}</div><div class="sp-body">${body}</div></div>`;
+  switch (kind) {
+    case "prices": {
+      const at = s.nodes.findIndex(isPriceTable);
+      return sec(grid(`${h2}<div class="sp-aside-text">${spNodes(s.nodes.slice(0, at), page, p)}</div>${act("Записаться на консультацию", "book", p, { cls: "btn--lg", service: page.slug })}`,
+        `${spNodes(s.nodes.slice(at), page, p)}${subs}`));
+    }
+    case "steps": {
+      const at = s.nodes.findIndex((n) => n.t === "ol");
+      const items = s.nodes[at].items.map((x) => {
+        const m = /^\*\*(.+?)\*\*\s*(?:—\s*)?([\s\S]*)$/.exec(x);
+        return m ? [m[1].replace(/[.:]$/, ""), m[2]] : ["", x];
+      });
+      const rest = spNodes(s.nodes.slice(at + 1), page, p) + subs + after;
+      return `<section class="foil on-dark sp-steps" id="${id}" aria-labelledby="${id}-t"><div class="feat">
+    <div class="feat__pin"><div class="feat__track">
+      <div class="fcard fcard--intro">${h2}${spNodes(s.nodes.slice(0, at), page, p)}</div>
+      ${items.map(([title, d]) => `<article class="fcard"><div class="fcard__body">${title ? `<h3>${spMd(title, page, p)}</h3>` : ""}${d ? `<p>${spMd(d, page, p)}</p>` : ""}</div></article>`).join("")}
+    </div><div class="wrap cta-strip"><p>Сроки и цену каждого этапа врач распишет в плане лечения.</p>${act("Записаться на консультацию", "book", p, { cls: "btn--light btn--lg", service: page.slug })}</div></div>
+  </div>${rest ? `<div class="wrap sp-steps__sub">${rest}</div>` : ""}</section>`;
+    }
+    case "faq": {
+      const qa = [];
+      const lead = [];
+      for (const n of s.nodes) {
+        const m = n.t === "p" && /^\*\*(.+?)\*\*\s*\n([\s\S]+)$/.exec(n.text);
+        if (m) qa.push({ q: m[1], a: [{ t: "p", text: m[2] }] });
+        else if (qa.length) qa[qa.length - 1].a.push(n);
+        else lead.push(n);
+      }
+      page.faq = qa.filter((x) => !x.a.some((n) => spHasAsk(n.text || JSON.stringify(n)))).map((x) => [spPlain(x.q), x.a.map((n) => spPlain(n.text || (n.items || []).join("; "))).join(" ")]);
+      return sec(grid(`${h2}${spNodes(lead, page, p)}`, `<div class="sp-faq">${qa.map((x) => `<details class="faqq"><summary><span>${nobr(spMd(x.q, page, p))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${spNodes(x.a, page, p)}</div></details>`).join("")}</div>${subs}`)
+        + `<p class="sp-meta">Проверил: ${spMd(page.meta.reviewer || "[ВРАЧ — кто проверил текст]", page, p)} · Цены на ${esc(page.meta.updated || servicePriceDate)} · Обновлено ${esc(page.meta.updated || servicePriceDate)}</p>`);
+    }
+    case "reviews": return sec(`<div class="sp-head">${h2}</div>
+      <div class="sp-rates">${[clinic.ratings[2], clinic.ratings[1], clinic.ratings[0]].map((r) => `<a class="sp-rate" href="${r.url}"${ext} data-reveal><b>${esc(r.value)}</b><span>${esc(r.site)}</span><small>${esc(r.count)}</small><span class="link">Смотреть отзывы</span></a>`).join("")}</div>
+      <div class="sp-more">${spNodes(s.nodes, page, p)}${subs}</div>`);
+    case "doctors": {
+      const docs = [...new Set([...JSON.stringify(s.nodes).matchAll(/\(\/vrachi\/([\w-]+)\/?\)/g)].map((m) => m[1]))].filter((d) => docById[d]);
+      const nodes = s.nodes.filter((n) => !(n.t === "ul" && n.items.every((x) => /\(\/vrachi\//.test(x))));
+      return sec(`${grid(h2, spNodes(nodes, page, p) + subs)}<div class="team__grid sp-team">${docs.map((d) => doctorCard(docById[d], depth)).join("")}</div>
+      <div class="team__more"><a class="btn btn--ghost" href="${p}vrachi.html">Все врачи клиники</a></div>`);
+    }
+    case "place": {
+      const call = s.nodes.find((n) => n.t === "p" && /^\*\*Запишитесь[^*]+\*\*$/.test(n.text.trim()));
+      const nodes = s.nodes.filter((n) => n !== call);
+      return `<section class="section section--dark on-dark sp-cta"><div class="wrap sp-cta__in">
+      <p class="sp-cta__t">${call ? spMd(call.text.replace(/\*\*/g, ""), page, p) : "Запишитесь на консультацию: план лечения с ценой по этапам"}</p>
+      <div class="sp-cta__act">${act("Записаться на консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true, service: page.slug })}${spWarn}</div>
+    </div></section>
+${sec(grid(h2, spNodes(nodes, page, p) + subs))}
+${place({ depth })}`;
+    }
+    default:
+      return sec(wide ? `<div class="sp-head">${h2}</div><div class="sp-body sp-body--wide">${spNodes(s.nodes, page, p)}${subs}</div>` : grid(h2, spNodes(s.nodes, page, p) + subs));
+  }
 }
 
 function pageSvc(page) {
   const depth = page.path.split("/").filter(Boolean).length;
   const p = pre(depth);
+  const T = spTexts[page.slug];
+  page.meta = T.meta;
   const chain = [];
   for (let x = page; x.parent; ) { x = servicePages.find((y) => y.slug === x.parent); chain.unshift([x.path, x.crumb]); }
   const crumbs = [["index.html", "Главная"], ...chain];
-  const H = page.hero;
-  const heroImg = pick(H.img, depth).src;
-  const temp = !local(H.img[0]);
-  if (temp) spPending.push(`${page.slug}: картинка первого экрана ${H.wait}`);
-  // разметка: крошки, услуга с ценами, которые видны на странице; вопросы только с готовыми ответами
-  const rows = page.blocks.filter((b) => b.type === "prices").flatMap((b) => b.rows);
-  const offers = rows.map(([n, v]) => {
-    const m = typeof v === "number" ? [null, v] : typeof v === "string" && /^от (\d+)$/.exec(v);
+  const heroImg = pick(page.hero, depth).src;
+  if (!local(page.hero[0])) spPending.push(`${page.slug}: картинка первого экрана ${page.hero[0]}`);
+  // подзаголовок первого экрана — первое предложение вступления, остальное вступление идёт следующим блоком
+  const introP = T.intro.findIndex((n) => n.t === "p");
+  const [lead, leadRest] = firstSentence(T.intro[introP].text);
+  const intro = T.intro.map((n, i) => (i === introP ? (leadRest ? { t: "p", text: leadRest } : null) : n)).filter(Boolean);
+  const ids = new Set();
+  const body = T.sections.map((s, i) => spSection(s, i, page, depth, ids)).join("\n");
+  // разметка: крошки, услуга с ценами из прайсов страницы (без спорных), вопросы с готовыми ответами
+  const rows = T.sections.flatMap((s) => [...s.nodes, ...s.subs.flatMap((x) => x.nodes)]).filter(isPriceTable).flatMap((n) => n.rows);
+  const offers = rows.filter(([n, v = ""]) => !spHasAsk(`${n} — ${v}`)).map(([n, v = ""]) => {
+    const m = spPriceNum(v);
     if (!m) return null;
-    const n0 = Number(m[1]);
-    return typeof v === "number" ? { "@type": "Offer", name: n, price: n0, priceCurrency: "RUB" } : { "@type": "Offer", name: n, priceSpecification: { "@type": "PriceSpecification", minPrice: n0, priceCurrency: "RUB" } };
+    const name = spPlain(n);
+    return m[1] ? { "@type": "Offer", name, priceSpecification: { "@type": "PriceSpecification", minPrice: m[0], priceCurrency: "RUB" } } : { "@type": "Offer", name, price: m[0], priceCurrency: "RUB" };
   }).filter(Boolean);
-  const faq = page.blocks.filter((b) => b.type === "faq").flatMap((b) => b.items).filter(([, a]) => typeof a === "string");
   const provider = dentistLd["@id"] ? { "@id": dentistLd["@id"] } : { "@type": "Dentist", name: dentistLd.name, url: SITE, telephone: dentistLd.telephone, address: dentistLd.address };
+  const title = spPlain(T.meta.title), desc = spPlain(T.meta.desc);
+  if (spHasAsk(title + desc)) spPending.push(`${page.slug}: пометка в Title или Description`);
   const jsonld = [
     crumbsLd([...chain, [page.path, page.crumb]]),
-    { "@context": "https://schema.org", "@type": ["Service", "MedicalProcedure"], name: page.procedure, description: page.seoDesc, url: `${SITE}/${page.path}`, provider, areaServed: ["Удельная", "Раменский городской округ", "Жуковский"], offers },
-    ...(faq.length ? [faqLd(faq)] : []),
+    { "@context": "https://schema.org", "@type": ["Service", "MedicalProcedure"], name: page.procedure, description: desc, url: `${SITE}/${page.path}`, provider, areaServed: ["Удельная", "Раменский городской округ", "Жуковский"], offers },
+    ...(page.faq && page.faq.length ? [faqLd(page.faq)] : []),
   ];
   const heroHtml = `<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
   <div class="sp-hero__top">
-    <div class="sp-hero__media">${heroImg ? `<img src="${heroImg}" alt="${esc(H.alt)}" decoding="async" fetchpriority="high">` : ""}</div>${temp ? `<mark class="todo-tag sp-hero__wait">временная картинка, ждём ${esc(H.wait)}</mark>` : ""}
+    <div class="sp-hero__media">${heroImg ? `<img src="${heroImg}" alt="${esc(spPlain(T.meta.alt || page.crumb))}" decoding="async" fetchpriority="high">` : ""}</div>
     <div class="sp-hero__text">
       <nav class="crumbs" aria-label="Хлебные крошки">${crumbs.map(([h, t]) => `<a href="${p}${h}">${esc(t)}</a>`).join("")}<span aria-current="page">${esc(page.crumb)}</span></nav>
-      <h1 id="h1" data-split>${spDash(esc(page.h1))}</h1>
-      ${spText(page.lead, page, "p", "page-hero__lead")}
+      <h1 id="h1" data-split>${spDash(esc(T.meta.h1))}</h1>
+      <p class="page-hero__lead">${spMd(lead, page, p)}</p>
     </div>
     <div class="sp-hero__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true, service: page.slug })}<a class="link" href="#ceny">Все цены по этапам</a>${spWarn}</div>
   </div>
   <div class="wrap sp-hero__bottom">
     <ul class="sp-facts">${page.facts.map(([big, t]) => `<li><b>${esc(big)}</b><span>${esc(t)}</span></li>`).join("")}</ul>
-    ${page.factsNote ? spText(page.factsNote, page, "p", "sp-facts__note") : ""}
-    ${page.nav ? `<nav class="sp-nav" aria-label="В разделе «${esc(page.crumb)}»"><span class="label">В разделе</span>${page.nav.map(([t, h]) => spLink(t, h, p, "sp-pill")).join("")}</nav>` : ""}
+    ${page.factsNote ? `<p class="sp-facts__note">${spMd(page.factsNote, page, p)}</p>` : ""}
+    ${page.nav ? `<nav class="sp-nav" aria-label="В разделе «${esc(page.crumb)}»"><span class="label">В разделе</span>${page.nav.map(([t, h]) => `<a class="sp-pill" href="${p}${h}">${esc(t)}</a>`).join("")}</nav>` : ""}
   </div>
-</section>`;
-  return head({ title: page.seoTitle, desc: page.seoDesc, canonical: `/${page.path}`, depth, jsonld })
+</section>
+<section class="section sp-sec sp-intro" aria-label="Коротко об услуге"><div class="wrap">${spNodes(intro, page, p)}</div></section>`;
+  if (!ids.has("ceny")) throw new Error(`${page.slug}: в тексте нет прайса (таблица «Услуга | Цена»)`);
+  return head({ title, desc, canonical: `/${page.path}`, depth, jsonld })
   + header(depth) + `
 <main id="main" class="sp-page">
 ${heroHtml}
-${page.blocks.map((b) => spBlock(b, page, depth)).join("\n")}
+${body}
 </main>` + footer(depth) + end;
 }
+
 // старый адрес услуги ведёт на новую страницу
 const spRedirect = (page) => `<!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><title>${esc(page.crumb)}</title>
 <meta name="robots" content="noindex"><link rel="canonical" href="${SITE}/${page.path}">
 <meta http-equiv="refresh" content="0; url=../${page.path}">
-</head><body><p><a href="../${page.path}">${esc(page.h1)}</a></p></body></html>
+</head><body><p><a href="../${page.path}">${esc(spTexts[page.slug].meta.h1)}</a></p></body></html>
 `;
 
 // ---------- страница врача ----------
