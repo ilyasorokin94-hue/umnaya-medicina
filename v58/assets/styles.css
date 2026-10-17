@@ -2077,3 +2077,38 @@ html:not(.js-intro) .intro { display: none; }
 .svm__act .btn { flex: 1 1 50%; max-width: 50%; }
 .svm__act .btn:not(.btn--ghost) { --bg: var(--ink); --fg: var(--sage-2); }
 @media (max-width: 640px) { .svm__row { flex-direction: column; align-items: flex-start; gap: 4px; } .svm__act { flex-wrap: wrap; } .svm__act .btn { max-width: none; } }
+
+/* ---------- первый экран без перегруза (Ilya 17.10): заголовок, одна строка, кнопка и акция строкой.
+   Без кикера, фактов и пометок; картинка одна и стоит на месте, без анимации ---------- */
+.hero--v { position: relative; display: flex; flex-direction: column; min-height: 100svh; padding: calc(var(--hdr-d, var(--header-h)) + clamp(28px, 3.4vw, 56px)) 0 clamp(36px, 4vw, 64px); background: var(--ink); color: #fff; overflow: hidden; }
+.hero--v .hero__in { flex: 1; min-height: 0; }
+.hero--v h1 { color: #fff; }
+.hero--v h1 [data-split] { max-width: none; }
+.hv__sub { margin: 24px 0 0; max-width: 32ch; font-size: clamp(17px, 1.35vw, 21px); line-height: 1.45; color: rgba(255, 255, 255, .7); text-wrap: pretty; }
+.hero--v .hero__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 26px; margin-top: 36px; }
+.hv__offer { margin: 0; font-size: 15px; line-height: 1.3; color: rgba(255, 255, 255, .66); }
+.hv__offer b { font: 500 19px/1 var(--display); letter-spacing: -.02em; color: #fff; font-variant-numeric: tabular-nums; }
+.hv__offer s { color: rgba(255, 255, 255, .42); }
+.hv__pic { position: relative; margin: 0; overflow: hidden; }
+.hv__pic img { display: block; width: 100%; height: 100%; object-fit: cover; }
+@media (max-width: 760px) {
+  .hero--v { min-height: 0; }
+  .hero--v h1 { order: 0; font-size: clamp(36px, 10.4vw, 48px); line-height: 1.02; }
+  .hv__sub { order: 1; margin-top: 14px; font-size: 16px; }
+  .hv__pic { order: 2; flex: 1 1 0; min-height: 140px; margin-top: 22px; }
+  .hero--v .hero__actions { order: 3; display: grid; gap: 12px; margin-top: 18px; }
+  .hero--v .hero__actions .btn { width: 100%; }
+  .hv__offer { text-align: center; }
+}
+/* вариант «Только слова»: без картинки, крупный короткий заголовок в две строки, внизу пояснение и кнопка */
+.hero--v1 .hv__l2 { color: var(--sage); }
+@media (min-width: 761px) {
+  .hero--v1 .hero__in { display: flex; }
+  .hero--v1 .hero__text { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 1fr auto; column-gap: 48px; align-items: end; }
+  .hero--v1 h1 { grid-column: 1 / -1; align-self: center; padding-bottom: clamp(24px, 4vh, 56px); font-size: clamp(60px, 8.4vw, 152px); letter-spacing: -.055em; line-height: .96; }
+  .hero--v1 .hv__sub { grid-column: 1; margin: 0; }
+  .hero--v1 .hero__actions { grid-column: 2; margin: 0; flex-direction: column; align-items: flex-end; }
+}
+@media (max-width: 760px) {
+  .hero--v1 h1 { margin: auto 0; font-size: clamp(54px, 17vw, 76px); letter-spacing: -.05em; line-height: .96; }
+}
