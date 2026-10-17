@@ -794,11 +794,11 @@
       const s = pr.offsetHeight; pr.style.height = "100vh"; const l = pr.offsetHeight; pr.remove();
       const k = (s || l) / l;
       // в процентах от кадра, как в CSS: при смене высоты окна без пересчёта ScrollTrigger окно не устаревает
-      return `inset(${10 * k}% 0% ${100 - 90 * k}% 0% round 24px)`;
+      return `inset(${10 * k}% 0% ${100 - 90 * k}% 0%)`;
     };
     G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
     const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
-    zoom.fromTo(img, { clipPath: card, scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0% round 0px)", scale: 1.1 }, 0)
+    zoom.fromTo(img, { clipPath: card, scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
       .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
     sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
     pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
