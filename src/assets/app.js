@@ -328,6 +328,16 @@
   addEventListener("resize", teamDeck);
   teamDeck();
 
+  // акции «Стопка» на телефоне: если карточка не влезла в экран даже с низкой картинкой (styles.css), стопку выключаем,
+  // иначе кнопка застрявшей карточки так и остаётся под следующей карточкой или под нижней панелью
+  const pr4 = $(".pr4");
+  const pr4Fit = () => {
+    if (!pr4) return;
+    pr4.classList.remove("pr4--flat");
+    pr4.classList.toggle("pr4--flat", $$(".pr4-card", pr4).some((c) => c.scrollHeight > c.clientHeight + 1));
+  };
+  if (pr4) { addEventListener("resize", pr4Fit); document.fonts?.ready.then(pr4Fit); pr4Fit(); }
+
   // врачи как у Лава Дент: от 961px левая колонка едет от +20vmin к −20vmin, пока карточка проходит экран
   // снизу вверх, правая стоит, фото плывёт внутри рамки от +10% к −10%. Прогресс --k от 1 до −1.
   const lavaDocs = $$(".team__grid--lava .doc");

@@ -1774,7 +1774,17 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
 @media (max-width: 760px) and (max-height: 720px) {
   .pr4-card__pic { aspect-ratio: 2 / 1; }
 }
+/* телефон: застрявшая карточка не выше видимой части экрана между шапкой и нижней панелью, лишнее забирает картинка.
+   Если не влезает и так (узкий невысокий экран), app.js ставит .pr4--flat, и карточки идут друг за другом без стопки */
+@media (max-width: 760px) and (min-height: 601px) {
+  .pr4-card { display: flex; flex-direction: column; max-height: calc(100svh - var(--header-h) - 30px - var(--i) * 10px - 70px - env(safe-area-inset-bottom)); }
+  .pr4-card__pic { flex: 0 1 auto; min-height: 110px; }
+  .pr4-card__text { flex-shrink: 0; }
+  /* запас прокрутки, пока кнопка застрявшей карточки видна и следующая ещё не наплыла */
+  .pr4:not(.pr4--flat) { gap: 72px; }
+}
 /* на низком экране (телефон боком) карточки не складываются в стопку: иначе кнопка уходит под следующую */
 @media (max-height: 600px) {
   .pr4-card { position: relative; top: auto; }
 }
+.pr4--flat .pr4-card { position: relative; top: auto; max-height: none; transform: none !important; }
