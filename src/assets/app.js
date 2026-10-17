@@ -610,6 +610,36 @@
   // ---------- анимации ----------
   // Правило: прокрутку сглаживает только Lenis, поэтому все scrub = true (без второго сглаживания),
   // одно свойство одного элемента ведёт одна анимация, CSS-переходы на этих свойствах выключены.
+  // ---------- первый экран на компьютере: фразы пояснения сменяют друг друга ----------
+  // Слова уходят вверх и приходят снизу (CSS), пока экран на виду и вкладка открыта; наведение на фразу ставит смену на паузу
+  const rot = $(".hv__rot");
+  const rotStart = (() => {
+    if (!rot) return () => {};
+    const ph = $$(":scope > [aria-hidden]", rot);
+    let k = 0, seen = true, hold = false, timer = 0;
+    new IntersectionObserver(([en]) => (seen = en.isIntersecting)).observe(rot);
+    rot.addEventListener("pointerenter", () => (hold = true));
+    rot.addEventListener("pointerleave", () => (hold = false));
+    const next = () => {
+      if (document.hidden || !seen || hold || phoneMQ.matches) return;
+      const was = ph[k];
+      was.classList.replace("is-on", "is-out");
+      setTimeout(() => was.classList.remove("is-out"), 1100);
+      k = (k + 1) % ph.length;
+      ph[k].classList.add("is-on");
+    };
+    // до запуска первая фраза стоит на месте за счёт CSS, дальше её ведут классы
+    return () => {
+      if (timer) return;
+      rot.classList.add("is-live");
+      ph[0].classList.add("is-on");
+      timer = setInterval(next, 3600);
+    };
+  })();
+  // с анимацией первая фраза приходит после заголовка (запасной запуск, если заставка не доиграла), без неё всё сразу на месте
+  if (rot && anim && !phoneMQ.matches) setTimeout(rotStart, 6000);
+  else rotStart();
+
   if (!anim) return;
   G.registerPlugin(ST);
   G.defaults({ ease: "power3.out" });
@@ -621,7 +651,9 @@
     requestAnimationFrame(() => requestAnimationFrame(() => header?.classList.add("is-loaded")));
     const h = $(".hero, .page-hero");
     if (!h) return;
-    const words = $$("[data-split] .sw > span", h);
+    // главная на компьютере: «Один план лечения.» собирается из разлетевшихся букв, остальные слова поднимаются из-под строки
+    const conv = !phoneMQ.matches && h.classList.contains("hero--v1") && $(".hv__l2", h);
+    const words = $$("[data-split] .sw > span", h).filter((w) => !conv || !conv.contains(w));
     const tl = G.timeline();
     const media = h.classList.contains("hero") && $(".hero__media", h);
     const small = phoneMQ.matches;
@@ -629,8 +661,14 @@
     const mimg = $(".hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
-      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
+      .fromTo($$(".kicker, .label, .crumbs, .hero__sub, .page-hero__lead, .hero__facts > *, .hero__promo, .hero__actions > *, .hero__note, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *", h).filter((el) => !conv || !el.closest(".hero__actions")), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
     if (!matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
+    if (conv) {
+      tl.fromTo(conv, { letterSpacing: "0.5em", autoAlpha: 0, filter: "blur(6px)" }, { letterSpacing: "-0.055em", autoAlpha: 1, filter: "blur(0px)", duration: 2, ease: "expo.out", clearProps: "letterSpacing,filter" }, 0.45);
+      // кнопка приходит вместе с первой фразой, когда заголовок уже собрался
+      tl.fromTo($$(".hero__actions > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1 }, 1.35);
+      if (rot) tl.call(rotStart, null, 1.0);
+    }
     const pb = $(".hero__promo b", h), ps = $(".hero__promo s", h);
     if (small && pb && ps) {
       const orig = pb.textContent, to = +orig.replace(/\D/g, ""), o = { v: +ps.textContent.replace(/\D/g, "") };
