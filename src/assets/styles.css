@@ -1726,7 +1726,11 @@ html:not(.js-intro) .intro { display: none; }
   .hv__rot { grid-column: 1 / -1; }
   .hero--v1 .hero__actions { grid-column: 1 / -1; grid-row: 3; align-items: flex-start; }
 }
-@media (prefers-reduced-motion: reduce) { .hv__rot .sw > span { transition-delay: 0s !important; } }
+/* «уменьшить движение»: фразы сменяются на месте, без сдвига слов */
+@media (prefers-reduced-motion: reduce) {
+  .hv__rot .sw > span { transform: none !important; transition: none !important; }
+  .hv__rot.is-live > [aria-hidden]:not(.is-on), .hv__rot:not(.is-live) > [aria-hidden]:not(:nth-child(2)) { visibility: hidden; }
+}
 @media (max-width: 760px) {
   .hero--v1 h1 { margin: auto 0; font-size: clamp(54px, 17vw, 76px); letter-spacing: -.05em; line-height: .96; }
 }
