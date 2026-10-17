@@ -442,7 +442,7 @@ function place() {
 </section>`;
 }
 
-// ---------- услуги на компьютере как у Лава Дент ----------
+// ---------- услуги как у Лава Дент (компьютер и телефон) ----------
 // Пять главных направлений карточками (первая во всю ширину), остальные строками. Клик открывает окно услуги
 // с описанием, ценами «от» и записью, как у Лава Дент; без скриптов ссылка ведёт на страницу услуги.
 const svlGo = '<span class="svl-go" aria-hidden="true"><svg viewBox="0 0 60 60"><path d="M24 36 36 24M27 24h9v9"/></svg></span>';
@@ -463,7 +463,7 @@ function svlBlock(p, depth) {
     </a>`;
   const row = (s, i) => `<a class="svl-row" href="${p}uslugi/${s.slug}.html" data-modal="svc-${s.slug}" style="--delay:${(i * 0.3).toFixed(1)}s"><span class="svl-nr">${s.nr}</span><h3 class="svl-row__title">${svlTitle(s.title)}</h3><span class="svl-row__act">${svlGo}</span></a>`;
   return `<div class="svl">
-  <div class="svl__head"><div class="wrap"><h2 data-split>${esc(v2.lava.title)}</h2><a class="link" href="${p}ceny.html">Весь прайс</a></div></div>
+  <div class="svl__head"><div class="wrap"><h2 id="sv-title" data-split>${esc(v2.lava.title)}</h2><a class="link" href="${p}ceny.html">Весь прайс</a></div></div>
   <div class="svl__top"><div class="wrap"><div class="svl-grid" data-svl>
     ${items.slice(0, n).map(card).join("\n    ")}
   </div></div></div>
@@ -553,25 +553,7 @@ function pageHome() {
   </div>
 </section>
 
-<section class="section section--sage svs" id="services" aria-labelledby="sv-title"><div class="wrap svs__phone">
-  <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><a class="link" href="ceny.html">Весь прайс</a></div></div>
-  <div class="ptabs dirs__tabs" role="tablist" aria-label="Направления" data-tabs="dir">${D.dirs.map((d, i) => `<button class="chip" type="button" role="tab" data-tab="d${i}" aria-selected="${i === 0}">${esc(d.tab)}</button>`).join("")}</div>
-  ${D.dirs.map((d, i) => `<div class="dir" data-panel="dir" data-key="d${i}"${i ? " hidden" : ""}>
-    <aside class="offer dir__card">
-      <span class="label label--light">${esc(d.promo.tag)}</span>
-      <h3>${esc(d.promo.title)}</h3>
-      ${d.promo.price ? `<p class="invite__price"><b>${esc(d.promo.price)}</b>${d.promo.old ? `<s>${esc(d.promo.old)}</s>` : ""}</p>` : ""}
-      <p class="dir__promo">${esc(d.promo.text)}</p>
-      ${act(d.btn[0], d.btn[1], p, { cls: "btn--light", reason: d.btn[2] })}
-    </aside>
-    <div class="dir__body">
-      <h3 class="dir__title">${esc(d.title)}</h3>
-      <p class="dir__lead">${esc(d.lead)}</p>
-      <ul class="plist">${d.rows.map((r) => `<li><span>${esc(r[0])}</span><b>${rowPrice(r)}</b></li>`).join("")}</ul>
-      <div class="dir__links">${d.links.map(([t, k]) => `<a class="link" href="uslugi/${k}.html">${esc(t)}</a>`).join("")}</div>
-    </div>
-  </div>`).join("")}
-</div>
+<section class="section section--sage svs" id="services" aria-labelledby="sv-title">
 ${svlBlock(p, depth)}
 </section>
 
