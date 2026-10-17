@@ -628,7 +628,7 @@
     const tl = G.timeline();
     const media = h.classList.contains("hero") && $(".hero__media", h);
     const small = phoneMQ.matches;
-    if (media) tl.fromTo(media, { clipPath: small ? "inset(0% 0% 100% 0% round 22px)" : "inset(10% 6% 10% 6% round 22px)" }, { clipPath: "inset(0% 0% 0% 0% round 22px)", duration: small ? 1.4 : 1.6, ease: "power3.inOut" }, small ? 0.35 : 0);
+    if (media) tl.fromTo(media, { clipPath: small ? "inset(0% 0% 100% 0%)" : "inset(10% 6% 10% 6%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: small ? 1.4 : 1.6, ease: "power3.inOut" }, small ? 0.35 : 0);
     const mimg = $(".hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1)
@@ -700,7 +700,7 @@
   $$("[data-clip]").forEach((el) => {
     const im = $("img", el);
     const st = { trigger: el, start: "top 90%", once: true };
-    G.to(el, { clipPath: "inset(0% 0% 0% 0% round 22px)", duration: 1.4, ease: "power3.inOut", scrollTrigger: st });
+    G.to(el, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.4, ease: "power3.inOut", scrollTrigger: st });
     if (im) G.from(im, { scale: 1.15, duration: 1.8, ease: "power2.out", scrollTrigger: st });
   });
 
@@ -765,7 +765,7 @@
     // на телефоне кадр стартует широкой карточкой, как фото в лентах, и закрепление короче
     const narrow = () => innerWidth <= 760;
     const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: () => (narrow() ? "+=85%" : "+=110%"), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 2 } });
-    tl.fromTo(frame, { clipPath: () => (narrow() ? "inset(14% 4% 24% 4% round 22px)" : "inset(16% 22% 16% 22% round 28px)") }, { clipPath: "inset(0% 0% 0% 0% round 0px)", duration: 1 }, 0)
+    tl.fromTo(frame, { clipPath: () => (narrow() ? "inset(14% 4% 24% 4%)" : "inset(16% 22% 16% 22%)") }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1 }, 0)
       .fromTo(fim, { scale: () => (narrow() ? 1.1 : 1.25) }, { scale: 1, duration: 1 }, 0)
       .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
       .fromTo($$(".sw > span", tt), { yPercent: 110 }, { yPercent: 0, duration: 0.3, stagger: 0.04, ease: "power3.out" }, 0.72)
@@ -977,7 +977,7 @@
     } });
     wayTrig = tl.scrollTrigger;
     for (let i = 1; i < n; i++) {
-      tl.fromTo(wayShots[i], { clipPath: "inset(100% 0% 0% 0% round 22px)" }, { clipPath: "inset(0% 0% 0% 0% round 22px)", duration: 1 }, i - 1)
+      tl.fromTo(wayShots[i], { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1 }, i - 1)
         .fromTo(imgs[i], { scale: 1.18, yPercent: 4 }, { scale: 1, yPercent: 0, duration: 1 }, i - 1)
         .to(imgs[i - 1], { scale: 1.1, yPercent: -3, duration: 1 }, i - 1);
     }
