@@ -26,7 +26,6 @@ const priceText = (p) => {
   return m ? "от " + rub(Number(m[1])) : p;
 };
 const svc = Object.fromEntries(services.map((s) => [s.slug, s]));
-const pad = (n) => String(n).padStart(2, "0");
 const pre = (depth) => "../".repeat(depth);
 
 // ---------- картинки: локальный файл, если он есть, иначе запасной адрес ----------
@@ -446,14 +445,14 @@ function place() {
 const svlGo = '<span class="svl-go" aria-hidden="true"><svg viewBox="0 0 60 60"><path d="M24 36 36 24M27 24h9v9"/></svg></span>';
 // «All-on-4» не рвётся по дефису, короткий предлог не остаётся в конце строки («под микроскопом»)
 const svlTitle = (t) => esc(t).replace(/ (под|для|без|на|по|за|в|с|к|о|у|и) /gi, " $1\u00a0").replace(/\S+-\S+/g, (w) => `<span class="svl-nw">${w}</span>`);
-const svlItems = () => [...v2.lava.cards, ...v2.lava.list].map((it, i) => ({ ...it, nr: pad(i + 1) }));
+const svlItems = () => [...v2.lava.cards, ...v2.lava.list];
 function svlBlock(p, depth) {
   const items = svlItems(), n = v2.lava.cards.length;
   const card = (s, i) => `<a class="svl-card" href="${p}uslugi/${s.slug}.html" style="--delay:${(i * 0.3).toFixed(1)}s">
       ${img(s.img, "", depth, ' class="svl-card__img"')}
-      <span class="svl-card__in"><span class="svl-card__top"><span class="svl-nr">${s.nr}</span>${svlGo}</span><h3 class="svl-card__title">${svlTitle(s.title)}</h3></span>
+      <span class="svl-card__in"><span class="svl-card__top">${svlGo}</span><h3 class="svl-card__title">${svlTitle(s.title)}</h3></span>
     </a>`;
-  const row = (s, i) => `<a class="svl-row" href="${p}uslugi/${s.slug}.html" style="--delay:${(i * 0.3).toFixed(1)}s"><span class="svl-nr">${s.nr}</span><h3 class="svl-row__title">${svlTitle(s.title)}</h3><span class="svl-row__act">${svlGo}</span></a>`;
+  const row = (s, i) => `<a class="svl-row" href="${p}uslugi/${s.slug}.html" style="--delay:${(i * 0.3).toFixed(1)}s"><h3 class="svl-row__title">${svlTitle(s.title)}</h3><span class="svl-row__act">${svlGo}</span></a>`;
   return `<div class="svl">
   <div class="svl__head"><div class="wrap"><h2 id="sv-title" data-split>${esc(v2.lava.title)}</h2><a class="link" href="${p}ceny.html">Весь прайс</a></div></div>
   <div class="svl__top"><div class="wrap"><div class="svl-grid" data-svl>
