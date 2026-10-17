@@ -1,2 +1,20 @@
 /* Отзывы на телефоне (до 760px). На компьютере блок скрыт, там прежние ленты. */
 @media (min-width: 761px) { .rvm { display: none !important; } }
+
+/* Вариант 4. Карусель с крупной карточкой в центре */
+@media (max-width: 760px) {
+  .reviews .rv__rows { display: none; }
+  .rvm--flow { margin-top: 18px; }
+  .rvf { display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding: 18px 13vw 30px; scrollbar-width: none; outline: 0; }
+  .rvf::-webkit-scrollbar { display: none; }
+  .rvf__card { flex: 0 0 74vw; min-height: 368px; margin: 0; padding: 30px 24px; scroll-snap-align: center; scroll-snap-stop: always; border-radius: var(--radius); background: #fff; color: var(--ink); will-change: transform; box-shadow: 0 22px 40px -32px rgba(12, 36, 16, .6); }
+  .rvf__card[data-tone="ink"] { background: var(--ink); color: #fff; }
+  .rvf__card[data-tone="green"] { background: var(--green); color: #fff; }
+  .rvf__card[data-tone="sage"] { background: var(--sage-2); }
+  .rvf__card blockquote { margin: 0; font: 500 25px/1.2 var(--display); letter-spacing: -.02em; text-wrap: pretty; will-change: opacity; }
+  .rvf__card--short blockquote { font-size: 33px; line-height: 1.1; letter-spacing: -.03em; }
+  .rvf__card--long blockquote { font-size: 21px; line-height: 1.27; }
+  .rvf__card b { font-weight: inherit; color: var(--green); }
+  .rvf__card[data-tone="ink"] b { color: var(--green-hi); }
+  .rvf__card[data-tone="green"] b { color: var(--ink); }
+}

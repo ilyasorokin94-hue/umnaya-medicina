@@ -19,4 +19,10 @@ export const quote = (reviews, i, esc, tag = "mark") => {
 };
 export const size = (q) => (q.length > 110 ? "long" : q.length < 60 ? "short" : "mid");
 
-export const reviewsMobile = () => "";
+// Вариант 4. Карусель: крупная карточка в центре, соседние меньше и наклонены, листают пальцем вбок
+const TONES = ["ink", "green", "sage", "white"];
+export const reviewsMobile = (reviews, esc) => `<div class="rvm rvm--flow">
+    <div class="rvf" aria-label="Отзывы пациентов, листайте вбок" tabindex="0" data-lenis-prevent>
+      ${ORDER.map((i, n) => `<figure class="rvf__card rvf__card--${size(reviews[i])}" data-tone="${TONES[n % TONES.length]}"><blockquote>${quote(reviews, i, esc, "b")}</blockquote></figure>`).join("\n      ")}
+    </div>
+  </div>`;
