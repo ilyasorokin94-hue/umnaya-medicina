@@ -71,8 +71,8 @@ const navLine = {
   "О клинике": "animation-timeline:--tl-clinic", "Врачи": "animation-timeline:--tl-team", "Отзывы": "animation-timeline:--tl-reviews",
   "Вопросы": "animation-timeline:--tl-faq", "Контакты": "animation-timeline:--tl-contacts",
 };
-// меню телефона как у Лава Дент: разделы в порядке страницы, «Цены» рядом с услугами
-const phoneMenuItems = (p, href) => [["Услуги", href("services"), "uslugi"], ["Цены", `${p}ceny.html`], ["О клинике", href("clinic")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
+// меню телефона и шапка компьютера как у Лава Дент: разделы в порядке страницы (Ilya 17.10: после слогана клиника и «5 минут, 0 ₽, 3 врача», потом услуги), «Цены» рядом с услугами
+const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi"], ["Цены", `${p}ceny.html`], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
 function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
   const p = pre(depth);
@@ -477,26 +477,6 @@ function pageHome() {
 </section>
 </div>
 
-<section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
-  <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><a class="link" href="ceny.html">Весь прайс</a></div></div>
-  <div class="ptabs dirs__tabs" role="tablist" aria-label="Направления" data-tabs="dir">${D.dirs.map((d, i) => `<button class="chip" type="button" role="tab" data-tab="d${i}" aria-selected="${i === 0}">${esc(d.tab)}</button>`).join("")}</div>
-  ${D.dirs.map((d, i) => `<div class="dir" data-panel="dir" data-key="d${i}"${i ? " hidden" : ""}>
-    <aside class="offer dir__card">
-      <span class="label label--light">${esc(d.promo.tag)}</span>
-      <h3>${esc(d.promo.title)}</h3>
-      ${d.promo.price ? `<p class="invite__price"><b>${esc(d.promo.price)}</b>${d.promo.old ? `<s>${esc(d.promo.old)}</s>` : ""}</p>` : ""}
-      <p class="dir__promo">${esc(d.promo.text)}</p>
-      ${act(d.btn[0], d.btn[1], p, { cls: "btn--light", reason: d.btn[2] })}
-    </aside>
-    <div class="dir__body">
-      <h3 class="dir__title">${esc(d.title)}</h3>
-      <p class="dir__lead">${esc(d.lead)}</p>
-      <ul class="plist">${d.rows.map((r) => `<li><span>${esc(r[0])}</span><b>${rowPrice(r)}</b></li>`).join("")}</ul>
-      <div class="dir__links">${d.links.map(([t, k]) => `<a class="link" href="uslugi/${k}.html">${esc(t)}</a>`).join("")}</div>
-    </div>
-  </div>`).join("")}
-</div></section>
-
 <section class="tour on-dark" id="clinic" aria-labelledby="tr-title">
   <div class="tour__pin">
     <div class="tour__frame">${img(D.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»", depth)}</div>
@@ -518,6 +498,26 @@ function pageHome() {
     </div><div class="wrap cta-strip"><p>${esc(D.path.note)}</p>${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true })}</div></div>
   </div>
 </section>
+
+<section class="section section--sage" id="services" aria-labelledby="sv-title"><div class="wrap">
+  <div class="section__head"><div><span class="label">${esc(D.services.label)}</span><h2 id="sv-title" data-split>${esc(D.services.title)}</h2></div><div class="section__aside"><a class="link" href="ceny.html">Весь прайс</a></div></div>
+  <div class="ptabs dirs__tabs" role="tablist" aria-label="Направления" data-tabs="dir">${D.dirs.map((d, i) => `<button class="chip" type="button" role="tab" data-tab="d${i}" aria-selected="${i === 0}">${esc(d.tab)}</button>`).join("")}</div>
+  ${D.dirs.map((d, i) => `<div class="dir" data-panel="dir" data-key="d${i}"${i ? " hidden" : ""}>
+    <aside class="offer dir__card">
+      <span class="label label--light">${esc(d.promo.tag)}</span>
+      <h3>${esc(d.promo.title)}</h3>
+      ${d.promo.price ? `<p class="invite__price"><b>${esc(d.promo.price)}</b>${d.promo.old ? `<s>${esc(d.promo.old)}</s>` : ""}</p>` : ""}
+      <p class="dir__promo">${esc(d.promo.text)}</p>
+      ${act(d.btn[0], d.btn[1], p, { cls: "btn--light", reason: d.btn[2] })}
+    </aside>
+    <div class="dir__body">
+      <h3 class="dir__title">${esc(d.title)}</h3>
+      <p class="dir__lead">${esc(d.lead)}</p>
+      <ul class="plist">${d.rows.map((r) => `<li><span>${esc(r[0])}</span><b>${rowPrice(r)}</b></li>`).join("")}</ul>
+      <div class="dir__links">${d.links.map(([t, k]) => `<a class="link" href="uslugi/${k}.html">${esc(t)}</a>`).join("")}</div>
+    </div>
+  </div>`).join("")}
+</div></section>
 
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>
