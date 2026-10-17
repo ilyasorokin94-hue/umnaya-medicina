@@ -121,11 +121,10 @@ html:not(.js-intro) .intro { display: none; }
 .intro__col { display: flex; align-items: flex-end; padding: 0 var(--gutter) clamp(20px, 3vw, 44px); background: var(--ink-2); }
 .intro__col:nth-child(2) { background: var(--ink-3); }
 .intro__col:nth-child(3) { background: var(--green-deep); }
-.intro__col p { margin: 0; display: grid; gap: 6px; }
+.intro__col p { margin: 0; }
 .intro__col p > span { display: block; overflow: hidden; }
-.intro__col b, .intro__col small { display: block; transform: translateY(110%); }
+.intro__col b { display: block; transform: translateY(110%); }
 .intro__col b { font: 600 var(--fs-4)/1.05 var(--display); letter-spacing: -.02em; }
-.intro__col small { font: 400 var(--fs-0)/1.3 var(--body); color: var(--muted-on-dark); }
 @media (min-width: 761px) { .intro--v3 { grid-template-rows: none; grid-template-columns: repeat(3, 1fr); } }
 /* 4. кадр кабинета: фото в рамке с прямыми углами, подпись-логотип под ним */
 .intro--v4 { --fw: min(78vw, 360px); --fh: min(52vh, 460px); }

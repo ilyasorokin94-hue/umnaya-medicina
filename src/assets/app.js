@@ -685,7 +685,6 @@
     } else if (v === 3) {
       // хирург, ортопед, терапевт по очереди, потом полосы уходят вверх одна за другой
       tl.to($$(".intro__col b", intro), { y: 0, duration: 0.9, stagger: 0.14, ease: "power4.out" })
-        .to($$(".intro__col small", intro), { y: 0, duration: 0.9, stagger: 0.14, ease: "power4.out" }, 0.12)
         .to($$(".intro__col", intro), { yPercent: -100, duration: 0.95, stagger: 0.1, ease: "power4.inOut" }, 1.75)
         .add(heroIn, 2.1);
     } else if (v === 4) {
