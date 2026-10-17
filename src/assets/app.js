@@ -598,7 +598,7 @@
     // Заранее декодируем все фото, чтобы к ленте они были готовы
     const near = new IntersectionObserver(([en]) => {
       if (!en.isIntersecting) return;
-      $$("img", pt).forEach((im) => { if (window.chrome) im.decoding = "sync"; im.loading = "eager"; if (im.decode) im.decode().catch(() => {}); });
+      $$("img", pt).forEach((im) => { if (window.chrome) im.decoding = "sync"; im.loading = "eager"; if (im.decode && im.closest(".ptour__items")) im.decode().catch(() => {}); });
       near.disconnect();
     }, { rootMargin: "150% 0px" });
     near.observe(pt);
@@ -797,12 +797,16 @@
       return `inset(${10 * k}% 0% ${100 - 90 * k}% 0%)`;
     };
     G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
+    // на телефоне ScrollTrigger не пересчитывается при смене высоты окна; шаг ленты 400vh, поэтому пересчитываем сами, когда он меняется
+    let spH = spacer.offsetHeight;
+    const ro = new ResizeObserver(() => { if (spacer.offsetHeight !== spH) { spH = spacer.offsetHeight; ST.refresh(); } });
+    ro.observe(spacer);
     const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
     zoom.fromTo(img, { clipPath: card, scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
       .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
     sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
     pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
-    return () => G.set([items, img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" });
+    return () => { ro.disconnect(); G.set([items, img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" }); };
   });
   mm.add("(max-width: 760px)", () => {
     const track = $(".feat__track");
@@ -1007,7 +1011,8 @@
   document.fonts?.ready.then(refresh);
   addEventListener("load", refresh);
   let rt = 0;
-  $$(".tour img, .feat img, .apic img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
+  // фото тура на телефоне раскладку не меняют, а скрытые копии не видны: для них пересчёт только дёргает прокрутку
+  $$(".tour img:not(.ptour img), .feat img, .apic img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { if (!im.getClientRects().length) return; clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
 
   // ---------- запись: шаги ----------
   function booking(box) {
