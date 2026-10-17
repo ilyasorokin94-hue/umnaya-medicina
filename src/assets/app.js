@@ -290,7 +290,8 @@
   });
 
   // телефон: нижняя панель не дублирует кнопку первого экрана и форму в подвале, прячется при наборе текста
-  const heroCta = $(".hero .hero__actions");
+  // кнопка первого экрана: на главной блок кнопок, на страницах услуг и врачей «Записаться на консультацию»
+  const heroCta = $(".hero .hero__actions") || $(".page-hero .btn");
   if ("IntersectionObserver" in window) {
     if (heroCta) {
       // на телефоне первый экран стоит на месте, а шторка слогана наезжает на него: кнопка закрыта, панель нужна
@@ -298,7 +299,8 @@
       let ctaIn = true, mq = 0;
       const mb = () => root.classList.toggle("mb-off", ctaIn && !(curtain && phoneMQ.matches && curtain.getBoundingClientRect().top < heroCta.getBoundingClientRect().bottom));
       root.classList.add("mb-off");
-      new IntersectionObserver(([en]) => { ctaIn = en.isIntersecting; mb(); }, { rootMargin: "-90px 0px 0px 0px" }).observe(heroCta);
+      // кнопка ниже экрана (маленький телефон) тоже считается своей: панель не закрывает её, пока до неё не долистали
+      new IntersectionObserver(([en]) => { ctaIn = en.isIntersecting || en.boundingClientRect.top >= innerHeight; mb(); }, { rootMargin: "-90px 0px 0px 0px" }).observe(heroCta);
       // пока кнопка первого экрана не видна, панель нужна при любом положении шторки: размеры не читаем
       if (curtain) addEventListener("scroll", () => { if (ctaIn && !mq) mq = requestAnimationFrame(() => { mq = 0; mb(); }); }, { passive: true });
     }
@@ -796,7 +798,7 @@
   if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px) and (max-aspect-ratio: 4 / 5)", () => {
     const spacer = $(".ptour__spacer", pt);
     const at = (k) => () => `top+=${k * (spacer.offsetHeight - innerHeight)} top`;
-    const ranges = [[() => `top bottom-=${0.4 * innerHeight}`, at(0.25)], [at(0.11), at(0.56)], [at(0.44), at(0.89)]];
+    const ranges = [[() => `top bottom-=${0.85 * innerHeight}`, at(0.25)], [at(0.11), at(0.56)], [at(0.44), at(0.89)]];
     const rails = $$(".ptour__items > .ptour__item", pt).slice(1, 4).map((it) => $(".ptour__rail", it));
     rails.forEach((r, i) => r && G.fromTo(r, { xPercent: 0 }, { xPercent: -100, ease: "none", scrollTrigger: { trigger: spacer, start: ranges[i][0], end: ranges[i][1], scrub: true, invalidateOnRefresh: true } }));
     return () => G.set(rails.filter(Boolean), { clearProps: "transform" });

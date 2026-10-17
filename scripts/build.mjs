@@ -148,7 +148,7 @@ function intro(depth) {
 
 // кнопки-действия: открывают окно на сайте, без скриптов ведут на запись, телефон или Telegram
 const fallbackHref = (kind, p, o = {}) => kind === "call" ? clinic.phoneHref
-  : kind === "xray" || kind === "write" ? clinic.telegram
+  : kind === "xray" ? clinic.telegram
   : kind === "allon" ? `${p}zapis.html?service=all-on-4`
   : `${p}zapis.html${o.service ? `?service=${o.service}` : o.doctor ? `?doctor=${o.doctor}` : ""}`;
 const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""}" href="${fallbackHref(kind, p, o)}" data-modal="${kind}"${o.reason ? ` data-reason="${esc(o.reason)}"` : ""}${o.doctor ? ` data-doctor="${o.doctor}"` : ""}${o.magnet ? " data-magnet" : ""}>${esc(label)}</a>`;
@@ -157,11 +157,11 @@ const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""
 function phoneTour(depth) {
   const P = v2.clinic.phone;
   // фото ленты и галереи: в Chromium app.js переключает их на синхронное декодирование (иначе пустые карточки), в Safari остаётся фоновое
-  const pic = (entry, alt, x) => img(entry, alt, depth, ` class="ptour__img"${x ? ` style="object-position:${x} 50%"` : ""}`);
+  const pic = (entry, alt, x, y = "50%") => img(entry, alt, depth, ` class="ptour__img"${x ? ` style="object-position:${x} ${y}"` : ""}`);
   // карточка ленты; у широких фото (pan) окно карточки ведёт по фото слева направо, пока лента едет: доля p0..p1 от того, что не влезло
   const card = ([f, cap, o], cls = "") => {
     const body = o && o.pan
-      ? `<div class="ptour__win" style="--ar:${o.ar};--p0:${o.pan[0]};--p1:${o.pan[1]}"><span class="ptour__rail">${pic([f], cap, `${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}%`)}</span></div>`
+      ? `<div class="ptour__win" style="--ar:${o.ar};--p0:${o.pan[0]};--p1:${o.pan[1]}"><span class="ptour__rail">${pic([f], cap, `${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}%`, o.y)}</span></div>`
       : pic([f], cap, o);
     return `<div class="ptour__item${cls}">${body}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
   };
@@ -256,8 +256,6 @@ ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">
     <button class="btn btn--lg btn--wide">Записаться на консультацию</button>
     <p class="modal__note">Перезвоним за 5 минут. ${consent}</p>
   </form>`)}
-${box("write", "Напишите нам", `<p class="modal__sub">Ответим за 5 минут, ежедневно с 9:00 до 21:00. Можно сразу прислать снимок, врач посмотрит его до визита.</p>
-  <div class="modal__msgr"><a class="btn btn--lg" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--lg btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>`)}
 ${offer(depth, consent)}
 ${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}. Пока ждёте, можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>
