@@ -411,14 +411,18 @@ function marquee(text) {
   return `<div class="marquee" aria-hidden="true"><div class="marquee__track">${item.repeat(4)}</div></div>`;
 }
 
-// контакты «дорога до двери»: слева адрес и что важно знать, справа фото пути от улицы до входа.
-// На компьютере сцена закрепляется, и прокрутка ведёт от точки к точке; на телефоне фото листаются свайпом. Карта по кнопке
+// ---------- контакты «карточка на карте» (Ilya 17.10): без фото, с Яндекс Картой ----------
+// Компьютер: карта на весь экран, контакты на белой карточке поверх, как карточка места в Яндекс Картах; центр карты сдвинут,
+// чтобы метка была справа от карточки. Телефон: контакты сверху, карта под ними во всю ширину.
+// Карта: виджет Яндекса без ключа; до нажатия не ловит прокрутку (кнопка «Нажмите, чтобы двигать карту»)
+const ymapPin = (z, dx = 0) => `https://yandex.ru/map-widget/v1/?ll=${(clinic.geo.lon + dx).toFixed(6)}%2C${clinic.geo.lat}&z=${z}&pt=${clinic.geo.lon},${clinic.geo.lat},pm2grm`;
 function place() {
   const { lat, lon } = clinic.geo;
   const W = v2.way;
-  return `<section class="section way" id="contacts" aria-labelledby="ct-title">
-  <div class="wrap way__stage">
-    <div class="way__info">
+  const map = (src, phone) => `<div class="ctmap ct__map"><iframe title="Карта: стоматология на Громова, 10/2" data-src-phone="${phone}" loading="lazy" src="${src}"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button></div>`;
+  return `<section class="way ct" id="contacts" aria-labelledby="ct-title">
+  <div class="wrap ct__layer">
+    <div class="ct__card">
       <span class="label way__label">${esc(W.label)}</span>
       <h2 id="ct-title" class="way__addr" data-split>${esc(W.title)}</h2>
       <p class="way__where">${esc(W.where)}</p>
@@ -429,16 +433,10 @@ function place() {
         <a class="way__app" href="https://yandex.ru/maps/?rtext=~${lat},${lon}"${ext}><span class="rt-mark rt-mark--ya"><img src="${pick(["images/brand/yandex-maps.svg"], 0).src}" alt=""></span><span>Маршрут<small>Яндекс Карты</small></span></a>
         <a class="way__app" href="${clinic.gis}"${ext}><span class="rt-mark rt-mark--2gis"><img src="${pick(["images/brand/2gis.png"], 0).src}" alt=""></span><span>Маршрут<small>2ГИС</small></span></a>
       </div>
-      <div class="way__more"><button class="way__link" type="button" data-share data-share-text="${esc(W.share)}" data-share-url="${clinic.yandex}">Отправить адрес</button><button class="way__link" type="button" data-map-toggle aria-expanded="false" aria-controls="way-map">Показать карту</button></div>
-    </div>
-    <div class="way__walk">
-      <div class="way__frame" aria-label="Как пройти от улицы до входа">${W.stops.map((x) => `<figure class="way__shot" style="--op:${x.pos}"><span class="way__img">${img([x.img], x.alt, 0)}</span><figcaption><b>${esc(x.title)}</b><span>${esc(x.text)}</span></figcaption></figure>`).join("")}</div>
-      <div class="way__cap"><div class="chips way__stops">${W.stops.map((x, i) => `<button class="chip${i ? "" : " is-on"}" type="button" aria-pressed="${!i}">${esc(x.title)}</button>`).join("")}</div><p class="way__text" aria-live="polite">${esc(W.stops[0].text)}</p></div>
+      <div class="way__more"><button class="way__link" type="button" data-share data-share-text="${esc(W.share)}" data-share-url="${clinic.yandex}">Отправить адрес</button></div>
     </div>
   </div>
-  <div class="wrap way__mapwrap" id="way-map" hidden>
-    <div class="way__map"><iframe title="Карта: стоматология на Громова, 10/2" data-src="https://yandex.ru/map-widget/v1/?ll=${lon}%2C${lat}&z=16&pt=${lon},${lat},pm2grm"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button></div>
-  </div>
+  <div class="ct__mapbox">${map(ymapPin(16, -0.0062), ymapPin(16))}</div>
 </section>`;
 }
 

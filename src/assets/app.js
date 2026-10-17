@@ -505,7 +505,7 @@
     });
   });
 
-  // ---------- контакты «дорога до двери» ----------
+  // ---------- контакты: адрес, часы, маршрут, Яндекс Карта ----------
   // открыто ли сейчас: время Москвы, ежедневно с 9:00 до 21:00
   const nowMsk = () => {
     const pt = new Intl.DateTimeFormat("ru-RU", { timeZone: "Europe/Moscow", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
@@ -517,40 +517,14 @@
     if (isOpen()) { openSt.textContent = "Сейчас открыто, до 21:00"; openSt.classList.add("is-open"); }
     else openSt.textContent = nowMsk() < 540 ? "Сейчас закрыто, откроемся в 9:00" : "Сейчас закрыто, откроемся завтра в 9:00";
   }
-  // точки пути: без закрепления (телефон, низкий экран, «уменьшить движение») фото меняются по нажатию на точку
-  const wayShots = $$(".way__shot"), wayChips = $$(".way__stops .chip"), wayText = $(".way__text");
-  let wayCur = -1, wayTrig = null;
-  const wayActive = (i) => {
-    if (i === wayCur || !wayShots[i]) return;
-    wayCur = i;
-    wayChips.forEach((c, k) => { c.classList.toggle("is-on", k === i); c.setAttribute("aria-pressed", String(k === i)); });
-    wayShots.forEach((x, k) => x.classList.toggle("is-on", k === i));
-    if (wayText) wayText.textContent = $("figcaption span", wayShots[i])?.textContent || "";
-  };
-  wayActive(0);
-  wayChips.forEach((c, i) => c.addEventListener("click", () => {
-    if (!wayTrig) return wayActive(i);
-    const y = wayTrig.start + ((wayTrig.end - wayTrig.start) * i) / (wayShots.length - 1);
-    lenis ? lenis.scrollTo(y, { duration: 0.9 }) : scrollTo(0, y);
-  }));
-  // карта по кнопке: грузится только при первом открытии
-  const mapBtn = $("[data-map-toggle]"), mapWrap = $("#way-map");
-  mapBtn?.addEventListener("click", () => {
-    const open = mapWrap.hidden, fr = $("iframe", mapWrap);
-    if (open && fr && !fr.src) fr.src = fr.dataset.src;
-    mapBtn.setAttribute("aria-expanded", String(open));
-    mapBtn.textContent = open ? "Скрыть карту" : "Показать карту";
-    if (open) {
-      mapWrap.hidden = false;
-      if (anim) G.from(mapWrap, { height: 0, duration: 0.8, ease: "power3.inOut", clearProps: "height", onComplete: () => ST.refresh() });
-      else ST?.refresh();
-    } else {
-      const fin = () => { mapWrap.hidden = true; if (G) G.set(mapWrap, { clearProps: "height" }); ST?.refresh(); };
-      if (anim) G.to(mapWrap, { height: 0, duration: 0.5, ease: "power2.in", onComplete: fin }); else fin();
-    }
+  // карта двигается только после нажатия, иначе колесо и палец застревают на ней при прокрутке страницы
+  $$(".ctmap").forEach((m) => {
+    m.addEventListener("click", () => m.classList.add("is-active"));
+    m.addEventListener("mouseleave", () => m.classList.remove("is-active"));
   });
-  $(".way__map")?.addEventListener("click", (e) => e.currentTarget.classList.add("is-active"));
-  $(".way__map")?.addEventListener("mouseleave", (e) => e.currentTarget.classList.remove("is-active"));
+  document.addEventListener("pointerdown", (e) => { $$(".ctmap.is-active").forEach((m) => { if (!m.contains(e.target)) m.classList.remove("is-active"); }); });
+  // на телефоне метка по центру карты, на компьютере справа от карточки
+  if (matchMedia("(max-width: 1024px)").matches) $$("iframe[data-src-phone]").forEach((f) => { f.src = f.dataset.srcPhone; });
   // отправить адрес себе или тому, кто повезёт
   const shareBtn = $("[data-share]");
   shareBtn?.addEventListener("click", async () => {
@@ -986,24 +960,6 @@
       ST.removeEventListener("refresh", reglide);
       glider.remove(); dirTabs.classList.remove("has-glider"); dirRollStop = () => {};
     };
-  });
-
-  // контакты: сцена закрепляется, прокрутка ведёт от улицы к двери, каждое фото поднимается шторкой.
-  // Создаётся после ленты «путь», поэтому её отступ учтён; refreshPriority как у неё
-  if (wayShots.length > 1) mm.add("(min-width: 1025px) and (min-height: 780px)", () => {
-    const n = wayShots.length, imgs = wayShots.map((x) => $("img", x)), way = $(".way");
-    way.classList.add("is-pinned");
-    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: {
-      trigger: ".way__stage", start: "top top", end: () => "+=" + Math.round((n - 1) * innerHeight * 0.55), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 1,
-      onUpdate: (self) => wayActive(Math.round(self.progress * (n - 1))),
-    } });
-    wayTrig = tl.scrollTrigger;
-    for (let i = 1; i < n; i++) {
-      tl.fromTo(wayShots[i], { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1 }, i - 1)
-        .fromTo(imgs[i], { scale: 1.18, yPercent: 4 }, { scale: 1, yPercent: 0, duration: 1 }, i - 1)
-        .to(imgs[i - 1], { scale: 1.1, yPercent: -3, duration: 1 }, i - 1);
-    }
-    return () => { wayTrig = null; way.classList.remove("is-pinned"); G.set(wayShots, { clearProps: "clipPath" }); G.set(imgs, { clearProps: "transform" }); };
   });
 
   // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте и открывается из-под неё.
