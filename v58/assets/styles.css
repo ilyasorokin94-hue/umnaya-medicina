@@ -1326,6 +1326,10 @@ html:not(.js-intro) .intro { display: none; }
   .feat__pin > .cta-strip { padding: 0; flex: none; width: var(--wrap); }
   .team__grid .doc h3 { min-height: 2.4em; }
 }
+/* «5 минут, 0 ₽, 3 врача…» на компьютере без карточек, одни надписи (Ilya 17.10, проба): лента и закрепление те же, на телефоне карточки остаются */
+@media (min-width: 761px) {
+  .feat__track > .fcard:not(.fcard--intro) { border: 0; border-radius: 0; background: none; }
+}
 /* фото из 2ГИС: водяной знак в правом нижнем углу срезаем рамкой */
 .tfig__img img { height: 108%; object-position: 50% 0; }
 @media (max-width: 760px) {
