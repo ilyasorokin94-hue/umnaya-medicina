@@ -672,7 +672,7 @@
       tl.fromTo($$(".hero__actions > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1 }, 1.35);
     }
     // на телефоне первая фраза приходит вслед за заголовком, на компьютере вместе с кнопкой, когда буквы собрались
-    if (rot && h.contains(rot)) tl.call(rotStart, null, conv ? 1.0 : 0.6);
+    if (rot && h.contains(rot)) tl.call(rotStart, null, conv ? 0.85 : 0.45);
     const trio = $(".slogan__more .hero__trio") || $(".hero__trio", h);
     if (trio && small) {
       const st = { trigger: trio, start: "top 92%", once: true };

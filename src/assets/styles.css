@@ -1685,8 +1685,8 @@ html:not(.js-intro) .intro { display: none; }
 .hv__rot .sw > span { display: inline-block; transform: translateY(110%); }
 html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > span { transform: none; }
 /* новая фраза приходит, когда старая почти ушла, иначе на миг читаются обе */
-.hv__rot .is-on .sw > span { transform: none; transition: transform .9s var(--ease) calc(.35s + var(--i) * 45ms); }
-.hv__rot .is-out .sw > span { transform: translateY(-110%); transition: transform .45s cubic-bezier(.5, 0, .75, 0) calc(var(--i) * 20ms); }
+.hv__rot .is-on .sw > span { transform: none; transition: transform .7s var(--ease) calc(.28s + var(--i) * 35ms); }
+.hv__rot .is-out .sw > span { transform: translateY(-110%); transition: transform .36s cubic-bezier(.5, 0, .75, 0) calc(var(--i) * 15ms); }
 @media (min-width: 761px) {
   .hero--v1 .hero__in { display: flex; }
   .hero--v1 .hero__text { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 1fr auto; column-gap: 48px; align-items: end; }
