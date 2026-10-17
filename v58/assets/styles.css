@@ -753,7 +753,13 @@ html:not(.js-intro) .intro { display: none; }
 /* ПроДокторов: официальная плашка «нас рекомендуют» с мегафоном (prodoctorov.ru/rating/widget/recommend/95133/200.png)
    в светлом круге с тонким кольцом на отступе 5px, размеры как у Зубной Гармонии: круг 164/148px, плашка 128/116px (Ilya 17.10).
    Если картинка не загрузилась, в круге наш логотип ПроДокторов (.is-fb) */
-.rt .rt-seal { flex: none; width: 164px; aspect-ratio: 1; margin: 6px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fcfaf5; outline: 1px solid rgba(201, 189, 140, .55); outline-offset: 5px; }
+.rt .rt-seal { position: relative; flex: none; width: 164px; aspect-ratio: 1; margin: 7px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #fcfaf5; }
+/* кольцо на отступе 5px заполняется золотом до 4,9 из 5 (98%): на компьютере один раз при появлении, на телефоне вслед за прокруткой (app.js) */
+.rt-seal__ring { position: absolute; inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); transform: rotate(-90deg); overflow: visible; pointer-events: none; }
+.rt-seal__ring circle { fill: none; }
+.rt-seal__track { stroke: rgba(201, 189, 140, .3); stroke-width: .6; }
+.rt-seal__fill { stroke: var(--gold); stroke-width: 1.15; stroke-linecap: round; stroke-dasharray: 100 100; stroke-dashoffset: 2; }
+.js-anim .rt-seal__fill { stroke-dashoffset: 100; }
 .rt-seal__link { display: block; width: 128px; line-height: 0; border-radius: 8px; transition: transform .24s cubic-bezier(.16, 1, .3, 1); }
 @media (prefers-reduced-motion: reduce) { .rt-seal__link { transition: none; } }
 .rt-seal__link:hover { transform: translateY(-2px); }
