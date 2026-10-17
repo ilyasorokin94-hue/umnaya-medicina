@@ -1457,14 +1457,8 @@ html:not(.js-intro) .intro { display: none; }
 .faqq__a p { padding: 0 0 clamp(18px, 2.1vw, 30px); font-size: clamp(16px, 1.25vw, 18px); line-height: 1.65; color: var(--muted); text-wrap: pretty; }
 .faqq__a a { color: var(--green-deep); font-weight: 500; text-underline-offset: 3px; }
 .faqt > summary:focus-visible, .faqq > summary:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; border-radius: 6px; }
-.faqv__ask { display: flex; justify-content: space-between; align-items: center; gap: 16px 32px; margin-top: clamp(48px, 5.5vw, 80px); padding: clamp(20px, 2.2vw, 28px) clamp(20px, 2.6vw, 36px); border-radius: var(--radius); background: var(--sage-2); }
-.faqv__ask b { font: 500 clamp(19px, 1.5vw, 22px)/1.2 var(--display); letter-spacing: -.02em; }
-.faqv__ask p { margin-top: 6px; color: var(--muted); }
-.faqv__ask a:not(.btn) { color: var(--text); font-weight: 500; text-decoration: none; white-space: nowrap; }
-.faqv__ask .btn { flex: none; }
 @media (max-width: 760px) {
   .faqt > summary, .faqq > summary { gap: 18px; }
-  .faqv__ask { flex-direction: column; align-items: flex-start; }
 }
 
 /* ---------- контакты «дорога до двери» и заявка одной строкой (16.10, 11:21) ---------- */
