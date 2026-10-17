@@ -132,7 +132,13 @@ function phoneTour(depth) {
   const P = v2.clinic.phone;
   // фото ленты и галереи: в Chromium app.js переключает их на синхронное декодирование (иначе пустые карточки), в Safari остаётся фоновое
   const pic = (entry, alt, x) => img(entry, alt, depth, ` class="ptour__img"${x ? ` style="object-position:${x} 50%"` : ""}`);
-  const card = ([f, cap, x], cls = "") => `<div class="ptour__item${cls}">${pic([f], cap, x)}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
+  // карточка ленты; у широких фото (pan) окно карточки ведёт по фото слева направо, пока лента едет: доля p0..p1 от того, что не влезло
+  const card = ([f, cap, o], cls = "") => {
+    const body = o && o.pan
+      ? `<div class="ptour__win" style="--ar:${o.ar};--p0:${o.pan[0]};--p1:${o.pan[1]}"><span class="ptour__rail">${pic([f], cap, `${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}%`)}</span></div>`
+      : pic([f], cap, o);
+    return `<div class="ptour__item${cls}">${body}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
+  };
   const words = (t, from) => t.split(" ").map((w, i) => `<span class="w" style="--i:${from + i}">${esc(w)}</span>`).join(" ");
   return `<div class="ptour">
     <div class="ptour__car"><div class="ptour__items">

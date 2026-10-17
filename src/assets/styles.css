@@ -1865,6 +1865,10 @@ html:not(.js-intro) .intro { display: none; }
   .js-anim .ptour__item { display: flex; position: relative; flex: 0 0 100vw; width: 100vw; height: 100vh; margin-left: -25vw; padding-bottom: calc(100vh - var(--pt-s)); align-items: center; justify-content: center; overflow: clip; }
   /* у фото тура углы прямые, как у Лава Дент (Ilya 17.10: скругление не нравится) */
   .js-anim .ptour__img { transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(100vh - var(--pt-s) * .9)); }
+  /* широкие фото (вход с надписью, ресепшен, врачи): масштаб и обрезку карточки несёт окно .ptour__win, а фото внутри едет на .ptour__rail */
+  .js-anim .ptour__win { position: absolute; inset: 0; transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(100vh - var(--pt-s) * .9)); }
+  .ptour__rail { position: absolute; inset: 0; }
+  .js-anim .ptour__win .ptour__img { transform: none; clip-path: none; }
   .js-anim .ptour__shade { opacity: 0; }
   .js-anim .ptour__cap { display: block; position: absolute; left: 13.75%; right: 13.75%; top: calc(var(--pt-s) * .79 + 12px); margin: 0; font: 400 14px/1.35 var(--body); color: var(--muted-on-dark); }
   /* отступ шапки (scroll-padding) не должен сдвигать шкалы: лента едет ровно с момента, как встала */
@@ -1882,6 +1886,12 @@ html:not(.js-intro) .intro { display: none; }
 @supports (height: 1svh) {
   @media (max-width: 760px) { .js-anim .ptour { --pt-s: 100svh; } }
 }
+/* телефон вертикально: фото во всю свою ширину на высоту карточки (80% видимой высоты), окно проходит от p0 до p1 того, что не влезло.
+   Рельс шириной в этот путь сдвигается на свою ширину (translateX(-100%)), поэтому в keyframes нет var() */
+@media (max-width: 760px) and (max-aspect-ratio: 4 / 5) {
+  .js-anim .ptour__rail { --pt-w: calc(var(--pt-s) * .8 * var(--ar)); --pt-d: calc(var(--pt-w) - 100vw); inset: calc(var(--pt-s) * .1) auto auto calc(var(--pt-d) * var(--p0) * -1); width: calc(var(--pt-d) * (var(--p1) - var(--p0))); height: calc(var(--pt-s) * .8); will-change: transform; }
+  .js-anim .ptour__rail .ptour__img { inset: 0 auto auto 0; width: var(--pt-w); max-width: none; height: 100%; }
+}
 @supports (animation-timeline: view()) and (timeline-scope: --a) {
   @media (max-width: 760px) {
     .js-anim .ptour__items { animation: pt-move linear forwards; animation-timeline: --pt-car; animation-range: contain 0% contain 100%; }
@@ -1891,11 +1901,19 @@ html:not(.js-intro) .intro { display: none; }
     .js-anim .ptour__item--left, .js-anim .ptour__item--right { animation: pt-out linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
     .js-anim .ptour__fig[data-par] { animation: pt-par linear both; animation-timeline: view(block 0px); }
   }
+  /* окно ведёт по широкому фото, пока карточка проезжает экран: первая с момента, как показалась снизу, остальные пока их центр идёт от правого края к левому */
+  @media (max-width: 760px) and (max-aspect-ratio: 4 / 5) {
+    .js-anim .ptour__rail { animation: pt-pan linear both; animation-timeline: --pt-car; }
+    .js-anim .ptour__item:nth-child(2) .ptour__rail { animation-range: entry 40% contain 25%; }
+    .js-anim .ptour__item:nth-child(3) .ptour__rail { animation-range: contain 11% contain 56%; }
+    .js-anim .ptour__item:nth-child(4) .ptour__rail { animation-range: contain 44% contain 89%; }
+  }
 }
 @keyframes pt-move { to { transform: translate(calc(-100% + 275vw)); } }
 @keyframes pt-zoom-s { to { transform: scale(1.1); } }
 @keyframes pt-zoom-c { to { clip-path: inset(0); } }
 @keyframes pt-shade { to { opacity: 1; } }
+@keyframes pt-pan { to { transform: translateX(-100%); } }
 @keyframes pt-out { to { transform: translate(var(--pt-x)); } }
 @keyframes pt-par { from { transform: translateY(25svh); } to { transform: translateY(-25svh); } }
 
