@@ -125,7 +125,7 @@ ${fontPreload.map((f) => `<link rel="preload" href="${p}assets/fonts/${f}.woff2"
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
 window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
-window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big,.intro__logo");if(p)p.classList.add("is-fallback");i.style.display="none"};
+window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big");if(p)p.classList.add("is-fallback");i.style.display="none"};
 </script>
 <script src="${p}assets/vendor/gsap.min.js" defer></script>
 <script src="${p}assets/vendor/ScrollTrigger.min.js" defer></script>
@@ -138,12 +138,9 @@ ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</sc
 ${PUBLISH ? "" : `<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». Заявки из форм пока никуда не отправляются.</div>`}`;
 }
 
+// заставка (Ilya 17.10, вариант 5 из пяти): логотип проявляется по центру и перелетает на своё место в шапке, тёмный фон тает
 function intro(depth) {
-  return `<div class="intro" aria-hidden="true"><div class="intro__in">
-  <div class="intro__logo">${logoImg(depth)}<span class="logo__text">Умная Медицина</span></div>
-  <div class="intro__bar"><i></i></div>
-  <p class="intro__word">Стоматология</p>
-</div></div>`;
+  return `<div class="intro" aria-hidden="true"><div class="intro__bg"></div><img class="intro__mark" src="${pre(depth)}images/brand/header-logo-light.svg" alt=""></div>`;
 }
 
 // кнопки-действия: открывают окно на сайте, без скриптов ведут на запись, телефон или Telegram
