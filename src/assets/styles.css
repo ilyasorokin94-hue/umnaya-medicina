@@ -2043,3 +2043,42 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
   .team__grid.dl-grid .doc__photo img { translate: none; scale: none; }
   .dl-nav .sp-pill { font-size: 14px; }
 }
+
+/* ---------- прайс-лист: разделы раскрываются плюсом (Ilya 18.10) ---------- */
+.pfrom { display: grid; gap: 4px; justify-items: end; text-align: right; }
+.pfrom b { font: 500 var(--fs-1)/1.1 var(--display); letter-spacing: -.02em; white-space: nowrap; color: var(--text); }
+.pfrom small { font-size: 13px; line-height: 1.35; color: var(--muted); max-width: 24ch; }
+.pmore { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-top: 18px; }
+.pmore .link:only-child, .pmore .btn:only-child { margin-left: auto; }
+.pv .plist b mark { white-space: nowrap; }
+/* слева заголовок, пояснение к ценам и поиск, справа разделы */
+.pv-a__in { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.6fr); gap: clamp(32px, 5vw, 96px); align-items: start; }
+.pv-a__side { position: sticky; top: calc(var(--header-h) + 40px); display: grid; gap: 22px; }
+.pv-a__side .section__title { font-size: var(--fs-3); }
+.pv-a__side .pfilter { margin: 0; }
+.pv-a__main.ptables { display: block; }
+.pacc { border-bottom: 1px solid var(--line); }
+.pacc:first-child { border-top: 1px solid var(--line); }
+.pacc > summary { padding: clamp(18px, 2vw, 28px) 0; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 24px; }
+.pacc .pacc__t { display: grid; gap: 4px; }
+.pacc .pacc__t h3 { font-size: var(--fs-2); line-height: 1.15; }
+.pacc .pacc__t small { font-size: var(--fs--1); color: var(--muted); }
+.pacc .pfrom b { color: var(--muted); transition: color .5s cubic-bezier(.33, 0, .11, 1); }
+.pacc[open]:not(.is-off) .pfrom b { color: var(--green-deep); }
+.pacc__body { padding: 0 0 clamp(22px, 2.4vw, 34px); }
+.pacc .plist li { padding: 14px 2px; }
+.pacc .plist li > span { font-size: var(--fs--1); }
+.pacc .plist b { font-size: 16px; }
+@media (max-width: 1024px) {
+  .pv-a__in { grid-template-columns: minmax(0, 1fr); }
+  .pv-a__side { position: static; }
+}
+@media (max-width: 760px) {
+  .pacc > summary { grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; }
+  .pacc > summary .pfrom { grid-column: 1; grid-row: 2; justify-items: start; text-align: left; }
+  .pacc > summary > i { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  .pacc .pacc__t small { display: none; }
+  .pfrom small { max-width: none; }
+  .pv-a__side .pfilter input { min-height: 50px; }
+  .pv .plist li { grid-template-columns: minmax(0, 1fr) auto; gap: 14px; }
+}

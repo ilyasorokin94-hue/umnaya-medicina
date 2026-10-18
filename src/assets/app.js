@@ -392,31 +392,28 @@
   // кнопка «наверх»
   $$("[data-totop]").forEach((b) => b.addEventListener("click", () => (lenis ? lenis.scrollTo(0, { duration: 1.6 }) : scrollTo({ top: 0, behavior: "smooth" }))));
 
-  // прайс-страница: поиск и разделы
+  // прайс-страница: поиск по услугам. Разделы с найденным раскрываются, после очистки поиска
+  // раскрыты те же разделы, что до начала поиска
   const search = $("#p-search");
   if (search) {
-    let cat = "";
     const tables = $$(".ptables .ptable");
     const empty = $(".pempty");
-    const apply = () => {
+    let wasOpen = null;
+    search.addEventListener("input", () => {
       const q = search.value.trim().replace(/\s+/g, " ").toLowerCase();
+      if (q && !wasOpen) wasOpen = new Map(tables.map((t) => [t, t.open]));
       let any = false;
       tables.forEach((t) => {
-        const inCat = !cat || t.dataset.cat === cat;
         let n = 0;
-        $$("li", t).forEach((li) => { const ok = inCat && (!q || li.textContent.replace(/\u00a0/g, " ").toLowerCase().includes(q)); li.hidden = !ok; if (ok) n++; });
+        $$("li", t).forEach((li) => { const ok = !q || li.textContent.replace(/\u00a0/g, " ").toLowerCase().includes(q); li.hidden = !ok; if (ok) n++; });
         t.hidden = n === 0;
+        t.open = q ? n > 0 : wasOpen ? wasOpen.get(t) : t.open;
         if (n) any = true;
       });
+      if (!q) wasOpen = null;
       empty.hidden = any;
       ST?.refresh();
-    };
-    search.addEventListener("input", apply);
-    $$("[data-filter]").forEach((c) => c.addEventListener("click", () => {
-      cat = c.dataset.filter;
-      $$("[data-filter]").forEach((x) => x.classList.toggle("is-on", x === c));
-      apply();
-    }));
+    });
   }
 
   // ---------- онлайн-запись ----------

@@ -43,7 +43,7 @@ const nb = (t) => t.replace(/(\d) (?=\d{3}(?!\d))/g, "$1\u00a0").replace(/ ₽/g
 const esc = (s) => nb(String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"));
 const rub = (n) => n.toLocaleString("ru-RU").replace(/\s/g, " ") + " ₽";
 const priceText = (p) => {
-  if (p === 0) return "Бесплатно";
+  if (p === 0) return "0 ₽";
   if (typeof p === "number") return rub(p);
   const m = /^от (\d+)$/.exec(p);
   return m ? "от " + rub(Number(m[1])) : p;
@@ -1344,23 +1344,59 @@ ${docGroups.map((g, i) => `
 </main>` + footer(depth) + end;
 }
 
+// Прайс-лист (Ilya 18.10 выбрал подачу «разделы с плюсом»): разделы в порядке визита, у каждого стартовая цена
+// с подписью, что именно стоит столько; нажатие раскрывает список, как вопросы на главной. Источник цен на странице
+// не называем (Ilya 18.10: у сайта будет свой домен). В разделе ссылка на страницу услуги и кнопка записи
+const priceDate = "18.10.2026";
+const priceSecs = {
+  consult: ["0 ₽", "терапевт, ортопед, хирург и имплантолог", null],
+  xray: ["от 500 ₽", "прицельный снимок", "diagnostika"],
+  therapy: ["от 4 000 ₽", "лечение кариеса", "lechenie-zubov"],
+  hygiene: ["4 500 ₽", "Air-Flow по средам, по акции", "gigiena"],
+  implant: ["от 19 300 ₽", "установка импланта", "implantaciya"],
+  bone: ["от 22 000 ₽", "закрытый синус-лифтинг", "kostnaya-plastika"],
+  allon: ["от 114 000 ₽", "хирургический этап All-on-4", "all-on-4"],
+  crowns: ["от 26 400 ₽", "металлокерамическая коронка", "koronki"],
+  removable: ["от 22 550 ₽", "иммедиат-протез на 1–3 зуба", "semnye-protezy"],
+  surgery: ["от 2 100 ₽", "простое удаление зуба", "hirurgiya"],
+  ortho: ["от 28 500 ₽", "брекеты на одну челюсть", "ortodontiya"],
+  kidsOrtho: ["от 10 400 ₽", "удерживающее кольцо", "ortodontiya"],
+  kids: ["от 450 ₽", "покрытие зуба фтор-лаком", "detskaya"],
+};
+const priceOrder = Object.keys(priceSecs);
+const priceCount = (k) => `${prices[k].items.length} ${plural(prices[k].items.length, "позиция", "позиции", "позиций")}`;
+const priceMore = (k, p) => {
+  const slug = priceSecs[k][2];
+  const more = slug ? `<a class="link" href="${svcHref(slug, p)}">Об услуге</a>` : "";
+  return `<div class="pmore">${more}${act("Записаться", "book", p, { cls: "btn--sm", reason: `Прайс: ${prices[k].title}` })}</div>`;
+};
+// разметка для поисковиков и нейросетей: весь прайс каталогом услуг клиники, спорные цены не попадают
+function pricesLd() {
+  const offer = ([n, v]) => {
+    if (plHeld(n, v)) return null;
+    const m = typeof v === "number" ? [v, false] : /^от (\d+)$/.exec(v) ? [Number(v.slice(3)), true] : null;
+    if (!m) return null;
+    const base = { "@type": "Offer", itemOffered: { "@type": "MedicalProcedure", name: n }, offeredBy: { "@id": CLINIC_ID } };
+    return m[1] ? { ...base, priceSpecification: { "@type": "PriceSpecification", minPrice: m[0], priceCurrency: "RUB" } } : { ...base, price: m[0], priceCurrency: "RUB" };
+  };
+  return { "@context": "https://schema.org", "@type": "OfferCatalog", name: "Прайс стоматологии «Умная Медицина»", url: `${SITE}/ceny`,
+    itemListElement: priceOrder.map((k) => ({ "@type": "OfferCatalog", name: prices[k].title, itemListElement: prices[k].items.map(offer).filter(Boolean) })) };
+}
+const priceNote = `Цены на ${priceDate}. Цена «от» означает минимальную стоимость: точную сумму врач называет после осмотра и записывает в план лечения, она не меняется без вашего согласия.`;
+
 function pagePrices() {
-  const depth = 0;
-  const order = ["consult", "xray", "therapy", "hygiene", "implant", "bone", "allon", "crowns", "removable", "surgery", "ortho", "kidsOrtho", "kids"];
-  return head({ title: "Цены на стоматологию в Удельной и Жуковском | Умная Медицина", desc: "Прайс стоматологии «Умная Медицина»: лечение кариеса от 4 000 ₽, имплантация от 19 300 ₽, коронки от 26 400 ₽, КТ от 2 000 ₽. Цены на 15.10.2026.", canonical: "/ceny", depth, jsonld: [crumbsLd([["ceny", "Цены"]])] })
+  const depth = 0, p = "";
+  return head({ title: "Цены на стоматологию в Удельной и Жуковском | Умная Медицина", desc: `Прайс стоматологии «Умная Медицина»: консультация 0 ₽, лечение кариеса от 4 000 ₽, имплантация от 19 300 ₽, коронки от 26 400 ₽, КТ от 2 000 ₽. Цены на ${priceDate}.`, canonical: "/ceny", depth, jsonld: [crumbsLd([["ceny", "Цены"]]), pricesLd()] })
   + header(depth) + `
 <main id="main">
 <section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span aria-current="page">Цены</span></nav><h1 data-split>Прайс-лист</h1><p class="page-hero__lead">Цены на 15.10.2026. Итоговую стоимость врач называет после осмотра и записывает в план лечения.</p></div>
+  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span aria-current="page">Цены</span></nav><h1 data-split>Прайс-лист</h1><p class="page-hero__lead">Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽.</p></div>
   <div class="page-hero__aside">${act("Записаться на консультацию", "book", "", { cls: "btn--lg", magnet: true })}</div>
 </div></section>
-<section class="section"><div class="wrap">
-  <div class="pfilter">
-    <label class="sr" for="p-search">Поиск услуги</label><input id="p-search" type="search" placeholder="Найти услугу: коронка, имплант, КТ…">
-    <div class="chips" role="group" aria-label="Разделы прайса"><button type="button" class="chip is-on" data-filter="">Все</button>${order.map((k) => `<button type="button" class="chip" data-filter="${k}">${esc(prices[k].title)}</button>`).join("")}</div>
-  </div>
-  <div class="ptables">${order.map((k) => `<div class="ptable" data-cat="${k}"><h3>${esc(prices[k].title)}</h3>${plist([k])}</div>`).join("")}</div>
-  <p class="pempty note" hidden>Ничего не нашлось. Позвоните, и администратор подскажет цену: <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a></p>
+<section class="section pv"><div class="wrap pv-a__in">
+  <div class="pv-a__side"><h2 class="section__title" data-split>Цены по разделам</h2><p class="note">${esc(priceNote)}</p><div class="pfilter"><label class="sr" for="p-search">Поиск услуги</label><input id="p-search" type="search" placeholder="Найти услугу: коронка, имплант, КТ…"></div></div>
+  <div class="pv-a__main ptables" data-prices="acc">${priceOrder.map((k, i) => `<details class="faqt pacc ptable" data-cat="${k}"${i ? "" : " open"}><summary><span class="pacc__t"><h3>${esc(prices[k].title)}</h3><small>${priceCount(k)}</small></span><span class="pfrom"><b>${esc(priceSecs[k][0])}</b><small>${esc(priceSecs[k][1])}</small></span><i aria-hidden="true"></i></summary><div class="faqt__body"><div class="pacc__body">${plist([k])}${priceMore(k, p)}</div></div></details>`).join("")}
+  <p class="pempty note" hidden>Ничего не нашлось. Позвоните, и администратор подскажет цену: <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a></p></div>
 </div></section>
 </main>` + footer(depth) + end;
 }
