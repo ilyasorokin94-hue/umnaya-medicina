@@ -570,7 +570,7 @@ function promoBlock(p, depth) {
       ${prBtn(d, p)}
     </div>
   </article>`).join("")}</div>
-  <div class="pr-al"><h3 class="pr-al__title">${esc(A.alwaysTitle)}</h3><ul class="pr-al__list">${A.always.map(([t, d]) => `<li data-reveal><b>${prNw(t)}</b><span>${prNw(d)}</span></li>`).join("")}</ul></div>
+  <div class="pr-al pr-al--more"><h3 class="pr-al__title">${esc(A.alwaysTitle)}</h3><ul class="pr-al__list" id="pr-al-list">${A.always.map(([t, d]) => `<li data-reveal><b>${prNw(t)}</b><span>${prNw(d)}</span></li>`).join("")}</ul><button class="btn btn--ghost btn--wide pr-al__more" type="button" aria-controls="pr-al-list" aria-expanded="false" hidden>Ещё ${A.always.length - 4} условия</button></div>
 </div></section>`;
 }
 

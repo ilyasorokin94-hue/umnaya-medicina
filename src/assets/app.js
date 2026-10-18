@@ -340,6 +340,20 @@
   };
   if (pr4) { addEventListener("resize", pr4Fit); document.fonts?.ready.then(pr4Fit); pr4Fit(); }
 
+  // «Выгодно всегда» на телефоне: сначала четыре карточки, остальные по кнопке «Ещё» (styles.css, .pr-al--more)
+  const alMore = $(".pr-al--more");
+  if (alMore) {
+    const btn = $(".pr-al__more", alMore);
+    alMore.classList.add("is-js"); btn.hidden = false;
+    btn.addEventListener("click", () => {
+      alMore.classList.add("is-all"); btn.setAttribute("aria-expanded", "true");
+      const rest = $$(".pr-al__list li", alMore).slice(4);
+      rest.forEach((li) => { li.removeAttribute("data-reveal"); });
+      if (anim) G.fromTo(rest, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.06, ease: "power3.out", clearProps: "opacity,transform" });
+      ST?.refresh?.();
+    });
+  }
+
   // врачи как у Лава Дент: от 961px левая колонка едет от +20vmin к −20vmin, пока карточка проходит экран
   // снизу вверх, правая стоит, фото плывёт внутри рамки от +10% к −10%. Прогресс --k от 1 до −1.
   const lavaDocs = $$(".team__grid--lava .doc");
