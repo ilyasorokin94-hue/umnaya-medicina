@@ -1023,7 +1023,7 @@ function pageSvc(page) {
   ];
   const introHtml = spNodes(intro, page, p);
   const heroAlt = esc(spPlain(T.meta.alt || page.crumb));
-  const heroMedia = `<div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="${heroAlt}" decoding="async" fetchpriority="high"${heroRel === page.photo && page.photoPos ? ` style="object-position:${page.photoPos}"` : ""}>` : ""}</div>`;
+  const heroMedia = `<div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="${heroAlt}" decoding="async" fetchpriority="high">` : ""}</div>`;
   const heroHtml = `<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
   <div class="sp-hero__top">
     ${heroMedia}
