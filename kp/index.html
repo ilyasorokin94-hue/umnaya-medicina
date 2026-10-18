@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Коммерческое предложение | Умная Медицина. Стоматология</title>
+<meta name="description" content="Новый сайт стоматологии на 52 страницы, SEO под Яндекс, Google и нейросети, Вебмастер и Метрика, учёт заявок из сайта, Яндекс Карт и ПроДокторов в amoCRM, медиаплан и запуск ПроДокторов.">
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Коммерческое предложение для стоматологии «Умная Медицина»">
+<meta property="og:description" content="Сайт на 52 страницы, SEO под Яндекс, Google и нейросети, сквозной учёт заявок в amoCRM, запуск ПроДокторов.">
+<meta property="og:image" content="https://ilyasorokin94-hue.github.io/umnaya-medicina/kp/images/site-desktop.jpg">
+<meta property="og:locale" content="ru_RU">
+<meta name="theme-color" content="#0c2410">
+<link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+<link rel="preload" href="fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/golos-text-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* Шрифты, цвета и шкала размеров как на новом сайте (ветка ksenee7) */
+@font-face { font-family: 'Golos Text'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(fonts/golos-text-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Golos Text'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(fonts/golos-text-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(fonts/manrope-cyrillic.woff2) format('woff2'); unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116; }
+@font-face { font-family: 'Manrope'; font-style: normal; font-weight: 400 600; font-display: swap; src: url(fonts/manrope-latin.woff2) format('woff2'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
+:root {
+  --ink: #0c2410;
+  --ink-2: #12331a;
+  --green: #299926;
+  --green-deep: #1c6e1a;
+  --sage: #b7cbb3;
+  --sage-2: #dfe8dc;
+  --paper: #f5f4ee;
+  --paper-2: #ebeae2;
+  --muted: #4f6353;
+  --muted-on-dark: #a9bba9;
+  --line: rgba(12, 36, 16, .14);
+  --line-on-dark: rgba(223, 232, 220, .18);
+  --radius: 22px;
+  --radius-sm: 12px;
+  --gutter: clamp(16px, 4vw, 56px);
+  --wrap: min(1200px, 100% - 2 * var(--gutter));
+  --display: "Manrope", "Golos Text", system-ui, sans-serif;
+  --body: "Golos Text", system-ui, sans-serif;
+  --fs--1: clamp(.875rem, .8295rem + .202vw, .9375rem);
+  --fs-0: clamp(1rem, .9091rem + .404vw, 1.25rem);
+  --fs-1: clamp(1.25rem, 1.0986rem + .6727vw, 1.6663rem);
+  --fs-2: clamp(1.5625rem, 1.323rem + 1.0644vw, 2.2211rem);
+  --fs-4: clamp(2.2rem, 1.7rem + 2.4327vw, 3.9467rem);
+  --fs-5: clamp(2.6rem, 2rem + 3.5703vw, 5.2609rem);
+  --ease: cubic-bezier(.22, .8, .2, 1);
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; overflow-x: clip; overscroll-behavior-x: none; scroll-behavior: smooth; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 var(--fs-0)/1.5 var(--body); overflow-x: clip; overscroll-behavior-x: none; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; }
+h1, h2, h3 { font-family: var(--display); font-weight: 500; letter-spacing: -.025em; line-height: 1.05; margin: 0; }
+p, ul { margin: 0; }
+::selection { background: var(--green); color: #fff; }
+:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; border-radius: 6px; }
+.wrap { width: var(--wrap); margin-inline: auto; }
+.nobr { white-space: nowrap; }
+.label { display: inline-block; font: 500 13px/1.2 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.on-dark { background: var(--ink); color: #fff; }
+.on-dark .label { color: var(--muted-on-dark); }
+.src { font-size: var(--fs--1); color: var(--muted); }
+.on-dark .src { color: var(--muted-on-dark); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 26px; border-radius: 999px; background: var(--green); color: #fff; font: 500 16px/1.2 var(--body); text-decoration: none; text-align: center; position: relative; overflow: hidden; isolation: isolate; }
+.btn::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--ink-2); transform: translateY(101%); transition: transform .5s var(--ease); }
+.btn:hover::before { transform: none; }
+.btn--ghost { background: transparent; color: inherit; box-shadow: inset 0 0 0 1px currentColor; }
+.btn--ghost::before { background: currentColor; opacity: .1; }
+
+/* ---------- шапка ---------- */
+.top { padding: 22px 0 0; }
+.top__bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.logo { display: inline-flex; flex-direction: column; gap: 6px; text-decoration: none; }
+.logo img { height: 40px; width: auto; }
+.logo span { font: 600 10px/1 var(--body); letter-spacing: .32em; text-transform: uppercase; color: var(--muted-on-dark); padding-left: 52px; }
+.top__date { font-size: var(--fs--1); color: var(--muted-on-dark); text-align: right; }
+
+/* ---------- первый экран ---------- */
+.hero { padding: clamp(56px, 10vw, 128px) 0 clamp(48px, 7vw, 96px); }
+.hero h1 { font-size: var(--fs-5); max-width: 15ch; margin-top: 18px; }
+.hero h1 em { font-style: normal; color: var(--sage); }
+.hero__lead { margin-top: 28px; max-width: 46ch; font-size: var(--fs-1); line-height: 1.35; color: var(--sage-2); }
+.hero__foot { margin-top: clamp(40px, 6vw, 72px); display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 28px; padding-top: 28px; border-top: 1px solid var(--line-on-dark); }
+.price-tag .label { display: block; margin-bottom: 8px; }
+.price-tag b { font: 500 var(--fs-4)/1 var(--display); letter-spacing: -.03em; }
+.hero__btns { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* ---------- разделы ---------- */
+.section { padding: clamp(64px, 9vw, 128px) 0; }
+.section--sage { background: var(--sage-2); }
+.head { display: grid; gap: 18px; margin-bottom: clamp(32px, 5vw, 64px); }
+.head h2 { font-size: var(--fs-4); max-width: 18ch; }
+.head p { max-width: 52ch; color: var(--muted); }
+.on-dark .head p { color: var(--muted-on-dark); }
+@media (min-width: 900px) {
+  .head { grid-template-columns: 1fr 1fr; align-items: end; column-gap: 48px; }
+  .head .label { grid-column: 1 / -1; }
+}
+
+/* ---------- как сейчас и как будет ---------- */
+.cmp { display: grid; gap: 12px; }
+.cmp__row { display: grid; gap: 12px; padding: 24px; border-radius: var(--radius); background: #fff; }
+.cmp__topic { font: 500 var(--fs-1)/1.15 var(--display); letter-spacing: -.02em; }
+.cmp__col .label { display: block; margin-bottom: 8px; }
+.cmp__col--now p { color: var(--muted); }
+.cmp__col--new .label { color: var(--green-deep); }
+.cmp__row .src { margin-top: 4px; }
+@media (min-width: 900px) {
+  .cmp__row { grid-template-columns: 1fr 1.5fr 1.5fr; column-gap: 40px; padding: 32px 36px; }
+  .cmp__row .src { grid-column: 2 / -1; }
+}
+
+/* ---------- состав работ ---------- */
+.works { display: grid; gap: 12px; }
+.work { display: grid; gap: 14px; align-content: start; padding: 28px 24px; border-radius: var(--radius); background: var(--paper); }
+.work h3 { font-size: var(--fs-2); letter-spacing: -.02em; line-height: 1.1; }
+.work p { color: var(--muted); }
+.work ul { padding-left: 1.1em; color: var(--ink); }
+.work li + li { margin-top: 6px; }
+.work li::marker { color: var(--green); }
+.tag { justify-self: start; display: inline-block; padding: 7px 12px; border-radius: 999px; font: 500 13px/1.2 var(--body); background: var(--paper-2); color: var(--muted); }
+.tag--done { background: var(--green); color: #fff; }
+.tag--run { background: var(--sage); color: var(--ink); }
+@media (min-width: 760px) { .works { grid-template-columns: 1fr 1fr; } .work { padding: 36px 32px; } }
+.work--wide { background: var(--ink); color: #fff; }
+.work--wide p { color: var(--muted-on-dark); }
+.work--wide ul { color: #fff; }
+@media (min-width: 760px) { .work--wide { grid-column: 1 / -1; } }
+@media (min-width: 1000px) { .work--wide { grid-template-columns: 1fr 1fr; column-gap: 48px; } .work--wide .tag, .work--wide h3, .work--wide > p { grid-column: 1; } .work--wide ul { grid-column: 2; grid-row: 1 / span 4; align-self: center; } }
+
+/* ---------- новый сайт ---------- */
+.shots { display: grid; gap: 24px; align-items: end; }
+.shot figcaption { margin-top: 12px; font-size: var(--fs--1); color: var(--muted-on-dark); }
+.shot img { width: 100%; background: var(--ink-2); }
+.shot--phone { max-width: 300px; }
+@media (min-width: 760px) { .shots { grid-template-columns: 2.6fr 1fr; gap: 32px; } .shot--phone { max-width: none; } }
+.shots__more { margin-top: 32px; display: flex; flex-wrap: wrap; gap: 12px; }
+.pages { margin-top: clamp(40px, 6vw, 72px); display: grid; gap: 1px; background: var(--line-on-dark); border-block: 1px solid var(--line-on-dark); }
+.pages div { display: flex; justify-content: space-between; gap: 16px; padding: 16px 0; background: var(--ink); }
+.pages b { font: 500 var(--fs-1)/1.1 var(--display); white-space: nowrap; }
+.pages span { color: var(--muted-on-dark); }
+.pages .pages__total span { color: #fff; }
+@media (min-width: 900px) { .pages { grid-template-columns: repeat(3, 1fr); gap: 1px; } .pages div { padding: 20px 24px 20px 0; } }
+
+/* ---------- что нужно от клиники ---------- */
+.need { list-style: none; padding: 0; display: grid; gap: 1px; background: var(--line); border-block: 1px solid var(--line); }
+.need li { padding: 18px 0; background: var(--paper); display: grid; gap: 4px; }
+.need b { font-weight: 500; }
+.need span { color: var(--muted); }
+@media (min-width: 900px) { .need li { grid-template-columns: 1fr 1.6fr; column-gap: 40px; padding: 22px 0; } }
+
+/* ---------- стоимость ---------- */
+.cost { display: grid; gap: 32px; }
+.cost__sum b { display: block; font: 500 var(--fs-5)/1 var(--display); letter-spacing: -.035em; margin-top: 14px; }
+.cost__sum p { margin-top: 18px; color: var(--muted-on-dark); max-width: 40ch; }
+.cost__list { list-style: none; padding: 0; display: grid; gap: 1px; background: var(--line-on-dark); border-block: 1px solid var(--line-on-dark); }
+.cost__list li { padding: 14px 0; background: var(--ink); }
+@media (min-width: 900px) { .cost { grid-template-columns: 1fr 1fr; column-gap: 64px; align-items: start; } }
+
+.foot { padding: 32px 0 calc(32px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line-on-dark); font-size: var(--fs--1); color: var(--muted-on-dark); }
+.foot .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+
+@media (max-width: 520px) {
+  .hero__btns, .hero__btns .btn, .shots__more .btn { width: 100%; }
+  .top__date { max-width: 12ch; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn::before { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="on-dark">
+  <div class="top">
+    <div class="wrap top__bar">
+      <span class="logo"><img src="images/header-logo-light.svg" alt="Умная Медицина" width="213" height="40"><span>Стоматология</span></span>
+      <p class="top__date">Коммерческое предложение<br>18 октября 2026</p>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="wrap">
+      <span class="label">Для стоматологии «Умная Медицина», Удельная</span>
+      <h1>Новый сайт и&nbsp;понятный учёт заявок <em>из&nbsp;каждого канала</em></h1>
+      <p class="hero__lead">Сайт стоматологии на 52 страницы, продвижение в Яндексе, Google и ответах нейросетей, запуск ПроДокторов и связка с amoCRM, чтобы у каждой заявки был виден источник.</p>
+      <div class="hero__foot">
+        <div class="price-tag"><span class="label">Стоимость</span><b>80&nbsp;000&nbsp;₽</b></div>
+        <div class="hero__btns">
+          <a class="btn" href="https://ilyasorokin94-hue.github.io/umnaya-medicina/demo/" target="_blank" rel="noopener">Посмотреть новый сайт</a>
+          <a class="btn btn--ghost" href="#works">Что входит в работу</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</header>
+
+<main>
+
+<section class="section" id="now">
+  <div class="wrap">
+    <div class="head">
+      <span class="label">Как сейчас и как будет</span>
+      <h2>Что меняется для клиники</h2>
+      <p>Сейчас клиника получает заявки из нескольких каналов, но в amoCRM видна только часть из них. Поэтому трудно сказать, какой канал сколько приносит и куда добавлять бюджет.</p>
+    </div>
+
+    <div class="cmp">
+      <div class="cmp__row">
+        <h3 class="cmp__topic">Сайт</h3>
+        <div class="cmp__col cmp__col--now"><span class="label">Сейчас</span><p>Стоматология размещена на общем сайте с многопрофильной клиникой, разделы разнесены по 9 поддоменам, онлайн-записи нет.</p></div>
+        <div class="cmp__col cmp__col--new"><span class="label">Будет</span><p>Отдельный сайт стоматологии: у каждой услуги своя страница с ценой «от», врачи, прайс, заявка с любой страницы.</p></div>
+      </div>
+      <div class="cmp__row">
+        <h3 class="cmp__topic">Заявки с сайта</h3>
+        <div class="cmp__col cmp__col--now"><span class="label">Сейчас</span><p>В amoCRM не видно, что заявка пришла с сайта. Путь «реклама, заявка, сделка» прослеживается только у рекламного лендинга в Директе.</p></div>
+        <div class="cmp__col cmp__col--new"><span class="label">Будет</span><p>Каждая заявка с сайта сразу попадает в amoCRM сделкой, с источником и рекламной меткой.</p></div>
+      </div>
+      <div class="cmp__row">
+        <h3 class="cmp__topic">Яндекс Карты</h3>
+        <div class="cmp__col cmp__col--now"><span class="label">Сейчас</span><p>Рост обращений из Карт заметен по звонкам. Онлайн-запись из Карт уходит в МИС SQNS мимо amoCRM, и сколько людей записались, не видно.</p></div>
+        <div class="cmp__col cmp__col--new"><span class="label">Будет</span><p>Обращения из Карт видны в amoCRM отдельным источником: понятно, сколько заявок и записей дают Карты.</p></div>
+      </div>
+      <div class="cmp__row">
+        <h3 class="cmp__topic">ПроДокторов</h3>
+        <div class="cmp__col cmp__col--now"><span class="label">Сейчас</span><p>За январь–сентябрь 2026 года в amoCRM 50 заявок с ПроДокторов, а в кабинете площадки 75 записей: онлайн-записи идут в SQNS и в amoCRM не попадают.</p></div>
+        <div class="cmp__col cmp__col--new"><span class="label">Будет</span><p>Записи с ПроДокторов и других площадок попадают в amoCRM, канал считается по всем записям, а не по части.</p></div>
+        <p class="src">Источник: amoCRM клиники и кабинет ПроДокторов, данные на 7 октября 2026.</p>
+      </div>
+      <div class="cmp__row">
+        <h3 class="cmp__topic">Поиск и аналитика</h3>
+        <div class="cmp__col cmp__col--now"><span class="label">Сейчас</span><p>Результат SEO оценивается по отчётам Вебмастера, без связи с реальными заявками.</p></div>
+        <div class="cmp__col cmp__col--new"><span class="label">Будет</span><p>Новый сайт в Яндекс Вебмастере и Google Search Console, Метрика с целями на звонки и заявки. Видно, какие страницы и запросы приводят пациентов.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section--sage" id="works">
+  <div class="wrap">
+    <div class="head">
+      <span class="label">Состав работ</span>
+      <h2>Что входит в предложение</h2>
+      <p>Часть работ уже сделана, и её можно посмотреть. Остальное подключается при переезде на новый сайт.</p>
+    </div>
+
+    <div class="works">
+      <article class="work work--wide">
+        <span class="tag tag--done">Готово, макет можно посмотреть</span>
+        <h3>Разработка сайта на 52 страницы</h3>
+        <p>Сайт в фирменных цветах клиники, удобный на телефоне, компьютере и во встроенном браузере Telegram, откуда пациенты часто открывают ссылки.</p>
+        <ul>
+          <li>Главная страница</li>
+          <li>40 страниц услуг: у каждой услуги своя страница, имплантация, All-on-4 и All-on-6, протезирование, лечение, хирургия, ортодонтия, гигиена, детская стоматология, диагностика</li>
+          <li>2 страницы для пациентов из Жуковского: имплантация и протезирование</li>
+          <li>7 страниц врачей и страница всех врачей по направлениям</li>
+          <li>Прайс по разделам с ценами «от»</li>
+        </ul>
+      </article>
+
+      <article class="work">
+        <span class="tag tag--done">Тексты готовы</span>
+        <h3>SEO под Яндекс и Google</h3>
+        <ul>
+          <li>Тексты страниц под запросы пациентов, один запрос на одну страницу</li>
+          <li>Заголовки и описания для выдачи, перелинковка услуг</li>
+          <li>Перенаправления со старых адресов, чтобы не потерять накопленные позиции</li>
+          <li>Страницы для пациентов из Жуковского, следом Люберцы и Балашиха по данным Вебмастера</li>
+        </ul>
+      </article>
+
+      <article class="work">
+        <span class="tag tag--done">Подготовлено на сайте</span>
+        <h3>SEO под нейросети</h3>
+        <p>Алиса AI в Поиске Яндекса, ChatGPT и другие ассистенты всё чаще отвечают на вопрос «где сделать имплантацию».</p>
+        <ul>
+          <li>Весь текст доступен поисковым роботам без загрузки скриптов</li>
+          <li>Сведения о клинике, врачах и услугах в разметке Schema.org</li>
+          <li>Одинаковые название, адрес и телефон на сайте и площадках</li>
+          <li>Ответы на частые вопросы пациентов прямо на страницах</li>
+        </ul>
+      </article>
+
+      <article class="work">
+        <span class="tag">При запуске сайта</span>
+        <h3>Яндекс Вебмастер и Search Console</h3>
+        <ul>
+          <li>Подтверждение сайта, карта сайта и robots.txt</li>
+          <li>Переезд со старых адресов и быстрая отправка страниц в индекс (IndexNow)</li>
+          <li>Контроль индексации и ошибок</li>
+        </ul>
+      </article>
+
+      <article class="work">
+        <span class="tag">При запуске сайта</span>
+        <h3>Яндекс Метрика</h3>
+        <ul>
+          <li>Счётчик и цели: звонок, заявка, переход в мессенджер</li>
+          <li>Вебвизор и карта кликов, чтобы видеть, где пациенты уходят со страницы</li>
+          <li>Отчёт по каналам и страницам</li>
+        </ul>
+      </article>
+
+      <article class="work">
+        <span class="tag">При запуске сайта</span>
+        <h3>Интеграция сайта с amoCRM</h3>
+        <ul>
+          <li>Заявка с любой формы сайта сразу создаёт сделку в amoCRM</li>
+          <li>В сделке видны страница, источник и рекламная метка</li>
+          <li>Администратор видит новую заявку без ручного переноса</li>
+        </ul>
+      </article>
+
+      <article class="work">
+        <span class="tag tag--run">В работе</span>
+        <h3>Яндекс Карты, ПроДокторов и агрегаторы в amoCRM</h3>
+        <ul>
+          <li>Перенастройка Яндекс Карт, чтобы заявки оттуда были видны отдельным источником</li>
+          <li>Связка ПроДокторов, 2ГИС и других площадок с amoCRM</li>
+          <li>Понятно, откуда пришла каждая заявка и сколько стоила запись</li>
+        </ul>
+      </article>
+
+      <article class="work work--wide">
+        <span class="tag tag--run">Медиаплан готов, запуск идёт</span>
+        <h3>Медиаплан и запуск ПроДокторов</h3>
+        <p>ПроДокторов выбран основным недорогим источником записей: площадка уже даёт клинике пациентов, а в медицинских вопросах нейросети ссылаются на неё чаще, чем на другие сайты (исследование Semantica, 2026).</p>
+        <ul>
+          <li>Медиаплан на октябрь–декабрь 2026 года с разбивкой бюджета по площадкам</li>
+          <li>Разбор кабинета ПроДокторов и исправление карточки клиники и врачей</li>
+          <li>Ответы на отзывы: до 8 октября клиника ответила на 32% отзывов, теперь ответ есть на каждый опубликованный</li>
+          <li>Спецразмещение врачей и услуг с минимальных ставок, отчёт раз в две недели</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section on-dark" id="site">
+  <div class="wrap">
+    <div class="head">
+      <span class="label">Новый сайт</span>
+      <h2>Как выглядит сайт</h2>
+      <p>Макет для показа: главная страница целиком, остальные разделы открываются первым экраном. Заявки из форм в макете пока никуда не отправляются.</p>
+    </div>
+    <div class="shots">
+      <figure class="shot" style="margin:0">
+        <img src="images/site-desktop.jpg" alt="Первый экран нового сайта на компьютере: «Три врача. Один план лечения.»" width="1440" height="853">
+        <figcaption>Первый экран на компьютере</figcaption>
+      </figure>
+      <figure class="shot shot--phone" style="margin:0">
+        <img src="images/site-phone.jpg" alt="Раздел врачей нового сайта на телефоне" width="585" height="1266">
+        <figcaption>Раздел врачей на телефоне</figcaption>
+      </figure>
+    </div>
+    <div class="shots__more">
+      <a class="btn" href="https://ilyasorokin94-hue.github.io/umnaya-medicina/demo/" target="_blank" rel="noopener">Открыть макет сайта</a>
+    </div>
+    <div class="pages">
+      <div><span>Главная</span><b>1</b></div>
+      <div><span>Страницы услуг</span><b>40</b></div>
+      <div><span>Страницы для Жуковского</span><b>2</b></div>
+      <div><span>Страницы врачей</span><b>8</b></div>
+      <div><span>Прайс</span><b>1</b></div>
+      <div class="pages__total"><span>Всего страниц</span><b>52</b></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="need">
+  <div class="wrap">
+    <div class="head">
+      <span class="label">Со стороны клиники</span>
+      <h2>Что понадобится от клиники</h2>
+      <p>Без этих доступов и сведений сайт не перенести, а заявки не связать с amoCRM.</p>
+    </div>
+    <ul class="need">
+      <li><b>Доступ к домену и хостингу</b><span>Чтобы перенести сайт и настроить перенаправления со старых адресов.</span></li>
+      <li><b>Права администратора в amoCRM</b><span>Для интеграции с сайтом, Яндекс Картами и площадками.</span></li>
+      <li><b>Доступы к Метрике и Вебмастеру старого сайта</b><span>Чтобы сохранить историю статистики при переезде.</span></li>
+      <li><b>Реквизиты</b><span>Юрлицо, ОГРН и лицензия для подвала сайта и разметки.</span></li>
+      <li><b>Настройка записи в SQNS</b><span>Привязка врачей и услуг к филиалу стоматологии, чтобы онлайн-запись с площадок работала без сбоев.</span></li>
+      <li><b>Согласие врачей</b><span>На публикацию фото и сведений о них на сайте.</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section on-dark" id="cost">
+  <div class="wrap cost">
+    <div class="cost__sum">
+      <span class="label">Стоимость</span>
+      <b>80&nbsp;000&nbsp;₽</b>
+      <p>Рекламные бюджеты площадок (ПроДокторов, Яндекс Бизнес) в стоимость не входят и оплачиваются клиникой по медиаплану.</p>
+    </div>
+    <ul class="cost__list">
+      <li>Разработка сайта на 52 страницы</li>
+      <li>SEO под Яндекс и Google</li>
+      <li>SEO под нейросети</li>
+      <li>Яндекс Вебмастер и Google Search Console</li>
+      <li>Яндекс Метрика с целями</li>
+      <li>Интеграция сайта с amoCRM</li>
+      <li>Учёт заявок из Яндекс Карт, ПроДокторов и агрегаторов</li>
+      <li>Медиаплан и запуск ПроДокторов</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot on-dark">
+  <div class="wrap">
+    <span>Подготовил Илья Сорокин, маркетолог</span>
+    <span>18 октября 2026</span>
+  </div>
+</footer>
+
+</body>
+</html>
