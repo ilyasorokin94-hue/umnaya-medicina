@@ -8,7 +8,7 @@ import { transformSync } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 import { reviewsMobile } from "./reviews-mobile.mjs";
-import { servicePages, servicePriceDate, servicePriceHold } from "../src/service-pages.mjs";
+import { servicePages, servicePriceDate, servicePriceHold, consultFree } from "../src/service-pages.mjs";
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
@@ -758,7 +758,15 @@ const promoMark = (t) => t.replace(/от 77 000 ₽(\*\*)?/g, (m, b, off) => (/�
 const spTexts = Object.fromEntries(servicePages.map((pg) => {
   const f = path.join(root, "src", "service-texts", `${pg.slug}.md`);
   if (!existsSync(f)) throw new Error(`Нет текста страницы услуги: src/service-texts/${pg.slug}.md`);
-  return [pg.slug, parseServiceMd(promoMark(readFileSync(f, "utf8")))];
+  const free = (t) => consultFree.reduce((x, re) => x.replace(re, (m) => (/(ортодонт|детск)/i.test(m) ? m : m.replace(/500 ₽$/, "0 ₽"))), t);
+  const T = parseServiceMd(promoMark(free(readFileSync(f, "utf8"))));
+  // подпись «Проверено врачом: …» в конце текста дублирует строку «Проверил» под вопросами — на странице её нет
+  const noSign = (nodes) => nodes.filter((n) => !(n.t === "p" && /^\**Проверено врачом/.test(n.text)));
+  T.intro = noSign(T.intro);
+  for (const x of T.sections) { x.nodes = noSign(x.nodes); x.subs.forEach((y) => { y.nodes = noSign(y.nodes); }); }
+  // «Проверил: [ВРАЧ — …] (по профилю — …; уточнить у клиники)»: пояснение в скобках — для клиники, на сайт не идёт
+  if (T.meta.reviewer) T.meta.reviewer = T.meta.reviewer.replace(/(\])\s*\([^)]*\)\s*$/, "$1");
+  return [pg.slug, T];
 }));
 
 // адрес из текста (/implantaciya/all-on-4/, /vrachi/solodukhin/, /gigiena/) → ссылка на странице; ещё не сделанная страница → null
@@ -932,14 +940,17 @@ function spSection(s, i, page, depth, ids) {
     case "faq": {
       const qa = [];
       const lead = [];
+      const tail = [];
       for (const n of s.nodes) {
         const m = n.t === "p" && /^\*\*(.+?)\*\*\s*\n([\s\S]+)$/.exec(n.text);
-        if (m) qa.push({ q: m[1], a: [{ t: "p", text: m[2] }] });
+        // «Имеются противопоказания…» после последнего вопроса — не часть ответа, идёт под списком вопросов
+        if (n.t === "p" && /^\**Имеются противопоказания/.test(n.text)) tail.push(n);
+        else if (m) qa.push({ q: m[1], a: [{ t: "p", text: m[2] }] });
         else if (qa.length) qa[qa.length - 1].a.push(n);
         else lead.push(n);
       }
       page.faq = qa.filter((x) => ![x.q, ...x.a.map((n) => n.text || JSON.stringify(n))].some((t) => spHasAsk(t))).map((x) => [spPlain(x.q), x.a.map((n) => spPlain(n.text || (n.items || []).join("; "))).join(" ")]);
-      return sec(grid(`${h2}${spNodes(lead, page, p)}`, `<div class="sp-faq">${qa.map((x) => `<details class="faqq"><summary><span>${nobr(spMd(x.q, page, p))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${spNodes(x.a, page, p)}</div></details>`).join("")}</div>${subs}`)
+      return sec(grid(`${h2}${spNodes(lead, page, p)}`, `<div class="sp-faq">${qa.map((x) => `<details class="faqq"><summary><span>${nobr(spMd(x.q, page, p))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${spNodes(x.a, page, p)}</div></details>`).join("")}</div>${subs}${spNodes(tail, page, p)}`)
         + `<p class="sp-meta">Проверил: ${spMd(page.meta.reviewer || "[ВРАЧ — кто проверил текст]", page, p)}. Цены на ${esc(page.meta.updated || servicePriceDate)}. Обновлено ${esc(page.meta.updated || servicePriceDate)}</p>`);
     }
     case "reviews": return sec(`<div class="sp-head">${h2}</div>
@@ -1012,8 +1023,15 @@ function pageSvc(page) {
     return m[1] ? { "@type": "Offer", name, priceSpecification: { "@type": "PriceSpecification", minPrice: m[0], priceCurrency: "RUB" } } : { "@type": "Offer", name, price: m[0], priceCurrency: "RUB" };
   }).filter(Boolean);
   const provider = dentistLd["@id"] ? { "@id": dentistLd["@id"] } : { "@type": "Dentist", name: dentistLd.name, url: SITE, telephone: dentistLd.telephone, address: dentistLd.address };
-  // в Title и Description плашку не поставить: предложение со спорной ценой выпадает
-  const noHeld = (t) => t.split(/(?<=[.!?])\s+/).filter((x) => !servicePriceHold.some(([re]) => { re.lastIndex = 0; return re.test(x); })).join(" ");
+  // в Title и Description плашку не поставить: спорная цена выпадает вместе с частью фразы или фразой
+  // сначала выпадает часть фразы между запятыми («…, план с ценой по этапам за 500 ₽.»), если от фразы ничего не остаётся — фраза целиком
+  const held = (x) => servicePriceHold.some(([re]) => { re.lastIndex = 0; return re.test(x); });
+  const noHeld = (t) => t.split(/(?<=[.!?])\s+/).map((x) => {
+    if (!held(x)) return x;
+    const end = /[.!?]$/.test(x) ? x.slice(-1) : "";
+    const parts = (end ? x.slice(0, -1) : x).split(/,\s+/).filter((y) => !held(y));
+    return parts.length ? parts.join(", ").replace(/^[а-яё]/, (c) => c.toUpperCase()) + end : "";
+  }).filter(Boolean).join(" ");
   const title = spPlain(T.meta.title), desc = noHeld(spPlain(T.meta.desc));
   if (spHasAsk(title + desc)) spPending.push(`${page.slug}: пометка в Title или Description`);
   const jsonld = [
