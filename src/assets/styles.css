@@ -1773,7 +1773,7 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
   .pr-al--chips .pr-al__list li > span::before { content: attr(data-t); display: block; margin-bottom: 12px; font: 500 var(--fs-2)/1.1 var(--display); letter-spacing: -.03em; color: var(--paper); text-wrap: balance; }
   .pr-al--chips.is-js .pr-al__list b { cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .pr-al--chips.is-js .pr-al__list li.is-on b { background: var(--paper); color: var(--ink); box-shadow: none; }
-  .pr-al--chips.is-js .pr-al__list li > span { display: none; margin-top: 14px; }
+  .pr-al--chips.is-js .pr-al__list li > span { display: none; margin-top: 14px; min-height: var(--al-h, 0); }
   .pr-al--chips.is-js .pr-al__list li.is-on > span { display: block; animation: pr-al-in .5s var(--ease); }
 }
 @keyframes pr-al-in { from { opacity: 0; transform: translateY(10px); } }

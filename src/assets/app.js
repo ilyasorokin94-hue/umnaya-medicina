@@ -349,8 +349,23 @@
       if (phoneMQ.matches) { b.setAttribute("role", "button"); b.tabIndex = 0; b.setAttribute("aria-pressed", li.classList.contains("is-on")); }
       else { b.removeAttribute("role"); b.removeAttribute("tabindex"); b.removeAttribute("aria-pressed"); }
     });
+    // карточка под плашками всегда высотой с самое длинное условие: при переключении блок не меняет высоту и страница ниже не прыгает
+    const list = $(".pr-al__list", alChips);
+    const fit = () => {
+      list.style.removeProperty("--al-h");
+      if (!phoneMQ.matches) return;
+      const spans = items.map((li) => $(":scope > span", li));
+      spans.forEach((s) => { s.style.display = "block"; });
+      const h = Math.max(...spans.map((s) => s.offsetHeight));
+      spans.forEach((s) => { s.style.display = ""; });
+      list.style.setProperty("--al-h", h + "px");
+    };
     items[0]?.classList.add("is-on");
-    alChips.classList.add("is-js"); sync(); phoneMQ.addEventListener("change", sync);
+    alChips.classList.add("is-js"); sync(); fit();
+    phoneMQ.addEventListener("change", () => { sync(); fit(); });
+    let fitW = innerWidth;
+    addEventListener("resize", () => { if (innerWidth !== fitW) { fitW = innerWidth; fit(); } });
+    document.fonts?.ready.then(fit);
     alChips.addEventListener("click", (e) => {
       const b = e.target.closest(".pr-al__list b");
       if (!b || !phoneMQ.matches || b.parentElement.classList.contains("is-on")) return;
