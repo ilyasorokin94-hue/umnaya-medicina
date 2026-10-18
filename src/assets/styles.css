@@ -1968,9 +1968,11 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
 .dp-path .todo-tag { margin-left: 8px; }
 .dp-courses { margin: 0; }
 .dp-courses li > span { font-size: var(--fs-0); }
-.dp-quotes { list-style: none; margin: 0 0 clamp(28px, 3vw, 44px); padding: 0; border-top: 1px solid var(--line); }
+.dp-quotes { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .dp-quotes li { padding: clamp(18px, 2vw, 28px) 0; border-bottom: 1px solid var(--line); }
 .dp-quotes blockquote { margin: 0; font: 500 var(--fs-1)/1.4 var(--display); letter-spacing: -.015em; }
+.dp-quotes__by { margin-top: 12px; font-size: var(--fs--1); color: var(--muted); }
+.dp-quotes__by a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 1024px) {
   .dp-hero .sp-hero__top { grid-template-columns: var(--gutter) minmax(0, 1fr) minmax(0, 40%) var(--gutter); }
 }

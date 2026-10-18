@@ -11,6 +11,7 @@ import { reviewsMobile } from "./reviews-mobile.mjs";
 import { servicePages, servicePriceDate, servicePriceHold } from "../src/service-pages.mjs";
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
+import { doctorReviews } from "../src/doctor-reviews.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
@@ -1160,7 +1161,8 @@ function pageDoc(d, page) {
   const n = d.courses.length;
   // ссылки «Ведёт» в первом экране: одна на страницу
   const pills = page.does.filter(([, h], i, a) => a.findIndex(([, h2]) => h2 === h) === i);
-  const quotes = home.reviews.filter((r) => r.includes(last));
+  // отзывы только с площадки и ссылкой на неё; нет отзывов, нет и блока (Ilya 18.10)
+  const quotes = doctorReviews[d.id] || [];
   const others = doctors.filter((x) => x.id !== d.id && x.id !== "sikacheva");
   const org = (name) => ({ "@type": "EducationalOrganization", name });
   const ld = {
@@ -1211,13 +1213,10 @@ ${heroHtml}
 
 ${dpBlock({ type: "links", id: "uslugi", title: "Что делает врач в клинике", text: `${page.spec} в Удельной. Цены по прайсу клиники на ${servicePriceDate}, точную стоимость врач называет после осмотра и снимков.`, items: page.does }, pg, depth)}
 
-${dpBlock({ type: "text", id: "raboty", tone: "sage", title: "Работы врача", text: page.cases }, pg, depth)}
-
-<section class="section sp-sec" id="otzyvy" aria-labelledby="otzyvy-t"><div class="wrap sp-grid">
-  <div class="sp-grid__aside"><h2 id="otzyvy-t" data-split>Отзывы о враче</h2>${d.pd ? `<a class="link" href="${d.pd}"${ext}>Все отзывы о враче на ПроДокторов</a>` : ""}</div>
-  <div>${quotes.length ? `<ul class="dp-quotes">${quotes.map((q) => `<li data-reveal><blockquote>«${esc(q)}»</blockquote></li>`).join("")}</ul>` : ""}
-  ${dpText(page.reviews || { todo: "3–6 отзывов, где пациенты называют врача, с ПроДокторов и Яндекс Карт" }, pg)}</div>
-</div></section>
+${quotes.length ? `<section class="section sp-sec" id="otzyvy" aria-labelledby="otzyvy-t"><div class="wrap sp-grid">
+  <div class="sp-grid__aside"><h2 id="otzyvy-t" data-split>Отзывы о враче</h2>${d.pd && quotes.some((q) => q.site === "ПроДокторов") ? `<a class="link" href="${d.pd}"${ext}>Все отзывы о враче на ПроДокторов</a>` : ""}</div>
+  <ul class="dp-quotes">${quotes.map((q) => `<li data-reveal><blockquote>«${esc(q.text)}»</blockquote><p class="dp-quotes__by">${esc(q.author)}, <a href="${q.url}"${ext}>${esc(q.site)}</a>${q.date ? `, ${q.date.split("-").reverse().join(".")}` : ""}</p></li>`).join("")}</ul>
+</div></section>` : ""}
 
 ${place({ title: "Где принимает врач", depth })}
 
