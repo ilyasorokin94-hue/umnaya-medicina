@@ -8,7 +8,7 @@ import { transformSync } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 import { reviewsMobile } from "./reviews-mobile.mjs";
-import { servicePages, servicePriceDate, servicePriceHold, geoHold } from "../src/service-pages.mjs";
+import { servicePages, servicePriceDate, servicePriceHold } from "../src/service-pages.mjs";
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
@@ -797,7 +797,6 @@ function spMd(text, page, p) {
     return put(spTag(label, note, page));
   });
   for (const [re, note] of servicePriceHold) s = s.replace(re, (m) => m.replace(/(?:от )?\d{1,3}(?: \d{3})* ₽$/, () => put(spTag("цена уточняется", note, page))));
-  if (page.geo) s = geoMask(s, () => put(spTag("уточняем", geoHold.note, page)));
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, t, url) => {
     const h = spHref(url, p);
     return put(h ? `<a href="${h}">${esc(t)}</a>` : esc(t));
@@ -807,15 +806,6 @@ function spMd(text, page, p) {
   return s.replace(/\u0001(\d+)\u0002/g, (m, i) => keep[i]).replace(/·(\s*·)+/g, "·").replace(/(\s*·\s*)+$/, "").replace(/^(\s*·\s*)+/, "").trim();
 }
 const spPlain = (t) => t.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/\*\*/g, "").replace(/\s+→\s+/g, ", ").replace(/\s*\n\s*/g, " ").trim();
-// карточка адреса на гео-странице без «5 минут от Жуковского», пока время в пути не подтвердил Ilya
-const geoWhere = v2.way.where.replace(/\s*\d+ минут[^.]*\./, "").trim();
-// гео-страницы: километры всегда, минуты — когда рядом речь о дороге (правило в src/service-pages.mjs)
-const geoMask = (t, to) => t.replace(geoHold.km, to).replace(geoHold.min, (m, off, str) => {
-  const end = str.slice(off + m.length).search(/[.!?;\n]/);
-  const sentence = str.slice(Math.max(str.lastIndexOf(".", off), str.lastIndexOf("\n", off)) + 1, end < 0 ? str.length : off + m.length + end);
-  return geoHold.road.test(sentence) ? to() : m;
-});
-const geoHeld = (t) => geoMask(t, () => "\u0003") !== t;
 const spHasAsk = (t) => /\[[А-ЯЁ][А-ЯЁ]{2,}/.test(t) || servicePriceHold.some(([re]) => { re.lastIndex = 0; return re.test(t); });
 // точки-разделители «·» не показываем (правило Ilya: без декоративных точек). Строка плашек («Яндекс Карты 5,0 · рассрочка · налоговый вычет»)
 // убирается, как «Плашки:» на других страницах; «Проверил: … · Обновлено …» — через точку; в остальном тексте — запятая
@@ -948,7 +938,7 @@ function spSection(s, i, page, depth, ids) {
         else if (qa.length) qa[qa.length - 1].a.push(n);
         else lead.push(n);
       }
-      page.faq = qa.filter((x) => ![x.q, ...x.a.map((n) => n.text || JSON.stringify(n))].some((t) => spHasAsk(t) || (page.geo && geoHeld(t)))).map((x) => [spPlain(x.q), x.a.map((n) => spPlain(n.text || (n.items || []).join("; "))).join(" ")]);
+      page.faq = qa.filter((x) => ![x.q, ...x.a.map((n) => n.text || JSON.stringify(n))].some((t) => spHasAsk(t))).map((x) => [spPlain(x.q), x.a.map((n) => spPlain(n.text || (n.items || []).join("; "))).join(" ")]);
       return sec(grid(`${h2}${spNodes(lead, page, p)}`, `<div class="sp-faq">${qa.map((x) => `<details class="faqq"><summary><span>${nobr(spMd(x.q, page, p))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${spNodes(x.a, page, p)}</div></details>`).join("")}</div>${subs}`)
         + `<p class="sp-meta">Проверил: ${spMd(page.meta.reviewer || "[ВРАЧ — кто проверил текст]", page, p)}. Цены на ${esc(page.meta.updated || servicePriceDate)}. Обновлено ${esc(page.meta.updated || servicePriceDate)}</p>`);
     }
@@ -970,13 +960,19 @@ function spSection(s, i, page, depth, ids) {
       <p class="sp-cta__t">${call ? spMd(call.text.replace(/\*\*/g, ""), page, p) : "Запишитесь на консультацию: план лечения с ценой по этапам"}</p>
       <div class="sp-cta__act">${act("Записаться на консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true, service: page.slug })}${spWarn}</div>
     </div></section>` : ""}
-${sec(grid(h2, spNodes(nodes, page, p) + subs))}
-${place({ depth, where: page.geo ? geoWhere : undefined })}`;
+${sec(grid(h2, spNodes(nodes, page, p) + subs + (page.photo ? geoPhoto(page, depth) : "")))}
+${place({ depth })}`;
     }
     default:
       return sec(wide ? `<div class="sp-head">${h2}</div><div class="sp-body sp-body--wide">${spNodes(s.nodes, page, p)}${subs}</div>` : grid(h2, spNodes(s.nodes, page, p) + subs));
   }
 }
+
+// гео-страница: настоящее фото входа в клинику в блоке дороги, ровные углы, подпись под фото
+const geoPhoto = (page, depth) => {
+  const set = srcset(page.photo, depth);
+  return `<figure class="geo-photo"><span class="geo-photo__img"><img src="${pick([page.photo], depth).src}"${set ? ` srcset="${set}" sizes="(max-width: 760px) 92vw, 50vw"` : ""} alt="${esc(page.photoCap)}" loading="lazy" decoding="async"${page.photoPos ? ` style="object-position:${page.photoPos}"` : ""}></span><figcaption>${esc(page.photoCap)}</figcaption></figure>`;
+};
 
 function pageSvc(page) {
   const depth = page.path.split("/").filter(Boolean).length;
@@ -986,7 +982,8 @@ function pageSvc(page) {
   const chain = [];
   for (let x = page; x.parent; ) { x = servicePages.find((y) => y.slug === x.parent); chain.unshift([x.path, x.crumb]); }
   const crumbs = [["index.html", "Главная"], ...chain];
-  const heroImg = pick(page.hero, depth).src, heroSet = local(page.hero[0]) ? srcset(page.hero[0], depth) : "";
+  const heroRel = page.hero.find(local);
+  const heroImg = pick(page.hero, depth).src, heroSet = heroRel ? srcset(heroRel, depth) : "";
   if (!local(page.hero[0])) spPending.push(`${page.slug}: картинка первого экрана ${page.hero[0]}`);
   // подзаголовок первого экрана — первое предложение вступления, остальное вступление идёт следующим блоком
   const introP = T.intro.findIndex((n) => n.t === "p");
@@ -1017,10 +1014,7 @@ function pageSvc(page) {
   const provider = dentistLd["@id"] ? { "@id": dentistLd["@id"] } : { "@type": "Dentist", name: dentistLd.name, url: SITE, telephone: dentistLd.telephone, address: dentistLd.address };
   // в Title и Description плашку не поставить: предложение со спорной ценой выпадает
   const noHeld = (t) => t.split(/(?<=[.!?])\s+/).filter((x) => !servicePriceHold.some(([re]) => { re.lastIndex = 0; return re.test(x); })).join(" ");
-  // на гео-странице расстояние и время в пути до подтверждения выпадают из Title и Description
-  const geoCut = (t) => (page.geo ? geoMask(t, () => "\u0003").replace(/\s*[,—–]?\s*\u0003/g, "").replace(/\(\s*\)/g, "").replace(/\s{2,}/g, " ").trim() : t);
-  if (page.geo && geoHeld(spPlain(T.meta.title) + " " + spPlain(T.meta.desc))) spPending.push(`${page.slug}: расстояние или время в пути в Title или Description`);
-  const title = geoCut(spPlain(T.meta.title)), desc = geoCut(noHeld(spPlain(T.meta.desc)));
+  const title = spPlain(T.meta.title), desc = noHeld(spPlain(T.meta.desc));
   if (spHasAsk(title + desc)) spPending.push(`${page.slug}: пометка в Title или Description`);
   const jsonld = [
     crumbsLd([...chain, [page.path, page.crumb]]),
@@ -1029,11 +1023,8 @@ function pageSvc(page) {
   ];
   const introHtml = spNodes(intro, page, p);
   const heroAlt = esc(spPlain(T.meta.alt || page.crumb));
-  // гео-страница: вместо иллюстрации услуги — настоящее фото входа в клинику, ровные углы, подпись под фото
-  const heroMedia = page.geo
-    ? `<figure class="geo-hero__photo"><span class="geo-hero__img"><img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 92vw, 44vw"` : ""} alt="${heroAlt}" decoding="async" fetchpriority="high"${page.heroPos ? ` style="object-position:${page.heroPos}"` : ""}></span><figcaption>${esc(page.heroCap)}</figcaption></figure>`
-    : `<div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="${heroAlt}" decoding="async" fetchpriority="high">` : ""}</div>`;
-  const heroHtml = `<section class="page-hero sp-hero${page.geo ? " geo-hero" : ""} on-dark" aria-labelledby="h1">
+  const heroMedia = `<div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="${heroAlt}" decoding="async" fetchpriority="high"${heroRel === page.photo && page.photoPos ? ` style="object-position:${page.photoPos}"` : ""}>` : ""}</div>`;
+  const heroHtml = `<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
   <div class="sp-hero__top">
     ${heroMedia}
     <div class="sp-hero__text">

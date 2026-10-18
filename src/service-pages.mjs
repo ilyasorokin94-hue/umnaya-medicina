@@ -17,16 +17,6 @@ export const servicePriceHold = [
   [/(?:консультаци|при[её]м (?:врача-)?(?:ортопеда|хирурга|имплантолога))[^.;|\n[\]()₽]{0,90}?(?<!\d)(?:\s*—\s*|\s+|\s*\()(?:\*\*)?500 ₽/gi, "консультация: 0 или 500 ₽"],
 ];
 
-// гео-страницы (/goroda/<место>/<услуга>/): расстояния и время в пути показываем только после подтверждения Ilya.
-// До этого «6 км», «15 минут езды» в тексте заменяются плашкой, из Title и Description выпадают. Минуты прячутся,
-// только когда рядом речь о дороге (ехать, езды, на машине, от Жуковского), «КТ за 5 минут» остаётся
-export const geoHold = {
-  km: /(?:около |примерно |всего |~\s?)?\d+(?:[.,]\d+)?(?:[–-]\d+(?:[.,]\d+)?)?\s?(?:км|километр[а-яё]*)(?![а-яё])/gi,
-  min: /(?:около |примерно |всего |~\s?)?\d+(?:[–-]\d+)?\s?(?:мин\.?|минут[а-яё]*)(?![а-яё])/gi,
-  road: /ехать|езд|дорог|в пути|машин|электричк|автобус|маршрутк|такси|трасс|шосс|от жуковск|из жуковск|до клиники/i,
-  note: "расстояние или время в пути: ждём подтверждения",
-};
-
 export const servicePages = [
   {
     slug: "implantaciya", path: "implantaciya/", old: "implantaciya", crumb: "Имплантация зубов", procedure: "Имплантация зубов", hero: hero("implantaciya"),
@@ -83,16 +73,17 @@ export const servicePages = [
     slug: "cirkonievye-koronki", path: "protezirovanie/koronki/cirkoniy/", parent: "koronki", crumb: "Циркониевые коронки", procedure: "Циркониевые коронки", hero: hero("cirkonievye-koronki"),
     facts: [["от 34 100 ₽","цельноциркониевая коронка на свой зуб"], ["Без металла","для передних и жевательных зубов"], ["2 200 ₽","3D-сканирование челюстей"], ["3 врача","хирург, ортопед и терапевт составляют план"]],
   },
-  // ---------- гео-страницы Жуковского (план SEO-треда: гео-страницы_и_редиректы, лист «Гео-страницы»). Первый экран — вход в клинику ----------
+  // ---------- гео-страницы Жуковского (план SEO-треда: гео-страницы_и_редиректы, лист «Гео-страницы»). Первый экран — картинка по смыслу,
+// как у услуг (hero-zhukovskiy-*.png от SEO-треда; пока её нет — фото входа), фото входа с подписью — в блоке дороги, чтобы клинику легко найти ----------
   {
     slug: "zhukovskiy-implantaciya", path: "goroda/zhukovskiy/implantaciya/", geo: "Жуковский", crumb: "Имплантация для жителей Жуковского", procedure: "Имплантация зубов",
-    hero: ["images/clinic/yandex-08.jpg"], heroPos: "38% 50%", heroCap: "Вход в стоматологию: Громова, 10/2, Удельная",
+    hero: [...hero("zhukovskiy-implantaciya"), "images/clinic/yandex-08.jpg"], photo: "images/clinic/yandex-08.jpg", photoPos: "38% 50%", photoCap: "Вход в стоматологию: Громова, 10/2, Удельная",
     facts: [["от 19 300 ₽","установка импланта"], ["4 500 ₽","КТ двух челюстей, томограф в клинике"], ["3 врача","хирург, ортопед и терапевт составляют план"], ["Парковка","своя, у входа в клинику"]],
     links: [["Имплантация зубов","implantaciya/"], ["All-on-4","implantaciya/all-on-4/"], ["All-on-6","implantaciya/all-on-6/"], ["Вся челюсть на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Синус-лифтинг","implantaciya/sinus-lifting/"], ["Костная пластика","implantaciya/kostnaya-plastika/"]],
   },
   {
     slug: "zhukovskiy-protezirovanie", path: "goroda/zhukovskiy/protezirovanie/", geo: "Жуковский", crumb: "Протезирование для жителей Жуковского", procedure: "Протезирование зубов",
-    hero: ["images/clinic/2gis-14.jpg"], heroPos: "30% 50%", heroCap: "Вход в стоматологию: Громова, 10/2, Удельная",
+    hero: [...hero("zhukovskiy-protezirovanie"), "images/clinic/2gis-14.jpg"], photo: "images/clinic/2gis-14.jpg", photoPos: "30% 50%", photoCap: "Вход в стоматологию: Громова, 10/2, Удельная",
     facts: [["от 26 400 ₽","металлокерамическая коронка"], ["от 31 900 ₽","съёмный протез"], ["2 200 ₽","3D-сканирование челюстей"], ["Парковка","своя, у входа в клинику"]],
     links: [["Протезирование зубов","protezirovanie/"], ["Коронки","protezirovanie/koronki/"], ["Циркониевые коронки","protezirovanie/koronki/cirkoniy/"], ["Съёмные протезы","protezirovanie/semnye-protezy/"], ["Бюгельный протез","protezirovanie/byugelnyj-protez/"], ["Протез на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"]],
   },

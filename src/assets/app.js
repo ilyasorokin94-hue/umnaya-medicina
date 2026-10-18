@@ -681,10 +681,10 @@
     const conv = !phoneMQ.matches && h.classList.contains("hero--v1") && $(".hv__l2", h);
     const words = $$("[data-split] .sw > span", h).filter((w) => !conv || !conv.contains(w));
     const tl = G.timeline();
-    const media = h.classList.contains("hero") ? $(".hero__media", h) : $(".sp-hero__media, .geo-hero__img", h);
+    const media = h.classList.contains("hero") ? $(".hero__media", h) : $(".sp-hero__media", h);
     const small = phoneMQ.matches;
     if (media) tl.fromTo(media, { clipPath: small ? "inset(0% 0% 100% 0%)" : "inset(10% 6% 10% 6%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: small ? 1.4 : 1.6, ease: "power3.inOut" }, small ? 0.35 : 0);
-    const mimg = $(".hero__media img, .sp-hero__media img, .geo-hero__img img", h);
+    const mimg = $(".hero__media img, .sp-hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1);
     const rise = $$(".kicker, .label, .crumbs, .page-hero__lead, .hero__facts > *, .hero__actions > *, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav", h).filter((el) => !conv || !el.closest(".hero__actions"));

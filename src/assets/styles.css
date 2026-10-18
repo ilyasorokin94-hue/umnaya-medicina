@@ -1988,24 +1988,17 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
   .dp-hero__photo img { object-position: 50% 8%; }
 }
 
-/* ---------- гео-страницы (/goroda/<место>/<услуга>/): первый экран с фото входа в клинику, блок ссылок на страницы услуг ---------- */
-.geo-hero .sp-hero__top { grid-template-columns: max(var(--gutter), (100% - 1440px) / 2) minmax(0, 1fr) minmax(0, 44%) max(var(--gutter), (100% - 1440px) / 2); grid-template-areas: ". text photo ." ". act photo ."; min-height: clamp(600px, 86svh, 880px); }
-.geo-hero__photo { grid-area: photo; align-self: end; margin: 0 0 0 clamp(32px, 4.5vw, 88px); }
-.geo-hero__img { display: block; position: relative; aspect-ratio: 5 / 4; overflow: hidden; background: var(--ink-2); }
-.geo-hero__img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.geo-hero__photo figcaption { margin-top: 12px; font-size: var(--fs--1); color: var(--muted-on-dark); }
-.geo-hero h1 { max-width: 16ch; }
+/* ---------- гео-страницы (/goroda/<место>/<услуга>/): фото входа в клинику в блоке дороги, блок ссылок на страницы услуг ---------- */
+.geo-photo { margin: clamp(28px, 3vw, 44px) 0 0; }
+.geo-photo__img { display: block; position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--ink-2); }
+.geo-photo__img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.geo-photo figcaption { margin-top: 12px; font-size: var(--fs--1); color: var(--muted); }
 .geo-links__list { margin-top: clamp(28px, 3vw, 44px); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(32px, 5vw, 80px); border-top: 1px solid rgba(223, 232, 220, .2); }
 .geo-link { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: clamp(16px, 1.8vw, 24px) 0; border-bottom: 1px solid rgba(223, 232, 220, .2); font: 500 var(--fs-2)/1.15 var(--display); letter-spacing: -.02em; color: inherit; }
 .geo-link .svl-go { flex: none; background: var(--sage-2); color: var(--ink); transition: rotate .5s var(--sv-ease-4); }
 @media (hover: hover) { .geo-link:hover .svl-go { rotate: 45deg; } }
-@media (max-width: 1024px) {
-  .geo-hero .sp-hero__top { grid-template-columns: var(--gutter) minmax(0, 1fr) minmax(0, 42%) var(--gutter); }
-}
 @media (max-width: 760px) {
-  .geo-hero .sp-hero__top { grid-template-columns: var(--gutter) minmax(0, 1fr) var(--gutter); grid-template-areas: ". text ." ". photo ." ". act ."; }
-  .geo-hero__photo { margin: 0; }
-  .geo-hero__img { aspect-ratio: 4 / 3; }
+  .geo-photo__img { aspect-ratio: 4 / 3; }
   .geo-links__list { grid-template-columns: minmax(0, 1fr); }
   .geo-link { font-size: min(var(--fs-2), 6vw); }
 }
