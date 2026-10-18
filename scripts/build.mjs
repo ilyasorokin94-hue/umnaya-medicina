@@ -777,6 +777,10 @@ const spTexts = Object.fromEntries(servicePages.map((pg) => {
 // адрес из текста (/implantaciya/all-on-4/, /vrachi/solodukhin/, /gigiena/) → ссылка на странице; ещё не сделанная страница → null
 const spOld = { lechenie: "lechenie-zubov", "lechenie/pod-mikroskopom": "mikroskop", diagnostika: "diagnostika", hirurgiya: "hirurgiya", gigiena: "gigiena", ortodontiya: "ortodontiya", detskaya: "detskaya" };
 function spHref(url, p, cur) {
+  // своя страница услуги (в том числе /konsultaciya/) важнее запасных адресов ниже; страница, скрытая до подтверждения
+  // клиники (hidden), по ссылкам из текстов не открывается: ссылка ведёт на раздел
+  const real = servicePages.find((x) => x.path === url.replace(/^\/|\/$/g, "") + "/");
+  if (real) return real.hidden ? (real.parent ? p + servicePages.find((x) => x.slug === real.parent).path : null) : p + real.path;
   if (/^#/.test(url)) return url;
   const u = url.replace(/^\/|\/$/g, "");
   if (u === "") return `${p}index.html`;
@@ -786,7 +790,7 @@ function spHref(url, p, cur) {
   if (page) return p + page.path;
   if (u === "vrachi") return `${p}vrachi.html`;
   // ещё не сделанная дочерняя страница (/diagnostika/kt/, /lechenie/karies/) — ссылка на раздел, а со страницы самого раздела — просто текст
-  const up = servicePages.find((x) => x.path === u.replace(/\/[^/]+$/, "/") || x.path === u.split("/")[0] + "/");
+  const up = servicePages.find((x) => !x.hidden && (x.path === u.replace(/\/[^/]+$/, "/") || x.path === u.split("/")[0] + "/"));
   if (up && u.includes("/")) return up === cur ? null : p + up.path;
   const doc = /^vrachi\/([\w-]+)$/.exec(u);
   if (doc) return docById[doc[1]] ? docHref(doc[1], p) : null;
@@ -962,8 +966,9 @@ function spSection(s, i, page, depth, ids) {
       return sec(grid(`${h2}${spNodes(lead, page, p)}`, `<div class="sp-faq">${qa.map((x) => `<details class="faqq"><summary><span>${nobr(spMd(x.q, page, p))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${spNodes(x.a, page, p)}</div></details>`).join("")}</div>${subs}${spNodes(tail, page, p)}`)
         + `<p class="sp-meta">Проверил: ${spMd(page.meta.reviewer || "[ВРАЧ — кто проверил текст]", page, p)}. Обновлено ${esc(page.meta.updated || servicePriceDate)}</p>`);
     }
+    // оценка и число отзывов меняются, поэтому на страницах услуг их нет (слово Ilya 18.10 «убирать всё, что меняется»): только ссылки на площадки
     case "reviews": return sec(`<div class="sp-head">${h2}</div>
-      <div class="sp-rates">${[clinic.ratings[2], clinic.ratings[1], clinic.ratings[0]].map((r) => `<a class="sp-rate" href="${r.url}"${ext} data-reveal><b>${esc(r.value)}</b><span>${esc(r.site)}</span><small>${esc(r.count)}</small><span class="link">Смотреть отзывы</span></a>`).join("")}</div>
+      <div class="sp-rates">${[clinic.ratings[2], clinic.ratings[1], clinic.ratings[0]].map((r) => `<a class="sp-rate" href="${r.url}"${ext} data-reveal><span>${esc(r.site)}</span><span class="link">Смотреть отзывы</span></a>`).join("")}</div>
       <div class="sp-more">${spNodes(s.nodes, page, p)}${subs}</div>`);
     case "doctors": {
       const docs = [...new Set([...JSON.stringify(s.nodes).matchAll(/\(\/vrachi\/([\w-]+)\/?\)/g)].map((m) => m[1]))].filter((d) => docById[d]);
@@ -1544,7 +1549,7 @@ out("vrachi.html", pageDoctors());
 out("zapis.html", pageBooking());
 // старые адреса услуг, переехавших в новый формат, ведут на новую страницу и в карту сайта не попадают
 for (const s of services) spBySlug[s.slug] ? writeFileSync(path.join(dist, `uslugi/${s.slug}.html`), noDash(spRedirect(spBySlug[s.slug]))) : out(`uslugi/${s.slug}.html`, pageService(s));
-for (const page of servicePages) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}index.html`, pageSvc(page)); }
+for (const page of servicePages) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}index.html`, pageSvc(page), !page.hidden); }
 // старая страница Сикачевой остаётся, но в карту сайта не идёт, пока Ilya не решит (17.10)
 for (const d of doctors) {
   if (!doctorPages[d.id]) { out(`vrachi/${d.id}.html`, pageDoctor(d), d.id !== "sikacheva"); continue; }

@@ -1881,9 +1881,7 @@ a.sp-pill:hover { background: var(--paper); color: var(--ink); }
 .sp-rates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 1.8vw, 26px); }
 .sp-rate { display: grid; gap: 8px; align-content: start; padding: clamp(24px, 2.4vw, 36px); border-radius: var(--radius); background: var(--paper); color: var(--text); text-decoration: none; }
 .section--sage .sp-rate { background: #fff; }
-.sp-rate b { font: 500 var(--fs-4)/1 var(--display); letter-spacing: -.045em; }
-.sp-rate span:not(.link) { font: 500 var(--fs-1)/1.2 var(--display); }
-.sp-rate small { color: var(--muted); font-size: var(--fs--1); }
+.sp-rate span:not(.link) { font: 500 var(--fs-2)/1.15 var(--display); letter-spacing: -.02em; }
 .sp-rate .link { justify-self: start; margin-top: 14px; font-size: 15px; }
 
 /* вопросы, подпись врача, призыв */
