@@ -101,7 +101,7 @@ async function shrink(file, width, maxH) {
 // лист кадров прокрутки: компьютер 4 в ряд, телефон 7 в ряд
 async function sheet(files, out, kind) {
   try {
-    const cols = kind === 'd' ? 4 : 7, w = kind === 'd' ? 480 : 180, h = kind === 'd' ? 300 : 390, gap = 6;
+    const cols = kind === 'd' ? 4 : 7, w = kind === 'd' ? 480 : 180, h = kind === 'd' ? 300 : 306, gap = 6;
     const n = Math.min(files.length, kind === 'd' ? 12 : 14), rows = Math.ceil(n / cols);
     const comps = [];
     for (let i = 0; i < n; i++) {
@@ -133,7 +133,7 @@ async function run(browser, site, kind) {
     await dismiss(page);
     await page.waitForTimeout(800);
     await page.screenshot({ path: `${dir}/${kind}-00.jpg`, type: 'jpeg', quality: 80 });
-    const vh = kind === 'd' ? 900 : 844;
+    const vh = page.viewportSize().height;
     // медленная прокрутка, чтобы сработали анимации и ленивые картинки
     let frame = 1; const shots = [`${dir}/${kind}-00.jpg`]; let prev = '', same = 0;
     for (; frame <= 14; ) {
