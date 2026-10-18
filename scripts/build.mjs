@@ -1212,7 +1212,7 @@ ${heroHtml}
   ${page.eduTodo ? dpText(page.eduTodo, pg) : ""}
   ${timeline.length ? `<ol class="doc-path dp-path">${timeline.map((r) => `<li data-reveal><span class="doc-path__y">${esc(r.y)}</span><span class="doc-path__k">${esc(r.kind)}</span><div><b>${esc(r.t)}${r.check ? ` <mark class="todo-tag">${esc(r.check)}</mark>` : ""}</b><span>${esc(r.place)}</span></div></li>`).join("")}</ol>` : ""}
   ${n ? `<div class="sp-sub" data-reveal><h3>Курсы и конгрессы</h3><ul class="sp-plist dp-courses">${d.courses.map(([y, t]) => `<li><span>${esc(t)}</span><b>${esc(y)}</b></li>`).join("")}</ul></div>` : ""}
-  <div class="sp-more">${dpText(page.docs, pg)}</div>
+  ${page.docs ? `<div class="sp-more">${dpText(page.docs, pg)}</div>` : ""}
 </div></section>
 
 ${dpBlock({ type: "links", id: "uslugi", title: "Что делает врач в клинике", text: `${page.spec} в Удельной. Цены по прайсу клиники на ${servicePriceDate}, точную стоимость врач называет после осмотра и снимков.`, items: page.does }, pg, depth)}
