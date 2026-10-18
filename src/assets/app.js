@@ -357,6 +357,8 @@
       const on = !b.parentElement.classList.contains("is-on");
       items.forEach((li) => li.classList.toggle("is-on", li === b.parentElement && on));
       sync();
+      // высота блока поменялась: пересчитываем места анимаций ниже по странице, иначе они срабатывают не там и страницу дёргает
+      clearTimeout(alAcc.t); alAcc.t = setTimeout(() => ST?.refresh?.(), 560);
     });
     alAcc.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("b[role=button]")) { e.preventDefault(); e.target.click(); } });
   }
