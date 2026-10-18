@@ -1208,14 +1208,14 @@ function pageDoc(d, page) {
 ${heroHtml}
 
 <section class="section sp-sec" id="obrazovanie" aria-labelledby="obrazovanie-t"><div class="wrap">
-  <div class="sp-head"><h2 id="obrazovanie-t" data-split>Образование и квалификация</h2>${timeline.length ? `<p class="sp-head__lead">По открытым анкетам врача на ПроДокторов, сайте клиники и медицинских порталах.</p>` : ""}</div>
+  <div class="sp-head"><h2 id="obrazovanie-t" data-split>Образование и квалификация</h2></div>
   ${page.eduTodo ? dpText(page.eduTodo, pg) : ""}
   ${timeline.length ? `<ol class="doc-path dp-path">${timeline.map((r) => `<li data-reveal><span class="doc-path__y">${esc(r.y)}</span><span class="doc-path__k">${esc(r.kind)}</span><div><b>${esc(r.t)}${r.check ? ` <mark class="todo-tag">${esc(r.check)}</mark>` : ""}</b><span>${esc(r.place)}</span></div></li>`).join("")}</ol>` : ""}
   ${n ? `<div class="sp-sub" data-reveal><h3>Курсы и конгрессы</h3><ul class="sp-plist dp-courses">${d.courses.map(([y, t]) => `<li><span>${esc(t)}</span><b>${esc(y)}</b></li>`).join("")}</ul></div>` : ""}
   ${page.docs ? `<div class="sp-more">${dpText(page.docs, pg)}</div>` : ""}
 </div></section>
 
-${dpBlock({ type: "links", id: "uslugi", title: "Что делает врач в клинике", text: `${page.spec} в Удельной. Цены по прайсу клиники на ${servicePriceDate}, точную стоимость врач называет после осмотра и снимков.`, items: page.does }, pg, depth)}
+${dpBlock({ type: "links", id: "uslugi", title: "Что делает врач в клинике", text: `${page.spec} в Удельной. Точную стоимость врач называет после осмотра и снимков.`, items: page.does }, pg, depth)}
 
 ${quotes.length ? `<section class="section sp-sec" id="otzyvy" aria-labelledby="otzyvy-t"><div class="wrap sp-grid">
   <div class="sp-grid__aside"><h2 id="otzyvy-t" data-split>Отзывы пациентов</h2><p class="sp-aside-text">Отзывы с ${[...new Set(quotes.map((q) => q.site))].join(", ")} дословно, со ссылкой на каждый.</p>${d.pd && quotes.some((q) => q.site === "ПроДокторов") ? `<a class="link" href="${d.pd}otzivi/"${ext}>Все отзывы о враче на ПроДокторов</a>` : ""}</div>
