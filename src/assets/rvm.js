@@ -41,10 +41,10 @@
 
   // перетаскивание: по горизонтали карточка идёт за пальцем, по вертикали страница прокручивается как обычно
   // карточку ведёт только палец, который её взял: второй палец (щипок) её не трогает
-  let x0 = 0, dx = 0, drag = false, pid = null;
+  let x0 = 0, y0 = 0, dx = 0, drag = false, pid = null;
   deck.addEventListener("pointerdown", (e) => {
     if (busy || !e.isPrimary || !cards[0].contains(e.target)) return;
-    drag = true; pid = e.pointerId; x0 = e.clientX; dx = 0;
+    drag = true; pid = e.pointerId; x0 = e.clientX; y0 = e.clientY; dx = 0;
     cards[0].classList.add("is-drag"); cards[1].classList.add("is-drag");
     try { deck.setPointerCapture(e.pointerId); } catch (_) {}
   });
@@ -61,6 +61,11 @@
     cards[0].classList.remove("is-drag"); cards[1].classList.remove("is-drag");
     if (Math.abs(dx) > 70) fly(Math.sign(dx)); else place();
   };
+  // пока карточку тянут вбок, жест принадлежит стопке: встроенный браузер (Telegram, Chrome) не принимает его за «назад» или «вперёд»
+  deck.addEventListener("touchmove", (e) => {
+    const t = e.touches[0];
+    if (drag && e.cancelable && t && Math.abs(t.clientX - x0) > 10 && Math.abs(t.clientX - x0) > Math.abs(t.clientY - y0) * 1.5) e.preventDefault();
+  }, { passive: false });
   deck.addEventListener("pointerup", up);
   deck.addEventListener("pointercancel", up);
   next && next.addEventListener("click", () => fly(-1));
