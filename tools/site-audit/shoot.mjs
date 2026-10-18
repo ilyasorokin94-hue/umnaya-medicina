@@ -80,6 +80,21 @@ async function shrink(file, width, maxH) {
   } catch (e) { console.log('shrink', file, String(e).slice(0, 80)); }
 }
 
+// лист кадров прокрутки: компьютер 4 в ряд, телефон 7 в ряд
+async function sheet(files, out, kind) {
+  try {
+    const cols = kind === 'd' ? 4 : 7, w = kind === 'd' ? 480 : 180, h = kind === 'd' ? 300 : 390, gap = 6;
+    const n = Math.min(files.length, kind === 'd' ? 12 : 14), rows = Math.ceil(n / cols);
+    const comps = [];
+    for (let i = 0; i < n; i++) {
+      const input = await sharp(fs.readFileSync(files[i])).resize({ width: w, height: h, fit: 'cover', position: 'top' }).toBuffer();
+      comps.push({ input, left: (i % cols) * (w + gap), top: Math.floor(i / cols) * (h + gap) });
+    }
+    await sharp({ create: { width: cols * (w + gap) - gap, height: rows * (h + gap) - gap, channels: 3, background: '#888' } })
+      .composite(comps).jpeg({ quality: 70, mozjpeg: true }).toFile(out);
+  } catch (e) { console.log('sheet', out, String(e).slice(0, 120)); }
+}
+
 async function run(browser, site, kind) {
   const dir = path.join('out', site.slug); fs.mkdirSync(dir, { recursive: true });
   const ctxOpt = kind === 'd'
@@ -100,22 +115,21 @@ async function run(browser, site, kind) {
     await dismiss(page);
     await page.waitForTimeout(800);
     await page.screenshot({ path: `${dir}/${kind}-00.jpg`, type: 'jpeg', quality: 80 });
-    await shrink(`${dir}/${kind}-00.jpg`, kind === 'd' ? 1200 : 585);
     const vh = kind === 'd' ? 900 : 844;
     // медленная прокрутка, чтобы сработали анимации и ленивые картинки
     const H = await page.evaluate(() => document.documentElement.scrollHeight);
-    let frame = 1;
+    let frame = 1; const shots = [`${dir}/${kind}-00.jpg`];
     for (let y = vh; y < Math.min(H, vh * 16) && frame <= 14; y += vh) {
       for (let k = 1; k <= 6; k++) { await page.mouse.wheel(0, vh / 6); await page.waitForTimeout(120); }
       await page.waitForTimeout(900);
-      if (site.deep) {
-        const f = `${dir}/${kind}-${String(frame).padStart(2, '0')}.jpg`;
-        await page.screenshot({ path: f, type: 'jpeg', quality: 80 });
-        await shrink(f, kind === 'd' ? 1200 : 585);
-      }
+      const f = `${dir}/${kind}-${String(frame).padStart(2, '0')}.jpg`;
+      await page.screenshot({ path: f, type: 'jpeg', quality: 80 });
+      shots.push(f);
       frame++;
     }
     res.frames = frame;
+    await sheet(shots, `${dir}/${kind}-sheet.jpg`, kind);
+    for (const f of shots.slice(1)) { if (site.deep) await shrink(f, kind === 'd' ? 1200 : 585); else fs.rmSync(f); }
     Object.assign(res, await page.evaluate(probe));
     res.cls = await page.evaluate(() => new Promise(ok => { let v = 0; try { new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) v += e.value; }).observe({ type: 'layout-shift', buffered: true }); } catch {} setTimeout(() => ok(+v.toFixed(3)), 300); }));
     // полная страница сверху
@@ -134,6 +148,7 @@ async function run(browser, site, kind) {
         res.menu = true;
       }
     }
+    await shrink(`${dir}/${kind}-00.jpg`, kind === 'd' ? 1200 : 585);
     res.ok = true;
   } catch (e) { res.error = String(e).slice(0, 300); }
   res.bytes = bytes; res.requests = reqs;

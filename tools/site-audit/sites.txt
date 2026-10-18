@@ -1,3 +1,91 @@
-# slug|url
-lavadental|https://lavadental.lv/ru
-trydent|https://trydentspb.ru/
+# slug|url|mode  (deep = сохранить все кадры прокрутки)
+# Латвия
+lavadental|https://lavadental.lv/ru|deep
+ivfriga|https://ivfriga.lv/en/
+skydream|https://skydream.lv/en/
+auroradental|https://auroradental.lv/
+laurusdent|https://laurusdent.lv/
+azaryan|https://azaryan.lv/en/
+dentalmedical|https://dentalmedical.lv
+akribija|https://www.akribija.lv
+zobufeja|https://www.zobufeja.lv
+elladent|https://elladent.lv
+# Эстония
+maxilla|https://www.maxilla.ee/en/
+hambapol|https://hambapol.ee/en/
+dentalart-ee|https://dentalart.ee/en/
+lillehambaravi|https://lillehambaravi.ee/en/
+zagatallinn|https://zagatallinn.com/en/
+studiodentalcare|https://studiodentalcare.eu/en/
+# Литва
+meliva|https://meliva.lt/
+royalklinika|https://royalklinika.lt/vilnius/
+dentalpremium|https://dentalpremium.lt/
+gidenta|https://gidenta.lt/
+dantuharmonija|https://dantuharmonija.lt
+dentes|https://www.dentes.lt
+# Украина, Казахстан, Узбекистан, Кавказ
+axel|https://axel.clinic/en/
+chopovskyi|https://chopovskyi.dental/en/
+yarema|https://yaremadental.com/
+dentart-ua|https://dent-art.com.ua/
+bogomolets|https://bogomoletsclinic.ua/
+lapytko|https://lapytko.com/
+prizma|https://prizma.ua/
+kes|https://kes.com.ua/
+lumident|https://www.lumident.kiev.ua/
+dclinic|https://dclinic.dp.ua
+mvision|http://mvisionclinic.com/
+onedent|https://onedent.kz/
+lumina-kz|https://lumina.dental/
+eurodent-kz|https://eurodent.kz/
+perfectstom|https://perfect-stom.kz/
+richters|https://www.richters.ge/en
+dentx|https://dentx.am/
+akfamedline|https://akfamedline.uz/
+tashclinic|https://www.tashclinic.org/en
+beyazdis|https://beyazdis.az/en/index.html
+stomatika|https://100matika.ru
+# Сайты с премиями (Awwwards, CSSDA, One Page Love)
+skyclinics|https://skyclinics.al/
+southcliff|https://southcliffdentalgroup.com/
+aventura|https://aventuradentalarts.com/
+minemal|https://minemal.dental/
+brusco|https://www.studiobrusco.com/
+inca|https://identalinca.com/
+marsea|https://www.centremarsea.com/
+odyssee|https://www.odysseeclinic.com.au/
+clinique7|https://clinique7.com/
+beethoven|https://www.colette-camenisch.com/en
+asterie|https://asterieclinic.com.au/
+gagnon|https://www.dentistegagnon.com/
+kishimoto|https://dc-kishimoto.jp
+sixb|https://sixb-dentaire.fr/
+kinderpraxis|https://www.kinder-und-klinik.de/
+arbor|https://www.arbordentalnyc.com/
+aderdent|https://www.aderdent.com/
+dentalunitmalta|https://www.dentalunitmalta.com/
+herzel|https://www.herzel-zahnarzt.de/
+# Германия, Австрия, Швейцария, Польша, Европа
+32reasons|https://32reasons.de/
+pfaffenwinkel|https://www.praxisklinik-pfaffenwinkel.de/
+drmaul|https://www.dr-maul.de/
+sp64|https://www.sp64.de/
+zmm|https://zahnmedizin-mehringdamm.de/
+drshafe|https://dr-shafe.de/
+feuerlandhoefe|https://www.feuerlandhoefe.de/
+art32|https://www.zahnarzt-hanau.net/
+ku64|https://ku64.de/
+hammoniahaus|https://zahnaerzte-hammoniahaus.de/
+lieblings|https://www.lieblings-zahnarzt.de/duesseldorf/
+weissraum|https://www.praxis-weissraum.de/
+mundpropaganda|https://mundpropaganda.de/
+conceptblanc|https://www.concept-blanc.de/
+schottenring|https://zahnarzt-schottenring.at/
+tafers|https://dentalcentertafers.ch
+leandra|https://www.leandra-isler.ch/en
+nawrocki|https://www.nawrockiclinic.com
+debski|https://www.debskiclinic.pl
+royalclinic-pl|https://royalclinic.pl/
+taravilla|https://taravillalab.com/
+stpauls|https://stpaulsdental.com

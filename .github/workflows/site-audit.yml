@@ -43,11 +43,18 @@ jobs:
           path: dl
           pattern: shots-*
           merge-multiple: true
+      # снимки чужих сайтов в открытый репозиторий попадают только зашифрованными
       - run: |
-          mkdir -p audit-shots
-          cp -r dl/* audit-shots/ 2>/dev/null || true
+          set -e
+          mkdir -p audit-enc
+          tar -C dl -czf shots.tgz .
+          openssl rand -hex 32 > k.txt
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in shots.tgz -out shots.enc -pass file:k.txt
+          openssl pkeyutl -encrypt -pubin -inkey tools/site-audit/audit.pub.pem -in k.txt -out audit-enc/${{ github.run_id }}.key
+          split -b 45m -d shots.enc audit-enc/${{ github.run_id }}.part
+          rm -f k.txt shots.tgz shots.enc
           git config user.name "site-audit bot"
           git config user.email "actions@users.noreply.github.com"
-          git add audit-shots
-          git commit -qm "Снимки сайтов для аудита (run ${{ github.run_id }})" || exit 0
+          git add audit-enc
+          git commit -qm "Зашифрованные снимки аудита (run ${{ github.run_id }})" || exit 0
           for i in 1 2 3; do git pull -q --rebase origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && break; sleep 5; done
