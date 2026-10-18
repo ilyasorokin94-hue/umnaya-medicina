@@ -1763,6 +1763,14 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
   .pr-al__list li { padding: 16px 14px; }
   .pr-al__list b { font-size: var(--fs-0); }
 }
+/* «Выгодно всегда» на телефоне, вариант «Прайс»: одна колонка строками через тонкие линии, цена справа зелёным */
+@media (max-width: 760px) {
+  .pr-al--price .pr-al__list { grid-template-columns: minmax(0, 1fr); gap: 0; border-top: 1px solid var(--line-on-dark); }
+  .pr-al--price .pr-al__list li { gap: 6px; padding: 18px 0 20px; border-radius: 0; background: none; border-bottom: 1px solid var(--line-on-dark); }
+  .pr-al--price .pr-al__list b { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; font-size: var(--fs-1); text-wrap: pretty; }
+  .pr-al--price .pr-al__f { flex: none; color: var(--green-hi); white-space: nowrap; }
+  .pr-al--price .pr-al__list li > span { max-width: 32em; }
+}
 /* невысокий телефон (iPhone SE): картинка ниже, чтобы кнопка застрявшей карточки не уходила под нижнюю панель */
 @media (max-width: 760px) and (max-height: 720px) {
   .pr4-card__pic { aspect-ratio: 2 / 1; }

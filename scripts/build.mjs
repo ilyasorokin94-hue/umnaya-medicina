@@ -556,6 +556,8 @@ function svlBlock(p, depth) {
 const prNw = (t) => esc(t).replace(/\S+-\S+/g, (w) => `<span class="nobr">${w}</span>`);
 const prBtn = (d, p) => act(d.btn, d.modal, p, { reason: d.reason, cls: "btn--lg", promo: d.promo });
 const prPrice = (d) => `<p class="pr-price"><b>${esc(d.price)}</b>${d.old ? `<s aria-label="вместо ${esc(d.old)}">${esc(d.old)}</s>` : ""}${d.sub ? `<span>${esc(d.sub)}</span>` : ""}</p>`;
+// «Выгодно всегда» на телефоне строками прайса: название слева, цена или процент справа (на компьютере та же строка целиком)
+const alSplit = (t) => { const m = t.match(/^(.*?)\s+((?:от\s+)?\d[\d\s]*\s?(?:₽|%))$/); return m ? `<span class="pr-al__n">${prNw(m[1])}</span> <span class="pr-al__f">${prNw(m[2])}</span>` : prNw(t); };
 function promoBlock(p, depth) {
   const A = v2.akcii;
   return `<section class="section pr on-dark" id="akcii" aria-labelledby="pr-title"><div class="wrap">
@@ -570,7 +572,7 @@ function promoBlock(p, depth) {
       ${prBtn(d, p)}
     </div>
   </article>`).join("")}</div>
-  <div class="pr-al"><h3 class="pr-al__title">${esc(A.alwaysTitle)}</h3><ul class="pr-al__list">${A.always.map(([t, d]) => `<li data-reveal><b>${prNw(t)}</b><span>${prNw(d)}</span></li>`).join("")}</ul></div>
+  <div class="pr-al pr-al--price"><h3 class="pr-al__title">${esc(A.alwaysTitle)}</h3><ul class="pr-al__list">${A.always.map(([t, d]) => `<li data-reveal><b>${alSplit(t)}</b><span>${prNw(d)}</span></li>`).join("")}</ul></div>
 </div></section>`;
 }
 
