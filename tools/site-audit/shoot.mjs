@@ -12,18 +12,36 @@ const sites = lines.map(l => { const [slug, url, mode] = l.split('|').map(s => s
 
 const ACCEPT = /^(accept|accept all|allow all|agree|i agree|ok|okay|got it|piekrītu|pieņemt|pieņemt visus|apstiprināt|nõustun|nõustu|luba kõik|sutinku|priimti|priimti visus|alle akzeptieren|akzeptieren|zustimmen|einverstanden|alle zulassen|принять|принять все|согласен|согласна|хорошо|понятно|прийняти|прийняти все|погоджуюсь|zgadzam się|akceptuję|accepter|aceptar|accetta)/i;
 
+const ACCEPT2 = /(accept|agree|allow all|akzeptier|zustimm|einverstanden|akceptuj|zgadzam|piekrīt|pieņem|nõustu|luba kõik|sutinku|priimti|принять|принимаю|согласен|прийняти|погоджуюсь|accetta|aceptar|accepter|^ok$|^okay$|got it|понятно|хорошо|^так$|^tak$)/i;
+
 async function dismiss(page) {
-  try {
-    const els = await page.$$('button, a, [role=button], div[class*=cookie] span');
-    for (const el of els.slice(0, 400)) {
-      const t = ((await el.innerText().catch(() => '')) || '').trim();
-      if (t.length < 30 && ACCEPT.test(t) && await el.isVisible().catch(() => false)) {
-        await el.click({ timeout: 1500 }).catch(() => {});
-        await page.waitForTimeout(600);
-        break;
+  for (const fr of page.frames()) {
+    try {
+      const els = await fr.$$('button, a, [role=button], input[type=button], input[type=submit]');
+      for (const el of els.slice(0, 500)) {
+        const t = ((await el.innerText().catch(() => '')) || (await el.getAttribute('value').catch(() => '')) || '').trim();
+        if (t && t.length < 40 && (ACCEPT.test(t) || ACCEPT2.test(t)) && await el.isVisible().catch(() => false)) {
+          await el.click({ timeout: 1500 }).catch(() => {});
+          await page.waitForTimeout(500);
+          break;
+        }
+      }
+    } catch {}
+  }
+  await page.keyboard.press('Escape').catch(() => {});
+  // всё, что осталось от согласий, окон выбора города и рекламных окон, прячем стилем
+  await page.addStyleTag({ content: `[id*=cookie i],[class*=cookie i],[id*=consent i],[class*=consent i],[id*=gdpr i],[class*=gdpr i],[id*=borlabs i],[class*=borlabs i],[id*=usercentrics i],[id*=CybotCookiebot],[id*=onetrust i],[class*=cmplz],[id*=cmplz],[class*=klaro],[id*=klaro],.fancybox-container,.popup-overlay,.pum-overlay,[class*=modal-backdrop],.t-popup_show,.t-popup__bg{display:none!important} html,body{overflow:auto!important}` }).catch(() => {});
+  await page.evaluate(() => {
+    for (const el of document.querySelectorAll('body *')) {
+      const cs = getComputedStyle(el);
+      if ((cs.position === 'fixed' || cs.position === 'sticky') && +cs.zIndex > 999) {
+        const r = el.getBoundingClientRect();
+        const t = (el.innerText || '').toLowerCase();
+        if (r.width * r.height > innerWidth * innerHeight * 0.12 && /(cookie|datenschutz|privacy|приват|файл|город|місто|newsletter|подпиш|-30%|off|запис)/.test(t)) el.style.display = 'none';
+        if (r.width >= innerWidth * 0.95 && r.height >= innerHeight * 0.95 && !(el.innerText || '').trim()) el.style.display = 'none';
       }
     }
-  } catch {}
+  }).catch(() => {});
 }
 
 const probe = () => {
@@ -107,25 +125,26 @@ async function run(browser, site, kind) {
   page.on('response', async r => { reqs++; const l = Number(r.headers()['content-length'] || 0); bytes += l; });
   const t0 = Date.now();
   try {
-    const r = await page.goto(site.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    const r = await page.goto(site.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
     res.status = r && r.status(); res.finalUrl = page.url();
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
     res.loadMs = Date.now() - t0;
-    await page.waitForTimeout(2500);
+    await page.waitForTimeout(3500);
     await dismiss(page);
     await page.waitForTimeout(800);
     await page.screenshot({ path: `${dir}/${kind}-00.jpg`, type: 'jpeg', quality: 80 });
     const vh = kind === 'd' ? 900 : 844;
     // медленная прокрутка, чтобы сработали анимации и ленивые картинки
-    const H = await page.evaluate(() => document.documentElement.scrollHeight);
-    let frame = 1; const shots = [`${dir}/${kind}-00.jpg`];
-    for (let y = vh; y < Math.min(H, vh * 16) && frame <= 14; y += vh) {
-      for (let k = 1; k <= 6; k++) { await page.mouse.wheel(0, vh / 6); await page.waitForTimeout(120); }
-      await page.waitForTimeout(900);
+    let frame = 1; const shots = [`${dir}/${kind}-00.jpg`]; let prev = '', same = 0;
+    for (; frame <= 14; ) {
+      for (let k = 1; k <= 6; k++) { await page.mouse.wheel(0, vh / 6); await page.waitForTimeout(140); }
+      await page.waitForTimeout(1000);
       const f = `${dir}/${kind}-${String(frame).padStart(2, '0')}.jpg`;
-      await page.screenshot({ path: f, type: 'jpeg', quality: 80 });
-      shots.push(f);
-      frame++;
+      const buf = await page.screenshot({ type: 'jpeg', quality: 80 });
+      const h = buf.length + ':' + buf.subarray(buf.length >> 1, (buf.length >> 1) + 64).toString('hex');
+      if (h === prev) { if (++same >= 2) break; continue; }
+      same = 0; prev = h;
+      fs.writeFileSync(f, buf); shots.push(f); frame++;
     }
     res.frames = frame;
     await sheet(shots, `${dir}/${kind}-sheet.jpg`, kind);
@@ -160,7 +179,7 @@ const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gestur
 for (const site of sites) {
   const meta = { slug: site.slug, url: site.url };
   for (const kind of ['d', 'm']) {
-    meta[kind] = await Promise.race([run(browser, site, kind), new Promise(ok => setTimeout(() => ok({ kind, error: 'timeout 150s' }), 150000))]);
+    meta[kind] = await Promise.race([run(browser, site, kind), new Promise(ok => setTimeout(() => ok({ kind, error: 'timeout 240s' }), 240000))]);
     console.log(site.slug, kind, meta[kind].ok ? 'ok' : meta[kind].error);
   }
   fs.mkdirSync(path.join('out', site.slug), { recursive: true });
