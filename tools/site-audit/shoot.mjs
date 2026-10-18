@@ -2,11 +2,12 @@
 import { chromium, devices } from './node_modules/playwright/index.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+import sharp from 'sharp';
 
 const [shard = 0, total = 1] = process.argv.slice(2).map(Number);
 const lines = fs.readFileSync(new URL('./sites.txt', import.meta.url), 'utf8')
   .split('\n').map(s => s.trim()).filter(s => s && !s.startsWith('#'));
-const sites = lines.map(l => { const [slug, url] = l.split('|').map(s => s.trim()); return { slug, url }; })
+const sites = lines.map(l => { const [slug, url, mode] = l.split('|').map(s => s.trim()); return { slug, url, deep: mode === 'deep' }; })
   .filter((_, i) => i % total === shard);
 
 const ACCEPT = /^(accept|accept all|allow all|agree|i agree|ok|okay|got it|piekrītu|pieņemt|pieņemt visus|apstiprināt|nõustun|nõustu|luba kõik|sutinku|priimti|priimti visus|alle akzeptieren|akzeptieren|zustimmen|einverstanden|alle zulassen|принять|принять все|согласен|согласна|хорошо|понятно|прийняти|прийняти все|погоджуюсь|zgadzam się|akceptuję|accepter|aceptar|accetta)/i;
@@ -68,6 +69,17 @@ const probe = () => {
   };
 };
 
+// уменьшить кадр, чтобы снимки помещались в git
+async function shrink(file, width, maxH) {
+  try {
+    const buf = fs.readFileSync(file);
+    let img = sharp(buf, { limitInputPixels: false }).resize({ width, withoutEnlargement: true });
+    const meta = await sharp(buf, { limitInputPixels: false }).metadata();
+    if (maxH) { const h = Math.round(meta.height * width / meta.width); if (h > maxH) img = sharp(await img.toBuffer()).extract({ left: 0, top: 0, width: Math.min(width, meta.width), height: maxH }); }
+    fs.writeFileSync(file, await img.jpeg({ quality: 62, mozjpeg: true }).toBuffer());
+  } catch (e) { console.log('shrink', file, String(e).slice(0, 80)); }
+}
+
 async function run(browser, site, kind) {
   const dir = path.join('out', site.slug); fs.mkdirSync(dir, { recursive: true });
   const ctxOpt = kind === 'd'
@@ -87,15 +99,20 @@ async function run(browser, site, kind) {
     await page.waitForTimeout(2500);
     await dismiss(page);
     await page.waitForTimeout(800);
-    await page.screenshot({ path: `${dir}/${kind}-00.jpg`, type: 'jpeg', quality: 72 });
+    await page.screenshot({ path: `${dir}/${kind}-00.jpg`, type: 'jpeg', quality: 80 });
+    await shrink(`${dir}/${kind}-00.jpg`, kind === 'd' ? 1200 : 585);
     const vh = kind === 'd' ? 900 : 844;
     // медленная прокрутка, чтобы сработали анимации и ленивые картинки
     const H = await page.evaluate(() => document.documentElement.scrollHeight);
     let frame = 1;
-    for (let y = vh; y < Math.min(H, vh * 14) && frame <= 12; y += vh) {
+    for (let y = vh; y < Math.min(H, vh * 16) && frame <= 14; y += vh) {
       for (let k = 1; k <= 6; k++) { await page.mouse.wheel(0, vh / 6); await page.waitForTimeout(120); }
       await page.waitForTimeout(900);
-      await page.screenshot({ path: `${dir}/${kind}-${String(frame).padStart(2, '0')}.jpg`, type: 'jpeg', quality: 70 });
+      if (site.deep) {
+        const f = `${dir}/${kind}-${String(frame).padStart(2, '0')}.jpg`;
+        await page.screenshot({ path: f, type: 'jpeg', quality: 80 });
+        await shrink(f, kind === 'd' ? 1200 : 585);
+      }
       frame++;
     }
     res.frames = frame;
@@ -103,14 +120,17 @@ async function run(browser, site, kind) {
     res.cls = await page.evaluate(() => new Promise(ok => { let v = 0; try { new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) v += e.value; }).observe({ type: 'layout-shift', buffered: true }); } catch {} setTimeout(() => ok(+v.toFixed(3)), 300); }));
     // полная страница сверху
     await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(600);
-    await page.screenshot({ path: `${dir}/${kind}-full.jpg`, type: 'jpeg', quality: 55, fullPage: true, timeout: 30000 }).catch(e => res.fullErr = String(e).slice(0, 120));
+    await page.screenshot({ path: `${dir}/${kind}-full.jpg`, type: 'jpeg', quality: 80, fullPage: true, timeout: 30000 })
+      .then(() => shrink(`${dir}/${kind}-full.jpg`, kind === 'd' ? 720 : 390, kind === 'd' ? 7000 : 9000))
+      .catch(e => res.fullErr = String(e).slice(0, 120));
     if (kind === 'm') {
       // попытка открыть меню
       const burger = await page.$('[class*=burger], [class*=hamburger], [aria-label*=enu], [class*=menu-toggle], [class*=menu-btn], [class*=nav-toggle], button[class*=menu], .menu-button');
       if (burger && await burger.isVisible().catch(() => false)) {
         await burger.click({ timeout: 2000 }).catch(() => {});
         await page.waitForTimeout(1200);
-        await page.screenshot({ path: `${dir}/m-menu.jpg`, type: 'jpeg', quality: 70 });
+        await page.screenshot({ path: `${dir}/m-menu.jpg`, type: 'jpeg', quality: 80 });
+        await shrink(`${dir}/m-menu.jpg`, 585);
         res.menu = true;
       }
     }
