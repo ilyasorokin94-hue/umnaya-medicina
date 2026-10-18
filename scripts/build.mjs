@@ -765,8 +765,8 @@ const spTexts = Object.fromEntries(servicePages.map((pg) => {
   const umMed = src.replace(/<!--[\s\S]*?-->/g, "").split(/^# /m).slice(1).join("").match(/[^.\n]*(?:um-med\.com|по прайсу|по данным сайта)[^.\n]*/gi);
   if (umMed) spPending.push(`${pg.slug}: оговорка об источнике в тексте (${umMed.length})`);
   const T = parseServiceMd(promoMark(src));
-  // подпись «Проверено врачом: …» в конце текста дублирует строку «Проверил» под вопросами — на странице её нет
-  const noSign = (nodes) => nodes.filter((n) => !(n.t === "p" && /^\**Проверено врачом/.test(n.text)));
+  // подпись «Проверено врачом: …» («Проверил: … · Обновлено …») в конце текста дублирует строку «Проверил» под вопросами — на странице её нет
+  const noSign = (nodes) => nodes.filter((n) => !(n.t === "p" && /^\**(?:Проверено врачом|Проверил:)/.test(n.text)));
   T.intro = noSign(T.intro);
   for (const x of T.sections) { x.nodes = noSign(x.nodes); x.subs.forEach((y) => { y.nodes = noSign(y.nodes); }); }
   // «Проверил: [ВРАЧ — …] (по профилю — …; уточнить у клиники)»: пояснение в скобках — для клиники, на сайт не идёт
@@ -776,7 +776,7 @@ const spTexts = Object.fromEntries(servicePages.map((pg) => {
 
 // адрес из текста (/implantaciya/all-on-4/, /vrachi/solodukhin/, /gigiena/) → ссылка на странице; ещё не сделанная страница → null
 const spOld = { lechenie: "lechenie-zubov", "lechenie/pod-mikroskopom": "mikroskop", diagnostika: "diagnostika", hirurgiya: "hirurgiya", gigiena: "gigiena", ortodontiya: "ortodontiya", detskaya: "detskaya" };
-function spHref(url, p) {
+function spHref(url, p, cur) {
   if (/^#/.test(url)) return url;
   const u = url.replace(/^\/|\/$/g, "");
   if (u === "") return `${p}index.html`;
@@ -784,6 +784,10 @@ function spHref(url, p) {
   if (u === "konsultaciya") return `${p}zapis.html`;
   const page = servicePages.find((x) => x.path === u + "/");
   if (page) return p + page.path;
+  if (u === "vrachi") return `${p}vrachi.html`;
+  // ещё не сделанная дочерняя страница (/diagnostika/kt/, /lechenie/karies/) — ссылка на раздел, а со страницы самого раздела — просто текст
+  const up = servicePages.find((x) => x.path === u.replace(/\/[^/]+$/, "/") || x.path === u.split("/")[0] + "/");
+  if (up && u.includes("/")) return up === cur ? null : p + up.path;
   const doc = /^vrachi\/([\w-]+)$/.exec(u);
   if (doc) return docById[doc[1]] ? docHref(doc[1], p) : null;
   const old = spOld[u] || spOld[u.split("/")[0]];
@@ -811,7 +815,7 @@ function spMd(text, page, p) {
   });
   for (const [re, note] of servicePriceHold) s = s.replace(re, (m) => m.replace(/(?:от )?\d{1,3}(?: \d{3})* ₽$/, () => put(spTag("цена уточняется", note, page))));
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, t, url) => {
-    const h = spHref(url, p);
+    const h = spHref(url, p, page);
     return put(h ? `<a href="${h}">${esc(t)}</a>` : esc(t));
   });
   // стрелки «КТ → 3D-план → шаблон» на сайте не показываем (правило Ilya): последовательность через запятую
@@ -904,7 +908,7 @@ function spSection(s, i, page, depth, ids) {
     : /этап/i.test(t) && s.nodes.some((n) => n.t === "ol" && n.items.every((x) => x.length <= 520)) ? "steps"
     : /^Как добраться/.test(t) || (page.geo && /добраться|дорог|маршрут|ехать/i.test(t)) ? "place"
     : /отзыв/i.test(t) ? "reviews"
-    : /врач|имплантолог|ортопед/i.test(t) && /\(\/vrachi\//.test(JSON.stringify(s.nodes)) ? "doctors"
+    : /врач|имплантолог|ортопед|хирург|кто ведёт/i.test(t) && /\(\/vrachi\//.test(JSON.stringify(s.nodes)) ? "doctors"
     : "text";
   s.kind = kind;
   const id = s.id || { prices: "ceny", faq: "voprosy", steps: "etapy", place: "kak-dobratsya", reviews: "otzyvy", doctors: "vrachi" }[kind] || `r${i + 1}`;
