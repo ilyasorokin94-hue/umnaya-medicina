@@ -449,18 +449,14 @@ function doctorCard(d, depth, o = {}) {
   const p = pre(depth);
   return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}"${o.lava ? ` data-col="${o.i % 2 ? "r" : "l"}"` : " data-reveal"}>
   <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth, "", "auto, (max-width: 760px) 80vw, 30vw")}
-    <a class="doc__cover" href="${docHref(d.id, p)}" tabindex="-1" aria-hidden="true"></a>${o.lava ? `
+    <a class="doc__cover" href="${docHref(d.id, p)}" tabindex="-1" aria-hidden="true"></a>${o.lava || o.go ? `
     <a class="doc__go" href="${docHref(d.id, p)}" aria-label="Страница врача: ${esc(d.short)}"><svg viewBox="0 0 60 60" aria-hidden="true"><path d="M24 36 36 24M27 24h9v9"/></svg></a>` : ""}</div>
   <h3><a href="${docHref(d.id, p)}">${esc(d.name)}</a></h3>
   <p class="doc__role${d.chief ? " doc__role--chief" : ""}">${esc(d.role)}</p>
-  ${d.focus ? `<p class="doc__focus">${esc(d.focus)}</p>` : ""}
+  ${d.focus ? `<p class="doc__focus">${esc(d.focus)}</p>` : ""}${o.more || ""}
   ${act("Записаться к врачу", "book", p, { cls: "btn--ghost btn--sm doc__cta", doctor: d.id })}
 </article>`;
 }
-
-const teamTabs = () => `<div class="chips team__tabs" role="tablist" data-tabs="team">
-    ${[["", "Все"], ["lechenie-zubov", "Терапия"], ["implantaciya", "Хирургия и имплантация"], ["protezirovanie", "Ортопедия"], ["ortodontiya", "Ортодонтия"], ["detskaya", "Детям"]].map(([v, t], i) => `<button class="chip" type="button" role="tab" data-tab="${v}" aria-selected="${i === 0}">${t}</button>`).join("")}
-  </div>`;
 
 function faqBlock(groups) {
   // groups: [[title, [[q, a], ...]], ...]
@@ -1293,19 +1289,57 @@ ${dpBlock({ type: "faq", id: "voprosy", title: "Вопросы о приёме",
 
 // ---------- прайс ----------
 // ---------- все врачи ----------
+// Врачи по направлениям (Ilya 18.10: страница всех врачей логичнее). Сикачевой нет, пока Ilya не решит; её старая страница остаётся.
+const docGroups = [
+  { id: "hirurgiya", title: "Хирургия и имплантация", text: "Удаляют зубы, которые не сохранить, ставят импланты, наращивают кость и проводят синус-лифтинг.", ids: ["hludnevskiy", "radzhabov"], svc: ["implantaciya", "all-on-4", "hirurgiya"] },
+  { id: "ortopediya", title: "Ортопедия и протезирование", text: "Восстанавливают зубы коронками, винирами и протезами, в том числе на имплантах. Отделение ведёт главный врач.", ids: ["solodukhin", "alikhanova"], svc: ["protezirovanie", "all-on-4"] },
+  { id: "terapiya", title: "Терапия, гигиена и ортодонтия", text: "Лечат кариес и каналы, в том числе под микроскопом, проводят профгигиену, исправляют прикус брекетами и элайнерами.", ids: ["chitaykin", "kashtanova"], svc: ["lechenie-zubov", "mikroskop", "gigiena", "ortodontiya"] },
+  { id: "deti", title: "Детский приём", text: "Лечение и профилактика молочных и постоянных зубов у детей.", ids: ["troitskiy"], svc: ["detskaya"] },
+];
+// по одной фразе из отзыва на карточку (Аудит 18.10): дословно, из собранных отзывов, со ссылкой на сам отзыв; без «боли» (ст. 24)
+const docQuote = { hludnevskiy: [4, "Чёткий план лечения, подробное объяснение, бережное отношение."], radzhabov: [6, "Внимательное и чуткое отношение к пациенту приятно удивило."], solodukhin: [0, "Выполнено все ювелирно, цвет, форма - все как родное."], alikhanova: [2, "Особенно мне понравилось, что всё объяснялось понятным языком, без медицинских терминов."], chitaykin: [0, "Доктор очень внимательный и корректный, профессиональный подход."], kashtanova: [3, "Врач опытный, работает на цифровых методах, всё понятно объясняет."], troitskiy: [2, "Великолепный детский доктор, очень быстро нашел подход к ребенку, провел осмотр без истерик, слез."] };
+function docCardMore(d) {
+  const dip = d.edu.find(([, , t]) => eduKind(t) === "Образование");
+  const [i, q] = docQuote[d.id] || [];
+  const r = q && doctorReviews[d.id]?.[i];
+  if (q && !(r && [...r.text, r.liked || ""].join(" ").includes(q))) throw new Error(`Цитаты нет в отзыве: ${d.id} #${i}`);
+  return (dip ? `<p class="dl-edu">${esc(dip[1])}, ${esc(dip[0])}</p>` : "")
+    + (r ? `<figure class="dl-quote"><blockquote cite="${r.url}">«${esc(q)}»</blockquote><figcaption><a href="${r.url}"${ext}>Отзыв на ${esc(r.site)}</a></figcaption></figure>` : "");
+}
+const docFaq = [
+  ["К какому врачу записаться, если не знаю?", "Позвоните по номеру +7 495 150-36-15 или оставьте заявку на сайте и опишите, что беспокоит. Администратор подберёт врача и время."],
+  ["Можно записаться к конкретному врачу?", "Да. Назовите врача администратору или нажмите «Записаться к врачу» в его карточке."],
+  ["Сколько стоит консультация?", "Консультация хирурга, ортопеда и терапевта бесплатная. Первичная консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
+  ["Где почитать отзывы о врачах?", "На странице каждого врача собраны отзывы пациентов с ПроДокторов, у каждого отзыва ссылка на оригинал."],
+];
 function pageDoctors() {
   const depth = 0;
-  const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: doctors.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + docHref(d.id, "/"), name: d.name })) };
-  return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты | Умная Медицина", desc: "Врачи стоматологии «Умная Медицина» в Удельной: имплантологи, ортопеды, терапевты, ортодонты и детский стоматолог. Опыт, образование, запись к врачу.", canonical: "/vrachi", depth, jsonld: [crumbsLd([["vrachi", "Врачи"]]), ld] })
+  const list = docGroups.flatMap((g) => g.ids.map((id) => docById[id]));
+  const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: list.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + docHref(d.id, "/"), name: d.name })) };
+  const cards = (ids) => `<div class="team__grid dl-grid">${ids.map((id) => doctorCard(docById[id], depth, { go: true, more: docCardMore(docById[id]) })).join("")}</div>`;
+  return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты | Умная Медицина", desc: "Врачи стоматологии «Умная Медицина» в Удельной: хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. Образование, отзывы пациентов, запись к врачу.", canonical: "/vrachi", depth, jsonld: [crumbsLd([["vrachi", "Врачи"]]), ld, faqLd(docFaq)] })
   + header(depth) + `
-<main id="main">
+<main id="main" class="dl-page">
 <section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span aria-current="page">Врачи</span></nav><h1 data-split>Врачи стоматологии</h1><p class="page-hero__lead">${esc(v2.team.text)}</p></div>
+  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span aria-current="page">Врачи</span></nav><h1 data-split>Врачи стоматологии</h1><p class="page-hero__lead">Хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. В сложных случаях план лечения хирург, ортопед и терапевт составляют вместе.</p></div>
   <div class="page-hero__aside">${act("Записаться на консультацию", "book", "", { cls: "btn--lg", magnet: true })}</div>
+  <nav class="sp-nav dl-nav" aria-label="Направления">${docGroups.map((g) => `<a class="sp-pill" href="#${g.id}">${esc(g.title)}</a>`).join("")}</nav>
 </div></section>
-<section class="section section--sage team--page" id="team" aria-label="Врачи"><div class="wrap">
-  ${teamTabs()}
-  <div class="team__grid team__grid--lava">${doctors.map((d, i) => doctorCard(d, depth, { lava: true, i })).join("")}</div>
+<section class="section sp-sec dl-plan" id="vmeste" aria-labelledby="vmeste-t"><div class="wrap">
+  <div class="sp-head"><h2 id="vmeste-t" data-split>Три врача. Один план лечения.</h2><p class="dl-text">Когда нужны и лечение, и имплантация, и протезы, на консультации собираются три врача и составляют один план с ценой. Цену плана фиксируем в договоре.</p></div>
+  <div class="sp-cards dl-roles">${[["Терапевт", "Лечит и сохраняет свои зубы, готовит рот к имплантации и протезированию.", ["chitaykin", "kashtanova"]], ["Хирург", "Удаляет зубы, которые не сохранить, ставит импланты, при нехватке кости наращивает её.", ["hludnevskiy", "radzhabov"]], ["Ортопед", "Планирует будущие зубы, ставит коронки и протезы, в том числе на импланты.", ["solodukhin", "alikhanova"]]].map(([t, x, ids]) => `<article class="sp-card" data-reveal><h3>${t}</h3><p>${x}</p><p class="dl-names">${ids.map((id) => `<a href="${docHref(id, "")}">${esc(docById[id].short)}</a>`).join("")}</p></article>`).join("")}</div>
+</div></section>
+${docGroups.map((g, i) => `
+<section class="section sp-sec${i % 2 ? "" : " section--sage"}" id="${g.id}" aria-labelledby="${g.id}-t"><div class="wrap sp-grid">
+  <div class="sp-grid__aside"><h2 id="${g.id}-t" data-split>${esc(g.title)}</h2><p class="dl-text">${esc(g.text)}</p>
+    <p class="dl-links">${g.svc.map((k) => `<a class="link" href="${svcHref(k, "")}">${esc(svc[k].menu)}</a>`).join("")}</p></div>
+  ${cards(g.ids)}
+</div></section>`).join("")}
+
+
+<section class="section sp-sec section--sage" id="voprosy" aria-labelledby="voprosy-t"><div class="wrap sp-grid">
+  <div class="sp-grid__aside"><h2 id="voprosy-t" data-split>Вопросы о записи</h2></div>
+  <div class="sp-faq">${docFaq.map(([q, a]) => `<details class="faqq"><summary><span>${nobr(esc(q))}</span><i aria-hidden="true"></i></summary><div class="faqq__a"><p>${nobr(esc(a))}</p></div></details>`).join("")}</div>
 </div></section>
 </main>` + footer(depth) + end;
 }

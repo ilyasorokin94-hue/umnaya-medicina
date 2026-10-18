@@ -2016,3 +2016,30 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
   .geo-links__list { grid-template-columns: minmax(0, 1fr); }
   .geo-link { font-size: min(var(--fs-2), 6vw); }
 }
+
+/* ---------- страница всех врачей (Ilya 18.10): врачи по направлениям, карточки как на главной ---------- */
+.dl-nav { grid-column: 1 / -1; margin-top: clamp(8px, 1.5vw, 24px); }
+.dl-text { max-width: 34em; color: var(--muted); }
+.on-dark .dl-text { color: var(--muted-on-dark); }
+.dl-links { display: flex; flex-wrap: wrap; gap: 12px 24px; }
+.dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dl-roles { --cols: 3; }
+.on-dark .sp-card { border-top-color: var(--line-on-dark); }
+.on-dark .sp-card > p { color: var(--muted-on-dark); }
+.dl-names { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.dl-names a { color: var(--text); text-decoration: underline; text-decoration-color: rgba(12, 36, 16, .3); text-underline-offset: 4px; transition: color .3s; }
+.dl-names a:hover { color: var(--green-deep); }
+.dl-plan .sp-card h3 { font-size: var(--fs-3); }
+.dl-edu { font-size: var(--fs--1); color: var(--muted); line-height: 1.45; }
+.dl-quote { margin: 8px 0 6px; padding-left: 14px; border-left: 2px solid var(--green); }
+.dl-quote blockquote { margin: 0; font-size: var(--fs-0); line-height: 1.5; }
+.dl-quote figcaption { margin-top: 6px; font-size: var(--fs--1); }
+.dl-quote figcaption a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 1024px) { .dl-roles { --cols: 1; } }
+@media (max-width: 760px) {
+  .team__grid.dl-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 48px; margin-inline: 0; padding: 0; overflow: visible; scroll-snap-type: none; }
+  .team__grid.dl-grid .doc__photo { scale: none; }
+  .team__grid.dl-grid .doc > :not(.doc__photo) { opacity: 1; }
+  .team__grid.dl-grid .doc__photo img { translate: none; scale: none; }
+  .dl-nav .sp-pill { font-size: 14px; }
+}

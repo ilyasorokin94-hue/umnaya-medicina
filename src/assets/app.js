@@ -313,7 +313,7 @@
   document.addEventListener("focusout", () => root.classList.remove("bar-kb"));
 
   // телефон: врач в центре ленты крупнее, соседние чуть меньше и тише, портрет слегка сдвигается внутри рамки
-  const tgrid = $(".team__grid:not(.team__grid--lava)");
+  const tgrid = $(".team__grid:not(.team__grid--lava):not(.dl-grid)");
   function teamDeck() {
     if (!tgrid || reduce) return;
     if (!phoneMQ.matches) { $$(".doc", tgrid).forEach((c) => { c.style.removeProperty("--p"); c.style.removeProperty("--a"); }); return; }
