@@ -193,19 +193,22 @@
       p.addEventListener("touchmove", (e) => {
         if (cur !== p) return;
         const dx = e.touches[0].clientX - sx, dy = e.touches[0].clientY - sy;
-        if (!lock && Math.hypot(dx, dy) > 8) lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 1 : -1;
+        // вбок только явный горизонтальный жест: иначе прокрутка пальцем с наклоном тянула панель и переключала вкладку
+        if (!lock && Math.hypot(dx, dy) > 18) lock = Math.abs(dx) > Math.abs(dy) * 2 ? 1 : -1;
+        if (lock === 1 && Math.abs(dy) > Math.abs(dx)) { lock = -1; if (anim) G.to(p, { x: 0, duration: 0.4, ease: "expo.out" }); }
         if (lock === 1 && anim) G.set(p, { x: dx * 0.35 });
       }, { passive: true });
       const end = (e) => {
         if (cur !== p) return;
         cur = null;
         if (lock !== 1) return;
-        const dx = (e.changedTouches[0]?.clientX ?? sx) - sx, seq = dirSeq(), i = seq.findIndex((b) => b.dataset.tab === p.dataset.key);
-        const next = Math.abs(dx) > 50 ? seq[i + (dx < 0 ? 1 : -1)] : null;
+        const t = e.changedTouches[0], dx = (t?.clientX ?? sx) - sx, dy = (t?.clientY ?? sy) - sy, seq = dirSeq(), i = seq.findIndex((b) => b.dataset.tab === p.dataset.key);
+        const next = Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 2 ? seq[i + (dx < 0 ? 1 : -1)] : null;
         if (next) { dirRollStop(); next.click(); } else if (anim) G.to(p, { x: 0, duration: 0.4, ease: "expo.out" });
       };
       p.addEventListener("touchend", end, { passive: true });
-      p.addEventListener("touchcancel", end, { passive: true });
+      // жест отдали прокрутке страницы: вкладку не переключаем, панель возвращаем на место
+      p.addEventListener("touchcancel", () => { if (cur !== p) return; cur = null; if (lock === 1 && anim) G.to(p, { x: 0, duration: 0.4, ease: "expo.out" }); }, { passive: true });
     });
   }
 
@@ -864,7 +867,7 @@
       const pr = document.createElement("div");
       pr.style.cssText = "position:absolute;top:0;left:0;width:0;visibility:hidden;height:var(--pt-s)";
       pt.append(pr);
-      const s = pr.offsetHeight; pr.style.height = "100vh"; const l = pr.offsetHeight; pr.remove();
+      const s = pr.offsetHeight; pr.style.height = "calc(var(--vh, 1vh) * 100)"; const l = pr.offsetHeight; pr.remove();
       const k = (s || l) / l;
       // в процентах от кадра, как в CSS: при смене высоты окна без пересчёта ScrollTrigger окно не устаревает
       return `inset(${10 * k}% 0% ${100 - 90 * k}% 0%)`;
@@ -962,7 +965,7 @@
     };
     const move = (e) => {
       const t = e.touches[0], dx = t.clientX - sx, dy = t.clientY - sy;
-      if (!lock && Math.hypot(dx, dy) > 6) { lock = Math.abs(dx) > Math.abs(dy) ? 1 : -1; if (lock === 1) { drag = true; glide?.kill(); p0 = st.pos - sign * dx; } }
+      if (!lock && Math.hypot(dx, dy) > 12) { lock = Math.abs(dx) > Math.abs(dy) * 1.6 ? 1 : -1; if (lock === 1) { drag = true; glide?.kill(); p0 = st.pos - sign * dx; } }
       if (lock !== 1) return;
       const dt = Math.max(1, e.timeStamp - lt);
       vel = Math.max(-2.5, Math.min(2.5, 0.7 * ((t.clientX - lx) / dt) + 0.3 * vel)); lx = t.clientX; lt = e.timeStamp;

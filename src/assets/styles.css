@@ -40,13 +40,13 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; overflow-x: clip; scroll-padding-top: calc(var(--header-h) + 12px); }
+html { -webkit-text-size-adjust: 100%; overflow-x: clip; overscroll-behavior-x: none; scroll-padding-top: calc(var(--header-h) + 12px); }
 html:not(.lenis) { scroll-behavior: smooth; }
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
 .lenis.lenis-stopped { overflow: clip; }
 .lenis.lenis-smooth { scroll-behavior: auto !important; }
-body { margin: 0; background: var(--paper); color: var(--text); font: 400 var(--fs-0)/1.5 var(--body); overflow-x: clip; }
+body { margin: 0; background: var(--paper); color: var(--text); font: 400 var(--fs-0)/1.5 var(--body); overflow-x: clip; overscroll-behavior-x: none; }
 img { display: block; max-width: 100%; }
 a { color: inherit; }
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -157,7 +157,7 @@ html:not(.js-intro) .intro { display: none; }
 .foil > * { position: relative; z-index: 1; }
 .feat { padding: clamp(80px, 10vw, 140px) 0 clamp(60px, 8vw, 120px); }
 .feat__pin { overflow: hidden; }
-@media (min-width: 761px) { .feat__pin { height: 100svh; display: flex; align-items: center; } .fcard { width: clamp(300px, 27vw, 420px); min-height: clamp(320px, 50svh, 460px); } }
+@media (min-width: 761px) { .feat__pin { height: calc(var(--svh, 1svh) * 100); display: flex; align-items: center; } .fcard { width: clamp(300px, 27vw, 420px); min-height: clamp(320px, calc(var(--svh, 1svh) * 50), 460px); } }
 .feat__track { display: flex; gap: clamp(16px, 2vw, 28px); padding-left: max(var(--gutter), (100vw - 1440px) / 2); padding-right: var(--gutter); width: max-content; }
 .fcard { width: clamp(280px, 27vw, 400px); flex: none; display: grid; border-radius: var(--radius); overflow: hidden; background: rgba(245, 244, 238, .07); border: 1px solid var(--line-on-dark); }
 .fcard__body { padding: clamp(26px, 2.6vw, 38px); display: grid; gap: 16px; align-content: end; }
@@ -297,10 +297,10 @@ html:not(.js-intro) .intro { display: none; }
 .ptable .plist li > span { font-size: var(--fs--1); }
 
 /* ---------- запись ---------- */
-.booking { min-height: 100svh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 420px); background: var(--paper); }
+.booking { min-height: calc(var(--svh, 1svh) * 100); display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 420px); background: var(--paper); }
 .booking__main { padding: 28px var(--gutter) 60px; display: grid; grid-template-rows: auto 1fr; gap: 30px; }
 .booking__top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
-.booking__aside { background: var(--ink); color: #fff; padding: clamp(28px, 3vw, 44px); display: flex; flex-direction: column; gap: 28px; position: sticky; top: 0; height: 100svh; overflow: auto; }
+.booking__aside { background: var(--ink); color: #fff; padding: clamp(28px, 3vw, 44px); display: flex; flex-direction: column; gap: 28px; position: sticky; top: 0; height: calc(var(--svh, 1svh) * 100); overflow: auto; }
 .bstart { align-self: center; max-width: 760px; }
 .bstart h1 { font-size: clamp(46px, 7vw, 112px); letter-spacing: -.045em; line-height: .95; margin: 20px 0 22px; }
 .bstart p { font-size: 19px; color: var(--muted); max-width: 46ch; margin-bottom: 34px; }
@@ -320,6 +320,8 @@ html:not(.js-intro) .intro { display: none; }
 .opt--doc .opt__ph { grid-row: span 2; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; background: var(--sage-2); display: grid; place-items: center; font: 500 18px var(--display); color: var(--muted); }
 .opt--doc .opt__ph img { width: 100%; height: 100%; object-fit: cover; }
 .days { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: thin; }
+/* ленты, которые листают вбок: дойдя до края, жест не уходит браузеру как «назад» или «вперёд» (Chrome, окно Telegram) */
+.days, .team__grid, .team__tabs, .sp-table, [data-tabs] { overscroll-behavior-x: contain; }
 .day { flex: none; width: 76px; padding: 12px 0; border-radius: 16px; border: 1px solid var(--line); background: var(--white); display: grid; justify-items: center; gap: 4px; }
 .day small { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .day b { font: 500 22px/1 var(--display); }
@@ -419,15 +421,15 @@ html:not(.js-intro) .intro { display: none; }
 
 /* ---------- клиника изнутри: рамка раскрывается на весь экран, ленты фото едут навстречу ---------- */
 .tour { position: relative; background: var(--ink); color: var(--white); overflow: hidden; }
-.tour__pin { position: relative; height: 100svh; min-height: 560px; overflow: hidden; }
+.tour__pin { position: relative; height: calc(var(--svh, 1svh) * 100); min-height: 560px; overflow: hidden; }
 .tour__frame { position: absolute; inset: 0; overflow: hidden; will-change: clip-path; }
 .tour__frame img { width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 50%; }
 .tour__frame::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(12, 36, 16, .05) 30%, rgba(12, 36, 16, .82)); }
-.tour__title { position: absolute; left: 0; right: 0; bottom: clamp(40px, 9vh, 110px); z-index: 2; margin: 0 auto; }
+.tour__title { position: absolute; left: 0; right: 0; bottom: clamp(40px, calc(var(--vh, 1vh) * 9), 110px); z-index: 2; margin: 0 auto; }
 .tour__title h2 { margin: 18px 0 18px; font: 500 var(--fs-4)/1.1 var(--display); letter-spacing: -.035em; }
 .tour__title p { max-width: 560px; color: rgba(255, 255, 255, .82); font-size: var(--fs-0); }
 @media (max-width: 760px) {
-  .tour__pin { height: 88svh; }
+  .tour__pin { height: calc(var(--svh, 1svh) * 88); }
   .tour__title h2 { font-size: clamp(44px, 13vw, 64px); }
 }
 .nav a { white-space: nowrap; }
@@ -454,7 +456,7 @@ html:not(.js-intro) .intro { display: none; }
 .doc-hero__facts span { font-size: 14px; line-height: 1.4; color: var(--muted-on-dark); }
 .doc-hero__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
 .doc-hero__cta .btn--ghost { color: #fff; }
-.doc-hero__photo { position: relative; margin: 0; width: 100%; aspect-ratio: 4 / 5; max-height: calc(100svh - var(--header-h) - 70px); overflow: hidden; background: linear-gradient(160deg, var(--sage-2), var(--sage)); }
+.doc-hero__photo { position: relative; margin: 0; width: 100%; aspect-ratio: 4 / 5; max-height: calc(calc(var(--svh, 1svh) * 100) - var(--header-h) - 70px); overflow: hidden; background: linear-gradient(160deg, var(--sage-2), var(--sage)); }
 .doc-hero__photo img { position: absolute; left: 0; top: 0; width: 100%; height: 112%; object-fit: cover; object-position: 50% 0%; }
 .doc-hero__photo .doc__initials { font-size: clamp(64px, 8vw, 120px); }
 .doc-about { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(28px, 5vw, 90px); align-items: start; }
@@ -686,7 +688,7 @@ html:not(.js-intro) .intro { display: none; }
 .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
 .hero__facts { list-style: none; margin: 34px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px clamp(16px, 2vw, 28px); max-width: 660px; }
 .hero__facts li { padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px; line-height: 1.35; }
-.hero__media { position: relative; margin: 0; aspect-ratio: 1 / 1; max-height: calc(100svh - var(--header-h) - 110px); min-height: 360px; overflow: hidden; isolation: isolate; background: var(--sage-2); }
+.hero__media { position: relative; margin: 0; aspect-ratio: 1 / 1; max-height: calc(calc(var(--svh, 1svh) * 100) - var(--header-h) - 110px); min-height: 360px; overflow: hidden; isolation: isolate; background: var(--sage-2); }
 .hero__media img { position: absolute; left: 0; top: 0; width: 100%; height: 112%; object-fit: cover; object-position: 50% 50%; }
 .js-anim .hero__media { clip-path: inset(10% 6% 10% 6%); }
 
@@ -837,7 +839,7 @@ html:not(.js-intro) .intro { display: none; }
   .hero__text { display: contents; }
   .hero h1 { order: 0; font-size: clamp(34px, 9.6vw, 46px); }
   .hero h1 .kicker { margin-bottom: 14px; font-size: 12px; letter-spacing: .1em; text-wrap: balance; }
-  .hero__media { order: 1; margin-top: 20px; aspect-ratio: auto; height: clamp(200px, 31svh, 320px); min-height: 0; max-height: none; }
+  .hero__media { order: 1; margin-top: 20px; aspect-ratio: auto; height: clamp(200px, calc(var(--svh, 1svh) * 31), 320px); min-height: 0; max-height: none; }
   .hero__media img { object-position: 50% 40%; }
   .hero__actions { order: 3; margin-top: 10px; }
   .hero__trio { order: 4; }
@@ -980,13 +982,13 @@ html:not(.js-intro) .intro { display: none; }
 @media (min-width: 761px) {
   .tour__frame::after { background: linear-gradient(180deg, rgba(12, 36, 16, .05) 25%, rgba(12, 36, 16, .55) 50%, rgba(12, 36, 16, .85)); }
   /* призыв под карточками едет вместе с закреплённой лентой, пустоты до него нет */
-  .feat__pin { flex-direction: column; justify-content: center; align-items: stretch; gap: clamp(28px, 4svh, 48px); }
+  .feat__pin { flex-direction: column; justify-content: center; align-items: stretch; gap: clamp(28px, calc(var(--svh, 1svh) * 4), 48px); }
   #path .feat { padding-bottom: clamp(40px, 5vw, 72px); }
   .feat__pin > .cta-strip { padding: 0; flex: none; width: var(--wrap); }
   .team__grid .doc h3 { min-height: 2.4em; }
 }
 /* невысокий экран компьютера: закреплённая сцена пути ниже размытой шапки, текст карточек по высоте экрана */
-@media (min-width: 761px) and (max-height: 860px) { .fcard p { font-size: min(var(--fs-0), 2.2svh); } .feat__pin { padding-top: calc(clamp(20px, 2.4vw, 36px) + 48px); } }
+@media (min-width: 761px) and (max-height: 860px) { .fcard p { font-size: min(var(--fs-0), calc(var(--svh, 1svh) * 2.2)); } .feat__pin { padding-top: calc(clamp(20px, 2.4vw, 36px) + 48px); } }
 /* «5 минут, 0 ₽, 3 врача…» на компьютере без карточек, одни надписи (Ilya 17.10, проба): лента и закрепление те же, на телефоне карточки остаются */
 @media (min-width: 761px) {
   .feat__track > .fcard:not(.fcard--intro) { border: 0; border-radius: 0; background: none; }
@@ -996,7 +998,7 @@ html:not(.js-intro) .intro { display: none; }
 @media (max-width: 760px) {
   #path .feat { padding-bottom: 0; }
   .feat__pin > .cta-strip { padding-top: 76px; }
-  .tour__pin { height: 100svh; }
+  .tour__pin { height: calc(var(--svh, 1svh) * 100); }
   .tour__title { bottom: calc(100px + env(safe-area-inset-bottom)); }
   .tour__frame::after { background: linear-gradient(180deg, rgba(12, 36, 16, 0) 40%, rgba(12, 36, 16, .5) 62%, rgba(12, 36, 16, .85)); }
   .hero h1 { font-size: clamp(36px, 10.2vw, 48px); }
@@ -1133,7 +1135,7 @@ html:not(.js-intro) .intro { display: none; }
 .ct__mapbox { position: absolute; inset: 0; }
 .ct__map { position: absolute; inset: 0; }
 .ct__map .place__unlock { left: auto; right: 16px; }
-.ct__layer { position: relative; z-index: 1; display: flex; align-items: center; min-height: max(100svh, 780px); padding: calc(var(--hdr-d, 96px) + 24px) 0 48px; pointer-events: none; }
+.ct__layer { position: relative; z-index: 1; display: flex; align-items: center; min-height: max(calc(var(--svh, 1svh) * 100), 780px); padding: calc(var(--hdr-d, 96px) + 24px) 0 48px; pointer-events: none; }
 .ct__card { pointer-events: auto; display: flex; flex-direction: column; align-items: flex-start; width: min(500px, 100%); padding: clamp(28px, 2.6vw, 44px); border-radius: var(--radius); background: var(--white); box-shadow: 0 24px 70px -28px rgba(12, 36, 16, .4); }
 .ct .way__addr { margin-top: 14px; }
 .ct .way__now { margin-top: 24px; }
@@ -1149,7 +1151,7 @@ html:not(.js-intro) .intro { display: none; }
   .ct__layer { display: block; min-height: 0; padding: 0; }
   .ct__card { width: auto; padding: 0; border-radius: 0; box-shadow: none; background: none; }
   .ct .way__app { background: var(--white); }
-  .ct__mapbox { position: relative; height: 64svh; min-height: 420px; margin-top: 32px; }
+  .ct__mapbox { position: relative; height: calc(var(--svh, 1svh) * 64); min-height: 420px; margin-top: 32px; }
 }
 @media (max-width: 760px) {
   .ct { padding-top: 48px; }
@@ -1253,7 +1255,7 @@ html:not(.js-intro) .intro { display: none; }
 @media (max-width: 1024px) {
   .js-anim .fstage__pin { margin-top: -150vmin; }
   .js-anim .fstage__pin::after { content: ""; display: block; height: 150vmin; }
-  .js-anim .fstage__logo { position: sticky; top: calc(100svh - 75vmin); }
+  .js-anim .fstage__logo { position: sticky; top: calc(calc(var(--svh, 1svh) * 100) - 75vmin); }
 }
 .fstage__logo img { display: block; width: 100%; max-width: none; height: auto; max-height: none; aspect-ratio: 106548 / 19978; object-fit: contain; filter: brightness(0) invert(1); opacity: .96; }
 .fstage__logo .footer__word { text-align: left; font-size: clamp(44px, 10vw, 180px); }
@@ -1357,12 +1359,12 @@ html:not(.js-intro) .intro { display: none; }
 .slogan__head, .slogan__more { display: none; }
 @media (max-width: 760px) {
   .opening { display: block; position: relative; timeline-scope: --um-slogan, --um-more; }
-  .opening .hero { position: sticky; top: 0; z-index: 0; display: flex; flex-direction: column; height: calc(100svh - var(--demo-h, 0px)); min-height: 520px; padding: calc(var(--header-h) + 28px) 0 22px; }
+  .opening .hero { position: sticky; top: 0; z-index: 0; display: flex; flex-direction: column; height: calc(calc(var(--svh, 1svh) * 100) - var(--demo-h, 0px)); min-height: 520px; padding: calc(var(--header-h) + 28px) 0 22px; }
   .opening .hero__in { flex: 1; min-height: 0; }
   .opening .hero .hero__facts, .opening .hero .hero__trio { display: none; }
   .opening .slogan { position: relative; z-index: 1; overflow: clip; view-timeline: --um-slogan block; }
   .opening .slogan .marquee { display: none; }
-  .slogan__head { display: flex; position: sticky; top: 0; min-height: 100svh; padding: 0 var(--gutter); align-items: center; justify-content: center; text-align: center; overflow: clip; }
+  .slogan__head { display: flex; position: sticky; top: 0; min-height: calc(var(--svh, 1svh) * 100); padding: 0 var(--gutter); align-items: center; justify-content: center; text-align: center; overflow: clip; }
   .slogan__title { margin: 0; font: 500 var(--fs-4)/1.1 var(--display); letter-spacing: -.03em; color: #dfe8dc; text-wrap: balance; }
   .slogan__title .line { display: block; }
   .js-anim .slogan__title .line { opacity: 0; transition: opacity 2.5s cubic-bezier(.33, 0, .11, 1); }
@@ -1379,8 +1381,8 @@ html:not(.js-intro) .intro { display: none; }
 /* сама механика на прокрутке, как у Лава Дент: CSS scroll-driven animations; где их нет, то же делает app.js */
 @supports (animation-timeline: view()) {
   @media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
-    .js-anim .slogan__title { animation: um-slogan-enter linear both; animation-timeline: --um-slogan; animation-range: 0 100vh; }
-    .js-anim .slogan__head { animation: um-slogan-leave ease-in both; animation-timeline: --um-more; animation-range: 0 50vh; }
+    .js-anim .slogan__title { animation: um-slogan-enter linear both; animation-timeline: --um-slogan; animation-range: 0 calc(var(--vh, 1vh) * 100); }
+    .js-anim .slogan__head { animation: um-slogan-leave ease-in both; animation-timeline: --um-more; animation-range: 0 calc(var(--vh, 1vh) * 50); }
   }
 }
 @keyframes um-slogan-enter { from { transform: translateY(-100svh); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -1447,7 +1449,7 @@ html:not(.js-intro) .intro { display: none; }
   .tour { overflow: clip; }
   .tour > .tour__pin, .tour > .tour__lead, .tour > .tour__rows { display: none; }
   .ptour { display: block; position: relative; timeline-scope: --pt-car, --pt-end; }
-  .ptour__car { position: relative; height: 100svh; overflow-x: clip; }
+  .ptour__car { position: relative; height: calc(var(--svh, 1svh) * 100); overflow-x: clip; }
   .ptour__items { height: 100%; }
   .ptour__item { display: none; }
   .ptour__item--main { display: flex; position: relative; height: 100%; align-items: center; justify-content: center; overflow: clip; }
@@ -1476,24 +1478,24 @@ html:not(.js-intro) .intro { display: none; }
 
   /* с анимацией: устройство как у Лава Дент. Карточки и подписи считаем от видимой высоты (--pt-s, 100svh):
      в Safari с развёрнутой панелью 100vh уходит под неё, и подписи прятались под нижней панелью сайта */
-  .js-anim .ptour { --pt-s: 100vh; }
+  .js-anim .ptour { --pt-s: calc(var(--vh, 1vh) * 100); }
   .js-anim .tour { scroll-margin-top: calc(-1 * (var(--header-h) + 12px)); }
-  .js-anim .ptour__car { position: sticky; top: 0; height: 100vh; width: 100vw; }
+  .js-anim .ptour__car { position: sticky; top: 0; height: calc(var(--vh, 1vh) * 100); width: 100vw; }
   .js-anim .ptour__items { display: flex; width: 500vw; margin-left: -50vw; will-change: transform; }
-  .js-anim .ptour__item { display: flex; position: relative; flex: 0 0 100vw; width: 100vw; height: 100vh; margin-left: -25vw; padding-bottom: calc(100vh - var(--pt-s)); align-items: center; justify-content: center; overflow: clip; }
+  .js-anim .ptour__item { display: flex; position: relative; flex: 0 0 100vw; width: 100vw; height: calc(var(--vh, 1vh) * 100); margin-left: -25vw; padding-bottom: calc(calc(var(--vh, 1vh) * 100) - var(--pt-s)); align-items: center; justify-content: center; overflow: clip; }
   /* у фото тура углы прямые, как у Лава Дент (Ilya 17.10: скругление не нравится) */
-  .js-anim .ptour__img { transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(100vh - var(--pt-s) * .9)); }
+  .js-anim .ptour__img { transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(calc(var(--vh, 1vh) * 100) - var(--pt-s) * .9)); }
   /* широкие фото (вход с надписью, ресепшен, врачи): масштаб и обрезку карточки несёт окно .ptour__win, а фото внутри едет на .ptour__rail */
-  .js-anim .ptour__win { position: absolute; inset: 0; transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(100vh - var(--pt-s) * .9)); }
+  .js-anim .ptour__win { position: absolute; inset: 0; transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(calc(var(--vh, 1vh) * 100) - var(--pt-s) * .9)); }
   .ptour__rail { position: absolute; inset: 0; }
   .js-anim .ptour__win .ptour__img { transform: none; clip-path: none; }
   .js-anim .ptour__shade { opacity: 0; }
   .js-anim .ptour__cap { display: block; position: absolute; left: 13.75%; right: 13.75%; top: calc(var(--pt-s) * .79 + 12px); margin: 0; font: 400 var(--fs--1)/1.35 var(--body); color: var(--muted-on-dark); }
   /* отступ шапки (scroll-padding) не должен сдвигать шкалы: лента едет ровно с момента, как встала */
-  .js-anim .ptour__spacer { display: block; height: 400vh; margin-top: -100vh; view-timeline: --pt-car block; view-timeline-inset: 0px; }
+  .js-anim .ptour__spacer { display: block; height: calc(var(--vh, 1vh) * 400); margin-top: calc(var(--vh, 1vh) * -100); view-timeline: --pt-car block; view-timeline-inset: 0px; }
   /* после раскрытия кабинета пауза, как у Лава Дент (их отступ 3xl), потом поднимаются фото и проявляется заголовок */
-  .js-anim .ptour__after { padding-top: calc(50vh + min(clamp(96px, 87.27px + 2.4242vw, 120px), 11.5vh)); view-timeline: --pt-end block; view-timeline-inset: 0px; }
-  .js-anim .ptour__text { margin-top: 40svh; }
+  .js-anim .ptour__after { padding-top: calc(calc(var(--vh, 1vh) * 50) + min(clamp(96px, 87.27px + 2.4242vw, 120px), calc(var(--vh, 1vh) * 11.5))); view-timeline: --pt-end block; view-timeline-inset: 0px; }
+  .js-anim .ptour__text { margin-top: calc(var(--svh, 1svh) * 40); }
   .js-anim .ptour__slogan .w { opacity: 0; transition: opacity 2.5s cubic-bezier(.33, 0, .11, 1) calc(var(--i) * .2s); }
   .js-anim .ptour.is-on .ptour__slogan .w { opacity: 1; }
   /* телефон боком: под карточкой нет места до нижней панели сайта, подписи ленты прячем (они дублируют alt) */
@@ -1502,7 +1504,7 @@ html:not(.js-intro) .intro { display: none; }
   .ptour__item--right { --pt-x: 20vw; }
 }
 @supports (height: 1svh) {
-  @media (max-width: 760px) { .js-anim .ptour { --pt-s: 100svh; } }
+  @media (max-width: 760px) { .js-anim .ptour { --pt-s: calc(var(--svh, 1svh) * 100); } }
 }
 /* телефон вертикально: фото во всю свою ширину на высоту карточки (80% видимой высоты), окно проходит от p0 до p1 того, что не влезло.
    Рельс шириной в этот путь сдвигается на свою ширину (translateX(-100%)), поэтому в keyframes нет var() */
@@ -1514,9 +1516,9 @@ html:not(.js-intro) .intro { display: none; }
   @media (max-width: 760px) {
     .js-anim .ptour__items { animation: pt-move linear forwards; animation-timeline: --pt-car; animation-range: contain 0% contain 100%; }
     /* масштаб и обрезка кабинета двумя анимациями: transform тогда идёт на видеокарте вместе с лентой, иначе Chrome считает обе в основном потоке и кабинет отстаёт при быстром свайпе */
-    .js-anim .ptour__item--main .ptour__img { animation: pt-zoom-s linear forwards, pt-zoom-c linear forwards; animation-timeline: --pt-end, --pt-end; animation-range: 0 50vh, 0 50vh; }
-    .js-anim .ptour__item--main .ptour__shade { animation: pt-shade ease-in-out forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
-    .js-anim .ptour__item--left, .js-anim .ptour__item--right { animation: pt-out linear forwards; animation-timeline: --pt-end; animation-range: 0 50vh; }
+    .js-anim .ptour__item--main .ptour__img { animation: pt-zoom-s linear forwards, pt-zoom-c linear forwards; animation-timeline: --pt-end, --pt-end; animation-range: 0 calc(var(--vh, 1vh) * 50), 0 calc(var(--vh, 1vh) * 50); }
+    .js-anim .ptour__item--main .ptour__shade { animation: pt-shade ease-in-out forwards; animation-timeline: --pt-end; animation-range: 0 calc(var(--vh, 1vh) * 50); }
+    .js-anim .ptour__item--left, .js-anim .ptour__item--right { animation: pt-out linear forwards; animation-timeline: --pt-end; animation-range: 0 calc(var(--vh, 1vh) * 50); }
     .js-anim .ptour__fig[data-par] { animation: pt-par linear both; animation-timeline: view(block 0px); }
   }
   /* окно ведёт по широкому фото, пока карточка проезжает экран: первая с момента, как вышла из-под нижней панели (иначе «У» из «УМНАЯ» на стекле уезжает раньше, чем её видно), остальные пока их центр идёт от правого края к левому */
@@ -1660,7 +1662,7 @@ html:not(.js-intro) .intro { display: none; }
 
 /* ---------- первый экран без перегруза (Ilya 17.10): заголовок, одна строка, кнопка; акции Osstem нет.
    Без кикера, фактов и пометок; картинка одна и стоит на месте, без анимации ---------- */
-.hero--v { position: relative; display: flex; flex-direction: column; min-height: 100svh; padding: calc(var(--hdr-d, var(--header-h)) + clamp(28px, 3.4vw, 56px)) 0 clamp(36px, 4vw, 64px); background: var(--ink); color: #fff; overflow: hidden; }
+.hero--v { position: relative; display: flex; flex-direction: column; min-height: calc(var(--svh, 1svh) * 100); padding: calc(var(--hdr-d, var(--header-h)) + clamp(28px, 3.4vw, 56px)) 0 clamp(36px, 4vw, 64px); background: var(--ink); color: #fff; overflow: hidden; }
 .hero--v .hero__in { flex: 1; min-height: 0; }
 .hero--v h1 { color: #fff; }
 .hero--v h1 [data-split] { max-width: none; }
@@ -1685,7 +1687,7 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
 @media (min-width: 761px) {
   .hero--v1 .hero__in { display: flex; }
   .hero--v1 .hero__text { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 1fr auto; column-gap: 48px; align-items: end; }
-  .hero--v1 h1 { grid-column: 1 / -1; align-self: center; padding-bottom: clamp(24px, 4vh, 56px); font-size: clamp(60px, 8.4vw, 152px); letter-spacing: -.055em; line-height: .96; }
+  .hero--v1 h1 { grid-column: 1 / -1; align-self: center; padding-bottom: clamp(24px, calc(var(--vh, 1vh) * 4), 56px); font-size: clamp(60px, 8.4vw, 152px); letter-spacing: -.055em; line-height: .96; }
   .hero--v1 .hero__actions { grid-column: 2; grid-row: 2; margin: 0; flex-direction: column; align-items: flex-end; }
   /* вторая строка заголовка собирается из разлетевшихся букв и не должна переноситься, пока они широко */
   .hero--v1 .hv__l2 { white-space: nowrap; }
@@ -1726,7 +1728,7 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
 .pr .btn { margin-top: 24px; align-self: flex-start; }
 
 .pr4 { display: grid; grid-auto-rows: 1fr; gap: clamp(16px, 2vw, 28px); }
-.pr4-card { position: sticky; top: calc(var(--hdr-d, var(--header-h)) + 12px + var(--i) * 16px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 72px); min-height: min(68svh, 620px); padding: clamp(10px, 1vw, 14px); border-radius: var(--radius); background: var(--paper); color: var(--text); transform-origin: 50% 0; box-shadow: 0 -18px 40px rgba(0, 0, 0, .18); }
+.pr4-card { position: sticky; top: calc(var(--hdr-d, var(--header-h)) + 12px + var(--i) * 16px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 72px); min-height: min(calc(var(--svh, 1svh) * 68), 620px); padding: clamp(10px, 1vw, 14px); border-radius: var(--radius); background: var(--paper); color: var(--text); transform-origin: 50% 0; box-shadow: 0 -18px 40px rgba(0, 0, 0, .18); }
 /* картинка не задаёт высоту карточки: высоту дают min-height и текст, поэтому карточка не выше экрана и не растёт, когда картинка догрузится */
 .pr4-card__pic { position: relative; overflow: hidden; background: var(--paper-2); }
 .pr4-card__pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -1770,7 +1772,7 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
 /* телефон: застрявшая карточка не выше видимой части экрана между шапкой и нижней панелью, лишнее забирает картинка.
    Если не влезает и так (узкий невысокий экран), app.js ставит .pr4--flat, и карточки идут друг за другом без стопки */
 @media (max-width: 760px) and (min-height: 601px) {
-  .pr4-card { display: flex; flex-direction: column; max-height: calc(100svh - var(--header-h) - 30px - var(--i) * 10px - 70px - env(safe-area-inset-bottom)); }
+  .pr4-card { display: flex; flex-direction: column; max-height: calc(calc(var(--svh, 1svh) * 100) - var(--header-h) - 30px - var(--i) * 10px - 70px - env(safe-area-inset-bottom)); }
   .pr4-card__pic { flex: 0 1 auto; min-height: 110px; }
   .pr4-card__text { flex-shrink: 0; }
   /* запас прокрутки, пока кнопка застрявшей карточки видна и следующая ещё не наплыла */
@@ -1787,7 +1789,7 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
    текст на ней не лежит. Ниже экрана крупные цифры, как «5 минут, 0 ₽, 3 врача» на главной. */
 .sp-page { --sv-ease: cubic-bezier(.33, 0, .11, 1); --sv-ease-4: cubic-bezier(.1, .75, .25, 1); }
 .sp-hero { padding: 0; background: #05140b; }
-.sp-hero__top { position: relative; display: grid; grid-template-columns: max(var(--gutter), (100% - 1440px) / 2) minmax(0, 46%) 1fr; grid-template-areas: ". text ." ". act ."; align-content: end; row-gap: clamp(28px, 3vw, 44px); min-height: clamp(600px, 92svh, 960px); padding: calc(var(--header-h) + 90px) 0 clamp(44px, 5vw, 72px); }
+.sp-hero__top { position: relative; display: grid; grid-template-columns: max(var(--gutter), (100% - 1440px) / 2) minmax(0, 46%) 1fr; grid-template-areas: ". text ." ". act ."; align-content: end; row-gap: clamp(28px, 3vw, 44px); min-height: clamp(600px, calc(var(--svh, 1svh) * 92), 960px); padding: calc(var(--header-h) + 90px) 0 clamp(44px, 5vw, 72px); }
 .sp-hero__media { position: absolute; inset: 0 0 0 auto; width: 60%; z-index: 0; overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 32%), linear-gradient(0deg, transparent 0, #000 22%);
   -webkit-mask-composite: source-in; mask-image: linear-gradient(90deg, transparent 0, #000 32%), linear-gradient(0deg, transparent 0, #000 22%); mask-composite: intersect; }
@@ -1951,8 +1953,8 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
 .dp-page .todo.todo--in { display: inline; padding: 2px 8px; border-radius: 6px; }
 .dp-page .on-dark .todo { color: #ffd598; background: rgba(255, 186, 73, .1); }
 .dp-page .faqq__a .todo { margin-bottom: clamp(18px, 2.1vw, 30px); }
-.dp-hero .sp-hero__top { grid-template-columns: max(var(--gutter), (100% - 1440px) / 2) minmax(0, 1fr) minmax(0, 36%) max(var(--gutter), (100% - 1440px) / 2); grid-template-areas: ". text photo ." ". act photo ."; min-height: clamp(600px, 88svh, 900px); }
-.dp-hero__photo { grid-area: photo; align-self: end; position: relative; margin: 0 0 0 clamp(32px, 5vw, 96px); aspect-ratio: 4 / 5; max-height: calc(100svh - var(--header-h) - 60px); overflow: hidden; background: linear-gradient(160deg, var(--sage-2), var(--sage)); }
+.dp-hero .sp-hero__top { grid-template-columns: max(var(--gutter), (100% - 1440px) / 2) minmax(0, 1fr) minmax(0, 36%) max(var(--gutter), (100% - 1440px) / 2); grid-template-areas: ". text photo ." ". act photo ."; min-height: clamp(600px, calc(var(--svh, 1svh) * 88), 900px); }
+.dp-hero__photo { grid-area: photo; align-self: end; position: relative; margin: 0 0 0 clamp(32px, 5vw, 96px); aspect-ratio: 4 / 5; max-height: calc(calc(var(--svh, 1svh) * 100) - var(--header-h) - 60px); overflow: hidden; background: linear-gradient(160deg, var(--sage-2), var(--sage)); }
 .dp-hero__photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
 .dp-hero__photo .doc__initials { font-size: clamp(64px, 8vw, 120px); }
 .dp-hero__spec { margin-top: 26px; }
