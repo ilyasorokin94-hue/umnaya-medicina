@@ -340,6 +340,29 @@
   };
   if (pr4) { addEventListener("resize", pr4Fit); document.fonts?.ready.then(pr4Fit); pr4Fit(); }
 
+  // «Выгодно всегда» на телефоне раскрывается: видны названия, описание по нажатию, открыто одно (styles.css, .pr-al--acc)
+  const alAcc = $(".pr-al--acc");
+  if (alAcc) {
+    const items = $$(".pr-al__list li", alAcc);
+    const sync = () => items.forEach((li) => {
+      const b = $("b", li);
+      if (phoneMQ.matches) { b.setAttribute("role", "button"); b.tabIndex = 0; b.setAttribute("aria-expanded", li.classList.contains("is-on")); }
+      else { b.removeAttribute("role"); b.removeAttribute("tabindex"); b.removeAttribute("aria-expanded"); }
+    });
+    items[0]?.classList.add("is-on");
+    alAcc.classList.add("is-js"); sync(); phoneMQ.addEventListener("change", sync);
+    alAcc.addEventListener("click", (e) => {
+      const b = e.target.closest(".pr-al__list b");
+      if (!b || !phoneMQ.matches) return;
+      const on = !b.parentElement.classList.contains("is-on");
+      items.forEach((li) => li.classList.toggle("is-on", li === b.parentElement && on));
+      sync();
+      // высота блока поменялась: пересчитываем места анимаций ниже по странице, иначе они срабатывают не там и страницу дёргает
+      clearTimeout(alAcc.t); alAcc.t = setTimeout(() => ST?.refresh?.(), 560);
+    });
+    alAcc.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("b[role=button]")) { e.preventDefault(); e.target.click(); } });
+  }
+
   // врачи как у Лава Дент: от 961px левая колонка едет от +20vmin к −20vmin, пока карточка проходит экран
   // снизу вверх, правая стоит, фото плывёт внутри рамки от +10% к −10%. Прогресс --k от 1 до −1.
   const lavaDocs = $$(".team__grid--lava .doc");
