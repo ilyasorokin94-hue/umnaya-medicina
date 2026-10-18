@@ -343,6 +343,26 @@
   };
   if (pr4) { addEventListener("resize", pr4Fit); document.fonts?.ready.then(pr4Fit); pr4Fit(); }
 
+  // нажатый заголовок раскрытия остаётся под пальцем (правило стабильности, 18.10): пока пункт выше сворачивается,
+  // страница каждый кадр прокручивается ровно на столько, на сколько заголовок ушёл с места на экране. Вызывать до смены классов.
+  // Держим место на экране, а не на странице: если браузер уже сам поправил прокрутку (привязка прокрутки в Chrome,
+  // когда пункт выше ушёл за край экрана), сдвига нет и мы ничего не добавляем. Тронул экран или колесо — отпускаем.
+  const holdUnderFinger = (el, ms = 900) => {
+    const y0 = el.getBoundingClientRect().top;
+    let stop = false;
+    const off = () => { stop = true; };
+    addEventListener("touchstart", off, { passive: true });
+    addEventListener("wheel", off, { passive: true });
+    const t0 = performance.now();
+    const step = () => {
+      const d = stop ? 0 : el.getBoundingClientRect().top - y0;
+      if (Math.abs(d) >= 0.5) { if (lenis) lenis.scrollTo(scrollY + d, { immediate: true, force: true }); else scrollBy({ top: d, behavior: "instant" }); }  // instant: у html стоит scroll-behavior: smooth, без него при «уменьшить движение» заголовок прыгал и съезжал обратно
+      if (!stop && performance.now() - t0 < ms) requestAnimationFrame(step);
+      else { removeEventListener("touchstart", off); removeEventListener("wheel", off); }
+    };
+    requestAnimationFrame(step);
+  };
+
   // «Выгодно всегда» на телефоне раскрывается: видны названия, описание по нажатию, открыто одно (styles.css, .pr-al--acc)
   const alAcc = $(".pr-al--acc");
   if (alAcc) {
@@ -358,6 +378,8 @@
       const b = e.target.closest(".pr-al__list b");
       if (!b || !phoneMQ.matches) return;
       const on = !b.parentElement.classList.contains("is-on");
+      // пункт выше сворачивается и тянул нажатый заголовок вверх на 30–50 px
+      holdUnderFinger(b);
       items.forEach((li) => li.classList.toggle("is-on", li === b.parentElement && on));
       sync();
       // высота блока поменялась: пересчитываем места анимаций ниже по странице, иначе они срабатывают не там и страницу дёргает
