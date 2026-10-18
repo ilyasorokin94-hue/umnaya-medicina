@@ -126,7 +126,7 @@ const icon = {
 
 // ---------- общие куски ----------
 // меню сайта, как у Тридента: «Услуги» раскрываются списком направлений, остальное разделы и страницы
-const menuItems = (p, href) => [["Цены", `${p}ceny.html`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
+const menuItems = (p, href) => [["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
 // шапка компьютера как у Лава Дент: под каждым разделом отрезок линии, он заполняется, пока этот раздел проходит
 // по экрану (CSS view-timeline блока). «Цены» отдельной страницей, поэтому блок услуг с ценами «от» делят пополам «Услуги» и «Цены»
 const navLine = {
@@ -136,7 +136,7 @@ const navLine = {
   "Вопросы": "animation-timeline:--tl-faq", "Контакты": "animation-timeline:--tl-contacts",
 };
 // меню телефона и шапка компьютера как у Лава Дент: разделы в порядке страницы (Ilya 17.10: после слогана клиника и «5 минут, 0 ₽, 3 врача», потом услуги), «Цены» рядом с услугами
-const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny.html`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
+const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
 // В <head> каждой страницы: телефоны и планшеты замеряют высоту экрана один раз (--vh, --svh) и меняют её только при повороте.
 // Во встроенных браузерах (Telegram, VK, Instagram) окно меняет высоту, когда прячется панель, и всё, что в styles.css задано
@@ -386,7 +386,7 @@ function footer(depth) {
       <div class="fstage__group">
         <h3>Пациентам</h3>
         <p class="fstage__list fstage__list--2">
-          <a href="${p}ceny.html">Полный прайс</a>
+          <a href="${p}ceny/">Полный прайс</a>
           <a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a>
           <a href="${clinic.vk}"${ext}>ВКонтакте</a>
           <a href="https://um-med.com/assets/files/dogovor-oferta.pdf"${ext}>Договор-оферта</a>
@@ -539,7 +539,7 @@ function svlBlock(p, depth) {
     </a>`;
   const row = (s, i) => `<a class="svl-row" href="${svcHref(s.slug, p)}" style="--delay:${(i * 0.3).toFixed(1)}s"><h3 class="svl-row__title">${svlTitle(s.title)}</h3><span class="svl-row__act">${svlGo}</span></a>`;
   return `<div class="svl">
-  <div class="svl__head"><div class="wrap"><h2 id="sv-title" data-split>${esc(v2.lava.title)}</h2><a class="link" href="${p}ceny.html">Весь прайс</a></div></div>
+  <div class="svl__head"><div class="wrap"><h2 id="sv-title" data-split>${esc(v2.lava.title)}</h2><a class="link" href="${p}ceny/">Весь прайс</a></div></div>
   <div class="svl__top"><div class="wrap"><div class="svl-grid" data-svl>
     ${items.slice(0, n).map(card).join("\n    ")}
   </div></div></div>
@@ -723,7 +723,7 @@ function pageService(s) {
 </div></section>
 
 <section class="section section--sage" id="prices"><div class="wrap">
-  <div class="section__head"><div><span class="label">Цены</span><h2 data-split>Стоимость</h2></div><a class="link" href="../ceny.html">Весь прайс</a></div>
+  <div class="section__head"><div><span class="label">Цены</span><h2 data-split>Стоимость</h2></div><a class="link" href="../ceny/">Весь прайс</a></div>
   <div class="ptables">${s.prices.map((k) => `<div class="ptable" data-reveal><h3>${esc(prices[k].title)}</h3>${plist([k])}</div>`).join("")}</div>
   <p class="note" style="margin-top:24px">Цены на 15.10.2026. Точную стоимость врач называет после осмотра.</p>
 </div></section>
@@ -780,7 +780,7 @@ function spHref(url, p, cur) {
   if (/^#/.test(url)) return url;
   const u = url.replace(/^\/|\/$/g, "");
   if (u === "") return `${p}index.html`;
-  if (u === "ceny") return `${p}ceny.html`;
+  if (u === "ceny") return `${p}ceny/`;
   if (u === "konsultaciya") return `${p}zapis.html`;
   const page = servicePages.find((x) => x.path === u + "/");
   if (page) return p + page.path;
@@ -1383,24 +1383,49 @@ function pricesLd() {
     const base = { "@type": "Offer", itemOffered: { "@type": "MedicalProcedure", name: n }, offeredBy: { "@id": CLINIC_ID } };
     return m[1] ? { ...base, priceSpecification: { "@type": "PriceSpecification", minPrice: m[0], priceCurrency: "RUB" } } : { ...base, price: m[0], priceCurrency: "RUB" };
   };
-  return { "@context": "https://schema.org", "@type": "OfferCatalog", name: "Прайс стоматологии «Умная Медицина»", url: `${SITE}/ceny`,
+  return { "@context": "https://schema.org", "@type": "OfferCatalog", name: "Прайс стоматологии «Умная Медицина»", url: `${SITE}/ceny/`,
     itemListElement: priceOrder.map((k) => ({ "@type": "OfferCatalog", name: prices[k].title, itemListElement: prices[k].items.map(offer).filter(Boolean) })) };
 }
+// тексты под прайсом от SEO-треда (/mnt/project-files/цены_мета_и_вопросы.md, 18.10): ключи «налоговый вычет за лечение зубов»
+// и «стоматология в рассрочку». Третий элемент — что уточнить у клиники: плашка на демо, с PUBLISH=1 сборка не пройдёт,
+// в разметку вопросов такие ответы не попадают
+const priceInfo = [
+  ["Как получить налоговый вычет за лечение зубов", "Лечение, имплантация и протезирование зубов входят в социальный налоговый вычет на лечение: можно вернуть 13% от оплаченной суммы в пределах лимита Налогового кодекса. Нужны договор, чеки и справка об оплате медицинских услуг от клиники.", "как заказать справку для вычета и в какие сроки её готовят"],
+  ["Стоматология в рассрочку", "Лечение можно оплатить в рассрочку. Условия администратор расскажет до начала лечения.", "рассрочка: банк-партнёр, срок, без переплаты ли, на какие услуги"],
+  ["Скидка −10% при оплате в день консультации", "Если начинаете лечение в день консультации, на оплату действует скидка 10%.", "скидка −10%: на какие услуги и до какого срока"],
+];
+const priceFaq = [
+  ["Сколько стоит консультация стоматолога?", "Консультация терапевта, хирурга, имплантолога и ортопеда с планом лечения стоит 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
+  ["Почему цены указаны «от»?", "Это минимальная стоимость услуги. Итог зависит от клинической ситуации и выбранных материалов, поэтому точную сумму врач называет после осмотра и снимков в плане лечения с ценой по этапам."],
+  ["Можно ли получить налоговый вычет за лечение зубов?", "Да. Лечение, имплантация и протезирование зубов относятся к социальному налоговому вычету на лечение: можно вернуть 13% от оплаченной суммы в пределах лимита, установленного Налоговым кодексом. Для вычета нужны договор, чеки и справка об оплате медицинских услуг, которую выдаёт клиника.", "как заказать справку для вычета и в какие сроки её готовят"],
+  ["Можно ли оформить вычет за лечение зубов ребёнка или родителей-пенсионеров?", "Да, вычет можно получить за лечение детей до 18 лет (до 24 лет при очной учёбе), супруга и родителей, если оплачивали вы и документы оформлены на вас. Подать документы можно через личный кабинет налогоплательщика или Госуслуги."],
+  ["Есть ли рассрочка на лечение?", "Да, лечение можно оплатить в рассрочку. Условия администратор расскажет до начала лечения.", "рассрочка: банк-партнёр, срок, без переплаты ли, на какие услуги"],
+  ["Меняется ли цена во время лечения?", "Стоимость фиксируется в плане лечения по этапам. Если по ходу лечения план нужно изменить, врач заранее объясняет причину и согласует новую сумму с вами."],
+  ["Есть ли скидки?", "При оплате лечения в день консультации действует скидка 10%.", "скидка −10%: на какие услуги и до какого срока"],
+];
+const priceAsk = (note) => spTag("уточняем у клиники", note, { slug: "ceny" });
 const priceNote = `Цены на ${priceDate}. Цена «от» означает минимальную стоимость: точную сумму врач называет после осмотра и записывает в план лечения, она не меняется без вашего согласия.`;
 
 function pagePrices() {
-  const depth = 0, p = "";
-  return head({ title: "Цены на стоматологию в Удельной и Жуковском | Умная Медицина", desc: `Прайс стоматологии «Умная Медицина»: консультация 0 ₽, лечение кариеса от 4 000 ₽, имплантация от 19 300 ₽, коронки от 26 400 ₽, КТ от 2 000 ₽. Цены на ${priceDate}.`, canonical: "/ceny", depth, jsonld: [crumbsLd([["ceny", "Цены"]]), pricesLd()] })
+  const depth = 1, p = "../";
+  return head({ title: "Цены на стоматологию в Удельной: рассрочка и налоговый вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Бесплатная консультация с планом лечения, рассрочка, налоговый вычет за лечение зубов.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
   + header(depth) + `
 <main id="main">
 <section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span aria-current="page">Цены</span></nav><h1 data-split>Прайс-лист</h1><p class="page-hero__lead">Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽.</p></div>
-  <div class="page-hero__aside">${act("Записаться на консультацию", "book", "", { cls: "btn--lg", magnet: true })}</div>
+  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Цены</span></nav><h1 data-split>Цены на стоматологию в Удельной</h1><p class="page-hero__lead">Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽.</p></div>
+  <div class="page-hero__aside">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
 </div></section>
 <section class="section pv"><div class="wrap pv-a__in">
   <div class="pv-a__side"><h2 class="section__title" data-split>Цены по разделам</h2><p class="note">${esc(priceNote)}</p><div class="pfilter"><label class="sr" for="p-search">Поиск услуги</label><input id="p-search" type="search" placeholder="Найти услугу: коронка, имплант, КТ…"></div></div>
   <div class="pv-a__main ptables" data-prices="acc">${priceOrder.map((k, i) => `<details class="faqt pacc ptable" data-cat="${k}"${i ? "" : " open"}><summary><span class="pacc__t"><h3>${esc(prices[k].title)}</h3><small>${priceCount(k)}</small></span><span class="pfrom"><b>${esc(priceSecs[k][0])}</b><small>${esc(priceSecs[k][1])}</small></span><i aria-hidden="true"></i></summary><div class="faqt__body"><div class="pacc__body">${plist([k])}${priceMore(k, p)}</div></div></details>`).join("")}
   <p class="pempty note" hidden>Ничего не нашлось. Позвоните, и администратор подскажет цену: <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a></p></div>
+</div></section>
+<section class="section section--sage pinfo"><div class="wrap">
+  <div class="sp-cards sp-cards--3">${priceInfo.map(([t, x, ask]) => `<article class="sp-card" data-reveal><h2>${esc(t)}</h2><p>${esc(x)}${ask ? ` ${priceAsk(ask)}` : ""}</p></article>`).join("")}</div>
+</div></section>
+<section class="section faqv pfaq" aria-labelledby="pq-title"><div class="wrap">
+  <h2 id="pq-title" class="section__title faqv__title" data-split>Частые вопросы о ценах</h2>
+  <div class="faqv__main"><div class="faqt__list">${priceFaq.map(([q, a, ask], i) => `<details class="faqq"${i ? "" : " open"}><summary><span>${esc(q)}</span><i aria-hidden="true"></i></summary><div class="faqq__a"><p>${esc(a)}${ask ? ` ${priceAsk(ask)}` : ""}</p></div></details>`).join("")}</div></div>
 </div></section>
 </main>` + footer(depth) + end;
 }
@@ -1506,7 +1531,15 @@ const out = (f, html, map = true) => {
   writeFileSync(path.join(dist, f), html);
 };
 out("index.html", pageHome());
-out("ceny.html", pagePrices());
+mkdirSync(path.join(dist, "ceny"), { recursive: true });
+out("ceny/index.html", pagePrices());
+// старый адрес прайса ведёт на /ceny/ и в карту сайта не попадает
+writeFileSync(path.join(dist, "ceny.html"), `<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Цены</title>
+<meta name="robots" content="noindex"><link rel="canonical" href="${SITE}/ceny/">
+<meta http-equiv="refresh" content="0; url=ceny/">
+</head><body><p><a href="ceny/">Цены на стоматологию в Удельной</a></p></body></html>
+`);
 out("vrachi.html", pageDoctors());
 out("zapis.html", pageBooking());
 // старые адреса услуг, переехавших в новый формат, ведут на новую страницу и в карту сайта не попадают

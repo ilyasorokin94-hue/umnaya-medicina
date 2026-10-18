@@ -2084,3 +2084,6 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
   .pv-a__side .pfilter input { min-height: 50px; }
   .pv .plist li { grid-template-columns: minmax(0, 1fr) auto; gap: 14px; }
 }
+/* под прайсом: вычет, рассрочка, скидка (заголовки H2 по семантике SEO-треда, размер как у карточек услуг) и вопросы о ценах */
+.pinfo .sp-card h2 { font-size: var(--fs-2); line-height: 1.2; letter-spacing: -.025em; }
+.pfaq .faqt__list { padding-top: 0; border-top: 1px solid var(--line); }
