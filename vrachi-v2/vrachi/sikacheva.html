@@ -24,17 +24,17 @@
 <link rel="preload" href="../assets/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="../assets/styles.css?v=5465eec7">
+<link rel="stylesheet" href="../assets/styles.css?v=329d919d">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
-window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
+window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.removeAttribute("srcset");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
 window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big");if(p)p.classList.add("is-fallback");i.style.display="none"};
 </script>
 <script src="../assets/vendor/gsap.min.js" defer></script>
 <script src="../assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="../assets/vendor/lenis.min.js" defer></script>
-<script src="../assets/app.js?v=1242bb94" defer></script>
+<script src="../assets/app.js?v=12f6b445" defer></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"https://umnaya-stomatologiya.ru"},{"@type":"ListItem","position":2,"name":"Врачи","item":"https://umnaya-stomatologiya.ru/vrachi"},{"@type":"ListItem","position":3,"name":"Мария Сикачева","item":"https://umnaya-stomatologiya.ru/vrachi/sikacheva"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Сикачева Мария Сергеевна","jobTitle":"Врач-стоматолог-ортодонт","worksFor":{"@type":"Dentist","name":"Умная Медицина"},"url":"https://umnaya-stomatologiya.ru/vrachi/sikacheva"}</script>
 </head>
@@ -44,7 +44,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <header class="header"><div class="header__bar">
   <a class="logo" href="../index.html" aria-label="Умная Медицина. Стоматология, на главную"><picture><source media="(max-width: 760px) and (forced-colors: none), (min-width: 1025px) and (forced-colors: none)" srcset="../images/brand/header-logo-light.svg"><img class="logo__img" src="../images/brand/header-logo.svg" data-fb="https://um-med.com/assets/template/img/header-logo.svg" alt="" referrerpolicy="no-referrer" onerror="umLogo(this)"></picture><span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
   <nav class="nav" aria-label="Разделы">
-    <ul class="nav__list"><li class="nav__item"><a class="nav__link" href="../index.html#clinic">О клинике</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-clinic"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#services" data-dir="uslugi">Услуги</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-services;animation-range:entry-crossing 0% entry-crossing 50%"></span></span></li><li class="nav__item"><a class="nav__link" href="../ceny.html">Цены</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-services;animation-range:entry-crossing 50% entry-crossing 100%"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#akcii">Акции</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-akcii"></span></span></li><li class="nav__item"><a class="nav__link" href="../vrachi.html" data-dir="vrachi">Врачи</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-team"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#reviews">Отзывы</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-reviews"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#faq">Вопросы</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-faq"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#contacts">Контакты</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-contacts"></span></span></li></ul>
+    <ul class="nav__list"><li class="nav__item"><a class="nav__link" href="../index.html#clinic">О клинике</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-clinic"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#services" data-dir="uslugi implantaciya protezirovanie">Услуги</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-services;animation-range:entry-crossing 0% entry-crossing 50%"></span></span></li><li class="nav__item"><a class="nav__link" href="../ceny.html">Цены</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-services;animation-range:entry-crossing 50% entry-crossing 100%"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#akcii">Акции</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-akcii"></span></span></li><li class="nav__item"><a class="nav__link" href="../vrachi.html" data-dir="vrachi">Врачи</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-team"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#reviews">Отзывы</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-reviews"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#faq">Вопросы</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-faq"></span></span></li><li class="nav__item"><a class="nav__link" href="../index.html#contacts">Контакты</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="animation-timeline:--tl-contacts"></span></span></li></ul>
   </nav>
   <div class="header__cta">
     <a class="header__phone" href="tel:+74951503615"><b>+7 495 150-36-15</b><small>Ежедневно с 9:00 до 21:00</small></a>
@@ -60,7 +60,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   </nav>
   <div class="menu__foot"><a class="footer__phone" href="tel:+74951503615">+7 495 150-36-15</a><span class="note">Ежедневно с 9:00 до 21:00. Перезвоним за 5 минут.</span><a class="btn btn--wide btn--lg" href="../zapis.html" data-modal="book">Записаться</a></div>
   <nav class="mnav" aria-label="Разделы">
-    <ul class="mnav__list"><li><a class="mnav__link" href="../index.html#clinic">О клинике</a></li><li><a class="mnav__link" href="../index.html#services" data-dir="uslugi">Услуги</a></li><li><a class="mnav__link" href="../ceny.html">Цены</a></li><li><a class="mnav__link" href="../index.html#akcii">Акции</a></li><li><a class="mnav__link" href="../vrachi.html" data-dir="vrachi">Врачи</a></li><li><a class="mnav__link" href="../index.html#reviews">Отзывы</a></li><li><a class="mnav__link" href="../index.html#faq">Вопросы</a></li><li><a class="mnav__link" href="../index.html#contacts">Контакты</a></li></ul>
+    <ul class="mnav__list"><li><a class="mnav__link" href="../index.html#clinic">О клинике</a></li><li><a class="mnav__link" href="../index.html#services" data-dir="uslugi implantaciya protezirovanie">Услуги</a></li><li><a class="mnav__link" href="../ceny.html">Цены</a></li><li><a class="mnav__link" href="../index.html#akcii">Акции</a></li><li><a class="mnav__link" href="../vrachi.html" data-dir="vrachi">Врачи</a></li><li><a class="mnav__link" href="../index.html#reviews">Отзывы</a></li><li><a class="mnav__link" href="../index.html#faq">Вопросы</a></li><li><a class="mnav__link" href="../index.html#contacts">Контакты</a></li></ul>
   </nav>
 </div>
 <main id="main">
@@ -76,7 +76,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
         <a class="btn btn--lg" href="../zapis.html?doctor=sikacheva" data-modal="book" data-doctor="sikacheva" data-magnet>Записаться к врачу</a>
       </div>
     </div>
-    <figure class="doc-hero__photo" data-ph data-clip data-parallax><span class="doc__initials" aria-hidden="true">МС</span><img src="../images/doctors/sikacheva.webp" alt="Сикачева Мария Сергеевна" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)" fetchpriority="high"></figure>
+    <figure class="doc-hero__photo" data-ph data-clip data-parallax><span class="doc__initials" aria-hidden="true">МС</span><img src="../images/doctors/sikacheva.webp" srcset="../images/doctors/sikacheva-480w.webp 480w, ../images/doctors/sikacheva-828w.webp 828w, ../images/doctors/sikacheva.webp 1024w" sizes="(max-width: 760px) 92vw, 40vw" alt="Сикачева Мария Сергеевна" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)" fetchpriority="high"></figure>
   </div>
 </section>
 
@@ -101,49 +101,49 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <section class="section section--sage"><div class="wrap">
   <div class="section__head"><div><span class="label">Команда</span><h2 data-split>Другие врачи</h2></div></div>
   <div class="team__grid team__grid--six"><article class="doc doc--chief" data-tags="protezirovanie all-on-4" data-reveal>
-  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">ЕС</span><img src="../images/doctors/solodukhin.webp" alt="Солодухин Евгений Викторович" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
+  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">ЕС</span><img src="../images/doctors/solodukhin.webp" srcset="../images/doctors/solodukhin-480w.webp 480w, ../images/doctors/solodukhin-828w.webp 828w, ../images/doctors/solodukhin.webp 1024w" sizes="auto, (max-width: 760px) 80vw, 30vw" alt="Солодухин Евгений Викторович" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
     <a class="doc__cover" href="../vrachi/solodukhin/" tabindex="-1" aria-hidden="true"></a></div>
   <h3><a href="../vrachi/solodukhin/">Солодухин Евгений Викторович</a></h3>
   <p class="doc__role doc__role--chief">Главный врач, ортопед</p>
   <p class="doc__focus">Протезирование и восстановление зубов, протезы на имплантах</p>
   <a class="btn btn--ghost btn--sm doc__cta" href="../zapis.html?doctor=solodukhin" data-modal="book" data-doctor="solodukhin">Записаться к врачу</a>
 </article><article class="doc" data-tags="implantaciya all-on-4 hirurgiya" data-reveal>
-  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">МХ</span><img src="../images/doctors/hludnevskiy.webp" data-fb="https://prodoctorov.ru/media/photo/moskva/doctorimage/909501/3142349-909501-hludnevskiy_square.jpg" alt="Хлудневский Михаил Сергеевич" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
+  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">МХ</span><img src="../images/doctors/hludnevskiy.webp" srcset="../images/doctors/hludnevskiy-480w.webp 480w, ../images/doctors/hludnevskiy-828w.webp 828w, ../images/doctors/hludnevskiy.webp 1024w" sizes="auto, (max-width: 760px) 80vw, 30vw" data-fb="https://prodoctorov.ru/media/photo/moskva/doctorimage/909501/3142349-909501-hludnevskiy_square.jpg" alt="Хлудневский Михаил Сергеевич" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
     <a class="doc__cover" href="../vrachi/hludnevskiy/" tabindex="-1" aria-hidden="true"></a></div>
   <h3><a href="../vrachi/hludnevskiy/">Хлудневский Михаил Сергеевич</a></h3>
   <p class="doc__role">Хирург, имплантолог</p>
   <p class="doc__focus">Имплантация, удаление зубов и подготовка к имплантации</p>
   <a class="btn btn--ghost btn--sm doc__cta" href="../zapis.html?doctor=hludnevskiy" data-modal="book" data-doctor="hludnevskiy">Записаться к врачу</a>
 </article><article class="doc" data-tags="implantaciya all-on-4 hirurgiya" data-reveal>
-  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">АР</span><img src="../images/doctors/radzhabov.webp" data-fb="https://prodoctorov.ru/media/photo/moskva/doctorimage/869089/1546726-869089-radzhabov_square.jpg" alt="Раджабов Азамат Назирович" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
+  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">АР</span><img src="../images/doctors/radzhabov.webp" srcset="../images/doctors/radzhabov-480w.webp 480w, ../images/doctors/radzhabov-828w.webp 828w, ../images/doctors/radzhabov.webp 1024w" sizes="auto, (max-width: 760px) 80vw, 30vw" data-fb="https://prodoctorov.ru/media/photo/moskva/doctorimage/869089/1546726-869089-radzhabov_square.jpg" alt="Раджабов Азамат Назирович" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
     <a class="doc__cover" href="../vrachi/radzhabov/" tabindex="-1" aria-hidden="true"></a></div>
   <h3><a href="../vrachi/radzhabov/">Раджабов Азамат Назирович</a></h3>
   <p class="doc__role">Хирург, имплантолог</p>
   <p class="doc__focus">Удаление зубов и имплантация, хирургия в сложных случаях</p>
   <a class="btn btn--ghost btn--sm doc__cta" href="../zapis.html?doctor=radzhabov" data-modal="book" data-doctor="radzhabov">Записаться к врачу</a>
 </article><article class="doc" data-tags="lechenie-zubov mikroskop gigiena" data-reveal>
-  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">АЧ</span><img src="../images/doctors/chitaykin.webp" data-fb="https://prodoctorov.ru/media/photo/saransk/doctorimage/602094/3142158-602094-chitaykin_square.jpg" alt="Читайкин Артём Сергеевич" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
+  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">АЧ</span><img src="../images/doctors/chitaykin.webp" srcset="../images/doctors/chitaykin-480w.webp 480w, ../images/doctors/chitaykin-828w.webp 828w, ../images/doctors/chitaykin.webp 1024w" sizes="auto, (max-width: 760px) 80vw, 30vw" data-fb="https://prodoctorov.ru/media/photo/saransk/doctorimage/602094/3142158-602094-chitaykin_square.jpg" alt="Читайкин Артём Сергеевич" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
     <a class="doc__cover" href="../vrachi/chitaykin/" tabindex="-1" aria-hidden="true"></a></div>
   <h3><a href="../vrachi/chitaykin/">Читайкин Артём Сергеевич</a></h3>
   <p class="doc__role">Терапевт, эндодонтист, гигиенист</p>
   <p class="doc__focus">Лечение кариеса и каналов, сохранение зубов</p>
   <a class="btn btn--ghost btn--sm doc__cta" href="../zapis.html?doctor=chitaykin" data-modal="book" data-doctor="chitaykin">Записаться к врачу</a>
 </article><article class="doc" data-tags="lechenie-zubov ortodontiya gigiena mikroskop" data-reveal>
-  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">ЕК</span><img src="../images/doctors/kashtanova.webp" data-fb="https://prodoctorov.ru/media/photo/zhukovskiy/doctorimage/982335/2690555-982335-kashtanova_square.jpg" alt="Каштанова Екатерина Константиновна" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
+  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">ЕК</span><img src="../images/doctors/kashtanova.webp" srcset="../images/doctors/kashtanova-480w.webp 480w, ../images/doctors/kashtanova-828w.webp 828w, ../images/doctors/kashtanova.webp 1024w" sizes="auto, (max-width: 760px) 80vw, 30vw" data-fb="https://prodoctorov.ru/media/photo/zhukovskiy/doctorimage/982335/2690555-982335-kashtanova_square.jpg" alt="Каштанова Екатерина Константиновна" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
     <a class="doc__cover" href="../vrachi/kashtanova/" tabindex="-1" aria-hidden="true"></a></div>
   <h3><a href="../vrachi/kashtanova/">Каштанова Екатерина Константиновна</a></h3>
   <p class="doc__role">Терапевт, ортодонт, гигиенист</p>
   <p class="doc__focus">Эстетическая реставрация и прикус</p>
   <a class="btn btn--ghost btn--sm doc__cta" href="../zapis.html?doctor=kashtanova" data-modal="book" data-doctor="kashtanova">Записаться к врачу</a>
 </article><article class="doc" data-tags="protezirovanie all-on-4" data-reveal>
-  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">СА</span><img src="../images/doctors/alikhanova.webp" data-fb="https://prodoctorov.ru/media/photo/moskva/doctorimage/869179/1548345-869179-alihanova_square.jpg" alt="Алиханова Светлана Андреевна" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
+  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">СА</span><img src="../images/doctors/alikhanova.webp" srcset="../images/doctors/alikhanova-480w.webp 480w, ../images/doctors/alikhanova-828w.webp 828w, ../images/doctors/alikhanova.webp 1024w" sizes="auto, (max-width: 760px) 80vw, 30vw" data-fb="https://prodoctorov.ru/media/photo/moskva/doctorimage/869179/1548345-869179-alihanova_square.jpg" alt="Алиханова Светлана Андреевна" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
     <a class="doc__cover" href="../vrachi/alikhanova/" tabindex="-1" aria-hidden="true"></a></div>
   <h3><a href="../vrachi/alikhanova/">Алиханова Светлана Андреевна</a></h3>
   <p class="doc__role">Ортопед</p>
   <p class="doc__focus">Восстановление зубов и протезирование, эстетичные коронки</p>
   <a class="btn btn--ghost btn--sm doc__cta" href="../zapis.html?doctor=alikhanova" data-modal="book" data-doctor="alikhanova">Записаться к врачу</a>
 </article><article class="doc" data-tags="detskaya" data-reveal>
-  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">ДТ</span><img src="../images/doctors/troitskiy.webp" alt="Троицкий Даниил Леонидович" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
+  <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">ДТ</span><img src="../images/doctors/troitskiy.webp" srcset="../images/doctors/troitskiy-480w.webp 480w, ../images/doctors/troitskiy-828w.webp 828w, ../images/doctors/troitskiy.webp 1024w" sizes="auto, (max-width: 760px) 80vw, 30vw" alt="Троицкий Даниил Леонидович" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)">
     <a class="doc__cover" href="../vrachi/troitskiy/" tabindex="-1" aria-hidden="true"></a></div>
   <h3><a href="../vrachi/troitskiy/">Троицкий Даниил Леонидович</a></h3>
   <p class="doc__role">Детский стоматолог</p>
@@ -257,7 +257,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <div class="modal modal--offer" id="m-offer" role="dialog" aria-modal="true" aria-labelledby="m-offer-t" hidden><div class="modal__box invite" data-lenis-prevent>
   <div class="invite__team">
     <p class="invite__cap">Консультацию ведут вместе</p>
-    <ul class="invite__docs"><li><span class="invite__pic"><img src="../images/doctors/hludnevskiy.webp" data-fb="https://prodoctorov.ru/media/photo/moskva/doctorimage/909501/3142349-909501-hludnevskiy_square.jpg" alt="Михаил Хлудневский" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"></span><b>Хирург</b><span>Михаил<br>Хлудневский</span></li><li><span class="invite__pic"><img src="../images/doctors/solodukhin.webp" alt="Евгений Солодухин" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"></span><b>Ортопед</b><span>Евгений<br>Солодухин</span></li><li><span class="invite__pic"><img src="../images/doctors/chitaykin.webp" data-fb="https://prodoctorov.ru/media/photo/saransk/doctorimage/602094/3142158-602094-chitaykin_square.jpg" alt="Артём Читайкин" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"></span><b>Терапевт</b><span>Артём<br>Читайкин</span></li></ul>
+    <ul class="invite__docs"><li><span class="invite__pic"><img src="../images/doctors/hludnevskiy.webp" srcset="../images/doctors/hludnevskiy-480w.webp 480w, ../images/doctors/hludnevskiy-828w.webp 828w, ../images/doctors/hludnevskiy.webp 1024w" sizes="auto, 120px" data-fb="https://prodoctorov.ru/media/photo/moskva/doctorimage/909501/3142349-909501-hludnevskiy_square.jpg" alt="Михаил Хлудневский" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"></span><b>Хирург</b><span>Михаил<br>Хлудневский</span></li><li><span class="invite__pic"><img src="../images/doctors/solodukhin.webp" srcset="../images/doctors/solodukhin-480w.webp 480w, ../images/doctors/solodukhin-828w.webp 828w, ../images/doctors/solodukhin.webp 1024w" sizes="auto, 120px" alt="Евгений Солодухин" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"></span><b>Ортопед</b><span>Евгений<br>Солодухин</span></li><li><span class="invite__pic"><img src="../images/doctors/chitaykin.webp" srcset="../images/doctors/chitaykin-480w.webp 480w, ../images/doctors/chitaykin-828w.webp 828w, ../images/doctors/chitaykin.webp 1024w" sizes="auto, 120px" data-fb="https://prodoctorov.ru/media/photo/saransk/doctorimage/602094/3142158-602094-chitaykin_square.jpg" alt="Артём Читайкин" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="umImg(this)"></span><b>Терапевт</b><span>Артём<br>Читайкин</span></li></ul>
   </div>
   <div class="invite__body">
     <button class="invite__x" type="button" data-close>Закрыть <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg></button>
