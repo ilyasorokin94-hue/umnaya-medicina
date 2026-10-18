@@ -1142,6 +1142,10 @@ function dpBlock(b, page, depth) {
 }
 const eduKind = (t) => (t.startsWith("Ординатура") ? "Ординатура" : t.startsWith("Повышение") ? "Квалификация" : "Образование");
 const eduName = (t) => cap(t.replace(/^(Ординатура|Повышение квалификации): /, ""));
+// отзыв: текст дословно, «Понравилось» и «Не понравилось» как на площадке, внизу автор, площадка со ссылкой на отзыв и дата
+const dpDate = (iso) => iso.split("-").reverse().join(".");
+const dpQuotes = (list) => `<ul class="dp-quotes">${list.map((q) => `<li data-reveal><blockquote cite="${q.url}">${q.text.map((t) => `<p>${esc(t)}</p>`).join("")}${q.liked ? `<p><b>Понравилось:</b> ${esc(q.liked)}</p>` : ""}${q.disliked ? `<p><b>Не понравилось:</b> ${esc(q.disliked)}</p>` : ""}</blockquote>
+  <p class="dp-quotes__by">${esc(q.author)}${q.visit ? `, приём в ${esc(q.visit)}` : ""} · <a href="${q.url}"${ext}>отзыв на ${esc(q.site)}</a>, ${dpDate(q.date)}</p></li>`).join("")}</ul>`;
 function pageDoc(d, page) {
   const depth = 2;
   const p = pre(depth);
@@ -1214,8 +1218,8 @@ ${heroHtml}
 ${dpBlock({ type: "links", id: "uslugi", title: "Что делает врач в клинике", text: `${page.spec} в Удельной. Цены по прайсу клиники на ${servicePriceDate}, точную стоимость врач называет после осмотра и снимков.`, items: page.does }, pg, depth)}
 
 ${quotes.length ? `<section class="section sp-sec" id="otzyvy" aria-labelledby="otzyvy-t"><div class="wrap sp-grid">
-  <div class="sp-grid__aside"><h2 id="otzyvy-t" data-split>Отзывы о враче</h2>${d.pd && quotes.some((q) => q.site === "ПроДокторов") ? `<a class="link" href="${d.pd}"${ext}>Все отзывы о враче на ПроДокторов</a>` : ""}</div>
-  <ul class="dp-quotes">${quotes.map((q) => `<li data-reveal><blockquote>«${esc(q.text)}»</blockquote><p class="dp-quotes__by">${esc(q.author)}, <a href="${q.url}"${ext}>${esc(q.site)}</a>${q.date ? `, ${q.date.split("-").reverse().join(".")}` : ""}</p></li>`).join("")}</ul>
+  <div class="sp-grid__aside"><h2 id="otzyvy-t" data-split>Отзывы пациентов</h2><p class="sp-aside-text">Отзывы с ${[...new Set(quotes.map((q) => q.site))].join(", ")} дословно, со ссылкой на каждый.</p>${d.pd && quotes.some((q) => q.site === "ПроДокторов") ? `<a class="link" href="${d.pd}otzivi/"${ext}>Все отзывы о враче на ПроДокторов</a>` : ""}</div>
+  <div>${dpQuotes(quotes.slice(0, 3))}${quotes.length > 3 ? `<details class="dp-more"><summary><span class="link">Ещё ${quotes.length - 3} ${plural(quotes.length - 3, "отзыв", "отзыва", "отзывов")}</span></summary>${dpQuotes(quotes.slice(3))}</details>` : ""}</div>
 </div></section>` : ""}
 
 ${place({ title: "Где принимает врач", depth })}
