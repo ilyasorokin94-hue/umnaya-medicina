@@ -759,7 +759,12 @@ const spTexts = Object.fromEntries(servicePages.map((pg) => {
   const f = path.join(root, "src", "service-texts", `${pg.slug}.md`);
   if (!existsSync(f)) throw new Error(`Нет текста страницы услуги: src/service-texts/${pg.slug}.md`);
   const free = (t) => consultFree.reduce((x, re) => x.replace(re, (m) => (/(ортодонт|детск)/i.test(m) ? m : m.replace(/500 ₽$/, "0 ₽"))), t);
-  const T = parseServiceMd(promoMark(free(readFileSync(f, "utf8"))));
+  const src = free(readFileSync(f, "utf8"));
+  // у нового сайта свой домен: оговорок об источнике («по прайсу um-med.com», «по данным сайта клиники») на страницах нет
+  // (слово Ilya 18.10), с PUBLISH=1 сборка на них остановится
+  const umMed = src.replace(/<!--[\s\S]*?-->/g, "").split(/^# /m).slice(1).join("").match(/[^.\n]*(?:um-med\.com|по прайсу|по данным сайта)[^.\n]*/gi);
+  if (umMed) spPending.push(`${pg.slug}: оговорка об источнике в тексте (${umMed.length})`);
+  const T = parseServiceMd(promoMark(src));
   // подпись «Проверено врачом: …» в конце текста дублирует строку «Проверил» под вопросами — на странице её нет
   const noSign = (nodes) => nodes.filter((n) => !(n.t === "p" && /^\**Проверено врачом/.test(n.text)));
   T.intro = noSign(T.intro);
@@ -951,7 +956,7 @@ function spSection(s, i, page, depth, ids) {
       }
       page.faq = qa.filter((x) => ![x.q, ...x.a.map((n) => n.text || JSON.stringify(n))].some((t) => spHasAsk(t))).map((x) => [spPlain(x.q), x.a.map((n) => spPlain(n.text || (n.items || []).join("; "))).join(" ")]);
       return sec(grid(`${h2}${spNodes(lead, page, p)}`, `<div class="sp-faq">${qa.map((x) => `<details class="faqq"><summary><span>${nobr(spMd(x.q, page, p))}</span><i aria-hidden="true"></i></summary><div class="faqq__a">${spNodes(x.a, page, p)}</div></details>`).join("")}</div>${subs}${spNodes(tail, page, p)}`)
-        + `<p class="sp-meta">Проверил: ${spMd(page.meta.reviewer || "[ВРАЧ — кто проверил текст]", page, p)}. Цены на ${esc(page.meta.updated || servicePriceDate)}. Обновлено ${esc(page.meta.updated || servicePriceDate)}</p>`);
+        + `<p class="sp-meta">Проверил: ${spMd(page.meta.reviewer || "[ВРАЧ — кто проверил текст]", page, p)}. Обновлено ${esc(page.meta.updated || servicePriceDate)}</p>`);
     }
     case "reviews": return sec(`<div class="sp-head">${h2}</div>
       <div class="sp-rates">${[clinic.ratings[2], clinic.ratings[1], clinic.ratings[0]].map((r) => `<a class="sp-rate" href="${r.url}"${ext} data-reveal><b>${esc(r.value)}</b><span>${esc(r.site)}</span><small>${esc(r.count)}</small><span class="link">Смотреть отзывы</span></a>`).join("")}</div>
