@@ -19,8 +19,10 @@
   // ---------- разбивка текста для анимаций ----------
   const splitWords = (el, cls = "sw") => {
     const words = el.textContent.trim().split(/[ \t\r\n]+/);
-    el.setAttribute("aria-label", el.textContent.trim());
-    el.innerHTML = words.map((w) => (cls === "sw" ? `<span class="sw" aria-hidden="true"><span>${w}</span></span>` : `<span class="${cls}" aria-hidden="true">${w}</span>`)).join(" ");
+    // текст целиком для чтения с экрана: aria-label на простом span не разрешён (Lighthouse aria-prohibited-attr)
+    const full = el.textContent.trim().replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    if (el.hasAttribute("data-split")) el.setAttribute("data-split", "on"); // стили показывают заголовок, когда он разбит
+    el.innerHTML = `<span class="sr">${full}</span>` + words.map((w) => (cls === "sw" ? `<span class="sw" aria-hidden="true"><span>${w}</span></span>` : `<span class="${cls}" aria-hidden="true">${w}</span>`)).join(" ");
     return $$(cls === "sw" ? ".sw > span" : "." + cls, el);
   };
 

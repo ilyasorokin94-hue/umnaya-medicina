@@ -24,7 +24,9 @@ createServer(async (req, res) => {
     res.writeHead(200, { "Content-Type": types[path.extname(file).toLowerCase()] || "application/octet-stream", "Cache-Control": "no-cache" });
     res.end(body);
   } catch {
-    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-    res.end("Не найдено. Сначала соберите макет: npm run build");
+    // как на хостинге: по несуществующему адресу отдаём 404.html
+    const page = await readFile(path.join(root, "404.html")).catch(() => null);
+    res.writeHead(404, { "Content-Type": page ? types[".html"] : "text/plain; charset=utf-8" });
+    res.end(page || "Не найдено. Сначала соберите макет: npm run build");
   }
 }).listen(port, () => console.log(`Макет: http://localhost:${port}/  (папка dist/)`));

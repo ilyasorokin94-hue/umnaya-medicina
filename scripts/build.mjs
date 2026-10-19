@@ -108,7 +108,7 @@ const img = (entry, alt, depth, attrs = "", sizes = "auto, 100vw") => {
 const ph = (text = "Фото клиники") => `<span class="ph">${esc(text)}</span>`;
 const logoImg = (depth, eager = true) => {
   const { src, fb } = pick(brand.logo, depth);
-  return `<img class="logo__img" src="${src}"${fb ? ` data-fb="${fb}"` : ""} alt=""${eager ? "" : ' loading="lazy"'} referrerpolicy="no-referrer" onerror="umLogo(this)">`;
+  return `<img class="logo__img" src="${src}"${fb ? ` data-fb="${fb}"` : ""} alt="" width="298" height="56"${eager ? "" : ' loading="lazy"'} referrerpolicy="no-referrer" onerror="umLogo(this)">`;
 };
 
 // в шапке телефона и компьютера светлая надпись логотипа (шапка там прозрачная с тёмной дымкой, как у Лава Дент);
@@ -143,21 +143,21 @@ const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["У
 // В <head> каждой страницы: телефоны и планшеты замеряют высоту экрана один раз (--vh, --svh) и меняют её только при повороте.
 // Во встроенных браузерах (Telegram, VK, Instagram) окно меняет высоту, когда прячется панель, и всё, что в styles.css задано
 // в vh и svh, вместе со страницей прыгало на сотни пикселей. Поэтому в styles.css высоты экрана пишем через var(--vh)/var(--svh)
-function head({ title, desc, canonical, depth, page = "inner", jsonld = [] }) {
+function head({ title, desc, canonical, depth, page = "inner", jsonld = [], noindex = false, base = "" }) {
   const p = pre(depth);
   return `<!doctype html>
 <html lang="ru" data-page="${page}">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8">${base}
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
-<meta name="robots" content="${PUBLISH ? "index, follow" : "noindex, nofollow"}">
-<link rel="canonical" href="${SITE}${canonical}">
+<meta name="robots" content="${!PUBLISH ? "noindex, nofollow" : noindex ? "noindex, follow" : "index, follow"}">
+${canonical ? `<link rel="canonical" href="${SITE}${canonical}">` : ""}
 <link rel="icon" type="image/svg+xml" href="${p}images/brand/favicon.svg">
-<meta property="og:type" content="${/^\/vrachi\/[^/]+\/?$/.test(canonical) ? "profile" : "website"}">
+<meta property="og:type" content="${/^\/vrachi\/[^/]+\/?$/.test(canonical || "") ? "profile" : "website"}">
 <meta property="og:site_name" content="Умная Медицина. Стоматология">
-<meta property="og:url" content="${SITE}${canonical}">
+${canonical ? `<meta property="og:url" content="${SITE}${canonical}">` : ""}
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:image" content="${SITE}/${OG_IMAGE}">
@@ -295,7 +295,7 @@ function modals(depth) {
 <div class="modals">
 ${box("book", "Запишитесь на бесплатную консультацию", `<p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
   <p class="modal__doc" hidden></p>${promoLine}
-  <form class="form lead" data-lead="book">
+  <form class="form lead" data-lead="book" method="post" action="${p}spasibo/">
     <input type="hidden" name="doctor"><input type="hidden" name="promo">${name}${phone}
     <fieldset class="reasons"><legend>Что беспокоит <span>необязательно</span></legend><div class="chips">${home.reasons.map((r) => `<label class="chip chip--pick"><input type="radio" name="reason" value="${esc(r)}"><span>${esc(r)}</span></label>`).join("")}</div></fieldset>
     ${agree}
@@ -303,13 +303,13 @@ ${box("book", "Запишитесь на бесплатную консульта
     <p class="modal__note">Перезвоним за 5 минут. Заявки после 21:00 перезваниваем с 9:00 утра. ${consent}</p>
   </form>`)}
 ${box("call", "Перезвоним за 5 минут", `<p class="modal__sub">Оставьте номер, администратор перезвонит и ответит на вопросы.</p>
-  <form class="form lead" data-lead="call">${phone}
+  <form class="form lead" data-lead="call" method="post" action="${p}spasibo/">${phone}
     ${agree}
     <button class="btn btn--lg btn--wide">Жду звонка</button>${consent ? `
     <p class="modal__note">${consent}</p>` : ""}
   </form>`)}
 ${box("xray", "Пришлите снимок, и врач скажет, можно ли сохранить зуб", `<p class="modal__sub">Подойдёт КТ, панорама, прицельный снимок или фото плана лечения из другой клиники. Врач посмотрит и ответит в течение рабочего дня. Это бесплатно.</p>
-  <form class="form lead" data-lead="xray">${name}${phone}
+  <form class="form lead" data-lead="xray" method="post" action="${p}spasibo/">${name}${phone}
     <label class="file">Снимок или план<input name="file" type="file" accept="image/*,.pdf,.zip,.dcm"><span>Выбрать файл</span></label>
     ${msgr}
     ${agree}
@@ -318,7 +318,7 @@ ${box("xray", "Пришлите снимок, и врач скажет, можн
   </form>`)}
 ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная, стоимость лечения врач назовёт после осмотра.</p>
   ${promoLine}
-  <form class="form lead" data-lead="allon"><input type="hidden" name="promo">${name}${phone}
+  <form class="form lead" data-lead="allon" method="post" action="${p}spasibo/"><input type="hidden" name="promo">${name}${phone}
     <fieldset class="reasons"><legend>Одна или обе челюсти</legend><div class="chips">${["Одна челюсть", "Обе челюсти"].map((r, i) => `<label class="chip chip--pick"><input type="radio" name="jaws" value="${r}"${i ? "" : " checked"}><span>${r}</span></label>`).join("")}</div></fieldset>
     <fieldset class="reasons"><legend>Носите ли съёмный протез</legend><div class="chips">${["Да, ношу", "Нет"].map((r) => `<label class="chip chip--pick"><input type="radio" name="denture" value="${r}"><span>${r}</span></label>`).join("")}</div></fieldset>
     ${agree}
@@ -362,7 +362,7 @@ function footer(depth) {
   return `
 <footer class="footer on-dark"><div class="wrap footer__in">
   <div class="footer__cta footer__cta--big">
-    <form class="cb big" data-lead="final" novalidate>
+    <form class="cb big" data-lead="final" method="post" action="${p}spasibo/" novalidate>
       <p class="label label--light">${esc(home.footForm.label)}</p>
       <h2 class="big__t" data-split>${esc(home.final[0])}</h2>
       <label class="big__field" for="cb-phone"><span class="sr">Ваш телефон</span><span class="big__ghost" aria-hidden="true"><i data-typed></i><span data-rest>+7 000 000-00-00</span></span><input class="big__in" id="cb-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required aria-describedby="cb-hint"></label>
@@ -600,7 +600,7 @@ function pageHome() {
   const star = icon.star;
   const D = v2;
   // три врача после слогана на телефоне (на компьютере скрыты); пояснение, факты и пометки оттуда убраны (Ilya 17.10)
-  const heroTrio = `<ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="${docHref(id, "")}"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth, "", "auto, 120px")}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>`;
+  const heroTrio = `<ul class="hero__trio" aria-label="Кто составляет план">${[["hludnevskiy", "Хирург"], ["solodukhin", "Ортопед"], ["chitaykin", "Терапевт"]].map(([id, role]) => `<li><a href="${docHref(id, "")}" aria-label="${role}: ${esc(docById[id].short)}"><span class="hero__face">${img(docPhoto(docById[id]), docById[id].short, depth, "", "auto, 120px")}</span><b>${role}</b><span>${esc(docById[id].short).replace(" ", "<br>")}</span></a></li>`).join("")}</ul>`;
   const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 
   return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq.flatMap(([, qs]) => qs).map(([q, a]) => [q, a.replace(/\[([^\]]+)\]\((\w+)\)/g, "$1")]))] })
@@ -1494,7 +1494,7 @@ function pageBooking() {
       <section class="bstep" data-step="4" hidden>
         <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span></div>
         <h2 tabindex="-1">Как с вами связаться?</h2>
-        <form class="form" id="b-form">
+        <form class="form" id="b-form" method="post" action="spasibo/">
           <label>Имя<input name="name" required autocomplete="name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
           <label>Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
@@ -1556,6 +1556,53 @@ function pageLegal(page) {
 </main>` + footer(depth) + end;
 }
 
+// ---------- служебные страницы: «Спасибо» после заявки и 404 (Ilya 19.10) ----------
+// обе закрыты от поиска и в карту сайта не идут. Тексты взяты из окон сайта и страницы цен
+const helpCard = (t, href, x) => `<article class="sp-card"><h2><a href="${href}">${esc(t)}</a></h2><p>${esc(x)}</p></article>`;
+const helpCards = (p) => [
+  helpCard("Услуги", `${p}index.html#services`, homeOrder.slice(0, 6).map((k, i) => (i && !/^[А-ЯA-Z]{2}/.test(svc[k].title) ? svc[k].title[0].toLowerCase() + svc[k].title.slice(1) : svc[k].title)).join(", ") + " и другие."),
+  helpCard("Цены", `${p}ceny/`, "Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽."),
+  helpCard("Врачи", `${p}vrachi.html`, "Врачи клиники по направлениям, у каждого своя страница."),
+  helpCard("Контакты", `${p}index.html#contacts`, `${clinic.addressShort}. ${clinic.hours}.`),
+].join("");
+// «Спасибо»: сюда же уходят формы без скриптов (action), обработчик заявок потом тоже ведёт сюда
+function pageThanks() {
+  const depth = 1, p = "../";
+  return head({ title: "Спасибо, заявка принята | Умная Медицина. Стоматология", desc: "Заявка в стоматологию «Умная Медицина» принята, администратор перезвонит.", canonical: "/spasibo/", depth, noindex: true, page: "thanks" })
+  + header(depth) + `
+<main id="main">
+<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
+  <div><span class="label label--light">Заявка принята</span><h1 data-split>Спасибо!</h1><p class="page-hero__lead">Администратор перезвонит за 5 минут с номера <span class="nobr">${esc(clinic.phone)}</span>. Если клиника сейчас закрыта, перезвоним утром, после 9:00.</p></div>
+  <div class="page-hero__aside"><a class="btn btn--lg btn--light" href="${p}index.html">На главную</a></div>
+</div></section>
+<section class="section"><div class="wrap">
+  <div class="sp-cards sp-cards--3">
+    <article class="sp-card"><h2>Пока ждёте звонка</h2><p>Можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p><div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div></article>
+    <article class="sp-card"><h2><a href="${p}index.html#contacts">Как добраться</a></h2><p>${esc(clinic.addressShort)}. ${esc(clinic.hours)}.</p></article>
+    <article class="sp-card"><h2><a href="${p}vrachi.html">Врачи</a></h2><p>Врачи клиники по направлениям, у каждого своя страница.</p></article>
+  </div>
+</div></section>
+</main>` + footer(depth) + end;
+}
+// 404: сервер отдаёт её по любому несуществующему адресу, поэтому все ссылки считаются от корня сайта (<base>).
+// На боевом сайте это корень домена; на демо (папка на GitHub Pages) корень берётся из адреса самой страницы
+function page404() {
+  const base = PUBLISH ? `\n<base href="${new URL(SITE + "/").pathname}">` : `\n<script>document.write('<base href="'+(/\\/404\\.html$/.test(location.pathname)?location.pathname.replace(/404\\.html$/,""):"/")+'">')</script>`;
+  return (head({ title: "Страница не найдена | Умная Медицина. Стоматология", desc: "Такой страницы на сайте стоматологии «Умная Медицина» нет.", canonical: "", depth: 0, noindex: true, base })
+  + header(0) + `
+<main id="main" tabindex="-1">
+<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
+  <div><span class="label label--light">Ошибка 404</span><h1 data-split>Такой страницы нет</h1><p class="page-hero__lead">Возможно, адрес изменился или в нём опечатка. Начните с главной или выберите раздел ниже.</p></div>
+  <div class="page-hero__aside"><a class="btn btn--lg btn--light" href="index.html">На главную</a>${act("Записаться на консультацию", "book", "", { cls: "btn--ghost" })}</div>
+</div></section>
+<section class="section"><div class="wrap">
+  <div class="sp-cards sp-cards--4">${helpCards("")}</div>
+</div></section>
+</main>` + footer(0) + end)
+    // ссылка «К содержанию» не должна уводить на главную из-за <base>
+    .replace('<a class="skip" href="#main">', `<a class="skip" href="#main" onclick="document.getElementById('main').focus();return false">`);
+}
+
 // ---------- сборка ----------
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(path.join(dist, "uslugi"), { recursive: true });
@@ -1595,6 +1642,9 @@ writeFileSync(path.join(dist, "ceny.html"), `<!doctype html>
 out("vrachi.html", pageDoctors());
 out("zapis.html", pageBooking());
 for (const page of legal) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}/index.html`, pageLegal(page)); }
+mkdirSync(path.join(dist, "spasibo"), { recursive: true });
+out("spasibo/index.html", pageThanks(), false);
+out("404.html", page404(), false);
 // старые адреса услуг, переехавших в новый формат, ведут на новую страницу и в карту сайта не попадают
 for (const s of services) spBySlug[s.slug] ? writeFileSync(path.join(dist, `uslugi/${s.slug}.html`), noDash(spRedirect(spBySlug[s.slug]))) : out(`uslugi/${s.slug}.html`, pageService(s));
 for (const page of servicePages) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}index.html`, pageSvc(page), !page.hidden); }
