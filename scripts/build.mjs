@@ -271,11 +271,14 @@ function header(depth, home = false) {
 
 // строка согласия под формами (152-ФЗ: согласие отдельным документом): ссылки на свои страницы в новой вкладке, заполненная форма не теряется
 const consentNote = (lead, p) => `${lead}, вы даёте <a href="${legalHref("consent", p)}"${ext}>согласие на обработку персональных данных</a> и принимаете <a href="${legalHref("privacy", p)}"${ext}>Политику конфиденциальности</a>.`;
+// галочка согласия (CONSENT_CHECKBOX, как у Зубной Гармонии): без неё заявка не уходит; form="…" связывает её с формой, если галочка стоит вне формы
+const consentCheck = (p, form = "") => `<label class="consent"><input type="checkbox" name="consent" required${form ? ` form="${form}"` : ""}><span>Даю <a href="${legalHref("consent", p)}"${ext}>согласие на обработку персональных данных</a> и принимаю <a href="${legalHref("privacy", p)}"${ext}>Политику конфиденциальности</a></span></label>`;
 
 // окна: запись, перезвон, снимок на второе мнение, расчёт All-on-4, мессенджеры, при уходе, «спасибо»
 function modals(depth) {
   const p = pre(depth);
-  const consent = consentNote("Отправляя заявку", p);
+  const consent = CONSENT_CHECKBOX ? "" : consentNote("Отправляя заявку", p);
+  const agree = CONSENT_CHECKBOX ? consentCheck(p) : "";
   const phone = `<label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>`;
   const name = `<label>Имя<input name="name" autocomplete="given-name" required></label>`;
   // строка «Акция: …», если окно открыли кнопкой из блока акций; уходит в заявку скрытым полем promo
@@ -293,18 +296,21 @@ ${box("book", "Запишитесь на бесплатную консульта
   <form class="form lead" data-lead="book">
     <input type="hidden" name="doctor"><input type="hidden" name="promo">${name}${phone}
     <fieldset class="reasons"><legend>Что беспокоит <span>необязательно</span></legend><div class="chips">${home.reasons.map((r) => `<label class="chip chip--pick"><input type="radio" name="reason" value="${esc(r)}"><span>${esc(r)}</span></label>`).join("")}</div></fieldset>
+    ${agree}
     <button class="btn btn--lg btn--wide">Жду звонка</button>
     <p class="modal__note">Перезвоним за 5 минут. Заявки после 21:00 перезваниваем с 9:00 утра. ${consent}</p>
   </form>`)}
 ${box("call", "Перезвоним за 5 минут", `<p class="modal__sub">Оставьте номер, администратор перезвонит и ответит на вопросы.</p>
   <form class="form lead" data-lead="call">${phone}
-    <button class="btn btn--lg btn--wide">Жду звонка</button>
-    <p class="modal__note">${consent}</p>
+    ${agree}
+    <button class="btn btn--lg btn--wide">Жду звонка</button>${consent ? `
+    <p class="modal__note">${consent}</p>` : ""}
   </form>`)}
 ${box("xray", "Пришлите снимок, и врач скажет, можно ли сохранить зуб", `<p class="modal__sub">Подойдёт КТ, панорама, прицельный снимок или фото плана лечения из другой клиники. Врач посмотрит и ответит в течение рабочего дня. Это бесплатно.</p>
   <form class="form lead" data-lead="xray">${name}${phone}
     <label class="file">Снимок или план<input name="file" type="file" accept="image/*,.pdf,.zip,.dcm"><span>Выбрать файл</span></label>
     ${msgr}
+    ${agree}
     <button class="btn btn--lg btn--wide">Отправить снимок</button>
     <p class="modal__note">Если зуб можно спасти, скажем, как и сколько это стоит. ${consent}</p>
   </form>`)}
@@ -313,10 +319,11 @@ ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">
   <form class="form lead" data-lead="allon"><input type="hidden" name="promo">${name}${phone}
     <fieldset class="reasons"><legend>Одна или обе челюсти</legend><div class="chips">${["Одна челюсть", "Обе челюсти"].map((r, i) => `<label class="chip chip--pick"><input type="radio" name="jaws" value="${r}"${i ? "" : " checked"}><span>${r}</span></label>`).join("")}</div></fieldset>
     <fieldset class="reasons"><legend>Носите ли съёмный протез</legend><div class="chips">${["Да, ношу", "Нет"].map((r) => `<label class="chip chip--pick"><input type="radio" name="denture" value="${r}"><span>${r}</span></label>`).join("")}</div></fieldset>
+    ${agree}
     <button class="btn btn--lg btn--wide">Записаться на консультацию</button>
     <p class="modal__note">Перезвоним за 5 минут. ${consent}</p>
   </form>`)}
-${offer(depth, consent)}
+${offer(depth, consent, p)}
 ${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}. Пока ждёте, можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>`)}
@@ -324,7 +331,7 @@ ${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Адми�
 }
 
 // окно с предложением: всплывает само через время на сайте. Одно поле, три врача крупно, крестик виден сразу
-function offer(depth, consent) {
+function offer(depth, consent, p) {
   const o = home.offer;
   return `<div class="modal modal--offer" id="m-offer" role="dialog" aria-modal="true" aria-labelledby="m-offer-t" hidden><div class="modal__box invite" data-lenis-prevent>
   <div class="invite__team">
@@ -337,11 +344,12 @@ function offer(depth, consent) {
     <h2 id="m-offer-t" tabindex="-1">${esc(o.title)}</h2>
     <p class="invite__sub">${esc(o.sub)}</p>
     <p class="invite__perk">${esc(o.perk)}</p>
-    <form class="lead invite__form" data-lead="offer">
+    <form class="lead invite__form" id="offer-form" data-lead="offer">
       <label class="invite__field"><span>Телефон</span><input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>
       <button class="btn">${esc(o.btn)}</button>
     </form>
-    <p class="modal__note">${esc(o.note)} ${consent}</p>
+    ${CONSENT_CHECKBOX ? consentCheck(p, "offer-form") : ""}
+    <p class="modal__note">${esc(o.note)}${consent ? ` ${consent}` : ""}</p>
   </div>
 </div></div>`;
 }
@@ -358,7 +366,7 @@ function footer(depth) {
       <label class="big__field" for="cb-phone"><span class="sr">Ваш телефон</span><span class="big__ghost" aria-hidden="true"><i data-typed></i><span data-rest>+7 000 000-00-00</span></span><input class="big__in" id="cb-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required aria-describedby="cb-hint"></label>
       <button class="big__btn" type="submit">${esc(home.footForm.btn)}</button>
       <p class="cb__hint" id="cb-hint">${esc(home.final[1])}</p>
-      <p class="cb__consent">${consentNote("Отправляя номер", p)}</p>
+      ${CONSENT_CHECKBOX ? consentCheck(p).replace('class="consent"', 'class="consent consent--dark cb__consent"') : `<p class="cb__consent">${consentNote("Отправляя номер", p)}</p>`}
     </form>
     <div class="cb__done" role="status" tabindex="-1" hidden>
       <p class="cb__done-t">Спасибо, номер у нас</p>
@@ -1488,7 +1496,7 @@ function pageBooking() {
           <label>Имя<input name="name" required autocomplete="name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
           <label>Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
-          <label class="check"><input type="checkbox" name="consent" required><span>Даю <a href="${legalHref("consent", "")}"${ext}>согласие на обработку персональных данных</a> и принимаю <a href="${legalHref("privacy", "")}"${ext}>Политику конфиденциальности</a></span></label>
+          ${consentCheck("")}
           <div class="bnav" style="margin-top:6px"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn">Записаться</button></div>
         </form>
       </section>

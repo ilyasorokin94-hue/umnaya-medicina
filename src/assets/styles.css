@@ -2114,8 +2114,16 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
 .legal__docs { display: flex; flex-wrap: wrap; gap: 12px 28px; max-width: 980px; padding-top: 28px; border-top: 1px solid var(--line); }
 .legal__docs a { color: var(--green-deep); }
 .footer__docs { display: flex; flex-wrap: wrap; gap: 6px 20px; flex-basis: 100%; }
-.form .check span { line-height: 1.4; }
-.form .check a { color: inherit; }
+/* галочка согласия под формами заявок */
+.consent, .form .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: var(--muted); text-align: left; cursor: pointer; }
+label.consent input[type="checkbox"][name="consent"][required] { flex: none; width: 18px; height: 18px; min-height: 0; margin: 1px 0 0; padding: 0; border-radius: 4px; accent-color: var(--green); }
+.big .consent { max-width: 52ch; }
+.consent a { color: inherit; }
+.footer .consent a { display: inline; padding: 0; }
+.consent--dark { color: rgba(169, 187, 169, .8); }
+.consent--dark input { accent-color: var(--green-hi); }
+.cb.is-error .consent--dark.is-error { color: #f0b86e; }
+.invite__body .consent { margin-top: 14px; font-size: 12.5px; }
 @media (max-width: 760px) {
   .legal__meta { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .legal__sec { grid-template-columns: minmax(0, 1fr); gap: 10px; }

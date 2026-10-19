@@ -634,7 +634,7 @@
     const M = rest.textContent;
     const digits = (v) => { let d = v.replace(/\D/g, ""); if (d[0] === "8") d = "7" + d.slice(1); if (d && d[0] !== "7") d = "7" + d; return d.slice(0, 11); };
     const fmt = (d) => { const r = d.slice(1); let t = "+7"; if (r.length) t += " " + r.slice(0, 3); if (r.length > 3) t += " " + r.slice(3, 6); if (r.length > 6) t += "-" + r.slice(6, 8); if (r.length > 8) t += "-" + r.slice(8, 10); return t; };
-    const clearErr = () => { cb.classList.remove("is-error"); cbIn.removeAttribute("aria-invalid"); cbHint.textContent = hint0; };
+    const clearErr = () => { cb.classList.remove("is-error"); cbIn.removeAttribute("aria-invalid"); $(".consent", cb)?.classList.remove("is-error"); cbHint.textContent = hint0; };
     const draw = () => {
       typed.textContent = cbIn.value; rest.textContent = M.slice(cbIn.value.length);
       const full = digits(cbIn.value).length === 11;
@@ -642,6 +642,7 @@
       btn.classList.toggle("is-ready", full);
       if (full) { clearErr(); if (anim) G.fromTo(btn, { scale: 0.92 }, { scale: 1, duration: 0.6, ease: "back.out(2.5)" }); }
     };
+    $("input[name=consent]", cb)?.addEventListener("change", (e) => { if (e.target.checked && digits(cbIn.value).length === 11) clearErr(); });
     cbIn.addEventListener("focus", () => { if (!cbIn.value) { cbIn.value = "+7 "; draw(); } });
     cbIn.addEventListener("blur", () => { if (digits(cbIn.value).length <= 1) { cbIn.value = ""; draw(); } });
     // привычная 8 сразу после «+7» не становится первой цифрой номера
@@ -649,7 +650,14 @@
     cb.addEventListener("submit", (e) => {
       e.preventDefault();
       if (btn.disabled) return;
-      const d = digits(cbIn.value);
+      const d = digits(cbIn.value), agree = $("input[name=consent]", cb);
+      if (d.length === 11 && agree && !agree.checked) {
+        // галочка согласия: форма с novalidate, поэтому проверяем сами
+        cb.classList.add("is-error"); agree.closest(".consent").classList.add("is-error");
+        cbHint.textContent = "Отметьте согласие на обработку персональных данных";
+        agree.focus();
+        return;
+      }
       if (d.length !== 11) {
         cb.classList.add("is-error"); cbIn.setAttribute("aria-invalid", "true");
         cbHint.textContent = d.length <= 1 ? "Введите номер, и мы перезвоним" : "Не хватает цифр: после +7 нужно 10";

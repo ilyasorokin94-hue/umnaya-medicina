@@ -5,7 +5,7 @@
 // В тексте: [текст](privacy|consent|agreement) — ссылка на соседний документ, {{что уточнить}} — плашка.
 
 // true: в формах галочка согласия, без неё заявка не уходит; false: согласие кнопкой отправки
-export const CONSENT_CHECKBOX = false;
+export const CONSENT_CHECKBOX = true;
 
 export const legalDate = "19.10.2026";
 
