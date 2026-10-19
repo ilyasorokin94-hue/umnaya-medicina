@@ -169,7 +169,7 @@ ${fontPreload.map((f) => `<link rel="preload" href="${p}assets/fonts/${f}.woff2"
 <link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
-setTimeout(function(){if(!window.__umReady)d.classList.remove("js-anim","js-intro")},4000)})(document.documentElement);
+setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
 (function(d){try{if(!matchMedia("(pointer: coarse)").matches)return;var w=-1;function m(u){var e=document.createElement("i");e.style.cssText="position:absolute;top:0;left:0;width:0;visibility:hidden;height:100"+u;d.appendChild(e);var h=e.getBoundingClientRect().height;d.removeChild(e);return h}function s(){if(innerWidth===w)return;w=innerWidth;var l=m("vh"),v=m("svh")||l;if(!l)return;d.style.setProperty("--vh",l/100+"px");d.style.setProperty("--svh",v/100+"px")}s();addEventListener("resize",s)}catch(e){}})(document.documentElement);
 window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.removeAttribute("srcset");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
 window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big");if(p)p.classList.add("is-fallback");i.style.display="none"};
@@ -182,9 +182,10 @@ ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</sc
 </head>
 <body${page === "booking" ? ' class="booking-page"' : ""}>
 <a class="skip" href="#main">К содержанию</a>
-${PUBLISH ? "" : `<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». Заявки из форм пока никуда не отправляются.</div>`}`;
+${PUBLISH ? "" : `<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». Заявки из форм пока никуда не отправляются.</div><script>(function(d,b){var h=b.offsetHeight;d.style.setProperty("--demo-h",h+"px");d.style.setProperty("--hdr-top",h+"px")})(document.documentElement,document.currentScript.previousElementSibling)</script>`}`;
 }
 
+// демо-полосу меряем сразу после неё, до первого кадра: иначе до app.js шапка лежит поверх полосы, а потом прыгает вниз
 // заставка (Ilya 17.10, вариант 5 из пяти): логотип проявляется по центру и перелетает на своё место в шапке, тёмный фон тает
 function intro(depth) {
   return `<div class="intro" aria-hidden="true"><div class="intro__bg"></div><img class="intro__mark" src="${pre(depth)}images/brand/header-logo-light.svg" alt=""></div>`;

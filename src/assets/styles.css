@@ -415,6 +415,9 @@ html:not(.js-intro) .intro { display: none; }
 .sw > span { display: inline-block; will-change: transform; }
 .js-anim [data-split] { visibility: hidden; }
 .js-anim [data-split][aria-label] { visibility: visible; }
+/* первый экран: подписи, кнопки и факты поднимаются в app.js (heroIn, fromTo до видимых); до этого их нет, иначе кнопка «Записаться»
+   мелькала готовой, пропадала и появлялась снова */
+.js-anim :is(.hero, .page-hero) :is(.kicker, .label, .crumbs, .page-hero__lead, .hero__facts > *, .hero__actions > *, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav) { opacity: 0; }
 .header__cta { display: flex; align-items: center; gap: 16px; }
 .section__title { font-size: var(--fs-4); line-height: 1.1; letter-spacing: -.035em; }
 .faq > *, .place > *, .split > * { min-width: 0; }
@@ -857,6 +860,8 @@ html:not(.js-intro) .intro { display: none; }
   .footer__in { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
   .mobilebar { bottom: calc(10px + env(safe-area-inset-bottom)); box-shadow: 0 18px 40px -14px rgba(12, 36, 16, .55), 0 0 0 1px rgba(255, 255, 255, .06); transition: transform .6s var(--ease), opacity .35s; }
   html.mb-off .mobilebar, html.bar-off .mobilebar, html.bar-kb .mobilebar { transform: translateY(calc(100% + 30px)); opacity: 0; pointer-events: none; }
+  /* до решения app.js (видна ли кнопка первого экрана) панели нет: иначе она мелькала при загрузке и уезжала вниз */
+  html.js:not(.mb-ready) .mobilebar { transform: translateY(calc(100% + 30px)); opacity: 0; pointer-events: none; transition: none; }
 
   /* слоган */
   .slogan .marquee { padding: 30px 0; }
@@ -1580,6 +1585,10 @@ html:not(.js-intro) .intro { display: none; }
   .header .header__cta .header__phone { display: inline-block; padding: clamp(.5rem, .4545rem + .202vw, .625rem) 0; color: rgb(var(--hc)); text-decoration: none; }
   .header .header__phone b { font-size: clamp(.8rem, .7499rem + .2226vw, .9377rem); font-weight: 400; line-height: 1.4; }
   .header .logo__unit { opacity: .8; }
+}
+/* телефон и планшет: шапка проявляется вместе с первым экраном (app.js, heroIn); до этого её нет, иначе она мелькала готовой и пропадала */
+@media (max-width: 1024px) {
+  .js-anim .header:not(.is-loaded) { opacity: 0; }
 }
 /* узкий компьютер: разделы и телефон остаются, как у Лава Дент, логотип чуть меньше, чтобы всё встало в строку */
 @media (min-width: 1025px) and (max-width: 1180px) {

@@ -305,13 +305,15 @@
       const mb = () => root.classList.toggle("mb-off", ctaIn && !(curtain && phoneMQ.matches && curtain.getBoundingClientRect().top < heroCta.getBoundingClientRect().bottom));
       root.classList.add("mb-off");
       // кнопка ниже экрана (маленький телефон) тоже считается своей: панель не закрывает её, пока до неё не долистали
-      new IntersectionObserver(([en]) => { ctaIn = en.isIntersecting || en.boundingClientRect.top >= innerHeight; mb(); }, { rootMargin: "-90px 0px 0px 0px" }).observe(heroCta);
+      new IntersectionObserver(([en]) => { ctaIn = en.isIntersecting || en.boundingClientRect.top >= innerHeight; mb(); root.classList.add("mb-ready"); }, { rootMargin: "-90px 0px 0px 0px" }).observe(heroCta);
       // пока кнопка первого экрана не видна, панель нужна при любом положении шторки: размеры не читаем
       if (curtain) addEventListener("scroll", () => { if (ctaIn && !mq) mq = requestAnimationFrame(() => { mq = 0; mb(); }); }, { passive: true });
     }
     const fcta = $(".footer__cta");
     if (fcta) new IntersectionObserver(([en]) => root.classList.toggle("bar-off", en.isIntersecting), { rootMargin: "0px 0px -30% 0px" }).observe(fcta);
   }
+  // без кнопки первого экрана решать нечего: панель видна сразу
+  if (!heroCta || !("IntersectionObserver" in window)) root.classList.add("mb-ready");
   document.addEventListener("focusin", (e) => { if (e.target.matches?.("input, textarea, select")) root.classList.add("bar-kb"); });
   document.addEventListener("focusout", () => root.classList.remove("bar-kb"));
 
@@ -528,25 +530,38 @@
     });
   });
 
-  // окно с предложением по центру: через 35 секунд на сайте, если вкладка открыта и человек уже пролистал первый экран,
-  // или когда курсор уходит к вкладкам (не раньше 15 секунд). Один раз за визит, после показа молчит 3 дня.
-  // Не всплывает поверх других окон и меню, во время ввода и у тех, кто уже открывал запись. Закрывается крестиком, Esc и кликом мимо.
+  // окно с предложением по центру (Ilya 19.10: только тем, кто пробыл на сайте больше минуты). Считаем активные секунды:
+  // вкладка на экране, счёт общий для всех страниц визита (sessionStorage), поэтому переход на другую страницу его не сбрасывает.
+  // После 60 секунд показываем, когда на текущей странице пролистан первый экран; на компьютере ещё и когда курсор уходит
+  // к вкладкам, но не раньше 20 секунд. Один раз за визит, после показа молчит 3 дня. Не всплывает поверх других окон и меню,
+  // во время ввода, пока на экране контакты, и у тех, кто уже открывал запись. Закрывается крестиком, Esc и кликом мимо.
   const offer = $("#m-offer");
   if (offer) {
     const quiet = () => { try { return !!sessionStorage.getItem("um2-exit") || Date.now() - (+localStorage.getItem("um2-offer") || 0) < 3 * 864e5; } catch (err) { return true; } };
     // пролистан ли первый экран: проверяем раз в кадр и снимаем слушатель, как только да (чтение размеров окна на каждом событии прокрутки заставляет браузер пересчитывать раскладку)
-    let seen = 0, deep = false, dq = 0;
+    let deep = false, dq = 0;
     const onDeep = () => { if (dq) return; dq = requestAnimationFrame(() => { dq = 0; if (scrollY > innerHeight * 0.7) { deep = true; removeEventListener("scroll", onDeep); } }); };
     addEventListener("scroll", onDeep, { passive: true });
+    // контакты на экране: человек уже смотрит адрес и телефон, рамка ему не нужна
+    let atContacts = false;
+    const ct = $("#contacts");
+    if (ct && "IntersectionObserver" in window) new IntersectionObserver(([en]) => { atContacts = en.isIntersecting; }).observe(ct);
+    let seen = 0;
+    try { seen = +sessionStorage.getItem("um2-active") || 0; } catch (err) {}
     const tryShow = () => {
       if (quiet() || anyModal) return clearInterval(tick);
-      if (openM || menu?.classList.contains("is-open") || document.activeElement?.matches?.("input, textarea, select")) return;
+      if (openM || atContacts || menu?.classList.contains("is-open") || document.activeElement?.matches?.("input, textarea, select")) return;
       try { sessionStorage.setItem("um2-exit", "1"); localStorage.setItem("um2-offer", String(Date.now())); } catch (err) {}
       clearInterval(tick);
       showModal("offer");
     };
-    const tick = setInterval(() => { if (!document.hidden && ++seen >= 35 && deep) tryShow(); }, 1000);
-    if (fine) document.addEventListener("mouseout", (e) => { if (!e.relatedTarget && e.clientY <= 8 && seen >= 15) tryShow(); });
+    const tick = setInterval(() => {
+      if (document.hidden) return;
+      seen++;
+      try { sessionStorage.setItem("um2-active", String(seen)); } catch (err) {}
+      if (seen >= 60 && deep) tryShow();
+    }, 1000);
+    if (fine) document.addEventListener("mouseout", (e) => { if (!e.relatedTarget && e.clientY <= 8 && seen >= 20) tryShow(); });
   }
 
   // квиз: вопрос за вопросом, без номеров, полоска прогресса
