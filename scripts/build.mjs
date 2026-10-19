@@ -1541,7 +1541,7 @@ const legalBlock = (b, page, p) => typeof b === "string" ? `<p>${legalText(b, pa
   : `${b.org ? `<h3 class="legal__org">${esc(b.org)}</h3><p>${esc(b.note)}</p>` : ""}<dl class="legal__req">${b.rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>`;
 function pageLegal(page) {
   const depth = 1, p = "../";
-  const meta = page.meta || [["Оператор", "{{юрлицо}}"], ["Редакция", legalDate], ["Телефон", clinic.phone], ["Email", clinic.email]];
+  const meta = page.meta || [["Оператор", clinic.legal], ["Редакция", legalDate], ["Телефон", clinic.phone], ["Email", clinic.email]];
   return head({ title: page.title, desc: page.desc, canonical: `/${page.path}/`, depth, jsonld: [crumbsLd([[`${page.path}/`, page.crumb]])] })
   + header(depth) + `
 <main id="main">
