@@ -526,6 +526,7 @@
       const dm = $("#m-done");
       if (dm) { $("h2", dm).textContent = d ? d[0] : "Спасибо!"; $("[data-done-text]", dm).textContent = d ? d[1] : defDone; }
       f.reset();
+      document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: kind } })); // цель Метрики (cookie.js), без имени и телефона
       showModal("done");
     });
   });
@@ -673,6 +674,7 @@
           : "Сейчас клиника закрыта. Перезвоним утром, после 9:00, с номера +7 495 150-36-15.";
         const h0 = cb.offsetHeight;
         cb.hidden = true; cbDone.hidden = false; cbDone.focus({ preventScroll: true });
+        document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "final" } }));
         if (anim) { G.from(cbDone, { height: h0, duration: 0.6, ease: "power3.out", clearProps: "height" }); G.from(cbDone.children, { y: 16, autoAlpha: 0, duration: 0.6, stagger: 0.06, ease: "power3.out" }); }
         btn.disabled = false; btn.textContent = "Жду звонка"; cbIn.value = ""; draw(); clearErr();
       }, 700);
@@ -1226,7 +1228,7 @@
       }
       if (b.matches("[data-next-time]")) return go(4);
     });
-    $("#b-form", box).addEventListener("submit", (e) => { e.preventDefault(); go(5); });
+    $("#b-form", box).addEventListener("submit", (e) => { e.preventDefault(); document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "zapis" } })); go(5); });
 
     // предвыбор из ссылки: zapis.html?service=implantaciya&doctor=hludnevskiy
     renderDocs();

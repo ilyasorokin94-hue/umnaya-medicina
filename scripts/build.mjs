@@ -12,7 +12,7 @@ import { servicePages, servicePriceDate, servicePriceHold, consultFree } from ".
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
-import { legalPages, legalDate, CONSENT_CHECKBOX } from "../src/legal-pages.mjs";
+import { legalPages, legalDate, CONSENT_CHECKBOX, METRIKA_ID } from "../src/legal-pages.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
@@ -24,8 +24,9 @@ const assets = {
   "styles.css": transformSync(["fonts.css", "styles.css", "rvm.css"].map(srcAsset).join("\n"), { loader: "css", minify: true }).code,
   "app.js": transformSync(srcAsset("app.js"), { loader: "js", minify: true }).code,
   "rvm.js": transformSync(srcAsset("rvm.js"), { loader: "js", minify: true }).code,
+  "cookie.js": transformSync(srcAsset("cookie.js"), { loader: "js", minify: true }).code,
 };
-const V = { css: hash(assets["styles.css"]), app: hash(assets["app.js"]), rvm: hash(assets["rvm.js"]) };
+const V = { css: hash(assets["styles.css"]), app: hash(assets["app.js"]), rvm: hash(assets["rvm.js"]), cookie: hash(assets["cookie.js"]) };
 // шрифты лежат на сайте (без Google Fonts): первыми грузим кириллицу и латиницу (цифры, знаки) текста и заголовков
 const fontPreload = ["golos-text-cyrillic", "golos-text-latin", "manrope-cyrillic", "manrope-latin"];
 const SITE = process.env.SITE_URL || "https://umnaya-stomatologiya.ru"; // домен-пример для canonical и разметки
@@ -179,6 +180,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <script src="${p}assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="${p}assets/vendor/lenis.min.js" defer></script>
 <script src="${p}assets/app.js?v=${V.app}" defer></script>
+<script src="${p}assets/cookie.js?v=${V.cookie}" data-privacy="${p}privacy/" data-ym="${METRIKA_ID}" defer></script>
 ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</script>`).join("\n")}
 </head>
 <body${page === "booking" ? ' class="booking-page"' : ""}>
@@ -414,7 +416,7 @@ function footer(depth) {
   <div class="footer__legal">
     <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. Лицензия на медицинскую деятельность.</span>
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
-    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a></span>
+    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a></span>
   </div>
 </div></footer>
 <div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>

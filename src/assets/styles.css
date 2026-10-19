@@ -2130,3 +2130,17 @@ label.consent input[type="checkbox"][name="consent"][required] { flex: none; wid
   .legal__body { font-size: 16px; }
   .legal__req div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
 }
+
+/* уведомление о cookie: внизу, страницу не закрывает (cookie.js) */
+.cookie { position: fixed; z-index: 140; left: 24px; bottom: 24px; max-width: 520px; display: grid; gap: 14px; padding: 20px 22px; border-radius: 18px; background: rgba(12, 36, 16, .96); color: #fff; box-shadow: 0 24px 60px -20px rgba(12, 36, 16, .6), 0 0 0 1px rgba(255, 255, 255, .06); opacity: 0; transform: translateY(16px); transition: opacity .35s, transform .5s var(--ease); }
+.cookie.is-on { opacity: 1; transform: none; }
+.cookie[hidden] { display: none; }
+.cookie__t { font-size: 14px; line-height: 1.5; color: var(--muted-on-dark); }
+.cookie__t a { color: #fff; }
+.cookie__btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.cookie .btn--ghost { color: #fff; }
+@media (max-width: 760px) {
+  .cookie { left: 10px; right: 10px; bottom: calc(10px + env(safe-area-inset-bottom)); max-width: none; padding: 16px; }
+  .cookie__t { font-size: 13px; }
+  .cookie__btns .btn { flex: 1 1 auto; }
+}
