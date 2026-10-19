@@ -128,7 +128,7 @@ const icon = {
 
 // ---------- общие куски ----------
 // меню сайта, как у Тридента: «Услуги» раскрываются списком направлений, остальное разделы и страницы
-const menuItems = (p, href) => [["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
+const menuItems = (p, href) => [["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi/`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
 // шапка компьютера как у Лава Дент: под каждым разделом отрезок линии, он заполняется, пока этот раздел проходит
 // по экрану (CSS view-timeline блока). «Цены» отдельной страницей, поэтому блок услуг с ценами «от» делят пополам «Услуги» и «Цены»
 const navLine = {
@@ -138,7 +138,7 @@ const navLine = {
   "Вопросы": "animation-timeline:--tl-faq", "Контакты": "animation-timeline:--tl-contacts",
 };
 // меню телефона и шапка компьютера как у Лава Дент: разделы в порядке страницы (Ilya 17.10: после слогана клиника и «5 минут, 0 ₽, 3 врача», потом услуги), «Цены» рядом с услугами
-const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi.html`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
+const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi/`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
 // В <head> каждой страницы: телефоны и планшеты замеряют высоту экрана один раз (--vh, --svh) и меняют её только при повороте.
 // Во встроенных браузерах (Telegram, VK, Instagram) окно меняет высоту, когда прячется панель, и всё, что в styles.css задано
@@ -356,6 +356,12 @@ function offer(depth, consent, p) {
 </div></div>`;
 }
 
+// строка с реквизитами и документами: в подвале и на странице записи, у которой своего подвала нет
+const footerLegal = (p, cls = "footer__legal") => `  <div class="${cls}">
+    <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. Лицензия на медицинскую деятельность.</span>
+    <span>Имеются противопоказания, необходима консультация специалиста.</span>
+    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a><a href="${legalHref("svedeniya", p)}">Сведения о медицинской организации</a><a href="${legalHref("gosgarantii", p)}">Информация о возможности получения медицинской помощи в рамках программы государственных гарантий</a></span>
+  </div>`;
 function footer(depth) {
   const p = pre(depth);
   const { lat, lon } = clinic.geo;
@@ -413,11 +419,7 @@ function footer(depth) {
       <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="${SITE}/">
     </div>
   </div>
-  <div class="footer__legal">
-    <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. Лицензия на медицинскую деятельность.</span>
-    <span>Имеются противопоказания, необходима консультация специалиста.</span>
-    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a><a href="${legalHref("svedeniya", p)}">Сведения о медицинской организации</a><a href="${legalHref("gosgarantii", p)}">Информация о возможности получения медицинской помощи в рамках программы государственных гарантий</a></span>
-  </div>
+${footerLegal(p)}
 </div></footer>
 <div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
 ${modals(depth)}`;
@@ -654,7 +656,7 @@ ${promoBlock(p, depth)}
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>
   <div class="team__grid team__grid--lava">${doctors.map((d, i) => doctorCard(d, depth, { lava: true, i })).join("")}</div>
-  <div class="team__more"><a class="btn btn--ghost" href="vrachi.html">Все врачи: опыт, образование, курсы</a></div>
+  <div class="team__more"><a class="btn btn--ghost" href="vrachi/">Все врачи: опыт, образование, курсы</a></div>
 </div></section>
 
 <section class="section reviews" id="reviews" aria-labelledby="rv-title">
@@ -804,7 +806,7 @@ function spHref(url, p, cur) {
   if (u === "konsultaciya") return `${p}zapis.html`;
   const page = servicePages.find((x) => x.path === u + "/");
   if (page) return p + page.path;
-  if (u === "vrachi") return `${p}vrachi.html`;
+  if (u === "vrachi") return `${p}vrachi/`;
   // ещё не сделанная дочерняя страница (/diagnostika/kt/, /lechenie/karies/) — ссылка на раздел, а со страницы самого раздела — просто текст
   const up = servicePages.find((x) => !x.hidden && (x.path === u.replace(/\/[^/]+$/, "/") || x.path === u.split("/")[0] + "/"));
   if (up && u.includes("/")) return up === cur ? null : p + up.path;
@@ -990,7 +992,7 @@ function spSection(s, i, page, depth, ids) {
       const docs = [...new Set([...JSON.stringify(s.nodes).matchAll(/\(\/vrachi\/([\w-]+)\/?\)/g)].map((m) => m[1]))].filter((d) => docById[d]);
       const nodes = s.nodes.filter((n) => !(n.t === "ul" && n.items.every((x) => /\(\/vrachi\//.test(x))));
       return sec(`${grid(h2, spNodes(nodes, page, p) + subs)}<div class="team__grid sp-team">${docs.map((d) => doctorCard(docById[d], depth)).join("")}</div>
-      <div class="team__more"><a class="btn btn--ghost" href="${p}vrachi.html">Все врачи клиники</a></div>`);
+      <div class="team__more"><a class="btn btn--ghost" href="${p}vrachi/">Все врачи клиники</a></div>`);
     }
     case "place": {
       const call = s.nodes.find((n) => n.t === "p" && /^\*\*Запишитесь[^*]+\*\*$/.test(n.text.trim()));
@@ -1120,14 +1122,14 @@ function pageDoctor(d) {
   ].sort((a, b) => a.sort - b.sort);
   const desc = `${d.name}, ${d.title.toLowerCase()} стоматологии «Умная Медицина» в Удельной (Жуковский).${d.exp ? ` Стаж ${d.exp} лет.` : ""} Образование, курсы, запись на приём.`;
   const ld = { "@context": "https://schema.org", "@type": "Person", name: d.name, jobTitle: d.title, worksFor: { "@type": "Dentist", name: clinic.name }, url: `${SITE}/vrachi/${d.id}` };
-  return head({ title: `${d.name} — ${d.title.toLowerCase()} | Умная Медицина`, desc, canonical: `/vrachi/${d.id}`, depth, jsonld: [crumbsLd([["vrachi", "Врачи"], ["vrachi/" + d.id, d.short]]), ld] })
+  return head({ title: `${d.name} — ${d.title.toLowerCase()} | Умная Медицина`, desc, canonical: `/vrachi/${d.id}`, depth, jsonld: [crumbsLd([["vrachi/", "Врачи"], ["vrachi/" + d.id, d.short]]), ld] })
   + header(depth) + `
 <main id="main">
 <section class="page-hero doc-hero on-dark">
   <div class="foil__bg"></div>
   <div class="wrap doc-hero__in">
     <div class="doc-hero__text">
-      <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../vrachi.html">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
+      <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../vrachi/">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
       <span class="label label--light doc-hero__role">${esc(d.title)}</span>
       <h1><span data-split>${esc(last)}</span> <span data-split>${esc(given.join(" "))}</span></h1>
       ${d.claims ? `<ul class="doc-hero__facts">${d.claims.map(([n, t]) => `<li><b>${esc(n)}</b><span>${esc(t)}</span></li>`).join("")}</ul>` : d.exp || d.courses.length ? `<ul class="doc-hero__facts">
@@ -1257,7 +1259,7 @@ function pageDoc(d, page) {
   <div class="sp-hero__top">
     <figure class="dp-hero__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), `${d.name}, ${page.spec.toLowerCase()}`, depth, ' fetchpriority="high"', "(max-width: 760px) 92vw, 36vw").replace(' loading="lazy"', "")}</figure>
     <div class="sp-hero__text">
-      <nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><a href="${p}vrachi.html">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
+      <nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><a href="${p}vrachi/">Врачи</a><span aria-current="page">${esc(d.short)}</span></nav>
       <p class="label label--light dp-hero__spec">${esc(page.spec)}</p>
       <h1 id="h1"><span data-split>${esc(last)}</span> <span data-split>${esc(given.join(" "))}</span></h1>
       ${dpText(page.lead, pg, "p", "page-hero__lead")}
@@ -1275,7 +1277,7 @@ function pageDoc(d, page) {
     <nav class="sp-nav" aria-label="Что делает врач"><span class="label">Ведёт</span>${pills.map(([t, h]) => dpLink(t, h, p, "sp-pill")).join("")}</nav>
   </div>
 </section>`;
-  return head({ title: page.seoTitle, desc: page.seoDesc, canonical: `/vrachi/${d.id}/`, depth, jsonld: [crumbsLd([["vrachi", "Врачи"], [`vrachi/${d.id}/`, d.short]]), ld, ...(faq.length ? [faqLd(faq)] : [])] })
+  return head({ title: page.seoTitle, desc: page.seoDesc, canonical: `/vrachi/${d.id}/`, depth, jsonld: [crumbsLd([["vrachi/", "Врачи"], [`vrachi/${d.id}/`, d.short]]), ld, ...(faq.length ? [faqLd(faq)] : [])] })
   + header(depth) + `
 <main id="main" class="sp-page dp-page">
 ${heroHtml}
@@ -1338,26 +1340,26 @@ const docFaq = [
   ["Где почитать отзывы о врачах?", "На странице каждого врача собраны отзывы пациентов с ПроДокторов, у каждого отзыва ссылка на оригинал."],
 ];
 function pageDoctors() {
-  const depth = 0;
+  const depth = 1, p = "../";
   const list = docGroups.flatMap((g) => g.ids.map((id) => docById[id]));
-  const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: list.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + docHref(d.id, "/"), name: d.name })) };
+  const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: list.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + docHref(d.id, "/").replace(/\.html$/, ""), name: d.name })) };
   const cards = (ids) => `<div class="team__grid dl-grid">${ids.map((id) => doctorCard(docById[id], depth, { go: true, more: docCardMore(docById[id]) })).join("")}</div>`;
-  return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты | Умная Медицина", desc: "Врачи стоматологии «Умная Медицина» в Удельной: хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. Образование, отзывы пациентов, запись к врачу.", canonical: "/vrachi", depth, jsonld: [crumbsLd([["vrachi", "Врачи"]]), ld, faqLd(docFaq)] })
+  return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты | Умная Медицина", desc: "Врачи стоматологии «Умная Медицина» в Удельной: хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. Образование, отзывы пациентов, запись к врачу.", canonical: "/vrachi/", depth, jsonld: [crumbsLd([["vrachi/", "Врачи"]]), ld, faqLd(docFaq)] })
   + header(depth) + `
 <main id="main" class="dl-page">
 <section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="index.html">Главная</a><span aria-current="page">Врачи</span></nav><h1 data-split>Врачи стоматологии</h1><p class="page-hero__lead">Хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. В сложных случаях план лечения хирург, ортопед и терапевт составляют вместе.</p></div>
-  <div class="page-hero__aside">${act("Записаться на консультацию", "book", "", { cls: "btn--lg", magnet: true })}</div>
+  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Врачи</span></nav><h1 data-split>Врачи стоматологии</h1><p class="page-hero__lead">Хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. В сложных случаях план лечения хирург, ортопед и терапевт составляют вместе.</p></div>
+  <div class="page-hero__aside">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
   <nav class="sp-nav dl-nav" aria-label="Направления">${docGroups.map((g) => `<a class="sp-pill" href="#${g.id}">${esc(g.title)}</a>`).join("")}</nav>
 </div></section>
 <section class="section sp-sec dl-plan" id="vmeste" aria-labelledby="vmeste-t"><div class="wrap">
   <div class="sp-head"><h2 id="vmeste-t" data-split>Три врача. Один план лечения.</h2><p class="dl-text">Когда нужны и лечение, и имплантация, и протезы, на консультации собираются три врача и составляют один план с ценой. Цену плана фиксируем в договоре.</p></div>
-  <div class="sp-cards dl-roles">${[["Терапевт", "Лечит и сохраняет свои зубы, готовит рот к имплантации и протезированию.", ["chitaykin", "kashtanova"]], ["Хирург", "Удаляет зубы, которые не сохранить, ставит импланты, при нехватке кости наращивает её.", ["hludnevskiy", "radzhabov"]], ["Ортопед", "Планирует будущие зубы, ставит коронки и протезы, в том числе на импланты.", ["solodukhin", "alikhanova"]]].map(([t, x, ids]) => `<article class="sp-card" data-reveal><h3>${t}</h3><p>${x}</p><p class="dl-names">${ids.map((id) => `<a href="${docHref(id, "")}">${esc(docById[id].short)}</a>`).join("")}</p></article>`).join("")}</div>
+  <div class="sp-cards dl-roles">${[["Терапевт", "Лечит и сохраняет свои зубы, готовит рот к имплантации и протезированию.", ["chitaykin", "kashtanova"]], ["Хирург", "Удаляет зубы, которые не сохранить, ставит импланты, при нехватке кости наращивает её.", ["hludnevskiy", "radzhabov"]], ["Ортопед", "Планирует будущие зубы, ставит коронки и протезы, в том числе на импланты.", ["solodukhin", "alikhanova"]]].map(([t, x, ids]) => `<article class="sp-card" data-reveal><h3>${t}</h3><p>${x}</p><p class="dl-names">${ids.map((id) => `<a href="${docHref(id, p)}">${esc(docById[id].short)}</a>`).join("")}</p></article>`).join("")}</div>
 </div></section>
 ${docGroups.map((g, i) => `
 <section class="section sp-sec${i % 2 ? "" : " section--sage"}" id="${g.id}" aria-labelledby="${g.id}-t"><div class="wrap sp-grid">
   <div class="sp-grid__aside"><h2 id="${g.id}-t" data-split>${esc(g.title)}</h2><p class="dl-text">${esc(g.text)}</p>
-    <p class="dl-links">${g.svc.map((k) => `<a class="link" href="${svcHref(k, "")}">${esc(svc[k].menu)}</a>`).join("")}</p></div>
+    <p class="dl-links">${g.svc.map((k) => `<a class="link" href="${svcHref(k, p)}">${esc(svc[k].menu)}</a>`).join("")}</p></div>
   ${cards(g.ids)}
 </div></section>`).join("")}
 
@@ -1520,6 +1522,7 @@ function pageBooking() {
     </dl>
     <p class="note">Есть вопросы? Позвоните: <a href="${clinic.phoneHref}" style="color:#fff"><span itemprop="telephone">${esc(clinic.phone)}</span></a>, ежедневно с 9:00 до 21:00.<meta itemprop="openingHours" content="Mo-Su 09:00-21:00"></p>
     <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="${SITE}/">
+${footerLegal("", "footer__legal booking__legal")}
   </aside>
 </div>
 <script type="application/json" id="bdata">${JSON.stringify(bdata).replace(/</g, "\\u003c")}</script>` + end;
@@ -1530,7 +1533,7 @@ function pageBooking() {
 const legal = legalPages(clinic);
 const legalBy = Object.fromEntries(legal.map((d) => [d.slug, d]));
 const legalHref = (slug, p) => `${p}${legalBy[slug].path}/`;
-const legalLink = (to, p) => (to === "ceny" ? `${p}ceny/` : to === "vrachi" ? `${p}vrachi.html` : legalHref(to, p));
+const legalLink = (to, p) => (to === "ceny" ? `${p}ceny/` : to === "vrachi" ? `${p}vrachi/` : legalHref(to, p));
 const legalText = (t, page, p) => esc(t)
   .replace(/(?:8|\+7) \(\d{3}\) \d{3}-\d{2}-\d{2}/g, (m) => `<span class="nobr">${m}</span>`)
   .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (m, txt, url) => `<a href="${url}"${ext}>${txt}</a>`)
@@ -1562,7 +1565,7 @@ const helpCard = (t, href, x) => `<article class="sp-card"><h2><a href="${href}"
 const helpCards = (p) => [
   helpCard("Услуги", `${p}index.html#services`, homeOrder.slice(0, 6).map((k, i) => (i && !/^[А-ЯA-Z]{2}/.test(svc[k].title) ? svc[k].title[0].toLowerCase() + svc[k].title.slice(1) : svc[k].title)).join(", ") + " и другие."),
   helpCard("Цены", `${p}ceny/`, "Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽."),
-  helpCard("Врачи", `${p}vrachi.html`, "Врачи клиники по направлениям, у каждого своя страница."),
+  helpCard("Врачи", `${p}vrachi/`, "Врачи клиники по направлениям, у каждого своя страница."),
   helpCard("Контакты", `${p}index.html#contacts`, `${clinic.addressShort}. ${clinic.hours}.`),
 ].join("");
 // «Спасибо»: сюда же уходят формы без скриптов (action), обработчик заявок потом тоже ведёт сюда
@@ -1579,7 +1582,7 @@ function pageThanks() {
   <div class="sp-cards sp-cards--3">
     <article class="sp-card"><h2>Пока ждёте звонка</h2><p>Можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p><div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div></article>
     <article class="sp-card"><h2><a href="${p}index.html#contacts">Как добраться</a></h2><p>${esc(clinic.addressShort)}. ${esc(clinic.hours)}.</p></article>
-    <article class="sp-card"><h2><a href="${p}vrachi.html">Врачи</a></h2><p>Врачи клиники по направлениям, у каждого своя страница.</p></article>
+    <article class="sp-card"><h2><a href="${p}vrachi/">Врачи</a></h2><p>Врачи клиники по направлениям, у каждого своя страница.</p></article>
   </div>
 </div></section>
 </main>` + footer(depth) + end;
@@ -1623,10 +1626,16 @@ const noDash = (html) => html.replace(/(<script(?![^>]*ld\+json)[\s\S]*?<\/scrip
   const rest = all.slice(off + m.length, off + m.length + 400).replace(/<[^>]*>/g, "").split(/[.!?](?:\s|$)|"/)[0];
   return /[:—]/.test(sent) || /:/.test(rest) ? ", " : ": ";
 });
+// ссылки внутри сайта ведут на те же адреса, что в canonical и карте сайта: без «index.html» и без «.html»
+// (/zapis, а не /zapis.html). GitHub Pages и хостинг (.htaccess) отдают такие адреса сами
+const cleanHref = (html) => html.replace(/\shref="(?![a-z]+:|\/\/|#)([^"?#]*?)\.html([?#][^"]*)?"/g, (m, url, tail = "") => {
+  const dir = /(^|\/)index$/.test(url) ? url.replace(/index$/, "") || "./" : url;
+  return ` href="${dir}${tail}"`;
+});
 const pages = [];
 const urls = new Map(); // адрес страницы на сайте → её html, для карты сайта
 const out = (f, html, map = true) => {
-  if (f.endsWith(".html")) { pages.push((html = typo(f === "vrachi/sikacheva.html" ? html : noDash(html)))); if (map) urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
+  if (f.endsWith(".html")) { pages.push((html = cleanHref(typo(f === "vrachi/sikacheva.html" ? html : noDash(html))))); if (map) urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
   writeFileSync(path.join(dist, f), html);
 };
 out("index.html", pageHome());
@@ -1639,7 +1648,7 @@ writeFileSync(path.join(dist, "ceny.html"), `<!doctype html>
 <meta http-equiv="refresh" content="0; url=ceny/">
 </head><body><p><a href="ceny/">Цены на стоматологию в Удельной</a></p></body></html>
 `);
-out("vrachi.html", pageDoctors());
+out("vrachi/index.html", pageDoctors());
 out("zapis.html", pageBooking());
 for (const page of legal) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}/index.html`, pageLegal(page)); }
 mkdirSync(path.join(dist, "spasibo"), { recursive: true });
@@ -1702,6 +1711,100 @@ await Promise.all(jobs);
 // не слушают группы «*» и «Yandex», поэтому у них своя группа. Отдельных разрешений и запретов для других нейросетей нет
 out("robots.txt", PUBLISH ? `User-agent: *\nAllow: /\n\nUser-agent: Yandex\nAllow: /\n\nUser-agent: YandexAdditional\nUser-agent: YandexAdditionalBot\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n` : "User-agent: *\nDisallow: /\n");
 out(".nojekyll", "");
+
+// настройки хостинга на Apache (Beget, Timeweb, REG.RU и большинство российских хостингов читают .htaccess):
+// https и один адрес без www, адреса без .html, 404, переадресации со старых адресов демо, сжатие, кэш, заголовки безопасности.
+// Разрешения CSP: Яндекс Метрика с Вебвизором (mc.yandex.ru, yastatic.net, просмотр записей с metrika.yandex.ru и webvisor.com),
+// карты Яндекса и виджеты ПроДокторов. Подключаете новый сервис (обработчик заявок, чат, amoCRM) — допишите его домен сюда
+const host = new URL(SITE).host.replace(/^www\./, "");
+const csp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://mc.yandex.ru https://mc.yandex.com https://yastatic.net",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com https://*.yandex.ru https://*.yandex.net https://prodoctorov.ru https://*.prodoctorov.ru https://um-med.com",
+  "font-src 'self'",
+  "connect-src 'self' https://mc.yandex.ru https://mc.yandex.com wss://mc.yandex.ru wss://mc.yandex.com",
+  "frame-src blob: https://yandex.ru https://*.yandex.ru https://mc.yandex.ru https://mc.yandex.com https://prodoctorov.ru https://*.prodoctorov.ru",
+  "child-src blob: https://mc.yandex.ru https://mc.yandex.com",
+  "frame-ancestors 'self' https://metrika.yandex.ru https://metrica.yandex.com https://*.webvisor.com https://webvisor.com",
+  "base-uri 'self'", "form-action 'self'", "object-src 'none'", "upgrade-insecure-requests",
+].join("; ");
+// старые адреса демо: услуги, переехавшие в новый формат, прайс и список врачей
+const moved = [["ceny\\.html", "/ceny/"], ["vrachi\\.html", "/vrachi/"], 
+  ...services.filter((x) => spBySlug[x.slug]).map((x) => [`uslugi/${x.slug}(?:\\.html)?`, `/${spBySlug[x.slug].path}`])];
+out(".htaccess", `# Стоматология «Умная Медицина», ${SITE}. Собирается из scripts/build.mjs, руками не править
+AddDefaultCharset utf-8
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+# https и один адрес сайта, без www
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteRule ^ https://${host}%{REQUEST_URI} [R=301,L,NE]
+RewriteCond %{HTTP_HOST} ^www\\.(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L,NE]
+
+# старые адреса
+${moved.map(([from, to]) => `RewriteRule ^${from}$ https://%{HTTP_HOST}${to} [R=301,L]`).join("\n")}
+
+# /index.html → /, /zapis.html → /zapis (только то, что набрано в адресе, без петли с внутренней подстановкой)
+RewriteCond %{THE_REQUEST} \\s/+((?:[^?\\s]*/)?)index\\.html[?\\s]
+RewriteRule ^ https://%{HTTP_HOST}/%1 [R=301,L,NE]
+RewriteCond %{THE_REQUEST} \\s/+([^?\\s]+?)\\.html[?\\s]
+RewriteCond %1 !^404$
+RewriteRule ^ https://%{HTTP_HOST}/%1 [R=301,L,NE]
+# /ceny → /ceny/ сразу на https (mod_dir сам отправил бы на http за прокси)
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^(.+[^/])$ https://%{HTTP_HOST}/$1/ [R=301,L]
+# /zapis/ → /zapis
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.+)/$ https://%{HTTP_HOST}/$1 [R=301,L]
+# /zapis отдаёт zapis.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.+)$ $1.html [L]
+</IfModule>
+
+# сжатие текста
+<IfModule mod_brotli.c>
+AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/plain text/xml application/javascript text/javascript application/json application/xml image/svg+xml
+</IfModule>
+<IfModule mod_deflate.c>
+AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript text/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+AddType image/webp .webp
+AddType font/woff2 .woff2
+AddType image/svg+xml .svg
+
+# кэш: стили и скрипты с версией в адресе (?v=) и шрифты на год, картинки на месяц, страницы всегда свежие
+<IfModule mod_headers.c>
+<FilesMatch "\\.(css|js|woff2)$">
+Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+<FilesMatch "\\.(webp|jpe?g|png|svg|avif|ico)$">
+Header set Cache-Control "public, max-age=2592000"
+</FilesMatch>
+<FilesMatch "\\.(html|xml|txt)$">
+Header set Cache-Control "no-cache"
+</FilesMatch>
+
+# защита
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+Header always set Content-Security-Policy "${csp}"
+Header unset X-Powered-By
+</IfModule>
+`);
 
 // карта сайта с честной датой: lastmod меняется, только когда меняется содержание страницы (заголовок, описание, разметка, текст),
 // а не вёрстка или версии файлов. Отпечатки и даты хранятся в scripts/seo-state.json, обновляет их только боевая сборка:

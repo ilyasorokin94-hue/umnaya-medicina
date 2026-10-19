@@ -2153,3 +2153,6 @@ label.consent input[type="checkbox"][name="consent"][required] { flex: none; wid
 @media (min-width: 1025px) { .sp-cards--4 { --cols: 4; } }
 /* на «Спасибо» второй раз номер не просим: заявка уже отправлена */
 [data-page="thanks"] .footer__cta { display: none; }
+/* страница записи без подвала: реквизиты и документы внизу колонки «Ваша запись» */
+.booking__legal { display: grid; gap: 8px; margin-top: auto; font-size: 12px; }
+.booking__legal .footer__docs { gap: 6px 16px; flex-basis: auto; }

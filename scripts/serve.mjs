@@ -19,7 +19,10 @@ createServer(async (req, res) => {
     let rel = decodeURIComponent(new URL(req.url, "http://x").pathname);
     let file = path.join(root, rel);
     if (!file.startsWith(root)) throw new Error("outside");
-    if ((await stat(file).catch(() => null))?.isDirectory()) file = path.join(file, "index.html");
+    const st = await stat(file).catch(() => null);
+    if (st?.isDirectory()) file = path.join(file, "index.html");
+    // адреса без .html (/zapis), как на GitHub Pages и хостинге
+    else if (!st && (await stat(file + ".html").catch(() => null))) file += ".html";
     const body = await readFile(file);
     res.writeHead(200, { "Content-Type": types[path.extname(file).toLowerCase()] || "application/octet-stream", "Cache-Control": "no-cache" });
     res.end(body);
