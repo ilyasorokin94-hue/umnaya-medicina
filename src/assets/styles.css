@@ -862,6 +862,8 @@ html:not(.js-intro) .intro { display: none; }
   html.mb-off .mobilebar, html.bar-off .mobilebar, html.bar-kb .mobilebar { transform: translateY(calc(100% + 30px)); opacity: 0; pointer-events: none; }
   /* до решения app.js (видна ли кнопка первого экрана) панели нет: иначе она мелькала при загрузке и уезжала вниз */
   html.js:not(.mb-ready) .mobilebar { transform: translateY(calc(100% + 30px)); opacity: 0; pointer-events: none; transition: none; }
+  /* пока открыто уведомление о cookie, панель уходит вниз: плашка стоит на её месте, вместе они наслаивались */
+  body:has(> .cookie.is-on) .mobilebar { transform: translateY(calc(100% + 30px)); opacity: 0; pointer-events: none; }
 
   /* слоган */
   .slogan .marquee { padding: 30px 0; }
