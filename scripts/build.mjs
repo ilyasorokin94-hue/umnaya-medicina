@@ -416,7 +416,7 @@ function footer(depth) {
   <div class="footer__legal">
     <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. Лицензия на медицинскую деятельность.</span>
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
-    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a></span>
+    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a><a href="${legalHref("svedeniya", p)}">Сведения о медицинской организации</a><a href="${legalHref("gosgarantii", p)}">Информация о возможности получения медицинской помощи в рамках программы государственных гарантий</a></span>
   </div>
 </div></footer>
 <div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
@@ -1530,15 +1530,18 @@ function pageBooking() {
 const legal = legalPages(clinic);
 const legalBy = Object.fromEntries(legal.map((d) => [d.slug, d]));
 const legalHref = (slug, p) => `${p}${legalBy[slug].path}/`;
+const legalLink = (to, p) => (to === "ceny" ? `${p}ceny/` : to === "vrachi" ? `${p}vrachi.html` : legalHref(to, p));
 const legalText = (t, page, p) => esc(t)
-  .replace(/\[([^\]]+)\]\((privacy|consent|agreement)\)/g, (m, txt, slug) => `<a href="${legalHref(slug, p)}">${txt}</a>`)
+  .replace(/(?:8|\+7) \(\d{3}\) \d{3}-\d{2}-\d{2}/g, (m) => `<span class="nobr">${m}</span>`)
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (m, txt, url) => `<a href="${url}"${ext}>${txt}</a>`)
+  .replace(/\[([^\]]+)\]\((privacy|consent|agreement|gosgarantii|svedeniya|ceny|vrachi)\)/g, (m, txt, to) => `<a href="${legalLink(to, p)}">${txt}</a>`)
   .replace(/\{\{([^}]+)\}\}/g, (m, note) => spTag("уточняем у клиники", note, page));
 const legalBlock = (b, page, p) => typeof b === "string" ? `<p>${legalText(b, page, p)}</p>`
   : b.ul ? `<ul>${b.ul.map((li) => `<li>${legalText(li, page, p)}</li>`).join("")}</ul>`
-  : `<dl class="legal__req">${b.rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>`;
+  : `${b.org ? `<h3 class="legal__org">${esc(b.org)}</h3><p>${esc(b.note)}</p>` : ""}<dl class="legal__req">${b.rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>`;
 function pageLegal(page) {
   const depth = 1, p = "../";
-  const meta = [["Оператор", "{{юрлицо}}"], ["Редакция", legalDate], ["Телефон", clinic.phone], ["Email", clinic.email]];
+  const meta = page.meta || [["Оператор", "{{юрлицо}}"], ["Редакция", legalDate], ["Телефон", clinic.phone], ["Email", clinic.email]];
   return head({ title: page.title, desc: page.desc, canonical: `/${page.path}/`, depth, jsonld: [crumbsLd([[`${page.path}/`, page.crumb]])] })
   + header(depth) + `
 <main id="main">
