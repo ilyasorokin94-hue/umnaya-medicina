@@ -12,6 +12,7 @@ import { servicePages, servicePriceDate, servicePriceHold, consultFree } from ".
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
+import { legalPages, legalDate, CONSENT_CHECKBOX } from "../src/legal-pages.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
@@ -268,10 +269,13 @@ function header(depth, home = false) {
 </div>`;
 }
 
+// строка согласия под формами (152-ФЗ: согласие отдельным документом): ссылки на свои страницы в новой вкладке, заполненная форма не теряется
+const consentNote = (lead, p) => `${lead}, вы даёте <a href="${legalHref("consent", p)}"${ext}>согласие на обработку персональных данных</a> и принимаете <a href="${legalHref("privacy", p)}"${ext}>Политику конфиденциальности</a>.`;
+
 // окна: запись, перезвон, снимок на второе мнение, расчёт All-on-4, мессенджеры, при уходе, «спасибо»
 function modals(depth) {
   const p = pre(depth);
-  const consent = `Отправляя заявку, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.`;
+  const consent = consentNote("Отправляя заявку", p);
   const phone = `<label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>`;
   const name = `<label>Имя<input name="name" autocomplete="given-name" required></label>`;
   // строка «Акция: …», если окно открыли кнопкой из блока акций; уходит в заявку скрытым полем promo
@@ -354,7 +358,7 @@ function footer(depth) {
       <label class="big__field" for="cb-phone"><span class="sr">Ваш телефон</span><span class="big__ghost" aria-hidden="true"><i data-typed></i><span data-rest>+7 000 000-00-00</span></span><input class="big__in" id="cb-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required aria-describedby="cb-hint"></label>
       <button class="big__btn" type="submit">${esc(home.footForm.btn)}</button>
       <p class="cb__hint" id="cb-hint">${esc(home.final[1])}</p>
-      <p class="cb__consent">Отправляя номер, вы соглашаетесь на <a href="https://um-med.com/assets/files/pol.pdf"${ext}>обработку персональных данных</a>.</p>
+      <p class="cb__consent">${consentNote("Отправляя номер", p)}</p>
     </form>
     <div class="cb__done" role="status" tabindex="-1" hidden>
       <p class="cb__done-t">Спасибо, номер у нас</p>
@@ -391,7 +395,7 @@ function footer(depth) {
           <a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a>
           <a href="${clinic.vk}"${ext}>ВКонтакте</a>
           <a href="https://um-med.com/assets/files/dogovor-oferta.pdf"${ext}>Договор-оферта</a>
-          <a href="https://um-med.com/assets/files/pol.pdf"${ext}>Политика обработки данных</a>
+          <a href="${legalHref("privacy", p)}">Политика конфиденциальности</a>
           <a href="${clinic.mainSite}"${ext}>Многопрофильная клиника</a>
           <a href="https://um-med.com/vacancies.html"${ext}>Вакансии</a>
         </p>
@@ -402,6 +406,7 @@ function footer(depth) {
   <div class="footer__legal">
     <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. Лицензия на медицинскую деятельность.</span>
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
+    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a></span>
   </div>
 </div></footer>
 <div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
@@ -1483,7 +1488,7 @@ function pageBooking() {
           <label>Имя<input name="name" required autocomplete="name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
           <label>Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
-          <label class="check"><input type="checkbox" required> Согласен на обработку персональных данных</label>
+          <label class="check"><input type="checkbox" name="consent" required><span>Даю <a href="${legalHref("consent", "")}"${ext}>согласие на обработку персональных данных</a> и принимаю <a href="${legalHref("privacy", "")}"${ext}>Политику конфиденциальности</a></span></label>
           <div class="bnav" style="margin-top:6px"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn">Записаться</button></div>
         </form>
       </section>
@@ -1508,6 +1513,34 @@ function pageBooking() {
   </aside>
 </div>
 <script type="application/json" id="bdata">${JSON.stringify(bdata).replace(/</g, "\\u003c")}</script>` + end;
+}
+
+// ---------- политика конфиденциальности, согласие, соглашение ----------
+// формат по образцу Зубной Гармонии и Юкки Дент: шапка с оператором и датой, нумерованные разделы
+const legal = legalPages(clinic);
+const legalBy = Object.fromEntries(legal.map((d) => [d.slug, d]));
+const legalHref = (slug, p) => `${p}${legalBy[slug].path}/`;
+const legalText = (t, page, p) => esc(t)
+  .replace(/\[([^\]]+)\]\((privacy|consent|agreement)\)/g, (m, txt, slug) => `<a href="${legalHref(slug, p)}">${txt}</a>`)
+  .replace(/\{\{([^}]+)\}\}/g, (m, note) => spTag("уточняем у клиники", note, page));
+const legalBlock = (b, page, p) => typeof b === "string" ? `<p>${legalText(b, page, p)}</p>`
+  : b.ul ? `<ul>${b.ul.map((li) => `<li>${legalText(li, page, p)}</li>`).join("")}</ul>`
+  : `<dl class="legal__req">${b.rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>`;
+function pageLegal(page) {
+  const depth = 1, p = "../";
+  const meta = [["Оператор", "{{юрлицо}}"], ["Редакция", legalDate], ["Телефон", clinic.phone], ["Email", clinic.email]];
+  return head({ title: page.title, desc: page.desc, canonical: `/${page.path}/`, depth, jsonld: [crumbsLd([[`${page.path}/`, page.crumb]])] })
+  + header(depth) + `
+<main id="main">
+<section class="page-hero on-dark legal-hero"><div class="foil__bg"></div><div class="wrap page-hero__in">
+  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">${esc(page.crumb)}</span></nav><h1>${esc(page.h1)}</h1><p class="page-hero__lead">${esc(page.lead)}</p></div>
+</div></section>
+<section class="section legal"><div class="wrap">
+  <dl class="legal__meta">${meta.map(([k, v]) => `<div><dt>${k}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>
+  <ol class="legal__list">${page.sections.map(([h, blocks], i) => `<li class="legal__sec" id="p${i + 1}"><span class="legal__n" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span><div class="legal__body"><h2>${esc(h)}</h2>${blocks.map((b) => legalBlock(b, page, p)).join("")}</div></li>`).join("")}</ol>
+  <nav class="legal__docs" aria-label="Документы">${legal.filter((d) => d !== page).map((d) => `<a href="${legalHref(d.slug, p)}">${esc(d.h1)}</a>`).join("")}</nav>
+</div></section>
+</main>` + footer(depth) + end;
 }
 
 // ---------- сборка ----------
@@ -1548,6 +1581,7 @@ writeFileSync(path.join(dist, "ceny.html"), `<!doctype html>
 `);
 out("vrachi.html", pageDoctors());
 out("zapis.html", pageBooking());
+for (const page of legal) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}/index.html`, pageLegal(page)); }
 // старые адреса услуг, переехавших в новый формат, ведут на новую страницу и в карту сайта не попадают
 for (const s of services) spBySlug[s.slug] ? writeFileSync(path.join(dist, `uslugi/${s.slug}.html`), noDash(spRedirect(spBySlug[s.slug]))) : out(`uslugi/${s.slug}.html`, pageService(s));
 for (const page of servicePages) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}index.html`, pageSvc(page), !page.hidden); }

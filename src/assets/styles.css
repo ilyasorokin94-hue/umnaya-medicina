@@ -2094,3 +2094,31 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
 /* под прайсом: вычет, рассрочка, скидка (заголовки H2 по семантике SEO-треда, размер как у карточек услуг) и вопросы о ценах */
 .pinfo .sp-card h2 { font-size: var(--fs-2); line-height: 1.2; letter-spacing: -.025em; }
 .pfaq .faqt__list { padding-top: 0; border-top: 1px solid var(--line); }
+
+/* ---------- политика конфиденциальности, согласие, соглашение (формат Зубной Гармонии и Юкки Дент) ---------- */
+.legal-hero h1 { max-width: 18ch; }
+.legal { padding-top: clamp(48px, 6vw, 90px); }
+.legal__meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px clamp(20px, 3vw, 48px); margin: 0 0 clamp(36px, 5vw, 64px); padding: 0 0 28px; border-bottom: 1px solid var(--line); }
+.legal__meta dt, .legal__req dt { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.legal__meta dd { margin: 8px 0 0; font: 500 17px/1.35 var(--display); overflow-wrap: anywhere; }
+.legal__list { list-style: none; margin: 0; padding: 0; max-width: 980px; }
+.legal__sec { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 24px; padding: clamp(26px, 3vw, 40px) 0; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--header-h) + 20px); }
+.legal__n { font: 500 clamp(26px, 2.4vw, 36px)/1 var(--display); letter-spacing: -.03em; color: var(--green); }
+.legal__body { display: grid; gap: 14px; max-width: 760px; font-size: 17px; line-height: 1.6; color: var(--muted); overflow-wrap: anywhere; }
+.legal__body h2 { font: 500 clamp(22px, 2vw, 30px)/1.2 var(--display); letter-spacing: -.02em; color: var(--text); }
+.legal__body ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.legal__body a { color: var(--green-deep); }
+.legal__req { display: grid; margin: 0; border-top: 1px solid var(--line); }
+.legal__req div { display: grid; grid-template-columns: minmax(150px, .5fr) minmax(0, 1fr); gap: 6px 20px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+.legal__req dd { margin: 0; color: var(--text); }
+.legal__docs { display: flex; flex-wrap: wrap; gap: 12px 28px; max-width: 980px; padding-top: 28px; border-top: 1px solid var(--line); }
+.legal__docs a { color: var(--green-deep); }
+.footer__docs { display: flex; flex-wrap: wrap; gap: 6px 20px; flex-basis: 100%; }
+.form .check span { line-height: 1.4; }
+.form .check a { color: inherit; }
+@media (max-width: 760px) {
+  .legal__meta { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .legal__sec { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .legal__body { font-size: 16px; }
+  .legal__req div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
