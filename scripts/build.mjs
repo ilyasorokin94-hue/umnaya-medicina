@@ -346,7 +346,7 @@ function offer(depth, consent, p) {
     <h2 id="m-offer-t" tabindex="-1">${esc(o.title)}</h2>
     <p class="invite__sub">${esc(o.sub)}</p>
     <p class="invite__perk">${esc(o.perk)}</p>
-    <form class="lead invite__form" id="offer-form" data-lead="offer">
+    <form class="lead invite__form" id="offer-form" data-lead="offer" method="post" action="${p}spasibo/">
       <label class="invite__field"><span>Телефон</span><input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>
       <button class="btn">${esc(o.btn)}</button>
     </form>
