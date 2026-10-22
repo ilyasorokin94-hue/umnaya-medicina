@@ -335,6 +335,7 @@ ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">
 ${offer(depth, consent, p)}
 ${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}.${msgrLinks().length ? ` Пока ждёте, можете прислать снимок в ${msgrSay()}, врач посмотрит его до визита.` : ""}</p>
   ${msgrLinks().length ? `<div class="modal__msgr">${msgrLinks().map(([n, u], i) => `<a class="btn${i ? " btn--ghost" : ""}" href="${u}"${ext}>${n}</a>`).join("")}</div>` : ""}
+  <button class="btn btn--lg btn--wide modal__ok" type="button" data-close>Хорошо</button>
 ${LEADS ? "" : `
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>`}`)}
 </div>`;
@@ -934,7 +935,7 @@ function spNodes(nodes, page, p) {
       last = "";
       out.push(isPriceTable(n) ? spPriceList(n, page, p) : `<div class="sp-table" data-reveal><table>
         <thead><tr>${n.head.map((h) => `<th scope="col">${spMd(h, page, p)}</th>`).join("")}</tr></thead>
-        <tbody>${n.rows.map((r) => `<tr>${r.map((c, i) => (i ? `<td>${spHeldCell(r[0], c, page) || spMd(c, page, p)}</td>` : `<th scope="row">${spMd(c, page, p)}</th>`)).join("")}</tr>`).join("")}</tbody>
+        <tbody>${n.rows.map((r) => `<tr>${r.map((c, i) => (i ? `<td${n.head.length > 2 ? ` data-label="${esc(spPlain(n.head[i] || ""))}"` : ""}>${spHeldCell(r[0], c, page) || spMd(c, page, p)}</td>` : `<th scope="row">${spMd(c, page, p)}</th>`)).join("")}</tr>`).join("")}</tbody>
       </table></div>`);
     }
   }

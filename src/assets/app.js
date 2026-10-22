@@ -569,6 +569,25 @@
     if (t && showModal(t.dataset.modal, t)) { e.preventDefault(); closeMenu(); return; }
     if (e.target.closest("[data-close]") || e.target.classList.contains("modal")) hideModal();
   });
+  // на телефоне окно снизу закрывается свайпом вниз, если оно прокручено к началу
+  let sw = null;
+  document.addEventListener("touchstart", (e) => {
+    const b = openM && e.target.closest(".modal__box");
+    sw = b && b.scrollTop <= 0 && !e.target.closest("input, textarea, select") ? { b, y: e.touches[0].clientY, dy: 0 } : null;
+  }, { passive: true });
+  document.addEventListener("touchmove", (e) => {
+    if (!sw) return;
+    sw.dy = e.touches[0].clientY - sw.y;
+    sw.b.style.transform = sw.dy > 0 ? `translateY(${sw.dy}px)` : "";
+  }, { passive: true });
+  document.addEventListener("touchend", () => {
+    if (!sw) return;
+    const { b, dy } = sw;
+    sw = null;
+    if (dy > 90) { hideModal(); setTimeout(() => (b.style.transform = ""), 320); return; }
+    b.style.transition = "transform .25s"; b.style.transform = "";
+    setTimeout(() => (b.style.transition = ""), 260);
+  });
   document.addEventListener("keydown", (e) => {
     if (!openM) return;
     if (e.key === "Escape") return hideModal();

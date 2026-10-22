@@ -2180,3 +2180,25 @@ label.consent input[type="checkbox"][name="consent"][required] { flex: none; wid
   .legal-hero.sp-hero h1 { font-size: clamp(30px, 8.4vw, 40px); }
   .bstart__pic { margin-inline: calc(-1 * var(--gutter)); max-width: none; }
 }
+
+/* телефон: таблицы услуг карточками, без прокрутки вбок (Ilya 22.10: правая колонка уезжала за край).
+   Строка — заголовок и под ним ячейки; у таблиц от трёх колонок над ячейкой подпись из шапки */
+@media (max-width: 760px) {
+  .sp-table { overflow: visible; border-top: 1px solid var(--line); }
+  .sp-table table, .sp-table tbody, .sp-table tr { display: block; min-width: 0; width: 100%; }
+  .sp-table thead { display: none; }
+  .sp-table tr { padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .sp-table tbody th, .sp-table td { display: block; width: auto; padding: 0; border: 0; }
+  .sp-table tbody th { color: var(--text); font-weight: 500; }
+  .sp-table tbody th + td { margin-top: 6px; }
+  .sp-table td + td { margin-top: 10px; }
+  .sp-table td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 2px; font-size: 13px; color: var(--muted); }
+}
+/* iPhone увеличивает страницу при вводе в поле мельче 16px и не возвращает обратно: окно «Спасибо» потом не помещалось */
+@media (hover: none), (max-width: 1024px) {
+  input:not([type="radio"]):not([type="checkbox"]):not([type="file"]), textarea, select { font-size: 16px !important; }
+}
+/* iPhone не передаёт касание по пустой подложке без cursor: pointer, и окно не закрывалось тапом мимо */
+.modal { cursor: pointer; }
+.modal__box { cursor: auto; }
+.modal__ok { margin-top: 22px; }
