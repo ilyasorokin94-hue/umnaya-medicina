@@ -551,6 +551,7 @@
     }
     m.hidden = false;
     openM = m; if (id !== "offer") anyModal = true;
+    if (id !== "done") document.dispatchEvent(new CustomEvent("um:goal", { detail: "open_" + id })); // цель Метрики (cookie.js)
     root.classList.add("has-modal");
     lenis?.stop();
     if (anim) {

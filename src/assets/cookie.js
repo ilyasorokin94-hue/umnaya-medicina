@@ -20,9 +20,34 @@
     mask();
     (function (m, e, t, r, i, k, a) { m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); }; m[i].l = 1 * new Date(); k = e.createElement(t); a = e.getElementsByTagName(t)[0]; k.async = 1; k.src = r; a.parentNode.insertBefore(k, a); })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
     window.ym(ID, "init", { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true });
+    if (/\/ceny(\/|\.html)?$/.test(location.pathname)) goal("prices");
   };
-  // цель «заявка»: только название формы, без имени и телефона (событие um:lead шлёт app.js после отправки)
-  document.addEventListener("um:lead", function (e) { if (loaded && window.ym) window.ym(ID, "reachGoal", "lead", { form: (e.detail && e.detail.form) || "" }); });
+  // цели Метрики (Ilya 22.10): только после согласия и без имени и телефона. Список целей для кабинета:
+  // /mnt/project-files/Заявки_с_сайта/цели_метрики.md
+  var goal = function (name, params) { if (loaded && window.ym) window.ym(ID, "reachGoal", name, params); };
+  // заявка: общая цель и отдельная по форме (событие um:lead шлёт app.js после отправки)
+  document.addEventListener("um:lead", function (e) {
+    var f = (e.detail && e.detail.form) || "";
+    goal("lead", { form: f });
+    if (f) goal("lead_" + f);
+  });
+  // открытие окна записи, звонка, снимка, All-on-4, рамки «Три врача» (событие um:goal шлёт app.js)
+  document.addEventListener("um:goal", function (e) { if (e.detail) goal(e.detail); });
+  var mapDone = false;
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest ? e.target : e.target.parentElement;
+    if (!t) return;
+    if (!mapDone && t.closest(".ctmap")) { mapDone = true; goal("map"); }
+    if (t.closest("[data-share]")) return goal("share_address");
+    var a = t.closest("a[href]");
+    // ссылка, которая открывает окно (запись, звонок), считается целью open_… из app.js
+    if (!a || a.hasAttribute("data-modal")) return;
+    var h = a.getAttribute("href");
+    if (/^tel:/.test(h)) goal("phone");
+    else if (/^https?:\/\/([a-z.]*\.)?(t\.me|max\.ru|vk\.com|wa\.me|whatsapp\.com)\//.test(h)) goal("messenger");
+    else if (/reviews/.test(h)) goal("reviews_out");
+    else if (/yandex\.ru\/maps|2gis\.ru/.test(h)) goal("route");
+  });
   // отказ после согласия: убираем cookie и записи Метрики
   var forget = function () {
     document.cookie.split(";").forEach(function (c) {
