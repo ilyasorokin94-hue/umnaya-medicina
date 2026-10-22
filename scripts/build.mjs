@@ -1134,7 +1134,7 @@ function pageSvc(page) {
 </section>
 ${introHtml ? `<section class="section sp-sec sp-intro" aria-label="Коротко об услуге"><div class="wrap">${introHtml}</div></section>` : ""}`;
   if (!ids.has("ceny")) throw new Error(`${page.slug}: в тексте нет прайса (таблица «Услуга | Цена»)`);
-  return head({ title, desc, canonical: `/${page.path}`, depth, jsonld })
+  return head({ title, desc, canonical: `/${page.path}`, depth, jsonld, noindex: !!page.hidden })
   + header(depth) + `
 <main id="main" class="sp-page">
 ${heroHtml}

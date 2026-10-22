@@ -835,12 +835,26 @@
     if (media) tl.fromTo(media, { clipPath: small ? "inset(0% 0% 100% 0%)" : "inset(10% 6% 10% 6%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: small ? 1.4 : 1.6, ease: "power3.inOut" }, small ? 0.35 : 0);
     const mimg = $(".hero__media img, .sp-hero__media img", h);
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
-    tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1);
+    if (words.length) tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1);
     const rise = $$(".kicker, .label, .crumbs, .page-hero__lead, .hero__facts > *, .hero__actions > *, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav", h).filter((el) => !conv || !el.closest(".hero__actions"));
     if (rise.length) tl.fromTo(rise, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
     if (bar && !matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     if (conv) {
-      tl.fromTo(conv, { letterSpacing: "0.5em", autoAlpha: 0, filter: "blur(6px)" }, { letterSpacing: "-0.055em", autoAlpha: 1, filter: "blur(0px)", duration: 2, ease: "expo.out", clearProps: "letterSpacing,filter" }, 0.45);
+      // буквы съезжаются сдвигом, а не letter-spacing: тот же рисунок (разрядка 0.5em → −0.055em), но раскладка
+      // не меняется и заголовок не даёт сдвига макета (CLS главной на компьютере был 0,14). После сборки слова как были
+      const wordEls = $$(".sw > span", conv), step = 0.555 * parseFloat(getComputedStyle(conv).fontSize);
+      const saved = wordEls.map((w) => w.textContent);
+      let at = 0;
+      const chars = wordEls.flatMap((w) => {
+        w.parentElement.style.overflow = "visible";
+        const cs = [...w.textContent].map((c) => { const s = document.createElement("span"); s.style.display = "inline-block"; s.textContent = c; s.dataset.i = at++; return s; });
+        at++; // пробел между словами тоже получал разрядку
+        w.replaceChildren(...cs);
+        return cs;
+      });
+      const unsplit = () => wordEls.forEach((w, i) => { w.textContent = saved[i]; w.parentElement.style.overflow = ""; });
+      tl.fromTo(conv, { autoAlpha: 0, filter: "blur(6px)" }, { autoAlpha: 1, filter: "blur(0px)", duration: 2, ease: "expo.out", clearProps: "filter" }, 0.45);
+      tl.fromTo(chars, { x: (i, el) => el.dataset.i * step }, { x: 0, duration: 2, ease: "expo.out", onComplete: unsplit }, 0.45);
       // кнопка приходит вместе с первой фразой, когда заголовок уже собрался
       tl.fromTo($$(".hero__actions > *", h), { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1 }, 1.35);
     }
