@@ -12,8 +12,8 @@ export const CONSENT_CHECKBOX = false;
 
 export const legalDate = "19.10.2026";
 
-// номер счётчика Яндекс Метрики: пока пусто, плашка cookie есть, но счётчик не грузится (Ilya 19.10: подключим позже)
-export const METRIKA_ID = "";
+// номер счётчика Яндекс Метрики (smartmed.clinic, вебвизор, Ilya 22.10); грузится только после «Принять все» в плашке cookie
+export const METRIKA_ID = "113739978";
 
 export const org = {
   full: "Общество с ограниченной ответственностью «Смартмед»",
