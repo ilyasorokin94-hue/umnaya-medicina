@@ -418,7 +418,6 @@ function footer(depth) {
           <a href="https://um-med.com/assets/files/dogovor-oferta.pdf"${ext}>Договор-оферта</a>
           <a href="${legalHref("privacy", p)}">Политика конфиденциальности</a>
           <a href="${clinic.mainSite}"${ext}>Многопрофильная клиника</a>
-          <a href="https://um-med.com/vacancies.html"${ext}>Вакансии</a>
         </p>
       </div>
       <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="${SITE}/">
