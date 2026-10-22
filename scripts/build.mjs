@@ -455,7 +455,28 @@ const faqLd = (faq) => ({ "@context": "https://schema.org", "@type": "FAQPage", 
 // ---------- блоки ----------
 // спорные цены (servicePriceHold) и в общем прайсе плашкой, как на страницах услуг
 const plHeld = (n, v) => servicePriceHold.find(([re]) => { re.lastIndex = 0; return re.test(`${n} — ${priceText(v)}`); });
-const plist = (keys, limit = 99) => `<ul class="plist">${keys.flatMap((k) => prices[k].items).slice(0, limit).map(([n, v]) => { const h = plHeld(n, v); if (h) spPending.push(`прайс: ${h[1]}`); return `<li><span>${esc(n)}</span><b>${h ? `<mark class="todo-tag" title="${esc(h[1].replace(/\d{1,3}(?:[\s\u00a0]\d{3})+/g, "…"))}">цена уточняется</mark>` : priceText(v)}</b></li>`; }).join("")}</ul>`;
+// в прайсе на /ceny/ название позиции ведёт на свою страницу услуги, если она есть и раздел не ведёт туда же
+// ссылкой «Об услуге» (третий аргумент plist — путь к корню)
+const priceLinks = {
+  consult: [[/Профосмотр/, "detskaya"]],
+  therapy: [[/кариес/, "karies"], [/пульпит/, "pulpit"], [/периодонтит/, "kanaly"], [/реставрац/, "restavraciya"], [/отбелив/, "otbelivanie"]],
+  hygiene: [[/^Детская/, "detskaya"]],
+  crowns: [[/^Металлокерамическая/, "metallokeramika"], [/циркони/i, "cirkonievye-koronki"], [/^Керамическая коронка E\.max/, "emax"], [/вкладка/i, "vkladki"]],
+  removable: [[/^Иммедиат/, "semnye-protezy"], [/^Частичный или полный/, "akrilovyj-protez"], [/Acry Free/, "nejlonovyj-protez"], [/^Бюгельный/, "byugelnyj-protez"]],
+  implant: [[/^Имплант по акции/, "implantaciya"], [/^Установка импланта/, "implanty"], [/коронка на имплант/i, "koronka-na-implant"]],
+  bone: [[/синус/i, "sinus-lifting"], [/блоками/, "kostnaya-plastika"]],
+  allon: [[/All-on-4/, "all-on-4"], [/All-on-6/, "all-on-6"], [/All-on-8|протез/, "vsya-chelyust"]],
+  surgery: [[/мудрости/, "zub-mudrosti"], [/кисты/, "kista"]],
+  ortho: [[/брекет/i, "brekety"], [/Элайнеры/, "elajnery"], [/^Ретен|^Ретейнер/, "retejnery"]],
+  xray: [[/^КТ/, "kt"], [/./, "rentgen"]],
+};
+const spPageBySlug = Object.fromEntries(servicePages.filter((x) => !x.hidden).map((x) => [x.slug, x]));
+const plName = (k, n, p) => {
+  const hit = p != null && (priceLinks[k] || []).find(([re]) => re.test(n));
+  const pg = hit && hit[1] !== priceSecs[k]?.[2] && spPageBySlug[hit[1]];
+  return pg ? `<a href="${p}${pg.path}">${esc(n)}</a>` : esc(n);
+};
+const plist = (keys, limit = 99, p = null) => `<ul class="plist">${keys.flatMap((k) => prices[k].items.map((it) => [k, it])).slice(0, limit).map(([k, [n, v]]) => { const h = plHeld(n, v); if (h) spPending.push(`прайс: ${h[1]}`); return `<li><span>${plName(k, n, p)}</span><b>${h ? `<mark class="todo-tag" title="${esc(h[1].replace(/\d{1,3}(?:[\s\u00a0]\d{3})+/g, "…"))}">цена уточняется</mark>` : priceText(v)}</b></li>`; }).join("")}</ul>`;
 
 // портрет врача: обработанный локальный файл, если он есть, иначе фото с ПроДокторов
 const docPhoto = (d) => [`images/doctors/${d.id}.jpg`, `images/doctors/${d.id}.png`, d.photo, d.photo && d.photo.replace("_square.jpg", "_square_small.jpg")];
@@ -1376,7 +1397,7 @@ ${docGroups.map((g, i) => `
 // не называем (Ilya 18.10: у сайта будет свой домен). В разделе ссылка на страницу услуги и кнопка записи
 const priceDate = "18.10.2026";
 const priceSecs = {
-  consult: ["0 ₽", "терапевт, ортопед, хирург и имплантолог", null],
+  consult: ["0 ₽", "терапевт, ортопед, хирург и имплантолог", "konsultaciya"],
   xray: ["от 500 ₽", "прицельный снимок", "diagnostika"],
   therapy: ["от 4 000 ₽", "лечение кариеса", "lechenie-zubov"],
   hygiene: ["4 500 ₽", "Air-Flow по средам, по акции", "gigiena"],
@@ -1429,18 +1450,39 @@ const priceFaq = [
 const priceAsk = (note) => spTag("уточняем у клиники", note, { slug: "ceny" });
 const priceNote = `Цены на ${priceDate}. Цена «от» означает минимальную стоимость: точную сумму врач называет после осмотра и записывает в план лечения, она не меняется без вашего согласия.`;
 
+// первый экран как у страниц услуг: картинка, цифры строкой. Своей картинки для цен пока нет, стоит консультационная
+const priceHero = ["images/svc-hero/konsultaciya.png"];
+const priceTotal = priceOrder.reduce((a, k) => a + prices[k].items.length, 0);
+const priceFacts = [
+  ["0 ₽", "консультация терапевта, ортопеда и хирурга с планом лечения"],
+  [priceSecs.therapy[0], priceSecs.therapy[1]],
+  [priceSecs.implant[0], priceSecs.implant[1]],
+  [String(priceTotal), `${plural(priceTotal, "позиция", "позиции", "позиций")} в ${priceOrder.length} разделах`],
+];
+
 function pagePrices() {
   const depth = 1, p = "../";
+  const heroImg = pick(priceHero, depth).src, heroSet = srcset(priceHero[0], depth);
   return head({ title: "Цены на стоматологию в Удельной: рассрочка и налоговый вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Бесплатная консультация с планом лечения, рассрочка, налоговый вычет за лечение зубов.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
   + header(depth) + `
-<main id="main">
-<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Цены</span></nav><h1 data-split>Цены на стоматологию в Удельной</h1><p class="page-hero__lead">Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽.</p></div>
-  <div class="page-hero__aside">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
-</div></section>
-<section class="section pv"><div class="wrap pv-a__in">
+<main id="main" class="sp-page">
+<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
+  <div class="sp-hero__top">
+    <div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="Модель челюсти и снимок КТ на планшете: план лечения с ценой по этапам" decoding="async" fetchpriority="high">` : ""}</div>
+    <div class="sp-hero__text">
+      <nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Цены</span></nav>
+      <h1 id="h1" data-split>Цены на стоматологию в Удельной</h1>
+      <p class="page-hero__lead">Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽.</p>
+    </div>
+    <div class="sp-hero__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true })}<a class="link" href="#prices">Все цены по разделам</a>${spWarn}</div>
+  </div>
+  <div class="wrap sp-hero__bottom">
+    <ul class="sp-facts">${priceFacts.map(([big, t]) => `<li><b>${esc(big)}</b><span>${esc(t)}</span></li>`).join("")}</ul>
+  </div>
+</section>
+<section class="section pv" id="prices"><div class="wrap pv-a__in">
   <div class="pv-a__side"><h2 class="section__title" data-split>Цены по разделам</h2><p class="note">${esc(priceNote)}</p><div class="pfilter"><label class="sr" for="p-search">Поиск услуги</label><input id="p-search" type="search" placeholder="Найти услугу: коронка, имплант, КТ…"></div></div>
-  <div class="pv-a__main ptables" data-prices="acc">${priceOrder.map((k, i) => `<details class="faqt pacc ptable" data-cat="${k}"${i ? "" : " open"}><summary><span class="pacc__t"><h3>${esc(prices[k].title)}</h3><small>${priceCount(k)}</small></span><span class="pfrom"><b>${esc(priceSecs[k][0])}</b><small>${esc(priceSecs[k][1])}</small></span><i aria-hidden="true"></i></summary><div class="faqt__body"><div class="pacc__body">${plist([k])}${priceMore(k, p)}</div></div></details>`).join("")}
+  <div class="pv-a__main ptables" data-prices="acc">${priceOrder.map((k, i) => `<details class="faqt pacc ptable" data-cat="${k}"${i ? "" : " open"}><summary><span class="pacc__t"><h3>${esc(prices[k].title)}</h3><small>${priceCount(k)}</small></span><span class="pfrom"><b>${esc(priceSecs[k][0])}</b><small>${esc(priceSecs[k][1])}</small></span><i aria-hidden="true"></i></summary><div class="faqt__body"><div class="pacc__body">${plist([k], 99, p)}${priceMore(k, p)}</div></div></details>`).join("")}
   <p class="pempty note" hidden>Ничего не нашлось. Позвоните, и администратор подскажет цену: <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a></p></div>
 </div></section>
 <section class="section section--sage pinfo"><div class="wrap">
