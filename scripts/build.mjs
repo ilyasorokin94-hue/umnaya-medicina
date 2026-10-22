@@ -1386,7 +1386,7 @@ function pageDoctors() {
   const list = docGroups.flatMap((g) => g.ids.map((id) => docById[id]));
   const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: list.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + docHref(d.id, "/").replace(/\.html$/, ""), name: d.name })) };
   const cards = (ids) => `<div class="team__grid dl-grid">${ids.map((id) => doctorCard(docById[id], depth, { go: true, more: docCardMore(docById[id]) })).join("")}</div>`;
-  return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты | Умная Медицина", desc: "Врачи стоматологии «Умная Медицина» в Удельной: хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. Образование, отзывы пациентов, запись к врачу.", canonical: "/vrachi/", depth, jsonld: [crumbsLd([["vrachi/", "Врачи"]]), ld, faqLd(docFaq)] })
+  return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты", desc: "Врачи стоматологии «Умная Медицина» в Удельной: хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. Образование, отзывы пациентов, запись к врачу.", canonical: "/vrachi/", depth, jsonld: [crumbsLd([["vrachi/", "Врачи"]]), ld, faqLd(docFaq)] })
   + header(depth) + `
 <main id="main" class="dl-page">
 ${picHero({ name: "vrachi", alt: "Три тёмно-зелёных медицинских костюма на вешалках", depth, text: `<nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Врачи</span></nav><h1 id="h1" data-split>Врачи стоматологии</h1><p class="page-hero__lead">Хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. В сложных случаях план лечения хирург, ортопед и терапевт составляют вместе.</p>`, act: act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true }), bottom: `<nav class="sp-nav dl-nav" aria-label="Направления">${docGroups.map((g) => `<a class="sp-pill" href="#${g.id}">${esc(g.title)}</a>`).join("")}</nav>` })}
@@ -1480,7 +1480,7 @@ const priceFacts = [
 function pagePrices() {
   const depth = 1, p = "../";
   const heroImg = pick(priceHero, depth).src, heroSet = srcset(priceHero[0], depth);
-  return head({ title: "Цены на стоматологию в Удельной: рассрочка и налоговый вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Консультация с планом лечения 0 ₽ при лечении в клинике, рассрочка, налоговый вычет за лечение зубов.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
+  return head({ title: "Цены на стоматологию в Удельной, рассрочка и вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Консультация с планом лечения 0 ₽ при лечении в клинике, рассрочка, налоговый вычет за лечение зубов.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
   + header(depth) + `
 <main id="main" class="sp-page">
 <section class="page-hero sp-hero on-dark" aria-labelledby="h1">
