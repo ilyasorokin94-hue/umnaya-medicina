@@ -25,7 +25,7 @@
 <link rel="preload" href="assets/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/styles.css?v=95946e28">
+<link rel="stylesheet" href="assets/styles.css?v=87813532">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
@@ -36,7 +36,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <script src="assets/vendor/gsap.min.js" defer></script>
 <script src="assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="assets/vendor/lenis.min.js" defer></script>
-<script src="assets/app.js?v=d2b6ed27" defer></script>
+<script src="assets/app.js?v=d169dadf" defer></script>
 <script src="assets/cookie.js?v=886e3f70" data-privacy="privacy/" data-ym="" defer></script>
 
 </head>
@@ -71,13 +71,13 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   <div class="page-hero__aside"><a class="btn btn--lg btn--light" href="./">На главную</a><a class="btn btn--ghost" href="zapis" data-modal="book">Записаться на консультацию</a></div>
 </div></section>
 <section class="section"><div class="wrap">
-  <div class="sp-cards sp-cards--4"><article class="sp-card"><h2><a href="./#services">Услуги</a></h2><p>КТ и снимки, профгигиена Air-Flow, лечение зубов, имплантация зубов, all-on-4 и All-on-6, лечение под микроскопом и другие.</p></article><article class="sp-card"><h2><a href="ceny/">Цены</a></h2><p>Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽.</p></article><article class="sp-card"><h2><a href="vrachi/">Врачи</a></h2><p>Врачи клиники по направлениям, у каждого своя страница.</p></article><article class="sp-card"><h2><a href="./#contacts">Контакты</a></h2><p>Удельная, ул. Громова, 10/2. Ежедневно с 9:00 до 21:00.</p></article></div>
+  <div class="sp-cards sp-cards--4"><article class="sp-card"><h2><a href="./#services">Услуги</a></h2><p>КТ и снимки, профгигиена Air-Flow, лечение зубов, имплантация зубов, all-on-4 и All-on-6, лечение под микроскопом и другие.</p></article><article class="sp-card"><h2><a href="ceny/">Цены</a></h2><p>Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽, если остаётесь у нас на лечение.</p></article><article class="sp-card"><h2><a href="vrachi/">Врачи</a></h2><p>Врачи клиники по направлениям, у каждого своя страница.</p></article><article class="sp-card"><h2><a href="./#contacts">Контакты</a></h2><p>Удельная, ул. Громова, 10/2. Ежедневно с 9:00 до 21:00.</p></article></div>
 </div></section>
 </main>
 <footer class="footer on-dark"><div class="wrap footer__in">
   <div class="footer__cta footer__cta--big">
     <form class="cb big" data-lead="final" method="post" action="spasibo/" novalidate>
-      <p class="label label--light">Бесплатная консультация и план лечения</p>
+      <p class="label label--light">Консультация и план лечения</p>
       <h2 class="big__t" data-split>Оставьте номер. Остальное сделаем мы</h2>
       <label class="big__field" for="cb-phone"><span class="sr">Ваш телефон</span><span class="big__ghost" aria-hidden="true"><i data-typed></i><span data-rest>+7 000 000-00-00</span></span><input class="big__in" id="cb-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required aria-describedby="cb-hint"></label>
       <button class="big__btn" type="submit">Жду звонка</button>
@@ -139,7 +139,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <div class="modals">
 <div class="modal modal--book" id="m-book" role="dialog" aria-modal="true" aria-labelledby="m-book-t" hidden><div class="modal__box" data-lenis-prevent>
   <button class="modal__x" type="button" aria-label="Закрыть" data-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg></button>
-  <h2 id="m-book-t" tabindex="-1">Запишитесь на бесплатную консультацию</h2><p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
+  <h2 id="m-book-t" tabindex="-1">Запишитесь на консультацию</h2><p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
   <p class="modal__doc" hidden></p><p class="modal__promo" hidden></p>
   <form class="form lead" data-lead="book" method="post" action="spasibo/">
     <input type="hidden" name="doctor"><input type="hidden" name="promo"><label>Имя<input name="name" autocomplete="given-name" required></label><label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>
@@ -170,7 +170,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 </div></div>
 <div class="modal modal--allon" id="m-allon" role="dialog" aria-modal="true" aria-labelledby="m-allon-t" hidden><div class="modal__box" data-lenis-prevent>
   <button class="modal__x" type="button" aria-label="Закрыть" data-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg></button>
-  <h2 id="m-allon-t" tabindex="-1">Консультация по All-on-4</h2><p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная, стоимость лечения врач назовёт после осмотра.</p>
+  <h2 id="m-allon-t" tabindex="-1">Консультация по All-on-4</h2><p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная, если остаётесь на лечение. Стоимость лечения врач назовёт после осмотра.</p>
   <p class="modal__promo" hidden></p>
   <form class="form lead" data-lead="allon" method="post" action="spasibo/"><input type="hidden" name="promo"><label>Имя<input name="name" autocomplete="given-name" required></label><label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>
     <fieldset class="reasons"><legend>Одна или обе челюсти</legend><div class="chips"><label class="chip chip--pick"><input type="radio" name="jaws" value="Одна челюсть" checked><span>Одна челюсть</span></label><label class="chip chip--pick"><input type="radio" name="jaws" value="Обе челюсти"><span>Обе челюсти</span></label></div></fieldset>
@@ -187,7 +187,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   </div>
   <div class="invite__body">
     <button class="invite__x" type="button" data-close>Закрыть <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg></button>
-    <p class="label">Первый визит бесплатно</p>
+    <p class="label">Первый визит 0 ₽, если остаётесь на лечение</p>
     <h2 id="m-offer-t" tabindex="-1">План лечения от трёх врачей</h2>
     <p class="invite__sub">Хирург, ортопед и терапевт посмотрят ваш случай вместе и предложат два-три варианта с ценой. Оставьте номер, администратор перезвонит и подберёт время.</p>
     <p class="invite__perk">Скидка 10% на лечение, если оплатить его в день консультации</p>
@@ -203,6 +203,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   <button class="modal__x" type="button" aria-label="Закрыть" data-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg></button>
   <h2 id="m-done-t" tabindex="-1">Спасибо!</h2><p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера +7 495 150-36-15. Пока ждёте, можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn" href="https://t.me/" target="_blank" rel="noopener">Telegram</a><a class="btn btn--ghost" href="https://max.ru/" target="_blank" rel="noopener">MAX</a></div>
+
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>
 </div></div>
 </div>
