@@ -1,6 +1,7 @@
 // Демо для показа клинике: из готовой сборки dist/ делает dist-demo/.
-// Главная остаётся целиком, у остальных страниц только первый экран и ниже «Страница в разработке» с возвратом на главную.
-// Адреса страниц те же, что в dist/, поэтому все внутренние ссылки остаются внутри демо. Запуск: node scripts/build.mjs && node scripts/demo.mjs
+// Готовые страницы (главная, врачи, услуги, Жуковский, прайс, юрстраницы) остаются целиком, у страниц из STUBS только первый экран
+// и ниже «Страница в разработке» с возвратом на главную (Ilya 22.10). Адреса те же, что в dist/, поэтому все внутренние ссылки
+// остаются внутри демо. Запуск: node scripts/build.mjs && node scripts/demo.mjs
 import { cpSync, rmSync, readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,6 +15,9 @@ if (/name="robots" content="index/.test(readFileSync(path.join(dist, "index.html
 rmSync(out, { recursive: true, force: true });
 // карта сайта и robots.txt с домена-примера демо не нужны
 cpSync(dist, out, { recursive: true, filter: (f) => !/[\\/](sitemap\.xml|robots\.txt|indexnow[^\\/]*)$/.test(f) });
+
+// старый формат страницы врача (Сикачева, до слова Ilya) и резекция (скрыта до ответа клиники)
+const STUBS = new Set(["vrachi/sikacheva.html", "hirurgiya/rezekciya/index.html"]);
 
 const walk = (dir) => readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
 const htmlFiles = walk(out).filter((f) => f.endsWith(".html"));
@@ -41,10 +45,10 @@ const soonCss = `<style>.dev-soon__in{display:grid;justify-items:start;gap:22px}
 let stubs = 0;
 for (const f of htmlFiles) {
   const rel = path.relative(out, f).split(path.sep).join("/");
-  if (rel === "index.html") continue;
+  if (!STUBS.has(rel)) continue;
   let html = readFileSync(f, "utf8");
   const heroAt = html.search(/<section class="page-hero\b/);
-  if (heroAt < 0) continue; // перенаправления и пошаговая запись zapis.html остаются как есть
+  if (heroAt < 0) throw new Error(`${rel}: нет первого экрана`);
   const home = "../".repeat(rel.split("/").length - 1) + "index.html";
   const heroEnd = closeOf(html, heroAt, "section");
   const mainEnd = html.indexOf("</main>", heroEnd);
@@ -65,9 +69,10 @@ const bad = [];
 for (const f of walk(out).filter((x) => x.endsWith(".html"))) {
   const html = readFileSync(f, "utf8");
   for (const [, href] of html.matchAll(/\b(?:href|src)="([^"]+)"/g)) {
-    if (/^(https?:|mailto:|tel:|#|data:|javascript:)/.test(href)) continue;
+    if (/^(https?:|mailto:|tel:|#|data:|javascript:|')/.test(href)) continue; // ' : адрес, который собирает скрипт (404.html)
     let target = path.resolve(path.dirname(f), href.replace(/[?#].*$/, ""));
     if (href.replace(/[?#].*$/, "").endsWith("/") || href === "") target = path.join(target, "index.html");
+    else if (!existsSync(target) && existsSync(target + ".html")) target += ".html"; // адреса без .html, как на GitHub Pages и хостинге
     if (!target.startsWith(out) || !existsSync(target)) bad.push(`${path.relative(out, f)} → ${href}`);
   }
   for (const [, url] of html.matchAll(/http-equiv="refresh" content="\d+;\s*url=([^"]+)"/gi)) {
@@ -75,4 +80,4 @@ for (const f of walk(out).filter((x) => x.endsWith(".html"))) {
   }
 }
 if (bad.length) throw new Error("Ссылки уводят из демо:\n" + [...new Set(bad)].join("\n"));
-console.log(`Демо: главная целиком, заглушек ${stubs} → ${out}`);
+console.log(`Демо: заглушек ${stubs} из ${STUBS.size} → ${out}`);
