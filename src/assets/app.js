@@ -15,6 +15,9 @@
   // страховка: если первый экран так и не запустился (или скрипт ниже упал), шапка компьютера всё равно появляется
   setTimeout(() => $(".header")?.classList.add("is-loaded"), 6000);
   if (!anim) { root.classList.remove("js-anim", "js-intro"); root.classList.add("no-anim"); }
+  // то, что не нужно для первого кадра, откладываем, чтобы первый экран начал появляться раньше (на телефоне)
+  const later = [];
+  const runLater = () => { removeEventListener("scroll", runLater); later.splice(0).forEach((fn) => fn()); };
 
   // ---------- разбивка текста для анимаций ----------
   const splitWords = (el, cls = "sw") => {
@@ -702,10 +705,11 @@
   };
   const isOpen = () => { const t = nowMsk(); return t >= 540 && t < 1260; };
   const openSt = $("[data-open-status]");
-  if (openSt) {
+  // часовой пояс в первый раз считается долго, а блок внизу страницы
+  if (openSt) later.push(() => {
     if (isOpen()) { openSt.textContent = "Сейчас открыто, до 21:00"; openSt.classList.add("is-open"); }
     else openSt.textContent = nowMsk() < 540 ? "Сейчас закрыто, откроемся в 9:00" : "Сейчас закрыто, откроемся завтра в 9:00";
-  }
+  });
   // карта двигается только после нажатия, иначе колесо и палец застревают на ней при прокрутке страницы
   $$(".ctmap").forEach((m) => {
     m.addEventListener("click", () => m.classList.add("is-active"));
@@ -713,7 +717,7 @@
   });
   document.addEventListener("pointerdown", (e) => { $$(".ctmap.is-active").forEach((m) => { if (!m.contains(e.target)) m.classList.remove("is-active"); }); });
   // на телефоне метка по центру карты, на компьютере справа от карточки
-  if (matchMedia("(max-width: 1024px)").matches) $$("iframe[data-src-phone]").forEach((f) => { f.src = f.dataset.srcPhone; });
+  if (matchMedia("(max-width: 1024px)").matches) later.push(() => $$("iframe[data-src-phone]").forEach((f) => { f.src = f.dataset.srcPhone; }));
   // отправить адрес себе или тому, кто повезёт
   const shareBtn = $("[data-share]");
   shareBtn?.addEventListener("click", async () => {
@@ -837,7 +841,7 @@
   if (rot && anim) setTimeout(rotStart, 6000);
   else rotStart();
 
-  if (!anim) return;
+  if (!anim) { runLater(); return; }
   G.registerPlugin(ST);
   G.defaults({ ease: "power3.out" });
   ST.config({ ignoreMobileResize: true });
@@ -894,7 +898,8 @@
   $$("[data-split]").forEach((el) => splitWords(el));
 
   const intro = $(".intro");
-  if (intro && root.classList.contains("js-intro")) {
+  const introOn = !!intro && root.classList.contains("js-intro");
+  if (introOn) {
     lenis?.stop();
     try { sessionStorage.setItem("um2-intro", "1"); } catch (e) { /* приватный режим */ }
     // логотип проявляется и перелетает на своё место в шапке; шапку ставим на место заранее, под заставкой,
@@ -919,354 +924,360 @@
     heroIn();
   }
 
-  // первый экран главной: фото чуть сдвигается внутри рамки, текст не тает (его ещё читают)
-  // на внутренних страницах текст первого экрана спокойно тает, на телефоне нет
-  const mm = G.matchMedia();
-  const hero = $(".hero");
-  if (hero && $(".hero__media img", hero)) G.fromTo(".hero__media img", { yPercent: 0 }, { yPercent: -6, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
-  mm.add("(min-width: 761px)", () => {
-    const ph = $(".page-hero"), pt = ph && $(".page-hero__in, .doc-hero__text", ph);
-    if (pt) G.to(pt, { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
-  });
-
-  // заголовки разделов: слова поднимаются из-под строки
-  $$("[data-split]").forEach((el) => {
-    if (el.closest(".hero, .page-hero, .tour__title")) return;
-    G.from($$(".sw > span", el), { yPercent: 110, duration: 1.1, stagger: 0.04, ease: "power4.out", scrollTrigger: { trigger: el, start: "top 90%", once: true } });
-  });
-
-  // появление блоков: по порядку, без наездов друг на друга.
-  // После появления снимаем data-reveal, иначе стиль из CSS (сдвиг на 24px) возвращается и блок съезжает вниз.
-  // То, что уже проскочили быстрой прокруткой, показываем сразу; лесенка не дольше 0,35 с, чтобы видимое не ждало.
-  const revealed = (el) => { el.removeAttribute("data-reveal"); G.set(el, { clearProps: "opacity,transform" }); };
-  ST.batch("[data-reveal]", {
-    start: "top 92%", once: true, interval: 0.1,
-    onEnter: (els) => {
-      const live = els.filter((el) => el.getBoundingClientRect().bottom > 0);
-      els.filter((el) => !live.includes(el)).forEach(revealed);
-      if (live.length) G.to(live, { opacity: 1, y: 0, scale: 1, duration: 0.9, stagger: Math.min(0.07, 0.35 / live.length), overwrite: true, onComplete: () => live.forEach(revealed) });
-    },
-  });
-
-  // акции «Стопка»: карточка уходит чуть вглубь, когда на неё наплывает следующая (на низком экране стопки нет, см. styles.css)
-  mm.add("(min-height: 601px)", () => {
-    const pr4 = $$(".pr4-card");
-    pr4.slice(0, -1).forEach((c, i) => G.to(c, { scale: 0.94, ease: "none", scrollTrigger: { trigger: pr4[i + 1], start: "top bottom", end: "top 30%", scrub: true } }));
-  });
-
-  // картинки раскрываются шторкой
-  $$("[data-clip]").forEach((el) => {
-    const im = $("img", el);
-    const st = { trigger: el, start: "top 90%", once: true };
-    G.to(el, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.4, ease: "power3.inOut", scrollTrigger: st });
-    if (im) G.from(im, { scale: 1.15, duration: 1.8, ease: "power2.out", scrollTrigger: st });
-  });
-
-  // параллакс: картинка внутри рамки
-  $$("[data-parallax]").forEach((fig) => {
-    const im = $("img", fig);
-    if (im) G.fromTo(im, { yPercent: -10 }, { yPercent: 0, ease: "none", scrollTrigger: { trigger: fig, start: "top bottom", end: "bottom top", scrub: true } });
-  });
-  // параллакс: элементы коллажа плывут с разной скоростью (небольшой разброс, чтобы не наезжали)
-  $$("[data-speed]").forEach((el) => {
-    const k = parseFloat(el.dataset.speed) || 0;
-    const amp = () => k * innerHeight * (innerWidth <= 760 ? 0.05 : 0.12);
-    G.fromTo(el, { y: () => amp() }, { y: () => -amp(), ease: "none", scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
-  });
-
-  // «О нас»: текст проявляется по словам при прокрутке
-  const st = $(".about__statement");
-  if (st) {
-    const ws = splitWords(st, "w");
-    G.to(ws, { opacity: 1, stagger: 0.1, ease: "none", scrollTrigger: { trigger: st, start: "top 75%", end: "bottom 45%", scrub: true } });
-  }
-
-  // счётчики
-  $$("[data-count]").forEach((el) => {
-    const raw = el.dataset.count, grp = /\s/.test(raw);
-    const target = parseFloat(raw.replace(/\s/g, "").replace(",", "."));
-    const dec = (raw.split(/[.,]/)[1] || "").length;
-    const fmt = (v) => (grp ? Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") : v.toFixed(dec).replace(".", ","));
-    const o = { v: 0 };
-    G.to(o, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => (el.textContent = fmt(o.v)) });
-  });
-
-  const ring = $(".rt-seal__fill");
-  if (ring) {
-    mm.add("(max-width: 760px)", () => { G.fromTo(ring, { strokeDashoffset: 100 }, { strokeDashoffset: 2, ease: "none", scrollTrigger: { trigger: ".rt-seal", start: "top 85%", end: "center 50%", scrub: true } }); });
-    mm.add("(min-width: 761px)", () => { G.fromTo(ring, { strokeDashoffset: 100 }, { strokeDashoffset: 2, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: ".rt-seal", start: "top 92%", once: true } }); });
-  }
-  if ($(".rt-avg .rt-stars svg")) G.from(".rt-avg .rt-stars svg", { scale: 0, transformOrigin: "50% 50%", stagger: 0.07, duration: 0.6, ease: "back.out(2.2)", scrollTrigger: { trigger: ".rt-avg", start: "top 85%", once: true } });
-  if ($(".rt-seal__stars svg")) G.from(".rt-seal__stars svg", { scale: 0, transformOrigin: "50% 50%", stagger: 0.07, duration: 0.6, ease: "back.out(2.2)", scrollTrigger: { trigger: ".rt-seal", start: "top 80%", once: true } });
-
-  // преимущества: горизонтальная лента с закреплением, карточки едут ровно
-  mm.add("(min-width: 761px)", () => {
-    const pin = $(".feat__pin"), track = $(".feat__track");
-    if (!pin || !track) return;
-    const dist = () => Math.max(0, track.scrollWidth - innerWidth);
-    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: pin, start: "center center", end: () => "+=" + dist(), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 1 } });
-    tl.to(track, { x: () => -dist(), duration: 1 }, 0);
-    // вступительный текст начинает с полной яркости и слегка уходит, когда наезжают карточки
-    const introCard = $(".fcard--intro", track);
-    if (introCard) tl.fromTo(introCard, { autoAlpha: 1 }, { autoAlpha: 0.25, duration: 0.35 }, 0.05);
-    // абзацы карточек одной высоты, чтобы заголовки стояли на одной линии
-    const ps = $$(".fcard:not(.fcard--intro) p", track);
-    const eq = () => { ps.forEach((x) => (x.style.minHeight = "")); const m = Math.max(...ps.map((x) => x.offsetHeight)); ps.forEach((x) => (x.style.minHeight = m + "px")); };
-    eq(); ST.addEventListener("refreshInit", eq);
-    return () => { ST.removeEventListener("refreshInit", eq); ps.forEach((x) => (x.style.minHeight = "")); };
-  });
-
-  // клиника изнутри: кадр раскрывается из карточки на весь экран, затем проявляется заголовок
-  const tour = $(".tour__pin");
-  if (tour) mm.add("(min-width: 761px)", () => {
-    const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
-    // на телефоне кадр стартует широкой карточкой, как фото в лентах, и закрепление короче
-    const narrow = () => innerWidth <= 760;
-    const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: () => (narrow() ? "+=85%" : "+=110%"), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 2 } });
-    tl.fromTo(frame, { clipPath: () => (narrow() ? "inset(14% 4% 24% 4%)" : "inset(16% 22% 16% 22%)") }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1 }, 0)
-      .fromTo(fim, { scale: () => (narrow() ? 1.1 : 1.25) }, { scale: 1, duration: 1 }, 0)
-      .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
-      .fromTo($$(".sw > span", tt), { yPercent: 110 }, { yPercent: 0, duration: 0.3, stagger: 0.04, ease: "power3.out" }, 0.72)
-      .to({}, { duration: 0.25 });
-  });
-  // телефон: экран не закрепляем (на iPhone закрепление дёргается). Кадр раскрывается из карточки, пока поднимается
-  // снизу, двигаем только transform. Где браузер умеет анимации от прокрутки (animation-timeline), это делает CSS
-  // без JS, как у Лава Дент, и кадр идёт ровно вместе с пальцем; ниже запасной вариант для остальных браузеров
-  if (tour && !(window.CSS && CSS.supports("animation-timeline: view()"))) mm.add("(max-width: 760px)", () => {
-    const st = { trigger: tour, start: "top 95%", end: "top 5%", scrub: true };
-    G.fromTo($(".tour__frame", tour), { scale: 0.86 }, { scale: 1, ease: "none", scrollTrigger: st });
-    G.fromTo($(".tour__frame img", tour), { scale: 1.14 }, { scale: 1, ease: "none", scrollTrigger: st });
-    G.fromTo($(".tour__title", tour), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, ease: "none", scrollTrigger: { trigger: tour, start: "top 30%", end: "top top", scrub: true } });
-  });
-  // тур на телефоне как у Лава Дент: всё делает CSS от прокрутки (animation-timeline), ниже то же самое для браузеров без неё
-  if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
-    const items = $(".ptour__items", pt), spacer = $(".ptour__spacer", pt), after = $(".ptour__after", pt);
-    const img = $(".ptour__item--main .ptour__img", pt), shade = $(".ptour__item--main .ptour__shade", pt);
-    const sides = [[$(".ptour__item--left", pt), -0.2], [$(".ptour__item--right", pt), 0.2]];
-    const pars = $$(".ptour__fig[data-par]", pt);
-    // карточка как в CSS: окно 80% видимой высоты (--pt-s) от её 10%
-    const card = () => {
-      const pr = document.createElement("div");
-      pr.style.cssText = "position:absolute;top:0;left:0;width:0;visibility:hidden;height:var(--pt-s)";
-      pt.append(pr);
-      const s = pr.offsetHeight; pr.style.height = "calc(var(--vh, 1vh) * 100)"; const l = pr.offsetHeight; pr.remove();
-      const k = (s || l) / l;
-      // в процентах от кадра, как в CSS: при смене высоты окна без пересчёта ScrollTrigger окно не устаревает
-      return `inset(${10 * k}% 0% ${100 - 90 * k}% 0%)`;
-    };
-    G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
-    // на телефоне ScrollTrigger не пересчитывается при смене высоты окна; шаг ленты 400vh, поэтому пересчитываем сами, когда он меняется
-    let spH = spacer.offsetHeight;
-    const ro = new ResizeObserver(() => { if (spacer.offsetHeight !== spH) { spH = spacer.offsetHeight; ST.refresh(); } });
-    ro.observe(spacer);
-    const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
-    zoom.fromTo(img, { clipPath: card, scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
-      .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
-    sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
-    pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
-    return () => { ro.disconnect(); G.set([items, img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" }); };
-  });
-  // то же для старых браузеров: окно ведёт по широким фото ленты (вход, ресепшен, врачи) в тех же отрезках прокрутки, что в CSS
-  if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px) and (max-aspect-ratio: 4 / 5)", () => {
-    const spacer = $(".ptour__spacer", pt);
-    const at = (k) => () => `top+=${k * (spacer.offsetHeight - innerHeight)} top`;
-    const ranges = [[() => `top bottom-=${0.85 * innerHeight}`, at(0.25)], [at(0.11), at(0.56)], [at(0.44), at(0.89)]];
-    const rails = $$(".ptour__items > .ptour__item", pt).slice(1, 4).map((it) => $(".ptour__rail", it));
-    rails.forEach((r, i) => r && G.fromTo(r, { xPercent: 0 }, { xPercent: -100, ease: "none", scrollTrigger: { trigger: spacer, start: ranges[i][0], end: ranges[i][1], scrub: true, invalidateOnRefresh: true } }));
-    return () => G.set(rails.filter(Boolean), { clearProps: "transform" });
-  });
-  mm.add("(max-width: 760px)", () => {
-    const track = $(".feat__track");
-    if (!track) return;
-    const cards = $$(".fcard:not(.fcard--intro)", track);
-    const upd = () => {
-      // сначала замеры всех карточек, потом записи (иначе раскладка пересчитывается на каждой карточке)
-      const rs = cards.map((c) => c.getBoundingClientRect());
-      for (let i = 0; i < cards.length - 1; i++) {
-        const c = rs[i], n = rs[i + 1];
-        const k = Math.min(1, Math.max(0, (c.bottom - n.top) / c.height));
-        cards[i].style.transform = k ? `scale(${1 - 0.07 * k})` : "";
-        cards[i].firstElementChild.style.opacity = String(1 - 0.6 * k);
-      }
-    };
-    const t = ST.create({ trigger: track, start: "top bottom", end: "bottom top", onUpdate: upd, onRefresh: upd });
-    return () => { t.kill(); cards.forEach((c) => { c.style.transform = ""; c.firstElementChild.style.opacity = ""; }); };
-  });
-
-  // телефон: подвал раскрывается из карточки на всю ширину, как кадр «Здесь вас ждут»
-  mm.add("(max-width: 760px)", () => {
-    const f = $(".footer");
-    if (f) G.fromTo(f, { clipPath: "inset(0% 4% 0% 4% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "top 30%", scrub: true } });
-  });
-
-  // ленты фото и отзывов едут навстречу друг другу и быстрее прокрутки: пока лента проходит экран,
-  // она сдвигается на 1,2 этого пути, поэтому за оборот колеса проезжает больше фото и отзывов.
-  // Ленту дополняем копиями (для чтения с экрана скрыты), чтобы её хватило на весь сдвиг.
-  const ribbon = (row) => {
-    const d = parseFloat(row.dataset.dir) || -1;
-    const base = [...row.children];
-    const setW = () => base[base.length / 2].offsetLeft - base[0].offsetLeft;
-    const dist = () => Math.max((innerHeight + row.offsetHeight) * 1.2, row.classList.contains("rv__row") ? setW() - innerWidth : 0);
-    const fill = () => {
-      for (let n = 0; n < 8 && row.scrollWidth < dist() + innerWidth + 40; n++) base.forEach((c) => { const k = c.cloneNode(true); k.setAttribute("aria-hidden", "true"); row.appendChild(k); });
-    };
-    fill();
-    ST.addEventListener("refreshInit", fill);
-    G.fromTo(row, { x: () => (d < 0 ? 0 : -dist()) }, { x: () => (d < 0 ? -dist() : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
-    // уход на ширину телефона: снять дозаполнение и копии, иначе скрытая лента копится и потом летит в сотни раз быстрее
-    return () => { ST.removeEventListener("refreshInit", fill); while (row.children.length > base.length) row.lastElementChild.remove(); };
-  };
-  // на телефоне вместо лент свой блок отзывов (assets/rvm.js)
-  const ribbons = (sel) => () => { const off = $$(sel).map(ribbon); return () => off.forEach((f) => f()); };
-  mm.add("(min-width: 761px)", ribbons(".rv__row"));
-  mm.add("(min-width: 761px)", ribbons(".tour__row"));
-
-  // телефон: фото клиники двумя лентами. Ленты сами медленно плывут навстречу друг другу по времени, а не от прокрутки,
-  // поэтому при прокрутке страницы не дрожат. Любую ленту можно листать пальцем вбок, вторая при этом крутится
-  // в обратную сторону; отпустили — ленты докатываются по инерции. Когда ленты впервые доходят до экрана,
-  // они сами проезжают немного быстрее, чтобы было видно, что их листают
-  mm.add("(max-width: 760px)", () => {
-    const box = $(".tour__rows");
-    if (!box || !box.offsetParent) return;   // на телефоне вместо лент тур как у Лава Дент (.ptour)
-    const rows = $$(".tour__row", box).map((r) => ({ r, k: $$(":scope > figure:not([aria-hidden])", r).length, dir: parseFloat(r.dataset.dir) || -1, w: 0, set: G.quickSetter(r, "x", "px") }));
-    const st = { pos: 0 };
-    const wrap = (v, w) => ((v % w) + w) % w;
-    const render = () => rows.forEach((o) => { if (o.w) o.set(o.dir < 0 ? -wrap(st.pos, o.w) : wrap(st.pos, o.w) - o.w); });
-    const measure = () => { rows.forEach((o) => { const c = o.r.children; o.w = c[o.k] ? c[o.k].offsetLeft - c[0].offsetLeft : 0; }); render(); };
-    measure();
-    let on = false, drag = false, glide = null;
-    const vis = ST.create({ trigger: box, start: "top bottom", end: "bottom top", onToggle: (self) => { on = self.isActive; } });
-    const hint = ST.create({ trigger: box, start: "top 80%", once: true, onEnter: () => { if (!drag) glide = G.to(st, { pos: st.pos + Math.min(innerWidth * 0.5, 220), duration: 1.6, ease: "power2.inOut", onUpdate: render }); } });
-    const tick = (time, dt) => { if (!on || drag || glide?.isActive()) return; st.pos += 0.024 * Math.min(dt, 50); render(); };
-    G.ticker.add(tick);
-    let sx = 0, sy = 0, lock = 0, p0 = 0, lx = 0, lt = 0, vel = 0, sign = 1;
-    const down = (o) => (e) => {
-      if (e.touches.length > 1) return;
-      const t = e.touches[0];
-      sx = lx = t.clientX; sy = t.clientY; lt = e.timeStamp; lock = 0; vel = 0; p0 = st.pos; sign = o.dir < 0 ? -1 : 1;
-    };
-    const move = (e) => {
-      const t = e.touches[0], dx = t.clientX - sx, dy = t.clientY - sy;
-      if (!lock && Math.hypot(dx, dy) > 12) { lock = Math.abs(dx) > Math.abs(dy) * 1.6 ? 1 : -1; if (lock === 1) { drag = true; glide?.kill(); p0 = st.pos - sign * dx; } }
-      if (lock !== 1) return;
-      const dt = Math.max(1, e.timeStamp - lt);
-      vel = Math.max(-2.5, Math.min(2.5, 0.7 * ((t.clientX - lx) / dt) + 0.3 * vel)); lx = t.clientX; lt = e.timeStamp;
-      st.pos = p0 + sign * dx; render();
-    };
-    const up = (e) => {
-      if (!drag) { lock = 0; return; }
-      drag = false; lock = 0;
-      if (e.timeStamp - lt > 90) vel = 0;   // палец остановился перед тем, как отпустить: без инерции
-      if (Math.abs(vel) > 0.05) glide = G.to(st, { pos: st.pos + sign * vel * 340, duration: Math.min(1.8, 0.6 + Math.abs(vel) * 0.5), ease: "power3.out", onUpdate: render });
-    };
-    const offs = rows.map((o) => {
-      const d = down(o);
-      o.r.addEventListener("touchstart", d, { passive: true });
-      o.r.addEventListener("touchmove", move, { passive: true });
-      o.r.addEventListener("touchend", up, { passive: true });
-      o.r.addEventListener("touchcancel", up, { passive: true });
-      return () => { o.r.removeEventListener("touchstart", d); o.r.removeEventListener("touchmove", move); o.r.removeEventListener("touchend", up); o.r.removeEventListener("touchcancel", up); };
+  // остальные анимации страницы настраиваем, когда первый экран выехал или человек начал листать: на телефоне эта
+  // настройка шла одной долгой задачей до первого кадра и задерживала появление текста первого экрана (Ilya 22.10)
+  later.push(() => {
+    // первый экран главной: фото чуть сдвигается внутри рамки, текст не тает (его ещё читают)
+    // на внутренних страницах текст первого экрана спокойно тает, на телефоне нет
+    const mm = G.matchMedia();
+    const hero = $(".hero");
+    if (hero && $(".hero__media img", hero)) G.fromTo(".hero__media img", { yPercent: 0 }, { yPercent: -6, ease: "none", scrollTrigger: { trigger: hero, start: "top top", end: "bottom top", scrub: true } });
+    mm.add("(min-width: 761px)", () => {
+      const ph = $(".page-hero"), pt = ph && $(".page-hero__in, .doc-hero__text", ph);
+      if (pt) G.to(pt, { y: -60, autoAlpha: 0.2, ease: "none", scrollTrigger: { trigger: ph, start: "30% top", end: "bottom top", scrub: true } });
     });
-    ST.addEventListener("refresh", measure);
-    $$("img", box).forEach((im) => { if (!im.complete) im.addEventListener("load", measure, { once: true }); });
-    return () => { G.ticker.remove(tick); vis.kill(); hint.kill(); glide?.kill(); ST.removeEventListener("refresh", measure); offs.forEach((f) => f()); rows.forEach((o) => G.set(o.r, { x: 0 })); };
-  });
 
-  // бегущая строка: скорость плавно следует за скоростью прокрутки, направление — за её направлением
-  $$(".marquee__track").forEach((tr) => {
-    const setX = G.quickSetter(tr, "xPercent");
-    let x = 0, dir = 1, cur = 1, target = 1;
-    ST.create({ trigger: tr, start: "top bottom", end: "bottom top", onUpdate: (self) => { dir = self.direction; target = dir * (1 + Math.min(Math.abs(self.getVelocity()) / 400, 4)); } });
-    G.ticker.add((time, dt) => { if (phoneMQ.matches) return; target += (dir - target) * 0.04; cur += (target - cur) * 0.12; x = (x - (cur * dt) / 600) % 50; if (x > 0) x -= 50; setX(x); });
-  });
-
-  // телефон: первый экран уходит под шторку слогана, как у Лава Дент (стили и сама механика в styles.css).
-  // Строки слогана загораются по очереди, когда верх шторки прошёл середину экрана, один раз.
-  // Где нет CSS scroll-driven animations, то же самое по прокрутке делает GSAP
-  const opening = $(".opening");
-  const sHead = opening && $(".slogan__head", opening);
-  if (sHead) {
-    const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { sHead.classList.add("is-visible"); io.disconnect(); } }, { threshold: 0, rootMargin: "0px 0px -50% 0px" });
-    io.observe(sHead);
-  }
-  // шторке нужны именованные шкалы прокрутки соседних блоков (timeline-scope); без них слоган ведёт GSAP
-  if (sHead && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
-    const sl = $(".slogan", opening), more = $(".slogan__more", opening);
-    const tl = [
-      G.fromTo($(".slogan__title", sHead), { y: () => -innerHeight, autoAlpha: 0 }, { y: 0, autoAlpha: 1, ease: "none", immediateRender: true,
-        scrollTrigger: { trigger: sl, start: "top bottom", end: "top top", scrub: true, invalidateOnRefresh: true } }),
-      G.to(sHead, { autoAlpha: 0, ease: "power1.in", scrollTrigger: { trigger: more, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } }),
-    ];
-    return () => tl.forEach((t) => { t.scrollTrigger?.kill(); t.kill(); });
-  });
-
-  // услуги на телефоне: лента направлений сама показывает, что она листается. Пока блок поднимается снизу,
-  // лента прокатывается справа налево к первой вкладке; тронули её пальцем, дальше листает только человек.
-  // Тёмная подложка выбранной вкладки переезжает к новой, новая панель въезжает с той стороны, куда листали
-  if (dirTabs) mm.add("(max-width: 760px)", () => {
-    const glider = document.createElement("span");
-    glider.className = "dirs__glider"; glider.setAttribute("aria-hidden", "true");
-    dirTabs.appendChild(glider); dirTabs.classList.add("has-glider", "is-rolling");
-    const sel = () => $('[aria-selected="true"]', dirTabs);
-    const glide = (now) => { const b = sel(); if (!b) return; const v = { x: b.offsetLeft, y: b.offsetTop, width: b.offsetWidth, height: b.offsetHeight }; if (now) G.set(glider, v); else G.to(glider, { ...v, duration: 0.5, ease: "expo.out", overwrite: true }); };
-    glide(true);
-    const roll = { v: 0 };
-    const far = () => Math.max(0, Math.min(dirTabs.scrollWidth - dirTabs.clientWidth, dirTabs.clientWidth * 0.7));
-    const tw = G.fromTo(roll, { v: far }, { v: 0, ease: "none", onUpdate: () => { dirTabs.scrollLeft = roll.v; }, scrollTrigger: { trigger: dirTabs, start: "top bottom", end: "top 55%", scrub: 0.5, invalidateOnRefresh: true } });
-    dirTabs.scrollLeft = roll.v;
-    const stop = () => { if (!tw.scrollTrigger) return; tw.scrollTrigger.kill(); tw.kill(); dirTabs.classList.remove("is-rolling"); };
-    dirRollStop = stop;
-    dirTabs.addEventListener("pointerdown", stop);
-    dirTabs.addEventListener("touchstart", stop, { passive: true });
-    let last = dirSeq().indexOf(sel());
-    const onPick = (e) => {
-      const b = e.currentTarget, seq = dirSeq(), i = seq.indexOf(b), p = $(`[data-panel="dir"][data-key="${b.dataset.tab}"]`);
-      stop(); glide(false);
-      if (p && i !== last) {
-        const kids = $$(".dir__card, li", p);
-        G.killTweensOf(kids); G.set(kids, { clearProps: "opacity,transform" });
-        G.fromTo(p, { x: i > last ? 70 : -70, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
-      }
-      last = i;
-    };
-    const btns = $$("[data-tab]", dirTabs);
-    btns.forEach((b) => b.addEventListener("click", onPick));
-    const reglide = () => requestAnimationFrame(() => { if (!G.isTweening(glider)) glide(true); });
-    ST.addEventListener("refresh", reglide);
-    return () => {
-      stop(); btns.forEach((b) => b.removeEventListener("click", onPick));
-      dirTabs.removeEventListener("pointerdown", stop); dirTabs.removeEventListener("touchstart", stop);
-      ST.removeEventListener("refresh", reglide);
-      glider.remove(); dirTabs.classList.remove("has-glider"); dirRollStop = () => {};
-    };
-  });
-
-  // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте и открывается из-под неё.
-  // На компьютере он сначала во всю ширину (масштаб 1,74), в конце отрезка уменьшается до левой колонки и дальше
-  // липнет под шапкой, а справа проезжают контакты. Движение целиком в CSS (на компьютере view-timeline, на телефоне
-  // sticky); только в браузерах без view-timeline на компьютере его повторяет GSAP
-  const fst = $(".fstage");
-  if (fst) {
-    const logo = $(".fstage__logo", fst);
-    const cssTL = !!window.CSS?.supports?.("animation-timeline: scroll()") && CSS.supports("animation-range: 0% 100%");
-    const vmin = () => Math.min(innerWidth, innerHeight);
-    // компьютер без view-timeline (Firefox): прокрутку там ведёт Lenis, поэтому GSAP успевает за ней
-    if (!cssTL) mm.add("(min-width: 1025px)", () => {
-      const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: fst, start: "top bottom", end: () => "+=" + Math.round(vmin() * 1.5), scrub: true, invalidateOnRefresh: true } })
-        .fromTo(logo, { y: () => -Math.round(vmin() * 1.5) }, { y: 0, duration: 1 }, 0)
-        .fromTo(logo, { scale: 1.74 }, { scale: 1, duration: 0.25, immediateRender: true }, 0.75);
-      return () => { tl.scrollTrigger?.kill(); tl.kill(); G.set(logo, { clearProps: "transform" }); };
+    // заголовки разделов: слова поднимаются из-под строки
+    $$("[data-split]").forEach((el) => {
+      if (el.closest(".hero, .page-hero, .tour__title")) return;
+      G.from($$(".sw > span", el), { yPercent: 110, duration: 1.1, stagger: 0.04, ease: "power4.out", scrollTrigger: { trigger: el, start: "top 90%", once: true } });
     });
-  }
 
-  // пересчитываем позиции, когда догрузились шрифты и картинки (до того, как пользователь доскроллил)
-  const refresh = () => ST.refresh();
-  document.fonts?.ready.then(refresh);
-  addEventListener("load", refresh);
-  let rt = 0;
-  // фото тура (лента, кадр, телефон) стоят в рамках с размерами из CSS и раскладку не меняют: пересчёт на их догрузку
-  // только дёргал прокрутку на компьютере посреди ленты
-  $$(".feat img, .apic img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { if (!im.getClientRects().length) return; clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
+    // появление блоков: по порядку, без наездов друг на друга.
+    // После появления снимаем data-reveal, иначе стиль из CSS (сдвиг на 24px) возвращается и блок съезжает вниз.
+    // То, что уже проскочили быстрой прокруткой, показываем сразу; лесенка не дольше 0,35 с, чтобы видимое не ждало.
+    const revealed = (el) => { el.removeAttribute("data-reveal"); G.set(el, { clearProps: "opacity,transform" }); };
+    ST.batch("[data-reveal]", {
+      start: "top 92%", once: true, interval: 0.1,
+      onEnter: (els) => {
+        const live = els.filter((el) => el.getBoundingClientRect().bottom > 0);
+        els.filter((el) => !live.includes(el)).forEach(revealed);
+        if (live.length) G.to(live, { opacity: 1, y: 0, scale: 1, duration: 0.9, stagger: Math.min(0.07, 0.35 / live.length), overwrite: true, onComplete: () => live.forEach(revealed) });
+      },
+    });
+
+    // акции «Стопка»: карточка уходит чуть вглубь, когда на неё наплывает следующая (на низком экране стопки нет, см. styles.css)
+    mm.add("(min-height: 601px)", () => {
+      const pr4 = $$(".pr4-card");
+      pr4.slice(0, -1).forEach((c, i) => G.to(c, { scale: 0.94, ease: "none", scrollTrigger: { trigger: pr4[i + 1], start: "top bottom", end: "top 30%", scrub: true } }));
+    });
+
+    // картинки раскрываются шторкой
+    $$("[data-clip]").forEach((el) => {
+      const im = $("img", el);
+      const st = { trigger: el, start: "top 90%", once: true };
+      G.to(el, { clipPath: "inset(0% 0% 0% 0%)", duration: 1.4, ease: "power3.inOut", scrollTrigger: st });
+      if (im) G.from(im, { scale: 1.15, duration: 1.8, ease: "power2.out", scrollTrigger: st });
+    });
+
+    // параллакс: картинка внутри рамки
+    $$("[data-parallax]").forEach((fig) => {
+      const im = $("img", fig);
+      if (im) G.fromTo(im, { yPercent: -10 }, { yPercent: 0, ease: "none", scrollTrigger: { trigger: fig, start: "top bottom", end: "bottom top", scrub: true } });
+    });
+    // параллакс: элементы коллажа плывут с разной скоростью (небольшой разброс, чтобы не наезжали)
+    $$("[data-speed]").forEach((el) => {
+      const k = parseFloat(el.dataset.speed) || 0;
+      const amp = () => k * innerHeight * (innerWidth <= 760 ? 0.05 : 0.12);
+      G.fromTo(el, { y: () => amp() }, { y: () => -amp(), ease: "none", scrollTrigger: { trigger: el, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
+    });
+
+    // «О нас»: текст проявляется по словам при прокрутке
+    const st = $(".about__statement");
+    if (st) {
+      const ws = splitWords(st, "w");
+      G.to(ws, { opacity: 1, stagger: 0.1, ease: "none", scrollTrigger: { trigger: st, start: "top 75%", end: "bottom 45%", scrub: true } });
+    }
+
+    // счётчики
+    $$("[data-count]").forEach((el) => {
+      const raw = el.dataset.count, grp = /\s/.test(raw);
+      const target = parseFloat(raw.replace(/\s/g, "").replace(",", "."));
+      const dec = (raw.split(/[.,]/)[1] || "").length;
+      const fmt = (v) => (grp ? Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") : v.toFixed(dec).replace(".", ","));
+      const o = { v: 0 };
+      G.to(o, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => (el.textContent = fmt(o.v)) });
+    });
+
+    const ring = $(".rt-seal__fill");
+    if (ring) {
+      mm.add("(max-width: 760px)", () => { G.fromTo(ring, { strokeDashoffset: 100 }, { strokeDashoffset: 2, ease: "none", scrollTrigger: { trigger: ".rt-seal", start: "top 85%", end: "center 50%", scrub: true } }); });
+      mm.add("(min-width: 761px)", () => { G.fromTo(ring, { strokeDashoffset: 100 }, { strokeDashoffset: 2, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: ".rt-seal", start: "top 92%", once: true } }); });
+    }
+    if ($(".rt-avg .rt-stars svg")) G.from(".rt-avg .rt-stars svg", { scale: 0, transformOrigin: "50% 50%", stagger: 0.07, duration: 0.6, ease: "back.out(2.2)", scrollTrigger: { trigger: ".rt-avg", start: "top 85%", once: true } });
+    if ($(".rt-seal__stars svg")) G.from(".rt-seal__stars svg", { scale: 0, transformOrigin: "50% 50%", stagger: 0.07, duration: 0.6, ease: "back.out(2.2)", scrollTrigger: { trigger: ".rt-seal", start: "top 80%", once: true } });
+
+    // преимущества: горизонтальная лента с закреплением, карточки едут ровно
+    mm.add("(min-width: 761px)", () => {
+      const pin = $(".feat__pin"), track = $(".feat__track");
+      if (!pin || !track) return;
+      const dist = () => Math.max(0, track.scrollWidth - innerWidth);
+      const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: pin, start: "center center", end: () => "+=" + dist(), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 1 } });
+      tl.to(track, { x: () => -dist(), duration: 1 }, 0);
+      // вступительный текст начинает с полной яркости и слегка уходит, когда наезжают карточки
+      const introCard = $(".fcard--intro", track);
+      if (introCard) tl.fromTo(introCard, { autoAlpha: 1 }, { autoAlpha: 0.25, duration: 0.35 }, 0.05);
+      // абзацы карточек одной высоты, чтобы заголовки стояли на одной линии
+      const ps = $$(".fcard:not(.fcard--intro) p", track);
+      const eq = () => { ps.forEach((x) => (x.style.minHeight = "")); const m = Math.max(...ps.map((x) => x.offsetHeight)); ps.forEach((x) => (x.style.minHeight = m + "px")); };
+      eq(); ST.addEventListener("refreshInit", eq);
+      return () => { ST.removeEventListener("refreshInit", eq); ps.forEach((x) => (x.style.minHeight = "")); };
+    });
+
+    // клиника изнутри: кадр раскрывается из карточки на весь экран, затем проявляется заголовок
+    const tour = $(".tour__pin");
+    if (tour) mm.add("(min-width: 761px)", () => {
+      const frame = $(".tour__frame", tour), fim = $(".tour__frame img", tour), tt = $(".tour__title", tour);
+      // на телефоне кадр стартует широкой карточкой, как фото в лентах, и закрепление короче
+      const narrow = () => innerWidth <= 760;
+      const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: tour, start: "top top", end: () => (narrow() ? "+=85%" : "+=110%"), pin: true, scrub: true, invalidateOnRefresh: true, refreshPriority: 2 } });
+      tl.fromTo(frame, { clipPath: () => (narrow() ? "inset(14% 4% 24% 4%)" : "inset(16% 22% 16% 22%)") }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1 }, 0)
+        .fromTo(fim, { scale: () => (narrow() ? 1.1 : 1.25) }, { scale: 1, duration: 1 }, 0)
+        .fromTo(tt, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.7)
+        .fromTo($$(".sw > span", tt), { yPercent: 110 }, { yPercent: 0, duration: 0.3, stagger: 0.04, ease: "power3.out" }, 0.72)
+        .to({}, { duration: 0.25 });
+    });
+    // телефон: экран не закрепляем (на iPhone закрепление дёргается). Кадр раскрывается из карточки, пока поднимается
+    // снизу, двигаем только transform. Где браузер умеет анимации от прокрутки (animation-timeline), это делает CSS
+    // без JS, как у Лава Дент, и кадр идёт ровно вместе с пальцем; ниже запасной вариант для остальных браузеров
+    if (tour && !(window.CSS && CSS.supports("animation-timeline: view()"))) mm.add("(max-width: 760px)", () => {
+      const st = { trigger: tour, start: "top 95%", end: "top 5%", scrub: true };
+      G.fromTo($(".tour__frame", tour), { scale: 0.86 }, { scale: 1, ease: "none", scrollTrigger: st });
+      G.fromTo($(".tour__frame img", tour), { scale: 1.14 }, { scale: 1, ease: "none", scrollTrigger: st });
+      G.fromTo($(".tour__title", tour), { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, ease: "none", scrollTrigger: { trigger: tour, start: "top 30%", end: "top top", scrub: true } });
+    });
+    // тур на телефоне как у Лава Дент: всё делает CSS от прокрутки (animation-timeline), ниже то же самое для браузеров без неё
+    if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
+      const items = $(".ptour__items", pt), spacer = $(".ptour__spacer", pt), after = $(".ptour__after", pt);
+      const img = $(".ptour__item--main .ptour__img", pt), shade = $(".ptour__item--main .ptour__shade", pt);
+      const sides = [[$(".ptour__item--left", pt), -0.2], [$(".ptour__item--right", pt), 0.2]];
+      const pars = $$(".ptour__fig[data-par]", pt);
+      // карточка как в CSS: окно 80% видимой высоты (--pt-s) от её 10%
+      const card = () => {
+        const pr = document.createElement("div");
+        pr.style.cssText = "position:absolute;top:0;left:0;width:0;visibility:hidden;height:var(--pt-s)";
+        pt.append(pr);
+        const s = pr.offsetHeight; pr.style.height = "calc(var(--vh, 1vh) * 100)"; const l = pr.offsetHeight; pr.remove();
+        const k = (s || l) / l;
+        // в процентах от кадра, как в CSS: при смене высоты окна без пересчёта ScrollTrigger окно не устаревает
+        return `inset(${10 * k}% 0% ${100 - 90 * k}% 0%)`;
+      };
+      G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
+      // на телефоне ScrollTrigger не пересчитывается при смене высоты окна; шаг ленты 400vh, поэтому пересчитываем сами, когда он меняется
+      let spH = spacer.offsetHeight;
+      const ro = new ResizeObserver(() => { if (spacer.offsetHeight !== spH) { spH = spacer.offsetHeight; ST.refresh(); } });
+      ro.observe(spacer);
+      const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
+      zoom.fromTo(img, { clipPath: card, scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
+        .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
+      sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
+      pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
+      return () => { ro.disconnect(); G.set([items, img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" }); };
+    });
+    // то же для старых браузеров: окно ведёт по широким фото ленты (вход, ресепшен, врачи) в тех же отрезках прокрутки, что в CSS
+    if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px) and (max-aspect-ratio: 4 / 5)", () => {
+      const spacer = $(".ptour__spacer", pt);
+      const at = (k) => () => `top+=${k * (spacer.offsetHeight - innerHeight)} top`;
+      const ranges = [[() => `top bottom-=${0.85 * innerHeight}`, at(0.25)], [at(0.11), at(0.56)], [at(0.44), at(0.89)]];
+      const rails = $$(".ptour__items > .ptour__item", pt).slice(1, 4).map((it) => $(".ptour__rail", it));
+      rails.forEach((r, i) => r && G.fromTo(r, { xPercent: 0 }, { xPercent: -100, ease: "none", scrollTrigger: { trigger: spacer, start: ranges[i][0], end: ranges[i][1], scrub: true, invalidateOnRefresh: true } }));
+      return () => G.set(rails.filter(Boolean), { clearProps: "transform" });
+    });
+    mm.add("(max-width: 760px)", () => {
+      const track = $(".feat__track");
+      if (!track) return;
+      const cards = $$(".fcard:not(.fcard--intro)", track);
+      const upd = () => {
+        // сначала замеры всех карточек, потом записи (иначе раскладка пересчитывается на каждой карточке)
+        const rs = cards.map((c) => c.getBoundingClientRect());
+        for (let i = 0; i < cards.length - 1; i++) {
+          const c = rs[i], n = rs[i + 1];
+          const k = Math.min(1, Math.max(0, (c.bottom - n.top) / c.height));
+          cards[i].style.transform = k ? `scale(${1 - 0.07 * k})` : "";
+          cards[i].firstElementChild.style.opacity = String(1 - 0.6 * k);
+        }
+      };
+      const t = ST.create({ trigger: track, start: "top bottom", end: "bottom top", onUpdate: upd, onRefresh: upd });
+      return () => { t.kill(); cards.forEach((c) => { c.style.transform = ""; c.firstElementChild.style.opacity = ""; }); };
+    });
+
+    // телефон: подвал раскрывается из карточки на всю ширину, как кадр «Здесь вас ждут»
+    mm.add("(max-width: 760px)", () => {
+      const f = $(".footer");
+      if (f) G.fromTo(f, { clipPath: "inset(0% 4% 0% 4% round 28px)" }, { clipPath: "inset(0% 0% 0% 0% round 0px)", ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "top 30%", scrub: true } });
+    });
+
+    // ленты фото и отзывов едут навстречу друг другу и быстрее прокрутки: пока лента проходит экран,
+    // она сдвигается на 1,2 этого пути, поэтому за оборот колеса проезжает больше фото и отзывов.
+    // Ленту дополняем копиями (для чтения с экрана скрыты), чтобы её хватило на весь сдвиг.
+    const ribbon = (row) => {
+      const d = parseFloat(row.dataset.dir) || -1;
+      const base = [...row.children];
+      const setW = () => base[base.length / 2].offsetLeft - base[0].offsetLeft;
+      const dist = () => Math.max((innerHeight + row.offsetHeight) * 1.2, row.classList.contains("rv__row") ? setW() - innerWidth : 0);
+      const fill = () => {
+        for (let n = 0; n < 8 && row.scrollWidth < dist() + innerWidth + 40; n++) base.forEach((c) => { const k = c.cloneNode(true); k.setAttribute("aria-hidden", "true"); row.appendChild(k); });
+      };
+      fill();
+      ST.addEventListener("refreshInit", fill);
+      G.fromTo(row, { x: () => (d < 0 ? 0 : -dist()) }, { x: () => (d < 0 ? -dist() : 0), ease: "none", scrollTrigger: { trigger: row, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } });
+      // уход на ширину телефона: снять дозаполнение и копии, иначе скрытая лента копится и потом летит в сотни раз быстрее
+      return () => { ST.removeEventListener("refreshInit", fill); while (row.children.length > base.length) row.lastElementChild.remove(); };
+    };
+    // на телефоне вместо лент свой блок отзывов (assets/rvm.js)
+    const ribbons = (sel) => () => { const off = $$(sel).map(ribbon); return () => off.forEach((f) => f()); };
+    mm.add("(min-width: 761px)", ribbons(".rv__row"));
+    mm.add("(min-width: 761px)", ribbons(".tour__row"));
+
+    // телефон: фото клиники двумя лентами. Ленты сами медленно плывут навстречу друг другу по времени, а не от прокрутки,
+    // поэтому при прокрутке страницы не дрожат. Любую ленту можно листать пальцем вбок, вторая при этом крутится
+    // в обратную сторону; отпустили — ленты докатываются по инерции. Когда ленты впервые доходят до экрана,
+    // они сами проезжают немного быстрее, чтобы было видно, что их листают
+    mm.add("(max-width: 760px)", () => {
+      const box = $(".tour__rows");
+      if (!box || !box.offsetParent) return;   // на телефоне вместо лент тур как у Лава Дент (.ptour)
+      const rows = $$(".tour__row", box).map((r) => ({ r, k: $$(":scope > figure:not([aria-hidden])", r).length, dir: parseFloat(r.dataset.dir) || -1, w: 0, set: G.quickSetter(r, "x", "px") }));
+      const st = { pos: 0 };
+      const wrap = (v, w) => ((v % w) + w) % w;
+      const render = () => rows.forEach((o) => { if (o.w) o.set(o.dir < 0 ? -wrap(st.pos, o.w) : wrap(st.pos, o.w) - o.w); });
+      const measure = () => { rows.forEach((o) => { const c = o.r.children; o.w = c[o.k] ? c[o.k].offsetLeft - c[0].offsetLeft : 0; }); render(); };
+      measure();
+      let on = false, drag = false, glide = null;
+      const vis = ST.create({ trigger: box, start: "top bottom", end: "bottom top", onToggle: (self) => { on = self.isActive; } });
+      const hint = ST.create({ trigger: box, start: "top 80%", once: true, onEnter: () => { if (!drag) glide = G.to(st, { pos: st.pos + Math.min(innerWidth * 0.5, 220), duration: 1.6, ease: "power2.inOut", onUpdate: render }); } });
+      const tick = (time, dt) => { if (!on || drag || glide?.isActive()) return; st.pos += 0.024 * Math.min(dt, 50); render(); };
+      G.ticker.add(tick);
+      let sx = 0, sy = 0, lock = 0, p0 = 0, lx = 0, lt = 0, vel = 0, sign = 1;
+      const down = (o) => (e) => {
+        if (e.touches.length > 1) return;
+        const t = e.touches[0];
+        sx = lx = t.clientX; sy = t.clientY; lt = e.timeStamp; lock = 0; vel = 0; p0 = st.pos; sign = o.dir < 0 ? -1 : 1;
+      };
+      const move = (e) => {
+        const t = e.touches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+        if (!lock && Math.hypot(dx, dy) > 12) { lock = Math.abs(dx) > Math.abs(dy) * 1.6 ? 1 : -1; if (lock === 1) { drag = true; glide?.kill(); p0 = st.pos - sign * dx; } }
+        if (lock !== 1) return;
+        const dt = Math.max(1, e.timeStamp - lt);
+        vel = Math.max(-2.5, Math.min(2.5, 0.7 * ((t.clientX - lx) / dt) + 0.3 * vel)); lx = t.clientX; lt = e.timeStamp;
+        st.pos = p0 + sign * dx; render();
+      };
+      const up = (e) => {
+        if (!drag) { lock = 0; return; }
+        drag = false; lock = 0;
+        if (e.timeStamp - lt > 90) vel = 0;   // палец остановился перед тем, как отпустить: без инерции
+        if (Math.abs(vel) > 0.05) glide = G.to(st, { pos: st.pos + sign * vel * 340, duration: Math.min(1.8, 0.6 + Math.abs(vel) * 0.5), ease: "power3.out", onUpdate: render });
+      };
+      const offs = rows.map((o) => {
+        const d = down(o);
+        o.r.addEventListener("touchstart", d, { passive: true });
+        o.r.addEventListener("touchmove", move, { passive: true });
+        o.r.addEventListener("touchend", up, { passive: true });
+        o.r.addEventListener("touchcancel", up, { passive: true });
+        return () => { o.r.removeEventListener("touchstart", d); o.r.removeEventListener("touchmove", move); o.r.removeEventListener("touchend", up); o.r.removeEventListener("touchcancel", up); };
+      });
+      ST.addEventListener("refresh", measure);
+      $$("img", box).forEach((im) => { if (!im.complete) im.addEventListener("load", measure, { once: true }); });
+      return () => { G.ticker.remove(tick); vis.kill(); hint.kill(); glide?.kill(); ST.removeEventListener("refresh", measure); offs.forEach((f) => f()); rows.forEach((o) => G.set(o.r, { x: 0 })); };
+    });
+
+    // бегущая строка: скорость плавно следует за скоростью прокрутки, направление — за её направлением
+    $$(".marquee__track").forEach((tr) => {
+      const setX = G.quickSetter(tr, "xPercent");
+      let x = 0, dir = 1, cur = 1, target = 1;
+      ST.create({ trigger: tr, start: "top bottom", end: "bottom top", onUpdate: (self) => { dir = self.direction; target = dir * (1 + Math.min(Math.abs(self.getVelocity()) / 400, 4)); } });
+      G.ticker.add((time, dt) => { if (phoneMQ.matches) return; target += (dir - target) * 0.04; cur += (target - cur) * 0.12; x = (x - (cur * dt) / 600) % 50; if (x > 0) x -= 50; setX(x); });
+    });
+
+    // телефон: первый экран уходит под шторку слогана, как у Лава Дент (стили и сама механика в styles.css).
+    // Строки слогана загораются по очереди, когда верх шторки прошёл середину экрана, один раз.
+    // Где нет CSS scroll-driven animations, то же самое по прокрутке делает GSAP
+    const opening = $(".opening");
+    const sHead = opening && $(".slogan__head", opening);
+    if (sHead) {
+      const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { sHead.classList.add("is-visible"); io.disconnect(); } }, { threshold: 0, rootMargin: "0px 0px -50% 0px" });
+      io.observe(sHead);
+    }
+    // шторке нужны именованные шкалы прокрутки соседних блоков (timeline-scope); без них слоган ведёт GSAP
+    if (sHead && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
+      const sl = $(".slogan", opening), more = $(".slogan__more", opening);
+      const tl = [
+        G.fromTo($(".slogan__title", sHead), { y: () => -innerHeight, autoAlpha: 0 }, { y: 0, autoAlpha: 1, ease: "none", immediateRender: true,
+          scrollTrigger: { trigger: sl, start: "top bottom", end: "top top", scrub: true, invalidateOnRefresh: true } }),
+        G.to(sHead, { autoAlpha: 0, ease: "power1.in", scrollTrigger: { trigger: more, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } }),
+      ];
+      return () => tl.forEach((t) => { t.scrollTrigger?.kill(); t.kill(); });
+    });
+
+    // услуги на телефоне: лента направлений сама показывает, что она листается. Пока блок поднимается снизу,
+    // лента прокатывается справа налево к первой вкладке; тронули её пальцем, дальше листает только человек.
+    // Тёмная подложка выбранной вкладки переезжает к новой, новая панель въезжает с той стороны, куда листали
+    if (dirTabs) mm.add("(max-width: 760px)", () => {
+      const glider = document.createElement("span");
+      glider.className = "dirs__glider"; glider.setAttribute("aria-hidden", "true");
+      dirTabs.appendChild(glider); dirTabs.classList.add("has-glider", "is-rolling");
+      const sel = () => $('[aria-selected="true"]', dirTabs);
+      const glide = (now) => { const b = sel(); if (!b) return; const v = { x: b.offsetLeft, y: b.offsetTop, width: b.offsetWidth, height: b.offsetHeight }; if (now) G.set(glider, v); else G.to(glider, { ...v, duration: 0.5, ease: "expo.out", overwrite: true }); };
+      glide(true);
+      const roll = { v: 0 };
+      const far = () => Math.max(0, Math.min(dirTabs.scrollWidth - dirTabs.clientWidth, dirTabs.clientWidth * 0.7));
+      const tw = G.fromTo(roll, { v: far }, { v: 0, ease: "none", onUpdate: () => { dirTabs.scrollLeft = roll.v; }, scrollTrigger: { trigger: dirTabs, start: "top bottom", end: "top 55%", scrub: 0.5, invalidateOnRefresh: true } });
+      dirTabs.scrollLeft = roll.v;
+      const stop = () => { if (!tw.scrollTrigger) return; tw.scrollTrigger.kill(); tw.kill(); dirTabs.classList.remove("is-rolling"); };
+      dirRollStop = stop;
+      dirTabs.addEventListener("pointerdown", stop);
+      dirTabs.addEventListener("touchstart", stop, { passive: true });
+      let last = dirSeq().indexOf(sel());
+      const onPick = (e) => {
+        const b = e.currentTarget, seq = dirSeq(), i = seq.indexOf(b), p = $(`[data-panel="dir"][data-key="${b.dataset.tab}"]`);
+        stop(); glide(false);
+        if (p && i !== last) {
+          const kids = $$(".dir__card, li", p);
+          G.killTweensOf(kids); G.set(kids, { clearProps: "opacity,transform" });
+          G.fromTo(p, { x: i > last ? 70 : -70, opacity: 0 }, { x: 0, opacity: 1, duration: 0.6, ease: "expo.out", clearProps: "transform,opacity" });
+        }
+        last = i;
+      };
+      const btns = $$("[data-tab]", dirTabs);
+      btns.forEach((b) => b.addEventListener("click", onPick));
+      const reglide = () => requestAnimationFrame(() => { if (!G.isTweening(glider)) glide(true); });
+      ST.addEventListener("refresh", reglide);
+      return () => {
+        stop(); btns.forEach((b) => b.removeEventListener("click", onPick));
+        dirTabs.removeEventListener("pointerdown", stop); dirTabs.removeEventListener("touchstart", stop);
+        ST.removeEventListener("refresh", reglide);
+        glider.remove(); dirTabs.classList.remove("has-glider"); dirRollStop = () => {};
+      };
+    });
+
+    // подвал, как у Лава Дент. Пока форма над подвалом уезжает вверх, логотип стоит на месте и открывается из-под неё.
+    // На компьютере он сначала во всю ширину (масштаб 1,74), в конце отрезка уменьшается до левой колонки и дальше
+    // липнет под шапкой, а справа проезжают контакты. Движение целиком в CSS (на компьютере view-timeline, на телефоне
+    // sticky); только в браузерах без view-timeline на компьютере его повторяет GSAP
+    const fst = $(".fstage");
+    if (fst) {
+      const logo = $(".fstage__logo", fst);
+      const cssTL = !!window.CSS?.supports?.("animation-timeline: scroll()") && CSS.supports("animation-range: 0% 100%");
+      const vmin = () => Math.min(innerWidth, innerHeight);
+      // компьютер без view-timeline (Firefox): прокрутку там ведёт Lenis, поэтому GSAP успевает за ней
+      if (!cssTL) mm.add("(min-width: 1025px)", () => {
+        const tl = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: fst, start: "top bottom", end: () => "+=" + Math.round(vmin() * 1.5), scrub: true, invalidateOnRefresh: true } })
+          .fromTo(logo, { y: () => -Math.round(vmin() * 1.5) }, { y: 0, duration: 1 }, 0)
+          .fromTo(logo, { scale: 1.74 }, { scale: 1, duration: 0.25, immediateRender: true }, 0.75);
+        return () => { tl.scrollTrigger?.kill(); tl.kill(); G.set(logo, { clearProps: "transform" }); };
+      });
+    }
+
+    // пересчитываем позиции, когда догрузились шрифты и картинки (до того, как пользователь доскроллил)
+    const refresh = () => ST.refresh();
+    document.fonts?.ready.then(refresh);
+    addEventListener("load", refresh);
+    let rt = 0;
+    // фото тура (лента, кадр, телефон) стоят в рамках с размерами из CSS и раскладку не меняют: пересчёт на их догрузку
+    // только дёргал прокрутку на компьютере посреди ленты
+    $$(".feat img, .apic img").forEach((im) => { if (!im.complete) im.addEventListener("load", () => { if (!im.getClientRects().length) return; clearTimeout(rt); rt = setTimeout(refresh, 200); }, { once: true }); });
+  });
+  if (introOn || location.hash || scrollY > 0) runLater();
+  else { setTimeout(runLater, 2200); addEventListener("scroll", runLater, { passive: true }); }
 
   // ---------- запись: шаги ----------
   function booking(box) {
