@@ -1796,7 +1796,7 @@ const csp = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://mc.yandex.ru https://mc.yandex.com https://yastatic.net",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com https://*.yandex.ru https://*.yandex.net https://prodoctorov.ru https://*.prodoctorov.ru https://um-med.com",
+  "img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com https://*.yandex.ru https://*.yandex.net https://prodoctorov.ru https://*.prodoctorov.ru",
   "font-src 'self'",
   "connect-src 'self' https://mc.yandex.ru https://mc.yandex.com wss://mc.yandex.ru wss://mc.yandex.com",
   "frame-src blob: https://yandex.ru https://*.yandex.ru https://mc.yandex.ru https://mc.yandex.com https://prodoctorov.ru https://*.prodoctorov.ru",

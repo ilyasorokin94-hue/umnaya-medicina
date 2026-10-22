@@ -450,8 +450,8 @@ export const clinicPhoto = "https://prodoctorov.ru/media/images/jpeg/bfc194796c1
 
 // Логотип клиники. Пока берётся прямо с um-med.com; когда файлы появятся в src/images/brand/, сборка возьмёт их.
 export const brand = {
-  logo: ["images/brand/header-logo.svg", "https://um-med.com/assets/template/img/header-logo.svg"],
-  logoFooter: ["images/brand/header-logo.svg", "https://um-med.com/assets/template/img/header-logo.svg"],
+  logo: ["images/brand/header-logo.svg"],
+  logoFooter: ["images/brand/header-logo.svg"],
 };
 
 // Фото клиники с ПроДокторов: _l крупное, _s запасное.
