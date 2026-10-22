@@ -1389,11 +1389,7 @@ function pageDoctors() {
   return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты | Умная Медицина", desc: "Врачи стоматологии «Умная Медицина» в Удельной: хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. Образование, отзывы пациентов, запись к врачу.", canonical: "/vrachi/", depth, jsonld: [crumbsLd([["vrachi/", "Врачи"]]), ld, faqLd(docFaq)] })
   + header(depth) + `
 <main id="main" class="dl-page">
-<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Врачи</span></nav><h1 data-split>Врачи стоматологии</h1><p class="page-hero__lead">Хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. В сложных случаях план лечения хирург, ортопед и терапевт составляют вместе.</p></div>
-  <div class="page-hero__aside">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
-  <nav class="sp-nav dl-nav" aria-label="Направления">${docGroups.map((g) => `<a class="sp-pill" href="#${g.id}">${esc(g.title)}</a>`).join("")}</nav>
-</div></section>
+${picHero({ name: "vrachi", alt: "Три тёмно-зелёных медицинских костюма на вешалках", depth, text: `<nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Врачи</span></nav><h1 id="h1" data-split>Врачи стоматологии</h1><p class="page-hero__lead">Хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. В сложных случаях план лечения хирург, ортопед и терапевт составляют вместе.</p>`, act: act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true }), bottom: `<nav class="sp-nav dl-nav" aria-label="Направления">${docGroups.map((g) => `<a class="sp-pill" href="#${g.id}">${esc(g.title)}</a>`).join("")}</nav>` })}
 <section class="section sp-sec dl-plan" id="vmeste" aria-labelledby="vmeste-t"><div class="wrap">
   <div class="sp-head"><h2 id="vmeste-t" data-split>Три врача. Один план лечения.</h2><p class="dl-text">Когда нужны и лечение, и имплантация, и протезы, на консультации собираются три врача и составляют один план с ценой. Цену плана фиксируем в договоре.</p></div>
   <div class="sp-cards dl-roles">${[["Терапевт", "Лечит и сохраняет свои зубы, готовит рот к имплантации и протезированию.", ["chitaykin", "kashtanova"]], ["Хирург", "Удаляет зубы, которые не сохранить, ставит импланты, при нехватке кости наращивает её.", ["hludnevskiy", "radzhabov"]], ["Ортопед", "Планирует будущие зубы, ставит коронки и протезы, в том числе на импланты.", ["solodukhin", "alikhanova"]]].map(([t, x, ids]) => `<article class="sp-card" data-reveal><h3>${t}</h3><p>${x}</p><p class="dl-names">${ids.map((id) => `<a href="${docHref(id, p)}">${esc(docById[id].short)}</a>`).join("")}</p></article>`).join("")}</div>
@@ -1536,6 +1532,7 @@ function pageBooking() {
         <h1 tabindex="-1">Записаться на приём</h1>
         <p>Выберите услугу, врача и удобное время, а администратор подтвердит запись. Консультация с планом лечения бесплатная, если остаётесь на лечение.</p>
         <button class="btn btn--lg" type="button" data-start data-magnet>Перейти к записи</button>
+        <figure class="bstart__pic">${(() => { const rel = "images/page-hero/zapis.png", set = srcset(rel, depth); return `<img src="${pick([rel], depth).src}"${set ? ` srcset="${set}" sizes="(max-width: 760px) 100vw, 46vw"` : ""} alt="Раскрытый ежедневник с отмеченным временем, часы и стоматологическое зеркало" width="1536" height="1024" decoding="async">`; })()}</figure>
       </section>
       <section class="bstep" data-step="1" hidden>
         <div class="bsteps" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
@@ -1605,15 +1602,20 @@ const legalText = (t, page, p) => esc(t)
 const legalBlock = (b, page, p) => typeof b === "string" ? `<p>${legalText(b, page, p)}</p>`
   : b.ul ? `<ul>${b.ul.map((li) => `<li>${legalText(li, page, p)}</li>`).join("")}</ul>`
   : `${b.org ? `<h3 class="legal__org">${esc(b.org)}</h3><p>${esc(b.note)}</p>` : ""}<dl class="legal__req">${b.rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>`;
+const legalPic = {
+  privacy: { name: "privacy", alt: "Закрытая папка с замком рядом с документами и моделью зуба: персональные данные под защитой" },
+  consent: { name: "soglasie", alt: "Подписанный бланк согласия на планшете с ручкой рядом с моделью зуба" },
+  agreement: { name: "soglashenie", alt: "Планшет с пустым экраном, документы со скрепкой, ручка и модель зуба" },
+  gosgarantii: { name: "gosgarantii", alt: "Карта полиса без надписей на папке с документами, печать и модель зуба" },
+  svedeniya: { name: "svedeniya", alt: "Папка с документами клиники, печать, перьевая ручка и модель зуба" },
+};
 function pageLegal(page) {
   const depth = 1, p = "../";
   const meta = page.meta || [["Оператор", clinic.legal], ["Редакция", legalDate], ["Телефон", clinic.phone], ["Email", clinic.email]];
   return head({ title: page.title, desc: page.desc, canonical: `/${page.path}/`, depth, jsonld: [crumbsLd([[`${page.path}/`, page.crumb]])] })
   + header(depth) + `
 <main id="main">
-<section class="page-hero on-dark legal-hero"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">${esc(page.crumb)}</span></nav><h1>${esc(page.h1)}</h1><p class="page-hero__lead">${esc(page.lead)}</p></div>
-</div></section>
+${picHero({ cls: " legal-hero", depth, ...legalPic[page.slug], text: `<nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">${esc(page.crumb)}</span></nav><h1 id="h1">${esc(page.h1)}</h1><p class="page-hero__lead">${esc(page.lead)}</p>` })}
 <section class="section legal"><div class="wrap">
   <dl class="legal__meta">${meta.map(([k, v]) => `<div><dt>${k}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>
   <ol class="legal__list">${page.sections.map(([h, blocks], i) => `<li class="legal__sec" id="p${i + 1}"><span class="legal__n" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span><div class="legal__body"><h2>${esc(h)}</h2>${blocks.map((b) => legalBlock(b, page, p)).join("")}</div></li>`).join("")}</ol>
@@ -1621,6 +1623,20 @@ function pageLegal(page) {
 </div></section>
 </main>` + footer(depth) + end;
 }
+
+// первый экран служебных страниц как у услуг: картинка справа, на телефоне под текстом (Ilya 22.10: где по смыслу нужна картинка, она есть)
+function heroPic(name, alt, depth) {
+  const rel = `images/page-hero/${name}.png`, im = pick([rel], depth).src, set = srcset(rel, depth);
+  return `<div class="sp-hero__media sp-hero__media--pic">${im ? `<img src="${im}"${set ? ` srcset="${set}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="${esc(alt)}" decoding="async" fetchpriority="high">` : ""}</div>`;
+}
+const picHero = ({ cls = "", name, alt, depth, text, act = "", bottom = "" }) => `<section class="page-hero sp-hero on-dark${cls}" aria-labelledby="h1">
+  <div class="sp-hero__top${act ? "" : " sp-hero__top--noact"}">
+    ${heroPic(name, alt, depth)}
+    <div class="sp-hero__text">${text}</div>${act ? `
+    <div class="sp-hero__act">${act}</div>` : ""}
+  </div>${bottom ? `
+  <div class="wrap sp-hero__bottom">${bottom}</div>` : ""}
+</section>`;
 
 // ---------- служебные страницы: «Спасибо» после заявки и 404 (Ilya 19.10) ----------
 // обе закрыты от поиска и в карту сайта не идут. Тексты взяты из окон сайта и страницы цен
@@ -1637,10 +1653,7 @@ function pageThanks() {
   return head({ title: "Спасибо, заявка принята | Умная Медицина. Стоматология", desc: "Заявка в стоматологию «Умная Медицина» принята, администратор перезвонит.", canonical: "/spasibo/", depth, noindex: true, page: "thanks" })
   + header(depth) + `
 <main id="main">
-<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><span class="label label--light">Заявка принята</span><h1 data-split>Спасибо!</h1><p class="page-hero__lead">Администратор перезвонит за 5 минут с номера <span class="nobr">${esc(clinic.phone)}</span>. Если клиника сейчас закрыта, перезвоним утром, после 9:00.</p></div>
-  <div class="page-hero__aside"><a class="btn btn--lg btn--light" href="${p}index.html">На главную</a></div>
-</div></section>
+${picHero({ name: "spasibo", alt: "Смартфон с входящим звонком на подлокотнике стоматологического кресла", depth, text: `<span class="label label--light">Заявка принята</span><h1 id="h1" data-split>Спасибо!</h1><p class="page-hero__lead">Администратор перезвонит за 5 минут с номера <span class="nobr">${esc(clinic.phone)}</span>. Если клиника сейчас закрыта, перезвоним утром, после 9:00.</p>`, act: `<a class="btn btn--lg btn--light" href="${p}index.html">На главную</a>` })}
 <section class="section"><div class="wrap">
   <div class="sp-cards sp-cards--3">
     <article class="sp-card"><h2>Пока ждёте звонка</h2><p>Можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p><div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div></article>
@@ -1657,10 +1670,7 @@ function page404() {
   return (head({ title: "Страница не найдена | Умная Медицина. Стоматология", desc: "Такой страницы на сайте стоматологии «Умная Медицина» нет.", canonical: "", depth: 0, noindex: true, base })
   + header(0) + `
 <main id="main" tabindex="-1">
-<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><span class="label label--light">Ошибка 404</span><h1 data-split>Такой страницы нет</h1><p class="page-hero__lead">Возможно, адрес изменился или в нём опечатка. Начните с главной или выберите раздел ниже.</p></div>
-  <div class="page-hero__aside"><a class="btn btn--lg btn--light" href="index.html">На главную</a>${act("Записаться на консультацию", "book", "", { cls: "btn--ghost" })}</div>
-</div></section>
+${picHero({ name: "404", alt: "Пустой стоматологический поднос и одинокая модель зуба на его краю", depth: 0, text: `<span class="label label--light">Ошибка 404</span><h1 id="h1" data-split>Такой страницы нет</h1><p class="page-hero__lead">Возможно, адрес изменился или в нём опечатка. Начните с главной или выберите раздел ниже.</p>`, act: `<a class="btn btn--lg btn--light" href="index.html">На главную</a>${act("Записаться на консультацию", "book", "", { cls: "btn--ghost" })}` })}
 <section class="section"><div class="wrap">
   <div class="sp-cards sp-cards--4">${helpCards("")}</div>
 </div></section>
