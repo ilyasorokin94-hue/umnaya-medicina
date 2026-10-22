@@ -1212,6 +1212,8 @@ html:not(.js-intro) .intro { display: none; }
 .team__grid--lava .doc { grid-column-end: span 6; min-width: 0; align-self: start; }
 .team__grid--lava .doc[data-col="l"] { grid-column-start: 1; padding-top: clamp(48px, 2.73rem + 1.21vw, 60px); }
 .team__grid--lava .doc[data-col="r"] { grid-column-start: 7; }
+/* главный врач отдельной карточкой по центру над парами (Ilya 22.10: врачей нечётное число) */
+.team__grid.team__grid--lava .doc[data-col="c"] { grid-column: 4 / span 6; margin-bottom: clamp(40px, 1.6rem + 4vw, 96px); }
 .team__grid.team__grid--lava .doc > * { opacity: 1; translate: 0 calc(var(--k, 0) * var(--shift, 0vmin)); }
 .team__grid--lava .doc[data-col="l"] { --shift: 20vmin; }
 .team__grid.team__grid--lava .doc__photo { scale: none; margin-bottom: 14px; }
@@ -1222,6 +1224,7 @@ html:not(.js-intro) .intro { display: none; }
   .team__grid--lava .doc { grid-column-end: span 4; }
   .team__grid--lava .doc[data-col="l"] { grid-column-start: 2; padding-top: clamp(64px, 2.73rem + 5.66vw, 120px); }
   .team__grid--lava .doc[data-col="r"] { grid-column-start: 7; }
+  .team__grid.team__grid--lava .doc[data-col="c"] { grid-column: 5 / span 4; }
   .team__grid--lava .doc h3 { font-size: var(--fs-1); }
 }
 @media (min-width: 961px) {

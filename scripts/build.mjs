@@ -495,7 +495,7 @@ const docById = Object.fromEntries(doctors.map((d) => [d.id, d]));
 // o.lava: сетка как у Лава Дент, карточка стоит в левой (l) или правой (r) колонке и не проявляется отдельно
 function doctorCard(d, depth, o = {}) {
   const p = pre(depth);
-  return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}"${o.lava ? ` data-col="${o.i % 2 ? "r" : "l"}"` : " data-reveal"}>
+  return `<article class="doc${d.chief ? " doc--chief" : ""}" data-tags="${d.tags.join(" ")}"${o.lava ? ` data-col="${o.chief ? "c" : o.i % 2 ? "r" : "l"}"` : " data-reveal"}>
   <div class="doc__photo" data-ph><span class="doc__initials" aria-hidden="true">${initialsOf(d)}</span>${img(docPhoto(d), d.name, depth, "", "auto, (max-width: 760px) 80vw, 30vw")}
     <a class="doc__cover" href="${docHref(d.id, p)}" tabindex="-1" aria-hidden="true"></a>${o.lava || o.go ? `
     <a class="doc__go" href="${docHref(d.id, p)}" aria-label="Страница врача: ${esc(d.short)}"><svg viewBox="0 0 60 60" aria-hidden="true"><path d="M24 36 36 24M27 24h9v9"/></svg></a>` : ""}</div>
@@ -681,7 +681,7 @@ ${promoBlock(p, depth)}
 
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>
-  <div class="team__grid team__grid--lava">${doctors.map((d, i) => doctorCard(d, depth, { lava: true, i })).join("")}</div>
+  <div class="team__grid team__grid--lava">${[...doctors.filter((d) => d.chief), ...doctors.filter((d) => !d.chief)].map((d, i, a) => doctorCard(d, depth, { lava: true, i: i - a.filter((x) => x.chief).length, chief: d.chief })).join("")}</div>
   <div class="team__more"><a class="btn btn--ghost" href="vrachi/">Все врачи: опыт, образование, курсы</a></div>
 </div></section>
 
@@ -1284,7 +1284,7 @@ function pageDoc(d, page) {
   const pills = page.does.filter(([, h], i, a) => a.findIndex(([, h2]) => h2 === h) === i);
   // отзывы только с площадки и ссылкой на неё; нет отзывов, нет и блока (Ilya 18.10)
   const quotes = doctorReviews[d.id] || [];
-  const others = doctors.filter((x) => x.id !== d.id && x.id !== "sikacheva");
+  const others = doctors.filter((x) => x.id !== d.id);
   const org = (name) => ({ "@type": "EducationalOrganization", name });
   const ld = {
     "@context": "https://schema.org", "@type": "Person", "@id": `${url}#person`, name: d.name, givenName: given.join(" "), familyName: last,
@@ -1358,7 +1358,7 @@ ${dpBlock({ type: "faq", id: "voprosy", title: "Вопросы о приёме",
 
 // ---------- прайс ----------
 // ---------- все врачи ----------
-// Врачи по направлениям (Ilya 18.10: страница всех врачей логичнее). Сикачевой нет, пока Ilya не решит; её старая страница остаётся.
+// Врачи по направлениям (Ilya 18.10: страница всех врачей логичнее).
 const docGroups = [
   { id: "hirurgiya", title: "Хирургия и имплантация", text: "Удаляют зубы, которые не сохранить, ставят импланты, наращивают кость и проводят синус-лифтинг.", ids: ["hludnevskiy", "radzhabov"], svc: ["implantaciya", "all-on-4", "hirurgiya"] },
   { id: "ortopediya", title: "Ортопедия и протезирование", text: "Восстанавливают зубы коронками, винирами и протезами, в том числе на имплантах. Отделение ведёт главный врач.", ids: ["solodukhin", "alikhanova"], svc: ["protezirovanie", "all-on-4"] },
@@ -1698,7 +1698,7 @@ const cleanHref = (html) => html.replace(/\shref="(?![a-z]+:|\/\/|#)([^"?#]*?)\.
 const pages = [];
 const urls = new Map(); // адрес страницы на сайте → её html, для карты сайта
 const out = (f, html, map = true) => {
-  if (f.endsWith(".html")) { pages.push((html = cleanHref(typo(f === "vrachi/sikacheva.html" ? html : noDash(html))))); if (map) urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
+  if (f.endsWith(".html")) { pages.push((html = cleanHref(typo(noDash(html))))); if (map) urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
   writeFileSync(path.join(dist, f), html);
 };
 out("index.html", pageHome());
@@ -1720,9 +1720,8 @@ out("404.html", page404(), false);
 // старые адреса услуг, переехавших в новый формат, ведут на новую страницу и в карту сайта не попадают
 for (const s of services) spBySlug[s.slug] ? writeFileSync(path.join(dist, `uslugi/${s.slug}.html`), noDash(spRedirect(spBySlug[s.slug]))) : out(`uslugi/${s.slug}.html`, pageService(s));
 for (const page of servicePages) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}index.html`, pageSvc(page), !page.hidden); }
-// старая страница Сикачевой остаётся, но в карту сайта не идёт, пока Ilya не решит (17.10)
 for (const d of doctors) {
-  if (!doctorPages[d.id]) { out(`vrachi/${d.id}.html`, pageDoctor(d), d.id !== "sikacheva"); continue; }
+  if (!doctorPages[d.id]) { out(`vrachi/${d.id}.html`, pageDoctor(d)); continue; }
   mkdirSync(path.join(dist, "vrachi", d.id), { recursive: true });
   out(`vrachi/${d.id}/index.html`, pageDoc(d, doctorPages[d.id]));
 }
@@ -1796,7 +1795,7 @@ const csp = [
   "base-uri 'self'", "form-action 'self'", "object-src 'none'", "upgrade-insecure-requests",
 ].join("; ");
 // старые адреса демо: услуги, переехавшие в новый формат, прайс и список врачей
-const moved = [["ceny\\.html", "/ceny/"], ["vrachi\\.html", "/vrachi/"], 
+const moved = [["ceny\\.html", "/ceny/"], ["vrachi\\.html", "/vrachi/"], ["vrachi/sikacheva(?:\\.html)?", "/vrachi/"], 
   ...services.filter((x) => spBySlug[x.slug]).map((x) => [`uslugi/${x.slug}(?:\\.html)?`, `/${spBySlug[x.slug].path}`])];
 out(".htaccess", `# Стоматология «Умная Медицина», ${SITE}. Собирается из scripts/build.mjs, руками не править
 AddDefaultCharset utf-8
