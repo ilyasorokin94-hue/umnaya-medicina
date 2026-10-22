@@ -198,9 +198,12 @@ function intro(depth) {
   return `<div class="intro" aria-hidden="true"><div class="intro__bg"></div><img class="intro__mark" src="${pre(depth)}images/brand/header-logo-light.svg" alt=""></div>`;
 }
 
+// мессенджеры клиники: пока в data.mjs только адрес сервиса без канала, кнопок нет (Ilya 22.10: никуда не уводим)
+const msgrLinks = () => [["Telegram", clinic.telegram], ["MAX", clinic.max]].filter(([, u]) => u && !/^https?:\/\/[^/]+\/?$/.test(u));
+const msgrSay = () => msgrLinks().map(([n]) => n).join(" или ");
 // кнопки-действия: открывают окно на сайте, без скриптов ведут на запись, телефон или Telegram
 const fallbackHref = (kind, p, o = {}) => kind === "call" ? clinic.phoneHref
-  : kind === "xray" ? clinic.telegram
+  : kind === "xray" ? (msgrLinks()[0]?.[1] || `${p}zapis.html`)
   : kind === "allon" ? `${p}zapis.html?service=all-on-4`
   : `${p}zapis.html${o.service ? `?service=${bookSlug(o.service)}` : o.doctor ? `?doctor=${o.doctor}` : ""}`;
 // услуга страницы нового формата → пункт списка на странице записи (там 10 направлений главной): All-on-6 и протез на имплантах
@@ -289,7 +292,7 @@ function modals(depth) {
   const name = `<label>Имя<input name="name" autocomplete="given-name" required></label>`;
   // строка «Акция: …», если окно открыли кнопкой из блока акций; уходит в заявку скрытым полем promo
   const promoLine = `<p class="modal__promo" hidden></p>`;
-  const msgr = `<div class="modal__msgr"><a class="btn btn--ghost" href="${clinic.telegram}"${ext}>Отправить в Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>Отправить в MAX</a></div>`;
+  const msgr = msgrLinks().length ? `<div class="modal__msgr">${msgrLinks().map(([n, u]) => `<a class="btn btn--ghost" href="${u}"${ext}>Отправить в ${n}</a>`).join("")}</div>` : "";
   const box = (id, title, inner, wide = false) => `<div class="modal modal--${id}" id="m-${id}" role="dialog" aria-modal="true" aria-labelledby="m-${id}-t" hidden><div class="modal__box${wide ? " modal__box--wide" : ""}" data-lenis-prevent>
   <button class="modal__x" type="button" aria-label="Закрыть" data-close>${icon.close}</button>
   <h2 id="m-${id}-t" tabindex="-1">${title}</h2>${inner}
@@ -330,8 +333,8 @@ ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">
     <p class="modal__note">Перезвоним за 5 минут. ${consent}</p>
   </form>`)}
 ${offer(depth, consent, p)}
-${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}. Пока ждёте, можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p>
-  <div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>
+${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}.${msgrLinks().length ? ` Пока ждёте, можете прислать снимок в ${msgrSay()}, врач посмотрит его до визита.` : ""}</p>
+  ${msgrLinks().length ? `<div class="modal__msgr">${msgrLinks().map(([n, u], i) => `<a class="btn${i ? " btn--ghost" : ""}" href="${u}"${ext}>${n}</a>`).join("")}</div>` : ""}
 ${LEADS ? "" : `
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>`}`)}
 </div>`;
@@ -415,9 +418,7 @@ function footer(depth) {
           <a href="${p}ceny/">Полный прайс</a>
           <a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a>
           <a href="${clinic.vk}"${ext}>ВКонтакте</a>
-          <a href="https://um-med.com/assets/files/dogovor-oferta.pdf"${ext}>Договор-оферта</a>
           <a href="${legalHref("privacy", p)}">Политика конфиденциальности</a>
-          <a href="${clinic.mainSite}"${ext}>Многопрофильная клиника</a>
         </p>
       </div>
       <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="${SITE}/">
@@ -1655,7 +1656,7 @@ function pageThanks() {
 ${picHero({ name: "spasibo", alt: "Смартфон с входящим звонком на подлокотнике стоматологического кресла", depth, text: `<span class="label label--light">Заявка принята</span><h1 id="h1" data-split>Спасибо!</h1><p class="page-hero__lead">Администратор перезвонит за 5 минут с номера <span class="nobr">${esc(clinic.phone)}</span>. Если клиника сейчас закрыта, перезвоним утром, после 9:00.</p>`, act: `<a class="btn btn--lg btn--light" href="${p}index.html">На главную</a>` })}
 <section class="section"><div class="wrap">
   <div class="sp-cards sp-cards--3">
-    <article class="sp-card"><h2>Пока ждёте звонка</h2><p>Можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p><div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div></article>
+    <article class="sp-card"><h2>Пока ждёте звонка</h2><p>Можете прислать снимок${msgrLinks().length ? ` в ${msgrSay()}` : ""}, врач посмотрит его до визита.</p><div class="modal__msgr">${msgrLinks().length ? msgrLinks().map(([n, u], i) => `<a class="btn${i ? " btn--ghost" : ""}" href="${u}"${ext}>${n}</a>`).join("") : `<a class="btn" href="${p}zapis.html" data-modal="xray">Прислать снимок</a>`}</div></article>
     <article class="sp-card"><h2><a href="${p}index.html#contacts">Как добраться</a></h2><p>${esc(clinic.addressShort)}. ${esc(clinic.hours)}.</p></article>
     <article class="sp-card"><h2><a href="${p}vrachi/">Врачи</a></h2><p>Врачи клиники по направлениям, у каждого своя страница.</p></article>
   </div>
