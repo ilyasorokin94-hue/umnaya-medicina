@@ -2156,3 +2156,9 @@ label.consent input[type="checkbox"][name="consent"][required] { flex: none; wid
 /* страница записи без подвала: реквизиты и документы внизу колонки «Ваша запись» */
 .booking__legal { display: grid; gap: 8px; margin-top: auto; font-size: 12px; }
 .booking__legal .footer__docs { gap: 6px 16px; flex-basis: auto; }
+
+/* отправка заявок: ошибка под формой с номером клиники, ловушка для ботов вне экрана */
+.form__err { margin: 2px 0 12px; font-size: 14px; line-height: 1.45; color: #b3261e; text-align: left; }
+.form__err a { color: inherit; font-weight: 600; white-space: nowrap; }
+.invite__form + .form__err { margin: 10px 0 0; }
+.hp { position: absolute !important; left: -10000px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }

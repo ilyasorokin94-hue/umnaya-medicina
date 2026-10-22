@@ -451,6 +451,71 @@
 
   // ---------- окна: запись, перезвон, снимок, расчёт, мессенджеры ----------
   const docs = (() => { try { return JSON.parse($("#um-docs")?.textContent || "{}"); } catch (e) { return {}; } })();
+
+  // ---------- отправка заявок ----------
+  // На рабочем сайте формы ведут на lead.php: заявка уходит fetch'ем, а без скриптов форма отправится сама и вернётся на «Спасибо».
+  // В демо формы ведут на spasibo/, здесь только пауза, как будто отправили.
+  // Откуда пришёл человек: метки и первая страница визита запоминаются на вкладку, чтобы заявка с пятой страницы знала источник
+  const srcKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "yclid", "gclid"];
+  const visit = (() => {
+    let v = null;
+    try { v = JSON.parse(sessionStorage.getItem("um2-src") || "null"); } catch (err) {}
+    const q = new URLSearchParams(location.search);
+    if (!v || srcKeys.some((k) => q.get(k))) {
+      const ref = document.referrer && new URL(document.referrer).origin !== location.origin ? document.referrer : "";
+      v = { landing: location.pathname + location.search, ref: ref || v?.ref || "" };
+      srcKeys.forEach((k) => { if (q.get(k)) v[k] = q.get(k).slice(0, 200); });
+      try { sessionStorage.setItem("um2-src", JSON.stringify(v)); } catch (err) {}
+    }
+    return v;
+  })();
+  const t0 = Date.now(), FILE_MB = 20;
+  const isLive = (f) => /lead\.php$/.test(f.getAttribute("action") || "");
+  // ловушка для ботов: поле, которого человек не видит
+  $$("form").forEach((f) => { if (isLive(f)) f.insertAdjacentHTML("beforeend", '<input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">'); });
+  const sendLead = async (form, kind, extra = {}) => {
+    if (!isLive(form)) return new Promise((r) => setTimeout(r, 700));
+    const fd = new FormData(form);
+    const file = fd.get("file");
+    if (file && file.size > FILE_MB * 1048576) throw new Error(`Файл больше ${FILE_MB} МБ. Пришлите снимок в Telegram или MAX.`);
+    if (file && !file.size) fd.delete("file");
+    fd.set("form", kind); fd.set("page", location.pathname); fd.set("title", document.title); fd.set("t", String(Date.now() - t0));
+    Object.entries({ ...visit, ...extra }).forEach(([k, v]) => { if (v) fd.set(k, v); });
+    const doc = fd.get("doctor");
+    if (doc && docs[doc]) fd.set("doctor", docs[doc]);
+    // номер посетителя в Метрике, только если её разрешили в уведомлении о cookie (без согласия её cookie нет)
+    const ym = document.cookie.match(/(?:^|; )_ym_uid=(\d+)/);
+    if (ym) fd.set("ym_uid", ym[1]);
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 45000);
+    try {
+      const r = await fetch(form.action, { method: "POST", body: fd, headers: { Accept: "application/json" }, signal: ctl.signal, credentials: "same-origin" });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) throw new Error(j.error || "");
+      return j;
+    } catch (err) {
+      throw new Error(err.name === "AbortError" || !err.message ? "" : err.message);
+    } finally { clearTimeout(tm); }
+  };
+  // ошибка под формой: что случилось и номер клиники, чтобы заявка не потерялась
+  // (у окна «Три врача» поле и кнопка в одной капсуле, там строка встаёт под формой)
+  const leadError = (form, msg) => {
+    let p = form._err;
+    if (!p) {
+      p = form._err = document.createElement("p"); p.className = "form__err"; p.setAttribute("role", "alert");
+      const b = form.querySelector("button:not([type=button])");
+      if (b && !form.matches(".invite__form")) b.before(p); else form.after(p);
+    }
+    p.hidden = false;
+    const tel = $('a[href^="tel:"]')?.getAttribute("href") || "tel:+74951503615";
+    p.innerHTML = `${msg || "Не получилось отправить заявку."} Попробуйте ещё раз или позвоните: <a href="${tel}">${tel.replace(/^tel:\+7(\d{3})(\d{3})(\d{2})(\d{2})$/, "+7 $1 $2-$3-$4")}</a>`;
+  };
+  // кнопка на время отправки: «Отправляем…» и без повторных нажатий
+  const busy = (form, on) => {
+    const b = form.querySelector("button:not([type=button])") || $(`button[form="${form.id}"]`);
+    if (!b) return;
+    if (on) { b.dataset.label = b.textContent; b.textContent = "Отправляем…"; b.disabled = true; }
+    else { b.textContent = b.dataset.label || b.textContent; b.disabled = false; }
+  };
   let openM = null, lastFocus = null, anyModal = false;
   const showModal = (id, from) => {
     const m = $("#m-" + id);
@@ -514,7 +579,7 @@
   // имя выбранного файла на кнопке
   $$(".file input").forEach((i) => i.addEventListener("change", () => { const s = i.nextElementSibling; if (s) s.textContent = i.files[0]?.name || "Выбрать файл"; }));
 
-  // отправка любой формы заявки: в демо только «спасибо»; на рабочем сайте здесь уходит заявка в amoCRM
+  // отправка любой формы заявки: заявка уходит в lead.php (amoCRM, Telegram, таблица), потом «спасибо»
   const doneText = {
     xray: ["Снимок у врача", "Врач посмотрит и ответит в течение рабочего дня. Если зуб можно спасти, скажем, как и сколько это стоит."],
     allon: ["Спасибо!", "Администратор перезвонит за 5 минут и запишет к имплантологу на консультацию с КТ. Расчёт бесплатный."],
@@ -522,12 +587,18 @@
   const defDone = $("#m-done [data-done-text]")?.textContent;
   $$("form[data-lead]").forEach((f) => {
     if (f.hasAttribute("data-quiz") || f.classList.contains("cb")) return;
-    f.addEventListener("submit", (e) => {
+    f.addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (f.dataset.sending) return;
       const kind = f.dataset.lead, d = doneText[kind];
+      f.dataset.sending = "1"; busy(f, true); if (f._err) f._err.hidden = true;
+      try { await sendLead(f, kind); }
+      catch (err) { leadError(f, err.message); return; }
+      finally { delete f.dataset.sending; busy(f, false); }
       const dm = $("#m-done");
       if (dm) { $("h2", dm).textContent = d ? d[0] : "Спасибо!"; $("[data-done-text]", dm).textContent = d ? d[1] : defDone; }
       f.reset();
+      $$(".file input", f).forEach((i) => i.dispatchEvent(new Event("change")));
       document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: kind } })); // цель Метрики (cookie.js), без имени и телефона
       showModal("done");
     });
@@ -669,8 +740,7 @@
         return;
       }
       btn.disabled = true; btn.textContent = "Отправляем";
-      // демо: на рабочем сайте здесь заявка уходит в amoCRM с формой «подвал», страницей и UTM-метками
-      setTimeout(() => {
+      sendLead(cb, "final").then(() => {
         $("[data-done-s]", cbDone).textContent = isOpen()
           ? "Администратор перезвонит за 5 минут с номера +7 495 150-36-15."
           : "Сейчас клиника закрыта. Перезвоним утром, после 9:00, с номера +7 495 150-36-15.";
@@ -679,7 +749,11 @@
         document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "final" } }));
         if (anim) { G.from(cbDone, { height: h0, duration: 0.6, ease: "power3.out", clearProps: "height" }); G.from(cbDone.children, { y: 16, autoAlpha: 0, duration: 0.6, stagger: 0.06, ease: "power3.out" }); }
         btn.disabled = false; btn.textContent = "Жду звонка"; cbIn.value = ""; draw(); clearErr();
-      }, 700);
+      }, (err) => {
+        btn.disabled = false; btn.textContent = "Жду звонка";
+        cb.classList.add("is-error");
+        cbHint.textContent = (err.message || "Не получилось отправить.") + " Позвоните: +7 495 150-36-15";
+      });
     });
     $("[data-again]", cbDone)?.addEventListener("click", () => { cbDone.hidden = true; cb.hidden = false; cbIn.focus(); });
   }
@@ -1230,7 +1304,19 @@
       }
       if (b.matches("[data-next-time]")) return go(4);
     });
-    $("#b-form", box).addEventListener("submit", (e) => { e.preventDefault(); document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "zapis" } })); go(5); });
+    // услуга, врач и время уходят в заявку словами, как на экране; время это пожелание, администратор его подтвердит
+    const bf = $("#b-form", box);
+    bf.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (bf.dataset.sending) return;
+      const said = (k) => (sum[k] && !sum[k].classList.contains("is-empty") ? sum[k].textContent : "");
+      bf.dataset.sending = "1"; busy(bf, true); if (bf._err) bf._err.hidden = true;
+      try { await sendLead(bf, "zapis", { service: said("service"), doctor: said("doctor"), when: said("date") }); }
+      catch (err) { leadError(bf, err.message); return; }
+      finally { delete bf.dataset.sending; busy(bf, false); }
+      document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "zapis" } }));
+      go(5);
+    });
 
     // предвыбор из ссылки: zapis.html?service=implantaciya&doctor=hludnevskiy
     renderDocs();

@@ -33,6 +33,10 @@ const SITE = process.env.SITE_URL || "https://umnaya-stomatologiya.ru"; // до�
 // PUBLISH=1 SITE_URL=https://… npm run build — сборка для боевого домена: страницы открыты поисковикам, robots.txt
 // с картой сайта, без полосы «демонстрационный макет». По умолчанию собирается демо: noindex и полоса сверху
 const PUBLISH = process.env.PUBLISH === "1";
+// заявки: с PUBLISH=1 (или LEADS=1 для проверки на тестовом хостинге) формы ведут на приёмник lead.php (server/lead.php,
+// настройки и ключи в config.php вне папки сайта). Без него, как на демо GitHub Pages, формы только показывают «спасибо»
+const LEADS = PUBLISH || process.env.LEADS === "1";
+const leadAction = (p) => (LEADS ? `${p}lead.php` : `${p}spasibo/`);
 if (PUBLISH && !process.env.SITE_URL) throw new Error("PUBLISH=1 собирается только с SITE_URL боевого домена");
 // один постоянный @id клиники: на него ссылаются разметка главной и подвал на всех страницах
 const CLINIC_ID = `${SITE}/#clinic`;
@@ -185,7 +189,7 @@ ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</sc
 </head>
 <body${page === "booking" ? ' class="booking-page"' : ""}>
 <a class="skip" href="#main">К содержанию</a>
-${PUBLISH ? "" : `<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». Заявки из форм пока никуда не отправляются.</div><script>(function(d,b){var h=b.offsetHeight;d.style.setProperty("--demo-h",h+"px");d.style.setProperty("--hdr-top",h+"px")})(document.documentElement,document.currentScript.previousElementSibling)</script>`}`;
+${PUBLISH ? "" : `<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». ${LEADS ? "Заявки уходят в тестовом режиме." : "Заявки из форм пока никуда не отправляются."}</div><script>(function(d,b){var h=b.offsetHeight;d.style.setProperty("--demo-h",h+"px");d.style.setProperty("--hdr-top",h+"px")})(document.documentElement,document.currentScript.previousElementSibling)</script>`}`;
 }
 
 // демо-полосу меряем сразу после неё, до первого кадра: иначе до app.js шапка лежит поверх полосы, а потом прыгает вниз
@@ -295,7 +299,7 @@ function modals(depth) {
 <div class="modals">
 ${box("book", "Запишитесь на бесплатную консультацию", `<p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
   <p class="modal__doc" hidden></p>${promoLine}
-  <form class="form lead" data-lead="book" method="post" action="${p}spasibo/">
+  <form class="form lead" data-lead="book" method="post" action="${leadAction(p)}">
     <input type="hidden" name="doctor"><input type="hidden" name="promo">${name}${phone}
     <fieldset class="reasons"><legend>Что беспокоит <span>необязательно</span></legend><div class="chips">${home.reasons.map((r) => `<label class="chip chip--pick"><input type="radio" name="reason" value="${esc(r)}"><span>${esc(r)}</span></label>`).join("")}</div></fieldset>
     ${agree}
@@ -303,13 +307,13 @@ ${box("book", "Запишитесь на бесплатную консульта
     <p class="modal__note">Перезвоним за 5 минут. Заявки после 21:00 перезваниваем с 9:00 утра. ${consent}</p>
   </form>`)}
 ${box("call", "Перезвоним за 5 минут", `<p class="modal__sub">Оставьте номер, администратор перезвонит и ответит на вопросы.</p>
-  <form class="form lead" data-lead="call" method="post" action="${p}spasibo/">${phone}
+  <form class="form lead" data-lead="call" method="post" action="${leadAction(p)}">${phone}
     ${agree}
     <button class="btn btn--lg btn--wide">Жду звонка</button>${consent ? `
     <p class="modal__note">${consent}</p>` : ""}
   </form>`)}
 ${box("xray", "Пришлите снимок, и врач скажет, можно ли сохранить зуб", `<p class="modal__sub">Подойдёт КТ, панорама, прицельный снимок или фото плана лечения из другой клиники. Врач посмотрит и ответит в течение рабочего дня. Это бесплатно.</p>
-  <form class="form lead" data-lead="xray" method="post" action="${p}spasibo/">${name}${phone}
+  <form class="form lead" data-lead="xray" method="post" action="${leadAction(p)}">${name}${phone}
     <label class="file">Снимок или план<input name="file" type="file" accept="image/*,.pdf,.zip,.dcm"><span>Выбрать файл</span></label>
     ${msgr}
     ${agree}
@@ -318,7 +322,7 @@ ${box("xray", "Пришлите снимок, и врач скажет, можн
   </form>`)}
 ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная, стоимость лечения врач назовёт после осмотра.</p>
   ${promoLine}
-  <form class="form lead" data-lead="allon" method="post" action="${p}spasibo/"><input type="hidden" name="promo">${name}${phone}
+  <form class="form lead" data-lead="allon" method="post" action="${leadAction(p)}"><input type="hidden" name="promo">${name}${phone}
     <fieldset class="reasons"><legend>Одна или обе челюсти</legend><div class="chips">${["Одна челюсть", "Обе челюсти"].map((r, i) => `<label class="chip chip--pick"><input type="radio" name="jaws" value="${r}"${i ? "" : " checked"}><span>${r}</span></label>`).join("")}</div></fieldset>
     <fieldset class="reasons"><legend>Носите ли съёмный протез</legend><div class="chips">${["Да, ношу", "Нет"].map((r) => `<label class="chip chip--pick"><input type="radio" name="denture" value="${r}"><span>${r}</span></label>`).join("")}</div></fieldset>
     ${agree}
@@ -328,7 +332,8 @@ ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">
 ${offer(depth, consent, p)}
 ${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}. Пока ждёте, можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p>
   <div class="modal__msgr"><a class="btn" href="${clinic.telegram}"${ext}>Telegram</a><a class="btn btn--ghost" href="${clinic.max}"${ext}>MAX</a></div>
-  <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>`)}
+${LEADS ? "" : `
+  <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>`}`)}
 </div>`;
 }
 
@@ -346,7 +351,7 @@ function offer(depth, consent, p) {
     <h2 id="m-offer-t" tabindex="-1">${esc(o.title)}</h2>
     <p class="invite__sub">${esc(o.sub)}</p>
     <p class="invite__perk">${esc(o.perk)}</p>
-    <form class="lead invite__form" id="offer-form" data-lead="offer" method="post" action="${p}spasibo/">
+    <form class="lead invite__form" id="offer-form" data-lead="offer" method="post" action="${leadAction(p)}">
       <label class="invite__field"><span>Телефон</span><input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>
       <button class="btn">${esc(o.btn)}</button>
     </form>
@@ -368,7 +373,7 @@ function footer(depth) {
   return `
 <footer class="footer on-dark"><div class="wrap footer__in">
   <div class="footer__cta footer__cta--big">
-    <form class="cb big" data-lead="final" method="post" action="${p}spasibo/" novalidate>
+    <form class="cb big" data-lead="final" method="post" action="${leadAction(p)}" novalidate>
       <p class="label label--light">${esc(home.footForm.label)}</p>
       <h2 class="big__t" data-split>${esc(home.final[0])}</h2>
       <label class="big__field" for="cb-phone"><span class="sr">Ваш телефон</span><span class="big__ghost" aria-hidden="true"><i data-typed></i><span data-rest>+7 000 000-00-00</span></span><input class="big__in" id="cb-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required aria-describedby="cb-hint"></label>
@@ -1496,7 +1501,7 @@ function pageBooking() {
       <section class="bstep" data-step="4" hidden>
         <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span></div>
         <h2 tabindex="-1">Как с вами связаться?</h2>
-        <form class="form" id="b-form" method="post" action="spasibo/">
+        <form class="form" id="b-form" method="post" action="${leadAction("")}">
           <label>Имя<input name="name" required autocomplete="name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
           <label>Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
@@ -1507,7 +1512,7 @@ function pageBooking() {
       <section class="bstep bdone" data-step="5" hidden>
         <div class="bdone__ok">${icon.check}</div>
         <h2 tabindex="-1">Заявка отправлена</h2>
-        <p class="muted">Это демонстрация. На рабочем сайте запись попадёт в расписание клиники и в amoCRM с меткой источника, а пациенту придёт подтверждение.</p>
+        <p class="muted">${LEADS ? "Администратор перезвонит и подтвердит время приёма." : "Это демонстрация. На рабочем сайте запись попадёт в расписание клиники и в amoCRM с меткой источника, а пациенту придёт подтверждение."}</p>
         <div class="bnav"><a class="btn" href="index.html">На главную</a></div>
       </section>
     </div>
@@ -1711,11 +1716,14 @@ await Promise.all(jobs);
 // не слушают группы «*» и «Yandex», поэтому у них своя группа. Отдельных разрешений и запретов для других нейросетей нет
 out("robots.txt", PUBLISH ? `User-agent: *\nAllow: /\n\nUser-agent: Yandex\nAllow: /\n\nUser-agent: YandexAdditional\nUser-agent: YandexAdditionalBot\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n` : "User-agent: *\nDisallow: /\n");
 out(".nojekyll", "");
+// приёмник заявок: только в сборке с LEADS, на GitHub Pages PHP не работает
+if (LEADS) copyFileSync(path.join(root, "server/lead.php"), path.join(dist, "lead.php"));
 
 // настройки хостинга на Apache (Beget, Timeweb, REG.RU и большинство российских хостингов читают .htaccess):
 // https и один адрес без www, адреса без .html, 404, переадресации со старых адресов демо, сжатие, кэш, заголовки безопасности.
 // Разрешения CSP: Яндекс Метрика с Вебвизором (mc.yandex.ru, yastatic.net, просмотр записей с metrika.yandex.ru и webvisor.com),
-// карты Яндекса и виджеты ПроДокторов. Подключаете новый сервис (обработчик заявок, чат, amoCRM) — допишите его домен сюда
+// карты Яндекса и виджеты ПроДокторов. Приёмник заявок lead.php свой (amoCRM, Telegram и таблицу он вызывает с сервера),
+// разрешений не требует. Подключаете сервис, который работает в браузере (чат, виджет), — допишите его домен сюда
 const host = new URL(SITE).host.replace(/^www\./, "");
 const csp = [
   "default-src 'self'",
@@ -1770,6 +1778,16 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{DOCUMENT_ROOT}/$1.html -f
 RewriteRule ^(.+)$ $1.html [L]
+</IfModule>
+
+# PHP исполняется только у приёмника заявок lead.php, остальные .php закрыты
+<IfModule mod_authz_core.c>
+<FilesMatch "\\.(php|phtml|phar|inc)$">
+Require all denied
+</FilesMatch>
+<Files "lead.php">
+Require all granted
+</Files>
 </IfModule>
 
 # сжатие текста
