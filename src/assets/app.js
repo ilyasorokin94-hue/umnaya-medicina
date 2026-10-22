@@ -530,7 +530,8 @@
       $('input[name="doctor"]', m).value = doc || "";
       info.hidden = !doc;
       info.textContent = doc ? "Врач: " + (docs[doc] || doc) : "";
-      $$('input[name="reason"]', m).forEach((r) => (r.checked = !!reason && r.value === reason));
+      // повод от кнопки («Сказали удалить» и т. п.) уходит в заявку скрытым полем, выбирать его в окне не нужно (Ilya 22.10)
+      $('input[name="reason"]', m).value = reason || "";
     }
     // акция из блока «Акции»: показываем строкой в окне и отправляем вместе с заявкой
     const pl = $(".modal__promo", m);

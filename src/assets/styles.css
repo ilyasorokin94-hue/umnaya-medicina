@@ -2202,3 +2202,5 @@ label.consent input[type="checkbox"][name="consent"][required] { flex: none; wid
 .modal { cursor: pointer; }
 .modal__box { cursor: auto; }
 .modal__ok { margin-top: 22px; }
+.modal__legal { margin-top: -4px; font-size: 12px; }
+.footer .cb__consent a { display: inline; padding: 0; }
