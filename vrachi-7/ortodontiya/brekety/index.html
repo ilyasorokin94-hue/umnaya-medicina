@@ -171,7 +171,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
     <div class="cb__done" role="status" tabindex="-1" hidden>
       <p class="cb__done-t">Спасибо, номер у нас</p>
       <p class="cb__done-s" data-done-s>Администратор перезвонит за 5 минут с номера +7 495 150-36-15.</p>
-      <div class="cb__alt"><p>Пока ждёте, можно прислать снимок.</p><a class="btn btn--ghost btn--sm" href="https://t.me/" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
+      <div class="cb__alt"><p>Пока ждёте, можно прислать снимок.</p><a class="btn btn--ghost btn--sm" href="../../zapis" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
       <button class="way__link cb__again" type="button" data-again>Указать другой номер</button>
     </div>
   </div>
@@ -202,10 +202,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
           <a href="../../ceny/">Полный прайс</a>
           <a href="../../zapis" data-modal="book">Записаться</a>
           <a href="https://vk.com/um_med_stomatologia" target="_blank" rel="noopener">ВКонтакте</a>
-          <a href="https://um-med.com/assets/files/dogovor-oferta.pdf" target="_blank" rel="noopener">Договор-оферта</a>
           <a href="../../privacy/">Политика конфиденциальности</a>
-          <a href="https://um-med.com/" target="_blank" rel="noopener">Многопрофильная клиника</a>
-          <a href="https://um-med.com/vacancies.html" target="_blank" rel="noopener">Вакансии</a>
         </p>
       </div>
       <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="https://umnaya-stomatologiya.ru/">
@@ -246,7 +243,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   <h2 id="m-xray-t" tabindex="-1">Пришлите снимок, и врач скажет, можно ли сохранить зуб</h2><p class="modal__sub">Подойдёт КТ, панорама, прицельный снимок или фото плана лечения из другой клиники. Врач посмотрит и ответит в течение рабочего дня. Это бесплатно.</p>
   <form class="form lead" data-lead="xray" method="post" action="../../spasibo/"><label>Имя<input name="name" autocomplete="given-name" required></label><label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>
     <label class="file">Снимок или план<input name="file" type="file" accept="image/*,.pdf,.zip,.dcm"><span>Выбрать файл</span></label>
-    <div class="modal__msgr"><a class="btn btn--ghost" href="https://t.me/" target="_blank" rel="noopener">Отправить в Telegram</a><a class="btn btn--ghost" href="https://max.ru/" target="_blank" rel="noopener">Отправить в MAX</a></div>
+    
     <label class="consent"><input type="checkbox" name="consent" required><span>Даю <a href="../../soglasie/" target="_blank" rel="noopener">согласие на обработку персональных данных</a> и принимаю <a href="../../privacy/" target="_blank" rel="noopener">Политику конфиденциальности</a></span></label>
     <button class="btn btn--lg btn--wide">Отправить снимок</button>
     <p class="modal__note">Если зуб можно спасти, скажем, как и сколько это стоит. </p>
@@ -285,8 +282,8 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 </div></div>
 <div class="modal modal--done" id="m-done" role="dialog" aria-modal="true" aria-labelledby="m-done-t" hidden><div class="modal__box" data-lenis-prevent>
   <button class="modal__x" type="button" aria-label="Закрыть" data-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg></button>
-  <h2 id="m-done-t" tabindex="-1">Спасибо!</h2><p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера +7 495 150-36-15. Пока ждёте, можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p>
-  <div class="modal__msgr"><a class="btn" href="https://t.me/" target="_blank" rel="noopener">Telegram</a><a class="btn btn--ghost" href="https://max.ru/" target="_blank" rel="noopener">MAX</a></div>
+  <h2 id="m-done-t" tabindex="-1">Спасибо!</h2><p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера +7 495 150-36-15.</p>
+  
 
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>
 </div></div>
