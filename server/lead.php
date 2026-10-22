@@ -1,7 +1,7 @@
 <?php
 // Приёмник заявок с сайта стоматологии «Умная Медицина» (Ilya 22.10.2026).
 // Заявка сначала записывается в журнал на сервере в России (ч. 5 ст. 18 152-ФЗ), потом уходит сделкой в amoCRM,
-// сообщением в Telegram и строкой в Google Таблицу. Ключи лежат в config.php вне папки сайта (образец server/config.sample.php),
+// сообщением в Telegram, строкой в Google Таблицу и, если клинике нужно, письмом на почту. Ключи лежат в config.php вне папки сайта (образец server/config.sample.php),
 // в репозитории их нет. Что не дошло (amoCRM, Telegram или таблица не ответили), повторяется кроном и при следующих заявках.
 //   POST /lead.php                 заявка; fetch с Accept: application/json получает JSON, форма без скриптов уходит на /spasibo/
 //   GET  /lead.php?file=…&k=…      снимок из формы «Пришлите снимок» по ссылке из примечания в amoCRM
@@ -97,7 +97,8 @@ $lead = [
   'ua' => mb_substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 300),
   'file' => null,
   'amo' => null,       // id сделки
-  'done' => ['amo' => false, 'tg' => false, 'sheet' => false],
+  // почта только для заявок, пришедших после её включения: иначе повтор разослал бы письма по старым заявкам журнала
+  'done' => ['amo' => false, 'tg' => false, 'sheet' => false, 'mail' => empty($C['mail']['to']) ? null : false],
   'tg_wait_amo' => false,
   'tries' => 0,
   'err' => [],
@@ -142,6 +143,10 @@ function process(array &$lead): void {
     try { sheetSend($lead); $lead['done']['sheet'] = true; $lead['sheet_amo'] = $lead['done']['amo']; unset($lead['err']['sheet']); }
     catch (Throwable $e) { $lead['err']['sheet'] = $e->getMessage(); }
   }
+  if (!empty($C['mail']['to']) && ($lead['done']['mail'] ?? null) === false) {
+    try { mailSend($lead); $lead['done']['mail'] = true; unset($lead['err']['mail']); }
+    catch (Throwable $e) { $lead['err']['mail'] = $e->getMessage(); }
+  }
   saveLead($lead);
 }
 
@@ -149,7 +154,8 @@ function pending(array $l): bool {
   global $C;
   return (!$l['done']['amo'] && !empty($C['amo']['token'])) || (!$l['done']['tg'] && !empty($C['telegram']['token']))
     || ($l['tg_wait_amo'] ?? false) || (!$l['done']['sheet'] && !empty($C['sheets']['url']))
-    || (!empty($C['sheets']['url']) && $l['done']['amo'] && empty($l['sheet_amo']));
+    || (!empty($C['sheets']['url']) && $l['done']['amo'] && empty($l['sheet_amo']))
+    || (!empty($C['mail']['to']) && ($l['done']['mail'] ?? null) === false);
 }
 
 // недошедшие заявки за последние 3 дня, не больше 30 попыток на каждую (крон раз в 5 минут — это 2,5 часа)
@@ -318,6 +324,30 @@ function sheetSend(array $l): void {
   [$code, $res] = http('POST', $C['sheets']['url'], ['secret' => $C['sheets']['secret'], 'sheet' => $C['sheets']['sheet'] ?? 'Заявки', 'header' => $header, 'row' => $row]);
   $j = json_decode($res, true);
   if ($code !== 200 || empty($j['ok'])) throw new RuntimeException("Таблица $code: " . mb_substr($res, 0, 300));
+}
+
+// ---------- почта (по желанию клиники, выключена, пока в config.php пустой mail.to) ----------
+// Письмо уходит функцией mail() хостинга. Отправитель mail.from должен быть ящиком на домене сайта, иначе письмо попадёт в спам
+function mailSend(array $l): void {
+  global $C;
+  $m = $C['mail'];
+  $full = !empty($m['full']);
+  $s = ['Заявка с сайта №' . $l['id'], 'Форма: ' . FORMS[$l['form']]];
+  if ($l['name'] !== '') $s[] = 'Имя: ' . $l['name'];
+  $s[] = 'Телефон: ' . ($full ? fmtPhone($l['phone']) : maskPhone($l['phone']));
+  foreach ($l['fields'] as $k => $v) if ($full || !FIELDS[$k][1]) $s[] = FIELDS[$k][0] . ': ' . $v;
+  if ($l['file']) $s[] = $full ? 'Снимок: ' . fileUrl($l['file']['name']) : 'Приложен снимок (в amoCRM)';
+  $s[] = 'Страница: ' . siteUrl($l['page']);
+  $s[] = 'Источник: ' . srcLine($l);
+  if ($l['amo']) $s[] = "\nСделка в amoCRM: " . amoLink($l['amo']);
+  elseif (!empty($C['amo']['token'])) $s[] = "\nВ amoCRM пока не попала, повторим автоматически.";
+  $to = implode(', ', (array)$m['to']);
+  $subj = '=?UTF-8?B?' . base64_encode('Заявка с сайта: ' . FORMS[$l['form']] . ' №' . $l['id']) . '?=';
+  $from = (string)($m['from'] ?? '');
+  $headers = ['MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64'];
+  if ($from !== '') $headers[] = 'From: =?UTF-8?B?' . base64_encode((string)($m['from_name'] ?? 'Сайт стоматологии')) . "?= <$from>";
+  $ok = mail($to, $subj, chunk_split(base64_encode(implode("\n", $s))), implode("\r\n", $headers), $from !== '' ? '-f' . $from : '');
+  if (!$ok) throw new RuntimeException('почта: mail() не отправил письмо');
 }
 
 // ---------- снимки ----------
