@@ -1618,7 +1618,7 @@ function pageLegal(page) {
 ${picHero({ cls: " legal-hero", depth, ...legalPic[page.slug], text: `<nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">${esc(page.crumb)}</span></nav><h1 id="h1">${esc(page.h1)}</h1><p class="page-hero__lead">${esc(page.lead)}</p>` })}
 <section class="section legal"><div class="wrap">
   <dl class="legal__meta">${meta.map(([k, v]) => `<div><dt>${k}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>
-  <ol class="legal__list">${page.sections.map(([h, blocks], i) => `<li class="legal__sec" id="p${i + 1}"><span class="legal__n" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span><div class="legal__body"><h2>${esc(h)}</h2>${blocks.map((b) => legalBlock(b, page, p)).join("")}</div></li>`).join("")}</ol>
+  <ol class="legal__list">${page.sections.map(([h, blocks], i) => `<li class="legal__sec" id="p${i + 1}"><span class="legal__n" aria-hidden="true">${i + 1}</span><div class="legal__body"><h2>${esc(h)}</h2>${blocks.map((b) => legalBlock(b, page, p)).join("")}</div></li>`).join("")}</ol>
   <nav class="legal__docs" aria-label="Документы">${legal.filter((d) => d !== page).map((d) => `<a href="${legalHref(d.slug, p)}">${esc(d.h1)}</a>`).join("")}</nav>
 </div></section>
 </main>` + footer(depth) + end;
