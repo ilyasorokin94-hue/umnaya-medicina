@@ -297,7 +297,7 @@ function modals(depth) {
   return `
 <script type="application/json" id="um-docs">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, d.short])))}</script>
 <div class="modals">
-${box("book", "Запишитесь на бесплатную консультацию", `<p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
+${box("book", "Запишитесь на консультацию", `<p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
   <p class="modal__doc" hidden></p>${promoLine}
   <form class="form lead" data-lead="book" method="post" action="${leadAction(p)}">
     <input type="hidden" name="doctor"><input type="hidden" name="promo">${name}${phone}
@@ -320,7 +320,7 @@ ${box("xray", "Пришлите снимок, и врач скажет, можн
     <button class="btn btn--lg btn--wide">Отправить снимок</button>
     <p class="modal__note">Если зуб можно спасти, скажем, как и сколько это стоит. ${consent}</p>
   </form>`)}
-${box("allon", "Консультация по All-on-4", `<p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная, стоимость лечения врач назовёт после осмотра.</p>
+${box("allon", "Консультация по All-on-4", `<p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная, если остаётесь на лечение. Стоимость лечения врач назовёт после осмотра.</p>
   ${promoLine}
   <form class="form lead" data-lead="allon" method="post" action="${leadAction(p)}"><input type="hidden" name="promo">${name}${phone}
     <fieldset class="reasons"><legend>Одна или обе челюсти</legend><div class="chips">${["Одна челюсть", "Обе челюсти"].map((r, i) => `<label class="chip chip--pick"><input type="radio" name="jaws" value="${r}"${i ? "" : " checked"}><span>${r}</span></label>`).join("")}</div></fieldset>
@@ -640,7 +640,7 @@ function pageHome() {
   <div class="hero__text">
     <h1 id="h1"><span data-split>Три врача.</span> <span class="hv__l2" data-split>Один план лечения.</span></h1>
     <p class="hv__rot"><span class="sr">${esc(D.heroLines.join(" "))}</span>${D.heroLines.map((t) => `<span aria-hidden="true">${t.replace(/(^|\s)([А-Яа-яЁё]{1,2}) /g, "$1$2\u00a0").split(" ").map((w, i) => `<span class="sw"><span style="--i:${i}">${esc(w)}</span></span>`).join(" ")}</span>`).join("")}</p>
-    <div class="hero__actions">${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
+    <div class="hero__actions">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true })}</div>
   </div>
 </div></section>
 
@@ -669,7 +669,7 @@ function pageHome() {
     <div class="feat__pin"><div class="feat__track">
       <div class="fcard fcard--intro"><span class="label">${esc(D.path.label)}</span><h2 id="ph-title" data-split>${esc(D.path.title)}</h2><p>${esc(D.path.intro)}</p></div>
       ${D.path.steps.map(([big, t, d]) => `<article class="fcard"><div class="fcard__body"><b class="fcard__big">${esc(big)}</b><h3>${esc(t)}</h3><p>${esc(d)}</p></div></article>`).join("")}
-    </div><div class="wrap cta-strip"><p>${esc(D.path.note)}</p>${act("Записаться на бесплатную консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true })}</div></div>
+    </div><div class="wrap cta-strip"><p>${esc(D.path.note)}</p>${act("Записаться на консультацию", "book", p, { cls: "btn--light btn--lg", magnet: true })}</div></div>
   </div>
 </section>
 
@@ -1533,7 +1533,7 @@ function pageBooking() {
       <section class="bstep bstart" data-step="0">
         <span class="label">Онлайн-запись</span>
         <h1 tabindex="-1">Записаться на приём</h1>
-        <p>Выберите услугу, врача и удобное время, а администратор подтвердит запись. Консультация с планом лечения бесплатная.</p>
+        <p>Выберите услугу, врача и удобное время, а администратор подтвердит запись. Консультация с планом лечения бесплатная, если остаётесь на лечение.</p>
         <button class="btn btn--lg" type="button" data-start data-magnet>Перейти к записи</button>
       </section>
       <section class="bstep" data-step="1" hidden>

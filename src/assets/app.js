@@ -661,7 +661,7 @@
       if (ph && !ph.value.trim()) { ph.setCustomValidity("Укажите телефон"); ph.reportValidity(); ph.setCustomValidity(""); return; }
       const first = $('input[name="q0"]:checked', form);
       const done = $(".quiz__done", wrap);
-      $("[data-qprice]", done).textContent = first?.dataset.price || "Консультация и план лечения бесплатно";
+      $("[data-qprice]", done).textContent = first?.dataset.price || "Консультация и план лечения 0 ₽, если остаётесь на лечение";
       if (bar) bar.style.transform = "scaleX(1)";
       form.hidden = true; done.hidden = false;
       if (anim) G.from(done.children, { opacity: 0, y: 20, stagger: 0.08, duration: 0.6 });
