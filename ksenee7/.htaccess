@@ -49,6 +49,16 @@ RewriteCond %{DOCUMENT_ROOT}/$1.html -f
 RewriteRule ^(.+)$ $1.html [L]
 </IfModule>
 
+# PHP исполняется только у приёмника заявок lead.php, остальные .php закрыты
+<IfModule mod_authz_core.c>
+<FilesMatch "\.(php|phtml|phar|inc)$">
+Require all denied
+</FilesMatch>
+<Files "lead.php">
+Require all granted
+</Files>
+</IfModule>
+
 # сжатие текста
 <IfModule mod_brotli.c>
 AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/plain text/xml application/javascript text/javascript application/json application/xml image/svg+xml
