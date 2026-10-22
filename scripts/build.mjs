@@ -8,7 +8,7 @@ import { transformSync } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 import { reviewsMobile } from "./reviews-mobile.mjs";
-import { servicePages, servicePriceDate, servicePriceHold } from "../src/service-pages.mjs";
+import { servicePages, servicePriceDate, servicePriceHold, consultPrice, consultDeal } from "../src/service-pages.mjs";
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
@@ -799,10 +799,26 @@ const spWarn = `<p class="sp-warn">${warnText}</p>`;
 const spDash = (t) => t.replace(/ — /g, "\u00a0— ");
 // акционная цена без слова «акция» рядом получает «по акции» (как 17 500 ₽ Osstem): на um-med.com она помечена «акция!»
 const promoMark = (t) => t.replace(/от 77 000 ₽(\*\*)?/g, (m, b, off) => (/акци/i.test(t.slice(Math.max(0, off - 70), off + m.length + 30).split(/\n/).slice(-2).join(" ")) ? m : `${m} по акции`));
+// консультация терапевта, хирурга и ортопеда: в строке прайса обычная цена, в тексте 0 ₽ и «бесплатная» — с условием (см. consultDeal);
+// пометки [УТОЧНИТЬ …] не трогаем, ортодонта и детского стоматолога тоже
+const consultLine = (l) => {
+  if (/^\|/.test(l)) {
+    const cells = l.split("|");
+    if (!/онсультаци|при[её]м/i.test(cells[1] || "") || /ортодонт|детск|остаётесь/i.test(cells[1])) return l;
+    return cells.map((c, i) => (i > 1 && /^\s*(?:\*\*)?0 ₽(?:\*\*)?\s*$/.test(c) ? c.replace("0 ₽", consultPrice) : c)).join("|");
+  }
+  // фразы, где условие уже есть («если остаётесь на лечение»), не трогаем
+  return l.split(/(\[[А-ЯЁ]{3,}[^\]]*\]|[^.!?[]*остаётесь[^.!?[]*[.!?]?)/).map((x, i) => (i % 2 ? x : x
+    .replace(/(консультаци|при[её]м|разбор[а-яё]* снимк)([^.;:\n₽[\]]{0,90}?)(?<!\d)0 ₽(\*\*)?(?!,? если остаётесь на лечение)/gi, (m, a, b, c = "") => (/ортодонт|детск/i.test(b) ? m : `${a}${b}0 ₽${c}, ${consultDeal}`))
+    .replace(/(^|[^а-яё])(б)есплатн(?:ая|ую|ой|ом|ый) (\[?)(консультаци|при[её]м)/gi, (m, a, b, k, c) => a + k + (b === "Б" ? c[0].toUpperCase() + c.slice(1) : c))
+    .replace(/(консультаци[а-яё]*|при[её]м[а-яё]*)([^.;:\n[\]]{0,70}?)(бесплатн(?:ая|ые|ый|ы|о|а))(?![а-яё]|,? если остаётесь на лечение)/gi, (m, a, b, c) => (/ортодонт|детск|₽/i.test(b) ? m : `${a}${b}${c}, ${consultDeal}`))
+  )).join("");
+};
+const consult = (t) => t.split("\n").map(consultLine).join("\n");
 const spTexts = Object.fromEntries(servicePages.map((pg) => {
   const f = path.join(root, "src", "service-texts", `${pg.slug}.md`);
   if (!existsSync(f)) throw new Error(`Нет текста страницы услуги: src/service-texts/${pg.slug}.md`);
-  const src = readFileSync(f, "utf8");
+  const src = consult(readFileSync(f, "utf8"));
   // у нового сайта свой домен: оговорок об источнике («по прайсу um-med.com», «по данным сайта клиники») на страницах нет
   // (слово Ilya 18.10), с PUBLISH=1 сборка на них остановится
   const umMed = src.replace(/<!--[\s\S]*?-->/g, "").split(/^# /m).slice(1).join("").match(/[^.\n]*(?:um-med\.com|по прайсу|по данным сайта)[^.\n]*/gi);
@@ -854,7 +870,7 @@ function spMd(text, page, p) {
   const put = (html) => `\u0001${keep.push(html) - 1}\u0002`;
   // места под кнопку записи («**[Записаться к врачу]**») и телефон — вёрстка, не текст: кнопка и телефон на странице свои
   let s = text.replace(/(?:\*\*)?\[Записаться[^\]]*\](?!\()(?:\*\*)?|Телефон:\s*\[УТОЧНИТЬ У КЛИНИКИ: телефон\]|\s*·\s*кнопка «Записаться[^»]*»\.?/g, "");
-  s = s.replace(/\[([А-ЯЁ][А-ЯЁ]{2,}[^\]]*|Кнопки:[^\]]*)\](?!\()/g, (m, note) => {
+  s = s.replace(/\[([А-ЯЁ][А-ЯЁ]{2,}[^\]]*|Кнопк[аи]:[^\]]*)\](?!\()/g, (m, note) => {
     if (spDrop.test(note)) return put("");
     if (/^ССЫЛКА НА КАРТОЧКУ/.test(note)) return put(`<a href="${clinic.yandex}"${ext}>карточка клиники в Яндекс Картах</a>`);
     const [, label] = spAsk.find(([re]) => re.test(note)) || [null, "уточняем у клиники"];
@@ -1361,7 +1377,7 @@ function docCardMore(d) {
 const docFaq = [
   ["К какому врачу записаться, если не знаю?", "Позвоните по номеру +7 495 150-36-15 или оставьте заявку на сайте и опишите, что беспокоит. Администратор подберёт врача и время."],
   ["Можно записаться к конкретному врачу?", "Да. Назовите врача администратору или нажмите «Записаться к врачу» в его карточке."],
-  ["Сколько стоит консультация?", "Консультация хирурга, ортопеда и терапевта бесплатная. Первичная консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
+  ["Сколько стоит консультация?", "Консультация хирурга, ортопеда или терапевта с планом лечения стоит 500 ₽. Если после консультации вы остаётесь у нас на лечение, она 0 ₽. Первичная консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
   ["Где почитать отзывы о врачах?", "На странице каждого врача собраны отзывы пациентов с ПроДокторов, у каждого отзыва ссылка на оригинал."],
 ];
 function pageDoctors() {
