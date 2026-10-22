@@ -32,7 +32,9 @@
     lenis = new window.Lenis({ lerp: 0.1, wheelMultiplier: 1 });
     lenis.on("scroll", ST.update);
     G.ticker.add((t) => lenis.raf(t * 1000));
-    G.ticker.lagSmoothing(0);
+    // после долгой задачи (загрузка скриптов на слабом телефоне) анимации продолжаются с того же места, а не перескакивают:
+    // с lagSmoothing(0) первый экран появлялся уже на середине выезда, будто залипал (Ilya 22.10)
+    G.ticker.lagSmoothing(250, 33);
   }
   const headerH = () => (parseFloat(getComputedStyle(root).getPropertyValue("--header-h")) || 70) + 20;
   const scrollToEl = (el) => {
@@ -739,7 +741,7 @@
       btn.classList.toggle("is-ready", full);
       if (full) { clearErr(); if (anim) G.fromTo(btn, { scale: 0.92 }, { scale: 1, duration: 0.6, ease: "back.out(2.5)" }); }
     };
-    $("input[name=consent]", cb)?.addEventListener("change", (e) => { if (e.target.checked && digits(cbIn.value).length === 11) clearErr(); });
+    $("input[type=checkbox][name=consent]", cb)?.addEventListener("change", (e) => { if (e.target.checked && digits(cbIn.value).length === 11) clearErr(); });
     cbIn.addEventListener("focus", () => { if (!cbIn.value) { cbIn.value = "+7 "; draw(); } });
     cbIn.addEventListener("blur", () => { if (digits(cbIn.value).length <= 1) { cbIn.value = ""; draw(); } });
     // привычная 8 сразу после «+7» не становится первой цифрой номера
@@ -747,7 +749,7 @@
     cb.addEventListener("submit", (e) => {
       e.preventDefault();
       if (btn.disabled) return;
-      const d = digits(cbIn.value), agree = $("input[name=consent]", cb);
+      const d = digits(cbIn.value), agree = $("input[type=checkbox][name=consent]", cb);
       if (d.length === 11 && agree && !agree.checked) {
         // галочка согласия: форма с novalidate, поэтому проверяем сами
         cb.classList.add("is-error"); agree.closest(".consent").classList.add("is-error");
