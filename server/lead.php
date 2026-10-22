@@ -35,8 +35,11 @@ const SRC = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_ter
 const FILE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'pdf', 'zip', 'dcm'];
 
 $json = str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
-$cfgPath = getenv('UMED_LEADS_CONFIG') ?: dirname(__DIR__) . '/umed-leads/config.php';
-$C = is_file($cfgPath) ? require $cfgPath : null;
+// настройки: путь из UMED_LEADS_CONFIG (SetEnv в .htaccess или окружение), иначе папка umed-leads рядом с корнем сайта
+// или уровнем выше (у Джино корень …/domains/<домен>, папка настроек ~/umed-leads)
+$C = null;
+foreach ([getenv('UMED_LEADS_CONFIG') ?: ($_SERVER['UMED_LEADS_CONFIG'] ?? ''), dirname(__DIR__) . '/umed-leads/config.php', dirname(__DIR__, 2) . '/umed-leads/config.php'] as $cfgPath)
+  if ($cfgPath !== '' && is_file($cfgPath)) { $C = require $cfgPath; break; }
 
 if (!$C) fail(503, 'Приём заявок не настроен. Позвоните нам, пожалуйста.');
 $C['data_dir'] = rtrim($C['data_dir'], '/');
