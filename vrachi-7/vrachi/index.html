@@ -24,7 +24,7 @@
 <link rel="preload" href="../assets/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="../assets/styles.css?v=85a1cb73">
+<link rel="stylesheet" href="../assets/styles.css?v=4254f455">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
@@ -67,11 +67,14 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   </nav>
 </div>
 <main id="main" class="dl-page">
-<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><nav class="crumbs" aria-label="Хлебные крошки"><a href="../">Главная</a><span aria-current="page">Врачи</span></nav><h1 data-split>Врачи стоматологии</h1><p class="page-hero__lead">Хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. В сложных случаях план лечения хирург, ортопед и терапевт составляют вместе.</p></div>
-  <div class="page-hero__aside"><a class="btn btn--lg" href="../zapis" data-modal="book" data-magnet>Записаться на консультацию</a></div>
-  <nav class="sp-nav dl-nav" aria-label="Направления"><a class="sp-pill" href="#hirurgiya">Хирургия и имплантация</a><a class="sp-pill" href="#ortopediya">Ортопедия и протезирование</a><a class="sp-pill" href="#terapiya">Терапия, гигиена и ортодонтия</a><a class="sp-pill" href="#deti">Детский приём</a></nav>
-</div></section>
+<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
+  <div class="sp-hero__top">
+    <div class="sp-hero__media sp-hero__media--pic"><img src="../images/page-hero/vrachi.webp" srcset="../images/page-hero/vrachi-480w.webp 480w, ../images/page-hero/vrachi-828w.webp 828w, ../images/page-hero/vrachi-1200w.webp 1200w, ../images/page-hero/vrachi.webp 1536w" sizes="(max-width: 760px) 100vw, 60vw" alt="Три тёмно-зелёных медицинских костюма на вешалках" decoding="async" fetchpriority="high"></div>
+    <div class="sp-hero__text"><nav class="crumbs" aria-label="Хлебные крошки"><a href="../">Главная</a><span aria-current="page">Врачи</span></nav><h1 id="h1" data-split>Врачи стоматологии</h1><p class="page-hero__lead">Хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. В сложных случаях план лечения хирург, ортопед и терапевт составляют вместе.</p></div>
+    <div class="sp-hero__act"><a class="btn btn--lg" href="../zapis" data-modal="book" data-magnet>Записаться на консультацию</a></div>
+  </div>
+  <div class="wrap sp-hero__bottom"><nav class="sp-nav dl-nav" aria-label="Направления"><a class="sp-pill" href="#hirurgiya">Хирургия и имплантация</a><a class="sp-pill" href="#ortopediya">Ортопедия и протезирование</a><a class="sp-pill" href="#terapiya">Терапия, гигиена и ортодонтия</a><a class="sp-pill" href="#deti">Детский приём</a></nav></div>
+</section>
 <section class="section sp-sec dl-plan" id="vmeste" aria-labelledby="vmeste-t"><div class="wrap">
   <div class="sp-head"><h2 id="vmeste-t" data-split>Три врача. Один план лечения.</h2><p class="dl-text">Когда нужны и лечение, и имплантация, и протезы, на консультации собираются три врача и составляют один план с ценой. Цену плана фиксируем в договоре.</p></div>
   <div class="sp-cards dl-roles"><article class="sp-card" data-reveal><h3>Терапевт</h3><p>Лечит и сохраняет свои зубы, готовит рот к имплантации и протезированию.</p><p class="dl-names"><a href="../vrachi/chitaykin/">Артём Читайкин</a><a href="../vrachi/kashtanova/">Екатерина Каштанова</a></p></article><article class="sp-card" data-reveal><h3>Хирург</h3><p>Удаляет зубы, которые не сохранить, ставит импланты, при нехватке кости наращивает её.</p><p class="dl-names"><a href="../vrachi/hludnevskiy/">Михаил Хлудневский</a><a href="../vrachi/radzhabov/">Азамат Раджабов</a></p></article><article class="sp-card" data-reveal><h3>Ортопед</h3><p>Планирует будущие зубы, ставит коронки и протезы, в том числе на импланты.</p><p class="dl-names"><a href="../vrachi/solodukhin/">Евгений Солодухин</a><a href="../vrachi/alikhanova/">Светлана Алиханова</a></p></article></div>

@@ -25,7 +25,7 @@
 <link rel="preload" href="assets/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/styles.css?v=85a1cb73">
+<link rel="stylesheet" href="assets/styles.css?v=4254f455">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
@@ -66,10 +66,13 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   </nav>
 </div>
 <main id="main" tabindex="-1">
-<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><span class="label label--light">Ошибка 404</span><h1 data-split>Такой страницы нет</h1><p class="page-hero__lead">Возможно, адрес изменился или в нём опечатка. Начните с главной или выберите раздел ниже.</p></div>
-  <div class="page-hero__aside"><a class="btn btn--lg btn--light" href="./">На главную</a><a class="btn btn--ghost" href="zapis" data-modal="book">Записаться на консультацию</a></div>
-</div></section>
+<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
+  <div class="sp-hero__top">
+    <div class="sp-hero__media sp-hero__media--pic"><img src="images/page-hero/404.webp" srcset="images/page-hero/404-480w.webp 480w, images/page-hero/404-828w.webp 828w, images/page-hero/404-1200w.webp 1200w, images/page-hero/404.webp 1536w" sizes="(max-width: 760px) 100vw, 60vw" alt="Пустой стоматологический поднос и одинокая модель зуба на его краю" decoding="async" fetchpriority="high"></div>
+    <div class="sp-hero__text"><span class="label label--light">Ошибка 404</span><h1 id="h1" data-split>Такой страницы нет</h1><p class="page-hero__lead">Возможно, адрес изменился или в нём опечатка. Начните с главной или выберите раздел ниже.</p></div>
+    <div class="sp-hero__act"><a class="btn btn--lg btn--light" href="./">На главную</a><a class="btn btn--ghost" href="zapis" data-modal="book">Записаться на консультацию</a></div>
+  </div>
+</section>
 <section class="section"><div class="wrap">
   <div class="sp-cards sp-cards--4"><article class="sp-card"><h2><a href="./#services">Услуги</a></h2><p>КТ и снимки, профгигиена Air-Flow, лечение зубов, имплантация зубов, all-on-4 и All-on-6, лечение под микроскопом и другие.</p></article><article class="sp-card"><h2><a href="ceny/">Цены</a></h2><p>Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽, если остаётесь у нас на лечение.</p></article><article class="sp-card"><h2><a href="vrachi/">Врачи</a></h2><p>Врачи клиники по направлениям, у каждого своя страница.</p></article><article class="sp-card"><h2><a href="./#contacts">Контакты</a></h2><p>Удельная, ул. Громова, 10/2. Ежедневно с 9:00 до 21:00.</p></article></div>
 </div></section>

@@ -24,7 +24,7 @@
 <link rel="preload" href="../assets/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="../assets/styles.css?v=85a1cb73">
+<link rel="stylesheet" href="../assets/styles.css?v=4254f455">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
 setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
@@ -65,10 +65,13 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   </nav>
 </div>
 <main id="main">
-<section class="page-hero on-dark"><div class="foil__bg"></div><div class="wrap page-hero__in">
-  <div><span class="label label--light">Заявка принята</span><h1 data-split>Спасибо!</h1><p class="page-hero__lead">Администратор перезвонит за 5 минут с номера <span class="nobr">+7 495 150-36-15</span>. Если клиника сейчас закрыта, перезвоним утром, после 9:00.</p></div>
-  <div class="page-hero__aside"><a class="btn btn--lg btn--light" href="../">На главную</a></div>
-</div></section>
+<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
+  <div class="sp-hero__top">
+    <div class="sp-hero__media sp-hero__media--pic"><img src="../images/page-hero/spasibo.webp" srcset="../images/page-hero/spasibo-480w.webp 480w, ../images/page-hero/spasibo-828w.webp 828w, ../images/page-hero/spasibo-1200w.webp 1200w, ../images/page-hero/spasibo.webp 1536w" sizes="(max-width: 760px) 100vw, 60vw" alt="Смартфон с входящим звонком на подлокотнике стоматологического кресла" decoding="async" fetchpriority="high"></div>
+    <div class="sp-hero__text"><span class="label label--light">Заявка принята</span><h1 id="h1" data-split>Спасибо!</h1><p class="page-hero__lead">Администратор перезвонит за 5 минут с номера <span class="nobr">+7 495 150-36-15</span>. Если клиника сейчас закрыта, перезвоним утром, после 9:00.</p></div>
+    <div class="sp-hero__act"><a class="btn btn--lg btn--light" href="../">На главную</a></div>
+  </div>
+</section>
 <section class="section"><div class="wrap">
   <div class="sp-cards sp-cards--3">
     <article class="sp-card"><h2>Пока ждёте звонка</h2><p>Можете прислать снимок в Telegram или MAX, врач посмотрит его до визита.</p><div class="modal__msgr"><a class="btn" href="https://t.me/" target="_blank" rel="noopener">Telegram</a><a class="btn btn--ghost" href="https://max.ru/" target="_blank" rel="noopener">MAX</a></div></article>
