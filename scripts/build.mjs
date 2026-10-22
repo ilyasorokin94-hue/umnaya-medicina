@@ -8,7 +8,7 @@ import { transformSync } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 import { reviewsMobile } from "./reviews-mobile.mjs";
-import { servicePages, servicePriceDate, servicePriceHold, consultFree } from "../src/service-pages.mjs";
+import { servicePages, servicePriceDate, servicePriceHold } from "../src/service-pages.mjs";
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
@@ -797,8 +797,7 @@ const promoMark = (t) => t.replace(/от 77 000 ₽(\*\*)?/g, (m, b, off) => (/�
 const spTexts = Object.fromEntries(servicePages.map((pg) => {
   const f = path.join(root, "src", "service-texts", `${pg.slug}.md`);
   if (!existsSync(f)) throw new Error(`Нет текста страницы услуги: src/service-texts/${pg.slug}.md`);
-  const free = (t) => consultFree.reduce((x, re) => x.replace(re, (m) => (/(ортодонт|детск)/i.test(m) ? m : m.replace(/500 ₽$/, "0 ₽"))), t);
-  const src = free(readFileSync(f, "utf8"));
+  const src = readFileSync(f, "utf8");
   // у нового сайта свой домен: оговорок об источнике («по прайсу um-med.com», «по данным сайта клиники») на страницах нет
   // (слово Ilya 18.10), с PUBLISH=1 сборка на них остановится
   const umMed = src.replace(/<!--[\s\S]*?-->/g, "").split(/^# /m).slice(1).join("").match(/[^.\n]*(?:um-med\.com|по прайсу|по данным сайта)[^.\n]*/gi);
@@ -1397,7 +1396,7 @@ ${docGroups.map((g, i) => `
 // не называем (Ilya 18.10: у сайта будет свой домен). В разделе ссылка на страницу услуги и кнопка записи
 const priceDate = "18.10.2026";
 const priceSecs = {
-  consult: ["0 ₽", "терапевт, ортопед, хирург и имплантолог", "konsultaciya"],
+  consult: ["0 ₽", "если после консультации остаётесь на лечение", "konsultaciya"],
   xray: ["от 500 ₽", "прицельный снимок", "diagnostika"],
   therapy: ["от 4 000 ₽", "лечение кариеса", "lechenie-zubov"],
   hygiene: ["4 500 ₽", "Air-Flow по средам, по акции", "gigiena"],
@@ -1439,7 +1438,7 @@ const priceInfo = [
   ["Скидка −10% при оплате в день консультации", "Если начинаете лечение в день консультации, на оплату действует скидка 10%.", "скидка −10%: на какие услуги и до какого срока"],
 ];
 const priceFaq = [
-  ["Сколько стоит консультация стоматолога?", "Консультация терапевта, хирурга, имплантолога и ортопеда с планом лечения стоит 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
+  ["Сколько стоит консультация стоматолога?", "Консультация терапевта, ортопеда, хирурга или имплантолога с планом лечения стоит 500 ₽. Если после консультации вы остаётесь у нас на лечение, первичная консультация 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
   ["Почему цены указаны «от»?", "Это минимальная стоимость услуги. Итог зависит от клинической ситуации и выбранных материалов, поэтому точную сумму врач называет после осмотра и снимков в плане лечения с ценой по этапам."],
   ["Можно ли получить налоговый вычет за лечение зубов?", "Да. Лечение, имплантация и протезирование зубов относятся к социальному налоговому вычету на лечение: можно вернуть 13% от оплаченной суммы в пределах лимита, установленного Налоговым кодексом. Для вычета нужны договор, чеки и справка об оплате медицинских услуг, которую выдаёт клиника.", "как заказать справку для вычета и в какие сроки её готовят"],
   ["Можно ли оформить вычет за лечение зубов ребёнка или родителей-пенсионеров?", "Да, вычет можно получить за лечение детей до 18 лет (до 24 лет при очной учёбе), супруга и родителей, если оплачивали вы и документы оформлены на вас. Подать документы можно через личный кабинет налогоплательщика или Госуслуги."],
@@ -1450,11 +1449,11 @@ const priceFaq = [
 const priceAsk = (note) => spTag("уточняем у клиники", note, { slug: "ceny" });
 const priceNote = `Цены на ${priceDate}. Цена «от» означает минимальную стоимость: точную сумму врач называет после осмотра и записывает в план лечения, она не меняется без вашего согласия.`;
 
-// первый экран как у страниц услуг: картинка, цифры строкой. Своей картинки для цен пока нет, стоит консультационная
-const priceHero = ["images/svc-hero/konsultaciya.png"];
+// первый экран как у страниц услуг: картинка, цифры строкой
+const priceHero = ["images/svc-hero/ceny.png"];
 const priceTotal = priceOrder.reduce((a, k) => a + prices[k].items.length, 0);
 const priceFacts = [
-  ["0 ₽", "консультация терапевта, ортопеда и хирурга с планом лечения"],
+  ["0 ₽", "консультация с планом лечения, если остаётесь на лечение"],
   [priceSecs.therapy[0], priceSecs.therapy[1]],
   [priceSecs.implant[0], priceSecs.implant[1]],
   [String(priceTotal), `${plural(priceTotal, "позиция", "позиции", "позиций")} в ${priceOrder.length} разделах`],
@@ -1463,16 +1462,16 @@ const priceFacts = [
 function pagePrices() {
   const depth = 1, p = "../";
   const heroImg = pick(priceHero, depth).src, heroSet = srcset(priceHero[0], depth);
-  return head({ title: "Цены на стоматологию в Удельной: рассрочка и налоговый вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Бесплатная консультация с планом лечения, рассрочка, налоговый вычет за лечение зубов.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
+  return head({ title: "Цены на стоматологию в Удельной: рассрочка и налоговый вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Консультация с планом лечения 0 ₽ при лечении в клинике, рассрочка, налоговый вычет за лечение зубов.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
   + header(depth) + `
 <main id="main" class="sp-page">
 <section class="page-hero sp-hero on-dark" aria-labelledby="h1">
   <div class="sp-hero__top">
-    <div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="Модель челюсти и снимок КТ на планшете: план лечения с ценой по этапам" decoding="async" fetchpriority="high">` : ""}</div>
+    <div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="Этапы лечения по порядку: имплант, абатмент и коронка рядом с моделью челюсти, план лечения с ценой каждого этапа" decoding="async" fetchpriority="high">` : ""}</div>
     <div class="sp-hero__text">
       <nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Цены</span></nav>
       <h1 id="h1" data-split>Цены на стоматологию в Удельной</h1>
-      <p class="page-hero__lead">Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽.</p>
+      <p class="page-hero__lead">Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽, если после неё остаётесь у нас на лечение.</p>
     </div>
     <div class="sp-hero__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true })}<a class="link" href="#prices">Все цены по разделам</a>${spWarn}</div>
   </div>
@@ -1606,7 +1605,7 @@ function pageLegal(page) {
 const helpCard = (t, href, x) => `<article class="sp-card"><h2><a href="${href}">${esc(t)}</a></h2><p>${esc(x)}</p></article>`;
 const helpCards = (p) => [
   helpCard("Услуги", `${p}index.html#services`, homeOrder.slice(0, 6).map((k, i) => (i && !/^[А-ЯA-Z]{2}/.test(svc[k].title) ? svc[k].title[0].toLowerCase() + svc[k].title.slice(1) : svc[k].title)).join(", ") + " и другие."),
-  helpCard("Цены", `${p}ceny/`, "Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽."),
+  helpCard("Цены", `${p}ceny/`, "Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽, если остаётесь у нас на лечение."),
   helpCard("Врачи", `${p}vrachi/`, "Врачи клиники по направлениям, у каждого своя страница."),
   helpCard("Контакты", `${p}index.html#contacts`, `${clinic.addressShort}. ${clinic.hours}.`),
 ].join("");
