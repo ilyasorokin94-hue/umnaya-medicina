@@ -1855,8 +1855,8 @@ a.sp-pill:hover { background: var(--paper); color: var(--ink); }
 .sp-plist { list-style: none; margin: 0 0 28px; padding: 0; border-top: 1px solid var(--line); }
 .sp-plist li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: baseline; padding: clamp(14px, 1.4vw, 20px) 0; border-bottom: 1px solid var(--line); }
 .sp-plist b { font: 500 var(--fs-1)/1.2 var(--display); letter-spacing: -.02em; white-space: nowrap; text-align: right; }
-.sp-plist a { text-decoration: underline; text-decoration-color: rgba(12, 36, 16, .3); text-underline-offset: 4px; transition: color .3s; }
-.sp-plist a:hover { color: var(--green-deep); }
+.sp-plist a, .pacc .plist a { text-decoration: underline; text-decoration-color: rgba(12, 36, 16, .3); text-underline-offset: 4px; transition: color .3s; }
+.sp-plist a:hover, .pacc .plist a:hover { color: var(--green-deep); }
 
 /* строки крупным шрифтом (показания), как строки услуг на главной */
 
