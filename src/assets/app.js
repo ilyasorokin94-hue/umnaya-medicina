@@ -486,6 +486,9 @@
     // номер посетителя в Метрике, только если её разрешили в уведомлении о cookie (без согласия её cookie нет)
     const ym = document.cookie.match(/(?:^|; )_ym_uid=(\d+)/);
     if (ym) fd.set("ym_uid", ym[1]);
+    // визит Roistat (он подключён к amoCRM клиники), если его счётчик стоит на сайте
+    const rs = document.cookie.match(/(?:^|; )roistat_visit=([^;]+)/);
+    if (rs) fd.set("roistat", decodeURIComponent(rs[1]).slice(0, 64));
     const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 45000);
     try {
       const r = await fetch(form.action, { method: "POST", body: fd, headers: { Accept: "application/json" }, signal: ctl.signal, credentials: "same-origin" });

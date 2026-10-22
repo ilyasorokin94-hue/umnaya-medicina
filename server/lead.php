@@ -31,7 +31,7 @@ const FIELDS = [
   'denture' => ['Съёмный протез', true],
   'comment' => ['Комментарий', true],
 ];
-const SRC = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid', 'gclid', 'ym_uid', 'ref', 'landing'];
+const SRC = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid', 'gclid', 'ym_uid', 'roistat', 'ref', 'landing'];
 const FILE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'pdf', 'zip', 'dcm'];
 
 $json = str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
@@ -257,7 +257,7 @@ function amoFields(array $l): array {
   // системные поля «Статистика» в amoCRM
   if ($C['amo']['utm_fields'] ?? true) {
     $codes = ['utm_source' => 'UTM_SOURCE', 'utm_medium' => 'UTM_MEDIUM', 'utm_campaign' => 'UTM_CAMPAIGN', 'utm_content' => 'UTM_CONTENT',
-      'utm_term' => 'UTM_TERM', 'yclid' => 'YCLID', 'gclid' => 'GCLID', 'ym_uid' => '_YM_UID', 'ref' => 'REFERRER'];
+      'utm_term' => 'UTM_TERM', 'yclid' => 'YCLID', 'gclid' => 'GCLID', 'ym_uid' => '_YM_UID', 'roistat' => 'ROISTAT', 'ref' => 'REFERRER'];
     foreach ($codes as $k => $code) if (!empty($l['src'][$k])) $out[] = ['field_code' => $code, 'values' => [['value' => $l['src'][$k]]]];
   }
   // свои поля сделки по id из config.php: 'fields' => ['form' => 123, 'page' => 456, 'reason' => 789 …]
@@ -327,7 +327,8 @@ function sheetSend(array $l): void {
 }
 
 // ---------- почта (по желанию клиники, выключена, пока в config.php пустой mail.to) ----------
-// Письмо уходит функцией mail() хостинга. Отправитель mail.from должен быть ящиком на домене сайта, иначе письмо попадёт в спам
+// Письмо уходит через SMTP ящика на домене (mail.smtp, у Джино smtp.jino.ru), без него функцией mail() хостинга.
+// Отправитель mail.from должен быть ящиком на домене сайта, иначе письмо попадёт в спам
 function mailSend(array $l): void {
   global $C;
   $m = $C['mail'];
@@ -346,8 +347,41 @@ function mailSend(array $l): void {
   $from = (string)($m['from'] ?? '');
   $headers = ['MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64'];
   if ($from !== '') $headers[] = 'From: =?UTF-8?B?' . base64_encode((string)($m['from_name'] ?? 'Сайт стоматологии')) . "?= <$from>";
-  $ok = mail($to, $subj, chunk_split(base64_encode(implode("\n", $s))), implode("\r\n", $headers), $from !== '' ? '-f' . $from : '');
+  $body = chunk_split(base64_encode(implode("\n", $s)));
+  if (!empty($m['smtp']['host'])) { smtpSend($m['smtp'], $from, (array)$m['to'], array_merge(["To: $to", "Subject: $subj", 'Date: ' . date('r')], $headers), $body); return; }
+  $ok = mail($to, $subj, $body, implode("\r\n", $headers), $from !== '' ? '-f' . $from : '');
   if (!$ok) throw new RuntimeException('почта: mail() не отправил письмо');
+}
+
+// SMTP с SSL (порт 465) или STARTTLS (587), вход AUTH LOGIN; secure => 'none' только для проверки на своём компьютере
+function smtpSend(array $o, string $from, array $to, array $headers, string $body): void {
+  $port = (int)($o['port'] ?? 465);
+  $sec = $o['secure'] ?? ($port === 465 ? 'ssl' : 'tls');
+  $h = @stream_socket_client(($sec === 'ssl' ? 'ssl://' : 'tcp://') . $o['host'] . ":$port", $en, $es, 10);
+  if (!$h) throw new RuntimeException("почта: нет связи с {$o['host']}: $es");
+  stream_set_timeout($h, 15);
+  $read = function (int $want) use ($h): string {
+    $r = '';
+    while (($line = fgets($h, 515)) !== false) { $r .= $line; if (strlen($line) < 4 || $line[3] === ' ') break; }
+    if ((int)substr($r, 0, 3) !== $want) throw new RuntimeException('почта: ' . trim($r));
+    return $r;
+  };
+  $cmd = function (string $c, int $want) use ($h, $read): string { fwrite($h, "$c\r\n"); return $read($want); };
+  try {
+    $read(220);
+    $cmd('EHLO ' . (gethostname() ?: 'localhost'), 250);
+    if ($sec === 'tls') {
+      $cmd('STARTTLS', 220);
+      if (!stream_socket_enable_crypto($h, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) throw new RuntimeException('почта: STARTTLS не включился');
+      $cmd('EHLO ' . (gethostname() ?: 'localhost'), 250);
+    }
+    $cmd('AUTH LOGIN', 334); $cmd(base64_encode((string)$o['user']), 334); $cmd(base64_encode((string)$o['pass']), 235);
+    $cmd("MAIL FROM:<$from>", 250);
+    foreach ($to as $rcpt) $cmd('RCPT TO:<' . trim($rcpt) . '>', 250);
+    $cmd('DATA', 354);
+    $cmd(implode("\r\n", $headers) . "\r\n\r\n" . str_replace("\n", "\r\n", rtrim($body)) . "\r\n.", 250);
+    fwrite($h, "QUIT\r\n");
+  } finally { fclose($h); }
 }
 
 // ---------- снимки ----------
