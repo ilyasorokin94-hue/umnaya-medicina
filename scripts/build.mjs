@@ -296,7 +296,7 @@ function modals(depth) {
   const promoLine = `<p class="modal__promo" hidden></p>`;
   const msgr = msgrLinks().length ? `<div class="modal__msgr">${msgrLinks().map(([n, u]) => `<a class="btn btn--ghost" href="${u}"${ext}>Отправить в ${n}</a>`).join("")}</div>` : "";
   const box = (id, title, inner, wide = false) => `<div class="modal modal--${id}" id="m-${id}" role="dialog" aria-modal="true" aria-labelledby="m-${id}-t" hidden><div class="modal__box${wide ? " modal__box--wide" : ""}" data-lenis-prevent>
-  <button class="modal__x" type="button" aria-label="Закрыть" data-close>${icon.close}</button>
+  <div class="modal__head"><img class="modal__logo" src="${p}images/brand/header-logo-ink.svg" alt="Умная Медицина. Стоматология" width="192" height="36"><button class="modal__x" type="button" aria-label="Закрыть" data-close>${icon.close}</button></div>
   <h2 id="m-${id}-t" tabindex="-1">${title}</h2>${inner}
 </div></div>`;
   return `
