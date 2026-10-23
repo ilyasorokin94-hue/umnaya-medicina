@@ -31,7 +31,8 @@ const FIELDS = [
   'denture' => ['Съёмный протез', true],
   'comment' => ['Комментарий', true],
 ];
-const SRC = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid', 'gclid', 'ym_uid', 'roistat', 'ref', 'landing'];
+// источник визита от cookie.js: метки, сайт-источник, страница входа и время захода (src_at, секунды)
+const SRC = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid', 'gclid', 'ym_uid', 'roistat', 'ref', 'landing', 'src_at'];
 const FILE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'pdf', 'zip', 'dcm'];
 
 $json = str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
@@ -264,22 +265,21 @@ function amoFields(array $l): array {
     foreach ($codes as $k => $code) if (!empty($l['src'][$k])) $out[] = ['field_code' => $code, 'values' => [['value' => $l['src'][$k]]]];
   }
   // свои поля сделки по id из config.php: 'fields' => ['form' => 123, 'page' => 456, 'reason' => 789 …]
-  $vals = ['form' => FORMS[$l['form']], 'page' => siteUrl($l['page'])] + $l['fields'];
+  $vals = ['form' => FORMS[$l['form']], 'page' => siteUrl($l['page']), 'source' => srcLine($l)] + $l['fields'];
   foreach ($C['amo']['fields'] ?? [] as $k => $fid) if ($fid && !empty($vals[$k])) $out[] = ['field_id' => (int)$fid, 'values' => [['value' => $vals[$k]]]];
   return $out;
 }
 
 function amoNote(array $l): string {
-  $s = ['Заявка с сайта №' . $l['id'], 'Форма: ' . FORMS[$l['form']]];
+  $s = ['Заявка с сайта №' . $l['id'], 'Форма: ' . FORMS[$l['form']], 'Откуда пришёл: ' . srcLine($l)];
   if ($l['name'] !== '') $s[] = 'Имя: ' . $l['name'];
   $s[] = 'Телефон: ' . fmtPhone($l['phone']);
   foreach ($l['fields'] as $k => $v) $s[] = FIELDS[$k][0] . ': ' . $v;
   if ($l['file']) $s[] = 'Снимок: ' . fileUrl($l['file']['name']) . ' (' . $l['file']['orig'] . ')';
-  $s[] = 'Страница: ' . siteUrl($l['page']);
-  $s[] = 'Источник: ' . srcLine($l);
+  $s[] = 'Страница заявки: ' . siteUrl($l['page']);
   $utm = array_filter(array_intersect_key($l['src'], array_flip(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid', 'gclid'])));
   if ($utm) $s[] = 'Метки: ' . implode(', ', array_map(fn($k, $v) => "$k=$v", array_keys($utm), $utm));
-  if (!empty($l['src']['ref'])) $s[] = 'Откуда пришёл: ' . $l['src']['ref'];
+  if (!empty($l['src']['ref'])) $s[] = 'Сайт, с которого перешли: ' . $l['src']['ref'];
   if (!empty($l['src']['landing'])) $s[] = 'Первая страница визита: ' . siteUrl($l['src']['landing']);
   if ($l['consent']) $s[] = 'Согласие на обработку ПД: отмечено ' . date('d.m.Y H:i', strtotime($l['consent']['at']));
   return implode("\n", $s);
@@ -290,13 +290,12 @@ function tgText(array $l): string {
   global $C;
   $full = !empty($C['telegram']['full']) || (!empty($C['telegram']['full_on_crm_fail']) && !$l['done']['amo']);
   $e = fn($s) => htmlspecialchars((string)$s, ENT_NOQUOTES);
-  $s = ['🦷 <b>Новая заявка с сайта</b> №' . $e($l['id']), 'Форма: ' . $e(FORMS[$l['form']])];
+  $s = ['🦷 <b>Новая заявка с сайта</b> №' . $e($l['id']), 'Форма: ' . $e(FORMS[$l['form']]), 'Откуда пришёл: ' . $e(srcLine($l))];
   if ($l['name'] !== '') $s[] = 'Имя: ' . $e($l['name']);
   $s[] = 'Телефон: ' . ($full ? '<a href="tel:+' . $l['phone'] . '">' . fmtPhone($l['phone']) . '</a>' : maskPhone($l['phone']));
   foreach ($l['fields'] as $k => $v) if ($full || !FIELDS[$k][1]) $s[] = FIELDS[$k][0] . ': ' . $e($v);
   if ($l['file']) $s[] = 'Приложен снимок' . ($full ? '' : ' (в amoCRM)');
-  $s[] = 'Страница: ' . $e($l['page'] ?: '/');
-  $s[] = 'Источник: ' . $e(srcLine($l));
+  $s[] = 'Страница заявки: ' . $e($l['page'] ?: '/');
   if (!empty($C['amo']['token']) && !$l['done']['amo']) $s[] = "\n⚠️ <b>В amoCRM не попала</b>, повторим автоматически. Ошибка: " . $e(mb_substr($l['err']['amo'] ?? '', 0, 200));
   return implode("\n", $s);
 }
@@ -322,7 +321,8 @@ function sheetSend(array $l): void {
     $full ? fmtPhone($l['phone']) : maskPhone($l['phone']),
     $full ? implode('; ', array_filter([$f['reason'] ?? '', $f['service'] ?? '', $f['jaws'] ?? '', $f['denture'] ?? ''])) : '',
     $f['doctor'] ?? '', $f['promo'] ?? '', siteUrl($l['page'])];
-  foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid', 'ref'] as $k) $row[] = $l['src'][$k] ?? '';
+  foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid'] as $k) $row[] = $l['src'][$k] ?? '';
+  $row[] = srcLine($l);
   $row[] = $l['amo'] ? amoLink($l['amo']) : (!empty($C['amo']['token']) ? 'не попала, повторяем' : '');
   [$code, $res] = http('POST', $C['sheets']['url'], ['secret' => $C['sheets']['secret'], 'sheet' => $C['sheets']['sheet'] ?? 'Заявки', 'header' => $header, 'row' => $row]);
   $j = json_decode($res, true);
@@ -336,13 +336,12 @@ function mailSend(array $l): void {
   global $C;
   $m = $C['mail'];
   $full = !empty($m['full']);
-  $s = ['Заявка с сайта №' . $l['id'], 'Форма: ' . FORMS[$l['form']]];
+  $s = ['Заявка с сайта №' . $l['id'], 'Форма: ' . FORMS[$l['form']], 'Откуда пришёл: ' . srcLine($l)];
   if ($l['name'] !== '') $s[] = 'Имя: ' . $l['name'];
   $s[] = 'Телефон: ' . ($full ? fmtPhone($l['phone']) : maskPhone($l['phone']));
   foreach ($l['fields'] as $k => $v) if ($full || !FIELDS[$k][1]) $s[] = FIELDS[$k][0] . ': ' . $v;
   if ($l['file']) $s[] = $full ? 'Снимок: ' . fileUrl($l['file']['name']) : 'Приложен снимок (в amoCRM)';
-  $s[] = 'Страница: ' . siteUrl($l['page']);
-  $s[] = 'Источник: ' . srcLine($l);
+  $s[] = 'Страница заявки: ' . siteUrl($l['page']);
   if ($l['amo']) $s[] = "\nСделка в amoCRM: " . amoLink($l['amo']);
   elseif (!empty($C['amo']['token'])) $s[] = "\nВ amoCRM пока не попала, повторим автоматически.";
   $to = implode(', ', (array)$m['to']);
@@ -467,12 +466,65 @@ function normPhone(string $s): ?string {
 function fmtPhone(string $d): string { return '+7 ' . substr($d, 1, 3) . ' ' . substr($d, 4, 3) . '-' . substr($d, 7, 2) . '-' . substr($d, 9, 2); }
 function maskPhone(string $d): string { return '+7 ' . $d[1] . '** ***-' . substr($d, 7, 2) . '-' . substr($d, 9, 2); }
 
+// «Откуда пришёл» одной строкой словами (Ilya 23.10): площадка, страница входа и день захода, если он был раньше этого визита.
+// Метки и адрес сайта-источника целиком идут отдельными строками примечания и в поля «Статистика» amoCRM
 function srcLine(array $l): string {
   $s = $l['src'];
-  if (!empty($s['utm_source'])) return implode(' / ', array_filter([$s['utm_source'], $s['utm_medium'] ?? '', $s['utm_campaign'] ?? '']));
-  if (!empty($s['yclid'])) return 'Яндекс Директ (yclid)';
-  if (!empty($s['ref'])) return (string)(parse_url($s['ref'], PHP_URL_HOST) ?: $s['ref']);
-  return 'прямой заход';
+  $out = [srcName($s)];
+  if (!empty($s['landing'])) $out[] = 'вход на ' . (parse_url($s['landing'], PHP_URL_PATH) ?: '/');
+  $at = (int)($s['src_at'] ?? 0);
+  if ($at > 0 && strtotime($l['at']) - $at > 6 * 3600) $out[] = 'заходил ' . date('d.m', $at);
+  return implode(', ', $out);
+}
+
+function srcName(array $s): string {
+  $u = mb_strtolower(trim((string)($s['utm_source'] ?? '')));
+  $m = mb_strtolower(trim((string)($s['utm_medium'] ?? '')));
+  // ссылки из карточки Яндекс Карт: utm_campaign говорит, где нажали (схема меток в маршрутной карте ссылок карточки)
+  if ($u === 'yandex_maps') {
+    $where = ['card' => 'кнопка «Сайт»', 'price' => 'витрина услуг', 'story' => 'истории', 'post' => 'публикации', 'promo' => 'акции'][mb_strtolower((string)($s['utm_campaign'] ?? ''))] ?? '';
+    return 'Яндекс Карты' . ($where !== '' ? " ($where)" : '');
+  }
+  $names = ['yandex_business' => 'Яндекс Бизнес', 'geoadv' => 'Яндекс Бизнес (реклама)', 'prodoctorov' => 'ПроДокторов', '2gis' => '2ГИС',
+    'vk' => 'ВКонтакте', 'telegram' => 'Telegram', 'tg' => 'Telegram', 'max' => 'MAX', 'um-med' => 'сайт um-med.com', 'um-med.com' => 'сайт um-med.com'];
+  if ($u !== '') {
+    if (isset($names[$u])) return $names[$u];
+    $paid = preg_match('/cpc|cpm|ppc|paid|context/', $m);
+    if (in_array($u, ['yandex', 'ya', 'direct', 'yandex_direct', 'yandexdirect'], true)) return $paid ? 'Яндекс Директ' : 'Яндекс (метка ' . $u . ')';
+    if ($u === 'google') return $paid ? 'Google Реклама' : 'Google (метка google)';
+    $ai = aiName($u);
+    if ($ai !== '') return $ai;
+    return 'метка ' . $u . ($m !== '' ? " / $m" : '');
+  }
+  if (!empty($s['yclid'])) return 'Яндекс Директ';
+  if (!empty($s['gclid'])) return 'Google Реклама';
+  if (!empty($s['ref'])) return refName((string)(parse_url($s['ref'], PHP_URL_HOST) ?: $s['ref']));
+  return 'прямой заход (набрали адрес, закладка или ссылка из приложения)';
+}
+
+// сайт, с которого перешли, словами. Браузеры обычно присылают только домен, поэтому поиск и Карты Яндекса без меток не различить
+function refName(string $host): string {
+  $h = preg_replace('/^(www|m)\./', '', mb_strtolower($host));
+  $ai = aiName($h);
+  if ($ai !== '') return $ai;
+  $map = [
+    '/^maps\.yandex\./' => 'Яндекс Карты', '/(^|\.)(yandex\.[a-z]+|ya\.ru)$/' => 'Поиск Яндекса', '/(^|\.)dzen\.ru$/' => 'Дзен',
+    '/(^|\.)google\.[a-z.]+$/' => 'Поиск Google', '/(^|\.)(go\.)?mail\.ru$/' => 'Поиск Mail.ru', '/(^|\.)bing\.com$/' => 'Поиск Bing',
+    '/(^|\.)prodoctorov\.ru$/' => 'ПроДокторов', '/(^|\.)2gis\.[a-z]+$/' => '2ГИС', '/(^|\.)(t\.me|telegram\.(org|me))$/' => 'Telegram',
+    '/(^|\.)vk\.(com|ru)$/' => 'ВКонтакте', '/(^|\.)max\.ru$/' => 'MAX', '/(^|\.)napopravku\.ru$/' => 'НаПоправку', '/(^|\.)zoon\.ru$/' => 'Zoon',
+    '/(^|\.)(docdoc\.ru|sberhealth\.ru)$/' => 'СберЗдоровье', '/(^|\.)um-med\.com$/' => 'сайт um-med.com', '/(^|\.)um-medicine\.ru$/' => 'сайт um-medicine.ru',
+  ];
+  foreach ($map as $re => $name) if (preg_match($re, $h)) return $name;
+  return 'сайт ' . $h;
+}
+
+// нейросети: по метке utm_source (ChatGPT ставит chatgpt.com) или по сайту, с которого перешли
+function aiName(string $h): string {
+  $map = ['/(^|\.)(chatgpt\.com|chat\.openai\.com|openai\.com)$/' => 'ChatGPT', '/(^|\.)alice\.yandex\.ru$/' => 'Алиса', '/(^|\.)perplexity\.ai$/' => 'Perplexity',
+    '/(^|\.)gemini\.google\.com$/' => 'Gemini', '/(^|\.)copilot\.microsoft\.com$/' => 'Copilot', '/(^|\.)(giga\.chat|gigachat\.ru)$/' => 'GigaChat',
+    '/(^|\.)(chat\.)?deepseek\.com$/' => 'DeepSeek', '/(^|\.)claude\.ai$/' => 'Claude'];
+  foreach ($map as $re => $name) if (preg_match($re, $h)) return 'нейросеть ' . $name;
+  return '';
 }
 
 function siteUrl(string $path): string {

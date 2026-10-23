@@ -15,7 +15,7 @@ return [
   'file_key' => '',
   // без отметки согласия заявка не принимается (галочка CONSENT_CHECKBOX в src/legal-pages.mjs)
   'require_consent' => true,
-  'consent_version' => 'Согласие и Политика от 19.10.2026',
+  'consent_version' => 'Согласие от 19.10.2026, Политика от 23.10.2026',
   'keep_days' => 90,        // сколько дней журнал и снимки хранятся на сервере, дальше заявка живёт в amoCRM
   'file_max_mb' => 20,
   'rate_per_10min' => 6,    // заявок с одного IP за 10 минут
@@ -34,7 +34,7 @@ return [
     'tags' => ['сайт smartmed.clinic'],  // плюс тег с названием формы (у Tilda тег «tilda»)
     'source_name' => 'Сайт стоматологии',
     'utm_fields' => true,          // UTM, yclid и referrer в поля «Статистика»
-    // свои поля сделки, если в amoCRM заведены: 'form', 'page', 'reason', 'service', 'doctor', 'when', 'promo', 'jaws', 'denture', 'comment' => id поля
+    // свои поля сделки, если в amoCRM заведены: 'form', 'page', 'source' («Откуда пришёл» словами), 'reason', 'service', 'doctor', 'when', 'promo', 'jaws', 'denture', 'comment' => id поля
     'fields' => [],
   ],
 

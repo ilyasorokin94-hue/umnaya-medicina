@@ -1611,7 +1611,7 @@ const legalPic = {
 };
 function pageLegal(page) {
   const depth = 1, p = "../";
-  const meta = page.meta || [["Оператор", clinic.legal], ["Редакция", legalDate], ["Телефон", clinic.phone], ["Email", clinic.email]];
+  const meta = page.meta || [["Оператор", clinic.legal], ["Редакция", page.date || legalDate], ["Телефон", clinic.phone], ["Email", clinic.email]];
   return head({ title: page.title, desc: page.desc, canonical: `/${page.path}/`, depth, jsonld: [crumbsLd([[`${page.path}/`, page.crumb]])] })
   + header(depth) + `
 <main id="main">

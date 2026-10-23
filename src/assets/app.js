@@ -460,20 +460,7 @@
   // ---------- отправка заявок ----------
   // На рабочем сайте формы ведут на lead.php: заявка уходит fetch'ем, а без скриптов форма отправится сама и вернётся на «Спасибо».
   // В демо формы ведут на spasibo/, здесь только пауза, как будто отправили.
-  // Откуда пришёл человек: метки и первая страница визита запоминаются на вкладку, чтобы заявка с пятой страницы знала источник
-  const srcKeys = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "yclid", "gclid"];
-  const visit = (() => {
-    let v = null;
-    try { v = JSON.parse(sessionStorage.getItem("um2-src") || "null"); } catch (err) {}
-    const q = new URLSearchParams(location.search);
-    if (!v || srcKeys.some((k) => q.get(k))) {
-      const ref = document.referrer && new URL(document.referrer).origin !== location.origin ? document.referrer : "";
-      v = { landing: location.pathname + location.search, ref: ref || v?.ref || "" };
-      srcKeys.forEach((k) => { if (q.get(k)) v[k] = q.get(k).slice(0, 200); });
-      try { sessionStorage.setItem("um2-src", JSON.stringify(v)); } catch (err) {}
-    }
-    return v;
-  })();
+  // Откуда пришёл человек (страница входа, сайт-источник, метки) запоминает cookie.js, заявка берёт это из window.umSource
   const t0 = Date.now(), FILE_MB = 20;
   const isLive = (f) => /lead\.php$/.test(f.getAttribute("action") || "");
   // ловушка для ботов: поле, которого человек не видит
@@ -485,7 +472,7 @@
     if (file && file.size > FILE_MB * 1048576) throw new Error(`Файл больше ${FILE_MB} МБ. Пришлите снимок в Telegram или MAX.`);
     if (file && !file.size) fd.delete("file");
     fd.set("form", kind); fd.set("page", location.pathname); fd.set("title", document.title); fd.set("t", String(Date.now() - t0));
-    Object.entries({ ...visit, ...extra }).forEach(([k, v]) => { if (v) fd.set(k, v); });
+    Object.entries({ ...(window.umSource?.() || {}), ...extra }).forEach(([k, v]) => { if (v) fd.set(k, v); });
     const doc = fd.get("doctor");
     if (doc && docs[doc]) fd.set("doctor", docs[doc]);
     // номер посетителя в Метрике, только если её разрешили в уведомлении о cookie (без согласия её cookie нет)
