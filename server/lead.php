@@ -265,7 +265,7 @@ function amoFields(array $l): array {
     foreach ($codes as $k => $code) if (!empty($l['src'][$k])) $out[] = ['field_code' => $code, 'values' => [['value' => $l['src'][$k]]]];
   }
   // свои поля сделки по id из config.php: 'fields' => ['form' => 123, 'page' => 456, 'reason' => 789 …]
-  $vals = ['form' => FORMS[$l['form']], 'page' => siteUrl($l['page']), 'source' => srcLine($l)] + $l['fields'];
+  $vals = ['form' => FORMS[$l['form']], 'page' => siteUrl($l['page']), 'source' => srcLine($l, false)] + $l['fields'];
   foreach ($C['amo']['fields'] ?? [] as $k => $fid) if ($fid && !empty($vals[$k])) $out[] = ['field_id' => (int)$fid, 'values' => [['value' => $vals[$k]]]];
   return $out;
 }
@@ -277,9 +277,6 @@ function amoNote(array $l): string {
   foreach ($l['fields'] as $k => $v) $s[] = FIELDS[$k][0] . ': ' . $v;
   if ($l['file']) $s[] = 'Снимок: ' . fileUrl($l['file']['name']) . ' (' . $l['file']['orig'] . ')';
   $s[] = 'Страница заявки: ' . siteUrl($l['page']);
-  $utm = array_filter(array_intersect_key($l['src'], array_flip(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid', 'gclid'])));
-  if ($utm) $s[] = 'Метки: ' . implode(', ', array_map(fn($k, $v) => "$k=$v", array_keys($utm), $utm));
-  if (!empty($l['src']['ref'])) $s[] = 'Сайт, с которого перешли: ' . $l['src']['ref'];
   if (!empty($l['src']['landing'])) $s[] = 'Первая страница визита: ' . siteUrl($l['src']['landing']);
   if ($l['consent']) $s[] = 'Согласие на обработку ПД: отмечено ' . date('d.m.Y H:i', strtotime($l['consent']['at']));
   return implode("\n", $s);
@@ -322,7 +319,7 @@ function sheetSend(array $l): void {
     $full ? implode('; ', array_filter([$f['reason'] ?? '', $f['service'] ?? '', $f['jaws'] ?? '', $f['denture'] ?? ''])) : '',
     $f['doctor'] ?? '', $f['promo'] ?? '', siteUrl($l['page'])];
   foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid'] as $k) $row[] = $l['src'][$k] ?? '';
-  $row[] = srcLine($l);
+  $row[] = srcLine($l, false);
   $row[] = $l['amo'] ? amoLink($l['amo']) : (!empty($C['amo']['token']) ? 'не попала, повторяем' : '');
   [$code, $res] = http('POST', $C['sheets']['url'], ['secret' => $C['sheets']['secret'], 'sheet' => $C['sheets']['sheet'] ?? 'Заявки', 'header' => $header, 'row' => $row]);
   $j = json_decode($res, true);
@@ -466,15 +463,21 @@ function normPhone(string $s): ?string {
 function fmtPhone(string $d): string { return '+7 ' . substr($d, 1, 3) . ' ' . substr($d, 4, 3) . '-' . substr($d, 7, 2) . '-' . substr($d, 9, 2); }
 function maskPhone(string $d): string { return '+7 ' . $d[1] . '** ***-' . substr($d, 7, 2) . '-' . substr($d, 9, 2); }
 
-// «Откуда пришёл» одной строкой словами (Ilya 23.10): площадка, страница входа и день захода, если он был раньше этого визита.
-// Метки и адрес сайта-источника целиком идут отдельными строками примечания и в поля «Статистика» amoCRM
-function srcLine(array $l): string {
+// «Откуда пришёл» одной строкой (Ilya 23.10), в каждой заявке и без согласия на Метрику: площадка словами, страница входа,
+// день захода, если он был раньше этого визита, а с $full ещё метки utm/yclid/gclid и сайт, с которого перешли.
+// В таблице короткая строка: метки там в своих колонках
+function srcLine(array $l, bool $full = true): string {
   $s = $l['src'];
   $out = [srcName($s)];
   if (!empty($s['landing'])) $out[] = 'вход на ' . (parse_url($s['landing'], PHP_URL_PATH) ?: '/');
   $at = (int)($s['src_at'] ?? 0);
   if ($at > 0 && strtotime($l['at']) - $at > 6 * 3600) $out[] = 'заходил ' . date('d.m', $at);
-  return implode(', ', $out);
+  $line = implode(', ', $out);
+  if (!$full) return $line;
+  $utm = array_filter(array_intersect_key($s, array_flip(['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'yclid', 'gclid'])));
+  if ($utm) $line .= '; метки: ' . implode(', ', array_map(fn($k, $v) => "$k=$v", array_keys($utm), $utm));
+  if (!empty($s['ref'])) $line .= '; переход с ' . $s['ref'];
+  return $line;
 }
 
 function srcName(array $s): string {

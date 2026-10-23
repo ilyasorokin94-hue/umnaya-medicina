@@ -1,13 +1,14 @@
 // Уведомление о cookie и Яндекс Метрика (Ilya 19.10, формат Юкки Дент; 23.10 схема как у Зубной Гармонии).
-// Метрика грузится только после «Принять»; «Нет» её не загружает. Выбор в localStorage «um2-cookie»,
-// поменять его можно ссылкой «Настройки cookie» в подвале. Плашка внизу, страницу не закрывает (фид «Врачи» не принимает модальные окна).
+// Одна кнопка «Принять» (Ilya 23.10): до неё Метрика не грузится и к Яндексу запросов нет, плашка видна на каждой странице.
+// Согласие в localStorage «um2-cookie» = "all"; отозвать его можно ссылкой «Настройки cookie» в подвале.
+// Плашка внизу, страницу не закрывает (фид «Врачи» не принимает модальные окна) и не закрывает кнопки записи.
 // До согласия источник визита и важные цели лежат только в браузере. После «Принять» Метрика получает визит с начала,
 // поэтому заход из Яндекс Карт, Бизнеса или Директа не теряется, даже если человек согласился на третьей странице.
 // Номер счётчика и адрес политики приходят из тега скрипта: data-ym, data-privacy.
 (function () {
   var me = document.currentScript, ID = +(me && me.dataset.ym) || 0, privacy = (me && me.dataset.privacy) || "privacy/";
   var KEY = "um2-cookie";
-  var get = function () { try { return localStorage.getItem(KEY); } catch (e) { return "necessary"; } };
+  var get = function () { try { return localStorage.getItem(KEY); } catch (e) { return ""; } };
   var set = function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} };
   // хранилища браузера: в приватном режиме или при запрете данных сайтов чтение и запись бросают ошибку
   var read = function (kind, k) { try { return JSON.parse(window[kind].getItem(k) || "null"); } catch (e) { return null; } };
@@ -80,12 +81,12 @@
   };
   // цели Метрики (Ilya 22.10): только после согласия и без имени и телефона. Список целей для кабинета:
   // /mnt/project-files/Заявки_с_сайта/цели_метрики.md
-  // Пока человек не выбрал в плашке, заявка, звонок, мессенджер и маршрут ждут в браузере до конца визита
-  // и уходят, если он нажмёт «Принять». После «Нет» ничего не копим.
+  // Пока человек не нажал «Принять», заявка, звонок, мессенджер и маршрут ждут в браузере до конца визита
+  // и уходят, если он нажмёт «Принять» на этой или следующей странице.
   var WAIT = /^(lead|phone|messenger|route)/;
   var goal = function (name, params) {
     if (loaded && window.ym) return window.ym(ID, "reachGoal", name, params);
-    if (!ID || get() || !WAIT.test(name)) return;
+    if (!ID || !WAIT.test(name)) return;
     var wait = read("sessionStorage", "um2-goals") || [];
     if (wait.length < 20) { wait.push([name, params || null]); write("sessionStorage", "um2-goals", wait); }
   };
@@ -121,8 +122,13 @@
     try { Object.keys(localStorage).forEach(function (k) { if (/^_ym/.test(k)) localStorage.removeItem(k); }); } catch (e) {}
   };
 
-  var bar;
-  var hide = function () { if (!bar) return; bar.classList.remove("is-on"); var b = bar; setTimeout(function () { b.hidden = true; }, 400); };
+  // плашка: пока она видна, низ подвала можно докрутить из-под неё (--ck-h), на телефоне она стоит над нижней панелью
+  var bar, root = document.documentElement;
+  var room = function () {
+    if (bar && !bar.hidden) { root.classList.add("has-ck"); root.style.setProperty("--ck-h", bar.offsetHeight + 16 + "px"); }
+    else { root.classList.remove("has-ck"); root.style.removeProperty("--ck-h"); }
+  };
+  var hide = function () { if (!bar) return; bar.classList.remove("is-on"); var b = bar; setTimeout(function () { b.hidden = true; room(); }, 400); };
   var show = function () {
     if (!bar) {
       bar = document.createElement("div");
@@ -130,23 +136,26 @@
       bar.setAttribute("role", "region");
       bar.setAttribute("aria-label", "Уведомление о cookie");
       bar.hidden = true;
-      bar.innerHTML = '<p class="cookie__t">Мы используем cookie: необходимые для работы сайта и, с вашего согласия, Яндекс Метрику, чтобы считать посещения и улучшать сайт. <a href="' + privacy + '#p9">Подробнее в Политике конфиденциальности</a></p>'
-        + '<div class="cookie__btns"><button class="btn btn--sm" type="button" data-ck="all">Принять</button><button class="btn btn--sm btn--ghost" type="button" data-ck="necessary">Нет</button></div>';
       bar.addEventListener("click", function (e) {
         var b = e.target.closest("[data-ck]");
         if (!b) return;
-        var was = get(), v = b.getAttribute("data-ck");
-        set(v);
+        var v = b.getAttribute("data-ck");
         hide();
-        if (v === "all") load();
-        else {
-          drop("sessionStorage", "um2-goals");
-          if (was === "all") { forget(); location.reload(); }
-        }
+        if (v === "all") { set("all"); load(); }
+        // отзыв согласия из «Настроек cookie»: Метрика выключается, её cookie удаляются, плашка снова на каждой странице
+        else if (v === "off") { set("off"); drop("sessionStorage", "um2-goals"); forget(); location.reload(); }
       });
+      addEventListener("resize", room);
       document.body.appendChild(bar);
     }
+    var on = get() === "all", more = '<a href="' + privacy + '#p9">Подробнее в Политике конфиденциальности</a>';
+    bar.innerHTML = on
+      ? '<p class="cookie__t">Яндекс Метрика включена с вашего согласия. Отключить её можно здесь. ' + more + '</p>'
+        + '<div class="cookie__btns"><button class="btn btn--sm btn--ghost" type="button" data-ck="off">Отключить Метрику</button><button class="btn btn--sm" type="button" data-ck="keep">Оставить</button></div>'
+      : '<p class="cookie__t">Сайт использует технические cookie. С вашего согласия мы также включим Яндекс Метрику, чтобы понимать, как пациенты пользуются сайтом. ' + more + '</p>'
+        + '<div class="cookie__btns"><button class="btn btn--sm" type="button" data-ck="all">Принять</button></div>';
     bar.hidden = false;
+    room();
     requestAnimationFrame(function () { requestAnimationFrame(function () { bar.classList.add("is-on"); }); });
   };
   document.addEventListener("click", function (e) {
@@ -154,10 +163,9 @@
   });
 
   var start = function () {
-    var v = get();
-    if (v === "all") load();
+    if (get() === "all") load();
     // плашка после заставки главной, чтобы не появляться поверх неё
-    else if (v !== "necessary") setTimeout(show, document.documentElement.classList.contains("js-intro") ? 2600 : 900);
+    else setTimeout(show, root.classList.contains("js-intro") ? 2600 : 900);
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
