@@ -1,230 +1,234 @@
 {
  "/": {
-  "fp": "e212c03c",
-  "lastmod": "2026-10-24"
+  "fp": "a4962415",
+  "lastmod": "2026-10-25"
  },
  "/ceny/": {
-  "fp": "6a991358",
-  "lastmod": "2026-10-22"
+  "fp": "bc45de0c",
+  "lastmod": "2026-10-25"
+ },
+ "/uslugi/": {
+  "fp": "fe7aabf7",
+  "lastmod": "2026-10-25"
  },
  "/vrachi/": {
-  "fp": "1fc6722b",
-  "lastmod": "2026-10-22"
+  "fp": "eeebec82",
+  "lastmod": "2026-10-25"
  },
  "/zapis": {
   "fp": "fc5be435",
   "lastmod": "2026-10-22"
  },
  "/privacy/": {
-  "fp": "f0509590",
-  "lastmod": "2026-10-23"
+  "fp": "1634aac1",
+  "lastmod": "2026-10-25"
  },
  "/soglasie/": {
-  "fp": "044a596c",
-  "lastmod": "2026-10-22"
+  "fp": "90abfc39",
+  "lastmod": "2026-10-25"
  },
  "/soglashenie/": {
-  "fp": "a483b250",
-  "lastmod": "2026-10-22"
+  "fp": "35e96107",
+  "lastmod": "2026-10-25"
  },
  "/gosudarstvennye-garantii/": {
-  "fp": "f61aac72",
-  "lastmod": "2026-10-22"
+  "fp": "936ae657",
+  "lastmod": "2026-10-25"
  },
  "/svedeniya/": {
-  "fp": "2b4d72a1",
-  "lastmod": "2026-10-22"
+  "fp": "cde61cf6",
+  "lastmod": "2026-10-25"
  },
  "/implantaciya/": {
-  "fp": "1e3964a1",
-  "lastmod": "2026-10-24"
+  "fp": "f8b58c93",
+  "lastmod": "2026-10-25"
  },
  "/implantaciya/all-on-4/": {
-  "fp": "2eea7260",
-  "lastmod": "2026-10-24"
+  "fp": "f1b52ed1",
+  "lastmod": "2026-10-25"
  },
  "/implantaciya/all-on-6/": {
-  "fp": "530b7da6",
-  "lastmod": "2026-10-24"
+  "fp": "bbe12b4d",
+  "lastmod": "2026-10-25"
  },
  "/implantaciya/vsya-chelyust/": {
-  "fp": "df949a76",
-  "lastmod": "2026-10-24"
+  "fp": "945a3aad",
+  "lastmod": "2026-10-25"
  },
  "/implantaciya/koronka-na-implant/": {
-  "fp": "24d7bda7",
-  "lastmod": "2026-10-24"
+  "fp": "92724401",
+  "lastmod": "2026-10-25"
  },
  "/implantaciya/sinus-lifting/": {
-  "fp": "a63e1162",
-  "lastmod": "2026-10-24"
+  "fp": "00919b1d",
+  "lastmod": "2026-10-25"
  },
  "/implantaciya/kostnaya-plastika/": {
-  "fp": "4432a0cc",
-  "lastmod": "2026-10-24"
+  "fp": "26fe51d8",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/": {
-  "fp": "7e6f4b3a",
-  "lastmod": "2026-10-24"
+  "fp": "dd926e90",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/semnye-protezy/": {
-  "fp": "5a104233",
-  "lastmod": "2026-10-24"
+  "fp": "59c43785",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/byugelnyj-protez/": {
-  "fp": "dbc91c2c",
-  "lastmod": "2026-10-24"
+  "fp": "996f97d0",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/koronki/": {
-  "fp": "5206a23e",
-  "lastmod": "2026-10-24"
+  "fp": "b9bdb80c",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/koronki/cirkoniy/": {
-  "fp": "dd25848a",
-  "lastmod": "2026-10-24"
+  "fp": "a3d559c1",
+  "lastmod": "2026-10-25"
  },
  "/diagnostika/": {
-  "fp": "26c3e2eb",
-  "lastmod": "2026-10-24"
+  "fp": "9ea5b48e",
+  "lastmod": "2026-10-25"
  },
  "/lechenie/": {
-  "fp": "f5e7a4df",
-  "lastmod": "2026-10-24"
+  "fp": "54cc3883",
+  "lastmod": "2026-10-25"
  },
  "/lechenie/pod-mikroskopom/": {
-  "fp": "50677496",
-  "lastmod": "2026-10-24"
+  "fp": "4df1fb32",
+  "lastmod": "2026-10-25"
  },
  "/hirurgiya/": {
-  "fp": "5d1f20cb",
-  "lastmod": "2026-10-24"
+  "fp": "b786f586",
+  "lastmod": "2026-10-25"
  },
  "/ortodontiya/": {
-  "fp": "06ae0802",
-  "lastmod": "2026-10-24"
+  "fp": "c22323b6",
+  "lastmod": "2026-10-25"
  },
  "/detskaya-stomatologiya/": {
-  "fp": "2749bd68",
-  "lastmod": "2026-10-24"
+  "fp": "421f6a80",
+  "lastmod": "2026-10-25"
  },
  "/gigiena/": {
-  "fp": "f20ba06b",
-  "lastmod": "2026-10-24"
+  "fp": "81d874c1",
+  "lastmod": "2026-10-25"
  },
  "/diagnostika/kt/": {
-  "fp": "afbba43d",
-  "lastmod": "2026-10-24"
+  "fp": "e307848b",
+  "lastmod": "2026-10-25"
  },
  "/diagnostika/rentgen/": {
-  "fp": "9a8b974f",
-  "lastmod": "2026-10-24"
+  "fp": "2e6fc9c4",
+  "lastmod": "2026-10-25"
  },
  "/hirurgiya/udalenie-zuba-mudrosti/": {
-  "fp": "9a527790",
-  "lastmod": "2026-10-24"
+  "fp": "5ad55781",
+  "lastmod": "2026-10-25"
  },
  "/ortodontiya/brekety/": {
-  "fp": "0b6b03e2",
-  "lastmod": "2026-10-24"
+  "fp": "733bf3d1",
+  "lastmod": "2026-10-25"
  },
  "/ortodontiya/elajnery/": {
-  "fp": "8da71bf3",
-  "lastmod": "2026-10-24"
+  "fp": "7ed928c1",
+  "lastmod": "2026-10-25"
  },
  "/lechenie/karies/": {
-  "fp": "fc0ebf38",
-  "lastmod": "2026-10-24"
+  "fp": "c118d199",
+  "lastmod": "2026-10-25"
  },
  "/lechenie/pulpit/": {
-  "fp": "bba10d7d",
-  "lastmod": "2026-10-24"
+  "fp": "588aa997",
+  "lastmod": "2026-10-25"
  },
  "/lechenie/kanaly/": {
-  "fp": "6d03dd62",
-  "lastmod": "2026-10-24"
+  "fp": "ce5cb5b9",
+  "lastmod": "2026-10-25"
  },
  "/lechenie/restavraciya/": {
-  "fp": "5e791857",
-  "lastmod": "2026-10-24"
+  "fp": "2480617f",
+  "lastmod": "2026-10-25"
  },
  "/gigiena/otbelivanie/": {
-  "fp": "63e36dbf",
-  "lastmod": "2026-10-24"
+  "fp": "f513b4c8",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/most/": {
-  "fp": "2015e17b",
-  "lastmod": "2026-10-24"
+  "fp": "237fa446",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/koronki/metallokeramika/": {
-  "fp": "eab5d379",
-  "lastmod": "2026-10-24"
+  "fp": "1ef3c34f",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/vkladki/": {
-  "fp": "8925caf1",
-  "lastmod": "2026-10-24"
+  "fp": "bebd56d1",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/nejlonovyj-protez/": {
-  "fp": "f8fd173c",
-  "lastmod": "2026-10-24"
+  "fp": "c3da1d1d",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/akrilovyj-protez/": {
-  "fp": "57c085d5",
-  "lastmod": "2026-10-24"
+  "fp": "e5ca3c16",
+  "lastmod": "2026-10-25"
  },
  "/implantaciya/implanty/": {
-  "fp": "e141099a",
-  "lastmod": "2026-10-24"
+  "fp": "fc731bf7",
+  "lastmod": "2026-10-25"
  },
  "/lechenie/kista/": {
-  "fp": "0e170d4c",
-  "lastmod": "2026-10-24"
+  "fp": "0ae9abee",
+  "lastmod": "2026-10-25"
  },
  "/protezirovanie/koronki/emax/": {
-  "fp": "38d8870b",
-  "lastmod": "2026-10-24"
+  "fp": "35679088",
+  "lastmod": "2026-10-25"
  },
  "/ortodontiya/retejnery/": {
-  "fp": "b84601ec",
-  "lastmod": "2026-10-24"
+  "fp": "8c425e42",
+  "lastmod": "2026-10-25"
  },
  "/konsultaciya/": {
-  "fp": "19b00835",
-  "lastmod": "2026-10-24"
+  "fp": "b06a7a43",
+  "lastmod": "2026-10-25"
  },
  "/goroda/zhukovskiy/implantaciya/": {
-  "fp": "cbfd33a5",
-  "lastmod": "2026-10-24"
+  "fp": "c0811766",
+  "lastmod": "2026-10-25"
  },
  "/goroda/zhukovskiy/protezirovanie/": {
-  "fp": "715644c2",
-  "lastmod": "2026-10-24"
+  "fp": "ab1dbbdd",
+  "lastmod": "2026-10-25"
  },
  "/vrachi/solodukhin/": {
-  "fp": "dde73fed",
-  "lastmod": "2026-10-24"
+  "fp": "544175ba",
+  "lastmod": "2026-10-25"
  },
  "/vrachi/hludnevskiy/": {
-  "fp": "cff0c838",
-  "lastmod": "2026-10-24"
+  "fp": "5f651763",
+  "lastmod": "2026-10-25"
  },
  "/vrachi/radzhabov/": {
-  "fp": "97d7df55",
-  "lastmod": "2026-10-24"
+  "fp": "9e33f4bd",
+  "lastmod": "2026-10-25"
  },
  "/vrachi/chitaykin/": {
-  "fp": "8efe5609",
-  "lastmod": "2026-10-24"
+  "fp": "7c4f0bf8",
+  "lastmod": "2026-10-25"
  },
  "/vrachi/kashtanova/": {
-  "fp": "6b7560fb",
-  "lastmod": "2026-10-24"
+  "fp": "1f03fc46",
+  "lastmod": "2026-10-25"
  },
  "/vrachi/alikhanova/": {
-  "fp": "fd2958c0",
-  "lastmod": "2026-10-24"
+  "fp": "61006414",
+  "lastmod": "2026-10-25"
  },
  "/vrachi/troitskiy/": {
-  "fp": "db307904",
-  "lastmod": "2026-10-24"
+  "fp": "81dc0303",
+  "lastmod": "2026-10-25"
  }
 }
