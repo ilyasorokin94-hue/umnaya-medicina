@@ -2224,3 +2224,70 @@ html.has-ck .footer__in { padding-bottom: calc(28px + var(--ck-h, 0px)); }
   .modal__box { border-radius: 0; }
   .modal__logo { height: 26px; }
 }
+
+/* ---------- кнопка «Смотреть все услуги и цены» под строками услуг на главной (Ilya 25.10, как у White Teeth) ---------- */
+.svl__more { display: flex; justify-content: center; margin: clamp(48px, 5vw, 80px) 0 0; }
+@media (max-width: 760px) { .svl__more .btn { width: 100%; } }
+
+/* ---------- все услуги и цены /uslugi/ (Ilya 25.10): архитектура страницы услуг Вайтиса в стиле страниц услуг.
+   Раздел: слева картинка (прямые углы), название, описание, сколько страниц и кнопка; справа строки страниц с ценой «от»
+   и круглой стрелкой, как строки услуг на главной. На телефоне всё в колонку, кнопку раздела заменяет первая строка ---------- */
+.uk-inside__head { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 24px clamp(40px, 6vw, 120px); align-items: end; margin-bottom: clamp(40px, 5vw, 72px); }
+.uk-inside__head .section__title { max-width: 16ch; }
+.uk-inside__head p { color: var(--muted); max-width: 30em; }
+.uk-inside__list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 28px clamp(20px, 2.4vw, 36px); }
+.uk-inside__list li { display: grid; gap: 8px; align-content: start; padding-top: 20px; border-top: 1px solid var(--line); }
+.uk-inside__list b { font: 500 var(--fs-1)/1.2 var(--display); letter-spacing: -.02em; }
+.uk-inside__list span { font-size: var(--fs--1); color: var(--muted); }
+
+.uk-cat { padding-top: clamp(72px, 8vw, 120px); }
+.uk-group { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px clamp(40px, 6vw, 120px); align-items: start; padding: clamp(48px, 5vw, 80px) 0; border-bottom: 1px solid var(--line); scroll-margin-top: calc(var(--header-h) + 16px); }
+.uk-group:first-child { padding-top: 0; }
+.uk-group__side { display: grid; justify-items: start; gap: 16px; }
+.uk-group__pic { display: block; width: 100%; aspect-ratio: 3 / 2; overflow: hidden; background: var(--ink); margin-bottom: 12px; }
+.uk-group__pic img { width: 100%; height: 100%; object-fit: cover; object-position: 70% 50%; transition: scale .8s var(--ease); }
+.uk-group__t { font-size: var(--fs-3); line-height: 1.1; letter-spacing: -.035em; }
+.uk-group__t a { color: inherit; text-decoration: none; }
+.uk-group__text { color: var(--muted); max-width: 32em; }
+.uk-group__count { font-size: var(--fs--1); font-weight: 500; color: var(--green-deep); }
+.uk-group__btn { margin-top: 8px; }
+.uk-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.uk-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: clamp(14px, 1.6vw, 24px); padding: clamp(14px, 1.3vw, 20px) 0; border-bottom: 1px solid var(--line); color: inherit; text-decoration: none; }
+.uk-list li:last-child .uk-row { border-bottom: 0; }
+.uk-row__name { font: 500 var(--fs-1)/1.25 var(--display); letter-spacing: -.02em; }
+.uk-row__name small { display: block; margin-top: 4px; font: 400 var(--fs--1)/1.4 var(--body); letter-spacing: 0; color: var(--muted); }
+.uk-row__price { font: 500 var(--fs-1)/1.2 var(--display); letter-spacing: -.02em; color: var(--green-deep); white-space: nowrap; text-align: right; }
+.uk-row .svl-go { --sv-ease-4: cubic-bezier(.1, .75, .25, 1); width: clamp(2rem, 1.6rem + 1vw, 2.75rem); background: var(--sage-2); color: var(--ink); transition: rotate .5s var(--sv-ease-4), background .3s; }
+.uk-row--hub .uk-row__name { font-weight: 600; }
+.uk-row:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+@media (hover: hover) {
+  .uk-row:hover .uk-row__name { color: var(--green-deep); }
+  .uk-row:hover .svl-go { rotate: 45deg; background: var(--sage); }
+  .uk-group__pic:hover img { scale: 1.04; }
+}
+.uk-terms { display: grid; gap: 16px; justify-items: start; padding-top: clamp(40px, 4vw, 64px); }
+.uk-terms p:first-child { max-width: 52em; color: var(--muted); }
+
+.uk-help { text-align: center; }
+.uk-help .wrap { display: grid; justify-items: center; gap: 24px; }
+.uk-help .section__title { max-width: 16ch; text-wrap: balance; }
+.uk-help__lead { max-width: 40em; font-size: var(--fs-1); line-height: 1.4; color: var(--muted); text-wrap: balance; }
+.uk-help__act { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px 28px; margin-top: 8px; }
+.uk-help__addr { max-width: 46em; color: var(--muted); }
+.uk-help__addr b { color: var(--text); font-weight: 500; }
+.uk-help__addr a { color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+
+@media (max-width: 1100px) { .uk-inside__list { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 860px) {
+  .uk-inside__head { grid-template-columns: minmax(0, 1fr); }
+  .uk-group { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .uk-inside__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 16px; }
+  .uk-group__btn { display: none; }
+  .uk-group__t { font-size: min(var(--fs-3), 9vw); }
+  .uk-row { grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+  .uk-row .svl-go { display: none; }
+  .uk-row__name, .uk-row__price { font-size: clamp(1.0625rem, 4.6vw, 1.25rem); }
+  .uk-help__act .btn { width: 100%; }
+}

@@ -11,6 +11,7 @@ import { reviewsMobile } from "./reviews-mobile.mjs";
 import { servicePages, servicePriceDate, servicePriceHold, consultPrice, consultDeal } from "../src/service-pages.mjs";
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
+import { catalogGroups, catalogInside } from "../src/uslugi-catalog.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
 import { legalPages, legalDate, CONSENT_CHECKBOX, METRIKA_ID } from "../src/legal-pages.mjs";
 
@@ -142,7 +143,8 @@ const navLine = {
   "Вопросы": "animation-timeline:--tl-faq", "Контакты": "animation-timeline:--tl-contacts",
 };
 // меню телефона и шапка компьютера как у Лава Дент: разделы в порядке страницы (Ilya 17.10: после слогана клиника и «5 минут, 0 ₽, 3 врача», потом услуги), «Цены» рядом с услугами
-const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services"), "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi/`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
+// «Услуги» на главной ведут к блоку услуг, на остальных страницах на страницу всех услуг /uslugi/ (Ilya 25.10)
+const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services").startsWith("#") ? "#services" : `${p}uslugi/`, "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi/`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
 // В <head> каждой страницы: телефоны и планшеты замеряют высоту экрана один раз (--vh, --svh) и меняют её только при повороте.
 // Во встроенных браузерах (Telegram, VK, Instagram) окно меняет высоту, когда прячется панель, и всё, что в styles.css задано
@@ -268,7 +270,7 @@ function header(depth, home = false) {
 <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Меню" data-lenis-prevent>
   <div class="menu__top"><a class="logo logo--white" href="${p}index.html">${phoneLogo(depth, true, "header-logo-ink.svg")}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a><button class="menu__close" type="button" aria-label="Закрыть меню">${icon.close}</button></div>
   <nav aria-label="Разделы">
-    <details class="menu__svc"><summary>Услуги</summary><div class="menu__list">${homeOrder.map((k) => `<a href="${svcHref(k, p)}">${esc(svc[k].menu)}</a>`).join("")}</div></details>
+    <details class="menu__svc"><summary>Услуги</summary><div class="menu__list">${homeOrder.map((k) => `<a href="${svcHref(k, p)}">${esc(svc[k].menu)}</a>`).join("")}<a href="${p}uslugi/">Все услуги и цены</a></div></details>
     ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}
   </nav>
   <div class="menu__foot"><a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a><span class="note">${esc(clinic.hours)}. Перезвоним за 5 минут.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
@@ -409,7 +411,7 @@ function footer(depth) {
       </div>
       <nav class="fstage__group" aria-label="Услуги">
         <h3>Услуги</h3>
-        <p class="fstage__list fstage__list--2">${homeOrder.map((k) => `<a href="${svcHref(k, p)}">${esc(svc[k].menu)}</a>`).join("")}</p>
+        <p class="fstage__list fstage__list--2">${homeOrder.map((k) => `<a href="${svcHref(k, p)}">${esc(svc[k].menu)}</a>`).join("")}<a href="${p}uslugi/">Все услуги</a></p>
       </nav>
       <div class="fstage__group">
         <h3>Пациентам</h3>
@@ -588,7 +590,8 @@ function svlBlock(p, depth) {
   </div></div></div>
   <div class="svl__bottom"><div class="wrap"><div class="svl-list" data-svl>
     ${items.slice(n).map(row).join("\n    ")}
-  </div></div></div>
+  </div>
+  <p class="svl__more" data-reveal><a class="btn btn--light btn--lg" href="${p}uslugi/">Смотреть все услуги и цены</a></p></div></div>
 </div>`;
 }
 
@@ -1511,6 +1514,97 @@ function pagePrices() {
 </main>` + footer(depth) + end;
 }
 
+// ---------- все услуги и цены /uslugi/ (Ilya 25.10): архитектура страницы услуг Вайтиса, стиль страниц услуг ----------
+// Разделы и цены в src/uslugi-catalog.mjs. Каждая видимая страница услуги должна стоять в каталоге, а цена строки должна
+// встречаться на самой странице (первый экран или текст): иначе на демо предупреждение, с PUBLISH=1 сборка останавливается
+const ukPage = Object.fromEntries(servicePages.map((x) => [x.slug, x]));
+const ukRows = (g) => [[g.hub, g.price, g.hubNote || "обзор раздела, все виды и цены", null, true], ...g.rows];
+function catalogCheck() {
+  const issues = [];
+  const listed = new Set(catalogGroups.flatMap((g) => ukRows(g).map(([slug]) => slug)));
+  for (const x of servicePages) if (!x.hidden && !x.geo && !listed.has(x.slug)) issues.push(`страница ${x.path} не стоит в каталоге src/uslugi-catalog.mjs`);
+  for (const g of catalogGroups) for (const [slug, price] of ukRows(g)) {
+    const x = ukPage[slug];
+    if (!x) { issues.push(`в каталоге нет такой страницы услуги: ${slug}`); continue; }
+    if (x.hidden) issues.push(`скрытая страница в каталоге: ${slug}`);
+    const num = price.replace(/\D/g, "");
+    const where = (x.facts.map(([b]) => b).join(" ") + readFileSync(path.join(root, "src", "service-texts", `${slug}.md`), "utf8")).replace(/(\d)\s(?=\d{3}(?!\d))/g, "$1");
+    if (!new RegExp(`(?<!\\d)${num}(?!\\d)`).test(where)) issues.push(`${slug}: цены ${price} нет на странице услуги`);
+  }
+  if (!issues.length) return;
+  if (PUBLISH) throw new Error("Каталог услуг /uslugi/:\n" + issues.join("\n"));
+  console.warn("Каталог услуг /uslugi/:\n" + issues.join("\n"));
+}
+const ukHero = ["images/svc-hero/uslugi.png", "images/svc-hero/ceny.png"];
+function pageCatalog() {
+  catalogCheck();
+  const depth = 1, p = "../";
+  const total = catalogGroups.reduce((a, g) => a + ukRows(g).length, 0);
+  const heroRel = ukHero.find(local), heroImg = pick(ukHero, depth).src, heroSet = heroRel ? srcset(heroRel, depth) : "";
+  const facts = [
+    [String(total), `${plural(total, "услуга", "услуги", "услуг")} в ${catalogGroups.length} разделах, у каждой своя страница`],
+    ["0 ₽", "консультация с планом лечения, если остаётесь на лечение"],
+    ["3 врача", "хирург, ортопед и терапевт составляют план"],
+    ["−10%", "при оплате лечения в день консультации"],
+  ];
+  const row = ([slug, price, note, name, hub], i) => {
+    const x = ukPage[slug];
+    return `<li><a class="uk-row${hub ? " uk-row--hub" : ""}" href="${p}${x.path}"><span class="uk-row__name">${prNw(name || x.crumb)}${note ? `<small>${esc(note)}</small>` : ""}</span><b class="uk-row__price">${esc(price)}</b>${svlGo}</a></li>`;
+  };
+  const group = (g) => {
+    const hub = ukPage[g.hub], rows = ukRows(g), n = rows.length;
+    const alt = spPlain(spTexts[g.hub].meta.alt || hub.crumb);
+    return `<article class="uk-group" id="${g.id}" aria-labelledby="uk-${g.id}" data-reveal>
+    <div class="uk-group__side">
+      <a class="uk-group__pic" href="${p}${hub.path}" tabindex="-1" aria-hidden="true">${img(hub.hero, alt, depth, "", "(max-width: 760px) 100vw, 40vw")}</a>
+      <h2 class="uk-group__t" id="uk-${g.id}"><a href="${p}${hub.path}">${esc(g.title)}</a></h2>
+      <p class="uk-group__text">${prNw(g.text)}</p>
+      <p class="uk-group__count">${n} ${plural(n, "страница", "страницы", "страниц")} в разделе</p>
+      <a class="btn uk-group__btn" href="${p}${hub.path}">Открыть раздел</a>
+    </div>
+    <ul class="uk-list">${rows.map(row).join("")}</ul>
+  </article>`;
+  };
+  const jsonld = [
+    crumbsLd([["uslugi/", "Услуги"]]),
+    { "@context": "https://schema.org", "@type": "ItemList", name: "Услуги стоматологии «Умная Медицина» в Удельной", itemListElement: catalogGroups.flatMap((g) => ukRows(g).map(([slug, , , name]) => [ukPage[slug], name])).map(([x, name], i) => ({ "@type": "ListItem", position: i + 1, name: name || x.crumb, url: `${SITE}/${x.path}` })) },
+  ];
+  const geoLinks = servicePages.filter((x) => x.geo && !x.hidden);
+  return head({ title: "Услуги стоматологии в Удельной: все услуги и цены | Умная Медицина", desc: `Услуги стоматологии «Умная Медицина» в Удельной ${clinic.near}: имплантация, протезирование, лечение и удаление зубов, брекеты, детям, КТ. Цены «от».`, canonical: "/uslugi/", depth, jsonld })
+  + header(depth) + `
+<main id="main" class="sp-page uk-page">
+<section class="page-hero sp-hero on-dark" aria-labelledby="h1">
+  <div class="sp-hero__top">
+    <div class="sp-hero__media">${heroImg ? `<img src="${heroImg}"${heroSet ? ` srcset="${heroSet}" sizes="(max-width: 760px) 100vw, 60vw"` : ""} alt="${heroRel === ukHero[0] ? "Модель челюсти с имплантом и коронкой, циркониевая коронка, элайнер и стоматологические инструменты: всё лечение в одной клинике" : "Этапы лечения по порядку: имплант, абатмент и коронка рядом с моделью челюсти, план лечения с ценой каждого этапа"}" decoding="async" fetchpriority="high">` : ""}</div>
+    <div class="sp-hero__text">
+      <nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Услуги</span></nav>
+      <h1 id="h1" data-split>Услуги стоматологии в Удельной</h1>
+      <p class="page-hero__lead">Все услуги клиники на одной странице: диагностика и КТ, имплантация и протезирование, лечение и удаление зубов, исправление прикуса, детская стоматология и гигиена. Цены «от»: точную стоимость врач называет после осмотра.</p>
+    </div>
+    <div class="sp-hero__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true, reason: "Все услуги" })}<a class="link" href="${p}ceny/">Все цены клиники</a>${spWarn}</div>
+  </div>
+  <div class="wrap sp-hero__bottom">
+    <ul class="sp-facts">${facts.map(([big, t]) => `<li><b>${esc(big)}</b><span>${esc(t)}</span></li>`).join("")}</ul>
+    <nav class="sp-nav" aria-label="Разделы услуг"><span class="label">Разделы</span>${catalogGroups.map((g) => `<a class="sp-pill" href="#${g.id}">${esc(g.chip)}</a>`).join("")}</nav>
+  </div>
+</section>
+<section class="section section--sage uk-inside" aria-labelledby="uk-inside-t"><div class="wrap">
+  <div class="uk-inside__head"><h2 id="uk-inside-t" class="section__title" data-split>Что вы найдёте на странице услуги</h2><p>У каждого раздела и каждой услуги своя страница. Нажмите на название, и откроется подробная страница с такими блоками:</p></div>
+  <ul class="uk-inside__list">${catalogInside.map(([t, x]) => `<li data-reveal><b>${esc(t)}</b><span>${esc(x)}</span></li>`).join("")}</ul>
+</div></section>
+<section class="section uk-cat" aria-label="Разделы и цены"><div class="wrap">
+  ${catalogGroups.map(group).join("\n  ")}
+  <div class="uk-terms"><p>Скидка 10% при оплате лечения в день консультации. Лечение можно оплатить в рассрочку, для имплантации есть рассрочка на 12 месяцев без процентов. Документы для налогового вычета 13% выдаём в клинике.</p>${spWarn}</div>
+</div></section>
+<section class="section section--sage uk-help" aria-labelledby="uk-help-t"><div class="wrap">
+  <h2 id="uk-help-t" class="section__title" data-split>Не знаете, какая услуга нужна?</h2>
+  <p class="uk-help__lead">Запишитесь на консультацию: врач осмотрит, при необходимости сделает снимок и предложит план лечения с ценой по этапам. Консультация терапевта, хирурга или ортопеда 500 ₽, 0 ₽, если остаётесь на лечение.</p>
+  <div class="uk-help__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", reason: "Все услуги: не знаю, какая услуга нужна" })}<a class="link" href="${clinic.phoneHref}">${esc(clinic.phone)}</a></div>
+  <p class="uk-help__addr"><b>Адрес.</b> ${esc(clinic.addressShort)}, ${esc(clinic.near)}. ${esc(clinic.hours)}.${geoLinks.length ? ` Для жителей Жуковского: ${geoLinks.map((x) => `<a href="${p}${x.path}">${esc(x.procedure.toLowerCase())}</a>`).join(" и ")}.` : ""}</p>
+</div></section>
+</main>` + footer(depth) + end;
+}
+
 // ---------- онлайн-запись ----------
 function pageBooking() {
   const depth = 0;
@@ -1721,6 +1815,7 @@ writeFileSync(path.join(dist, "ceny.html"), `<!doctype html>
 <meta http-equiv="refresh" content="0; url=ceny/">
 </head><body><p><a href="ceny/">Цены на стоматологию в Удельной</a></p></body></html>
 `);
+out("uslugi/index.html", pageCatalog());
 out("vrachi/index.html", pageDoctors());
 out("zapis.html", pageBooking());
 for (const page of legal) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}/index.html`, pageLegal(page)); }
@@ -1927,4 +2022,4 @@ if (PUBLISH) {
   if (key) { if (!/^[a-zA-Z0-9-]{8,128}$/.test(key)) throw new Error("INDEXNOW_KEY: 8–128 символов a-z, A-Z, 0-9, «-»"); out(`${key}.txt`, key); }
   console.log(`Карта сайта: изменились ${changed.length}, удалены ${removed.length}; для IndexNow ждут отправки ${list.length}`);
 }
-console.log("Собрано страниц:", 3 + services.length + servicePages.length + doctors.length, "→", dist);
+console.log("Собрано страниц:", 4 + services.length + servicePages.length + doctors.length, "→", dist);
