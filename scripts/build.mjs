@@ -160,7 +160,9 @@ function head({ title, desc, canonical, depth, page = "inner", jsonld = [], noin
 <meta name="description" content="${esc(desc)}">
 <meta name="robots" content="${!PUBLISH ? "noindex, nofollow" : noindex ? "noindex, follow" : "index, follow"}">
 ${canonical ? `<link rel="canonical" href="${SITE}${canonical}">` : ""}
+<link rel="icon" href="${p}favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="${p}images/brand/favicon.svg">
+<link rel="icon" type="image/png" sizes="96x96" href="${p}favicon-96x96.png">
 <meta property="og:type" content="${/^\/vrachi\/[^/]+\/?$/.test(canonical || "") ? "profile" : "website"}">
 <meta property="og:site_name" content="Умная Медицина. Стоматология">
 ${canonical ? `<meta property="og:url" content="${SITE}${canonical}">` : ""}
@@ -1868,6 +1870,23 @@ for (const rel of refs) {
 }
 // значок для экрана «Домой» на iPhone из favicon.svg
 if (sharp) jobs.push(sharp(path.join(root, "src/images/brand/favicon.svg"), { density: 300 }).resize(180, 180).flatten({ background: "#ffffff" }).png().toFile(path.join(dist, "images/brand/apple-touch-icon.png")));
+// значок в выдаче Google и Яндекса и во вкладке: эмблема из favicon.svg растром. Google просит квадрат, кратный 48 px,
+// Яндекс и старые браузеры сами спрашивают /favicon.ico в корне. В .ico три PNG (16, 32, 48), так ico понимают все
+if (sharp) {
+  const fav = (size) => sharp(path.join(root, "src/images/brand/favicon.svg"), { density: 300 }).resize(size, size).png().toBuffer();
+  jobs.push(fav(96).then((buf) => writeFileSync(path.join(dist, "favicon-96x96.png"), buf)));
+  jobs.push(Promise.all([16, 32, 48].map(fav)).then((pngs) => {
+    const dir = Buffer.alloc(6 + 16 * pngs.length);
+    dir.writeUInt16LE(1, 2); dir.writeUInt16LE(pngs.length, 4);
+    let at = dir.length;
+    pngs.forEach((png, i) => {
+      const e = 6 + 16 * i, size = [16, 32, 48][i];
+      dir.writeUInt8(size, e); dir.writeUInt8(size, e + 1); dir.writeUInt16LE(1, e + 4); dir.writeUInt16LE(32, e + 6);
+      dir.writeUInt32LE(png.length, e + 8); dir.writeUInt32LE(at, e + 12); at += png.length;
+    });
+    writeFileSync(path.join(dist, "favicon.ico"), Buffer.concat([dir, ...pngs]));
+  }));
+}
 // картинка для превью ссылок: 1200×630 из фото ресепшена (без sharp копируется как есть)
 mkdirSync(path.join(dist, path.dirname(OG_IMAGE)), { recursive: true });
 if (sharp) jobs.push(sharp(path.join(root, "src", OG_FROM)).resize(1200, 630, { fit: "cover" }).jpeg({ quality: 82, mozjpeg: true }).toFile(path.join(dist, OG_IMAGE)));
