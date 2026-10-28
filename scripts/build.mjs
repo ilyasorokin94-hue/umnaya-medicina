@@ -205,8 +205,8 @@ function intro(depth) {
 // мессенджеры клиники: пока в data.mjs только адрес сервиса без канала, кнопок нет (Ilya 22.10: никуда не уводим)
 const msgrLinks = () => [["Telegram", clinic.telegram], ["MAX", clinic.max]].filter(([, u]) => u && !/^https?:\/\/[^/]+\/?$/.test(u));
 const msgrSay = () => msgrLinks().map(([n]) => n).join(" или ");
-// кнопки-действия: открывают окно на сайте, без скриптов ведут на запись, телефон или Telegram
-const fallbackHref = (kind, p, o = {}) => kind === "call" ? clinic.phoneHref
+// кнопки-действия: открывают окно на сайте, без скриптов ведут на запись или Telegram (Ilya 28.10: звонок только по номеру в подвале, везде заявки)
+const fallbackHref = (kind, p, o = {}) => kind === "call" ? `${p}zapis.html`
   : kind === "xray" ? (msgrLinks()[0]?.[1] || `${p}zapis.html`)
   : kind === "allon" ? `${p}zapis.html?service=all-on-4`
   : `${p}zapis.html${o.service ? `?service=${bookSlug(o.service)}` : o.doctor ? `?doctor=${o.doctor}` : ""}`;
@@ -264,7 +264,7 @@ function header(depth, home = false) {
     <ul class="nav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li class="nav__item"><a class="nav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="${navLine[t] || ""}"></span></span></li>`).join("")}</ul>
   </nav>
   <div class="header__cta">
-    <a class="header__phone" href="${clinic.phoneHref}"><b>${esc(clinic.phone)}</b><small>${esc(clinic.hours)}</small></a>
+    <a class="header__phone" href="${fallbackHref("call", p)}" data-modal="call"><b>Перезвоним за 5 минут</b><small>${esc(clinic.hours)}</small></a>
     ${act("Записаться", "book", p, { cls: "btn--sm header__book", magnet: true })}
     <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="menu">${icon.menu}</button>
   </div>
@@ -275,7 +275,7 @@ function header(depth, home = false) {
     <details class="menu__svc"><summary>Услуги</summary><div class="menu__list">${homeOrder.map((k) => `<a href="${svcHref(k, p)}">${esc(svc[k].menu)}</a>`).join("")}<a href="${p}uslugi/">Все услуги и цены</a></div></details>
     ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}
   </nav>
-  <div class="menu__foot"><a class="footer__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a><span class="note">${esc(clinic.hours)}. Перезвоним за 5 минут.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
+  <div class="menu__foot"><span class="footer__phone">Перезвоним за 5 минут</span><span class="note">${esc(clinic.hours)}.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
   <nav class="mnav" aria-label="Разделы">
     <ul class="mnav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li><a class="mnav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a></li>`).join("")}</ul>
   </nav>
@@ -335,7 +335,7 @@ ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">
     <p class="modal__note">Перезвоним за 5 минут.</p>${consent}
   </form>`)}
 ${offer(depth, consent, p)}
-${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}.${msgrLinks().length ? ` Пока ждёте, можете прислать снимок в ${msgrSay()}, врач посмотрит его до визита.` : ""}</p>
+${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут.${msgrLinks().length ? ` Пока ждёте, можете прислать снимок в ${msgrSay()}, врач посмотрит его до визита.` : ""}</p>
   ${msgrLinks().length ? `<div class="modal__msgr">${msgrLinks().map(([n, u], i) => `<a class="btn${i ? " btn--ghost" : ""}" href="${u}"${ext}>${n}</a>`).join("")}</div>` : ""}
   <button class="btn btn--lg btn--wide modal__ok" type="button" data-close>Хорошо</button>
 ${LEADS ? "" : `
@@ -401,7 +401,7 @@ function footer(depth, { pd = true } = {}) {
     </form>
     <div class="cb__done" role="status" tabindex="-1" hidden>
       <p class="cb__done-t">Спасибо, номер у нас</p>
-      <p class="cb__done-s" data-done-s>Администратор перезвонит за 5 минут с номера ${esc(clinic.phone)}.</p>
+      <p class="cb__done-s" data-done-s>Администратор перезвонит за 5 минут.</p>
       <div class="cb__alt"><p>Пока ждёте, можно прислать снимок.</p><a class="btn btn--ghost btn--sm" href="${fallbackHref("xray", p)}" data-modal="xray" data-reason="Сказали удалить">Прислать снимок врачу</a></div>
       <button class="way__link cb__again" type="button" data-again>Указать другой номер</button>
     </div>
@@ -441,7 +441,7 @@ function footer(depth, { pd = true } = {}) {
   </div>
 ${footerLegal(p)}
 </div></footer>
-<div class="mobilebar"><a href="${clinic.phoneHref}">${icon.phone}Позвонить</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
+<div class="mobilebar"><a href="${fallbackHref("call", p)}" data-modal="call">${icon.phone}Перезвоните</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
 ${modals(depth)}`;
 }
 const end = `\n</body>\n</html>\n`;
@@ -569,7 +569,7 @@ function place(o = {}) {
       <p class="way__addr">${esc(W.title)}</p>` : `<span class="label way__label">${esc(W.label)}</span>
       <h2 id="ct-title" class="way__addr" data-split>${esc(W.title)}</h2>`}
       <p class="way__where">${esc(o.where || W.where)}</p>
-      <div class="way__now"><p class="way__status" data-open-status>${esc(clinic.hours)}</p><a class="way__phone" href="${clinic.phoneHref}">${esc(clinic.phone)}</a></div>
+      <div class="way__now"><p class="way__status" data-open-status>${esc(clinic.hours)}</p><a class="way__phone" href="${fallbackHref("call", pre(o.depth || 0))}" data-modal="call">Перезвоним за 5 минут</a></div>
       <ul class="way__facts">${W.facts.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
       <p class="way__towns">${esc(W.towns)}</p>
       <div class="way__apps">
@@ -1392,7 +1392,7 @@ function docCardMore(d) {
     + (r ? `<figure class="dl-quote"><blockquote cite="${r.url}">«${esc(q)}»</blockquote><figcaption><a href="${r.url}"${ext}>Отзыв на ${esc(r.site)}</a></figcaption></figure>` : "");
 }
 const docFaq = [
-  ["К какому врачу записаться, если не знаю?", "Позвоните по номеру +7 495 150-36-15 или оставьте заявку на сайте и опишите, что беспокоит. Администратор подберёт врача и время."],
+  ["К какому врачу записаться, если не знаю?", "Оставьте заявку на сайте и опишите, что беспокоит. Администратор подберёт врача и время."],
   ["Можно записаться к конкретному врачу?", "Да. Назовите врача администратору или нажмите «Записаться к врачу» в его карточке."],
   ["Сколько стоит консультация?", "Консультация хирурга, ортопеда или терапевта с планом лечения стоит 500 ₽. Если после консультации вы остаётесь у нас на лечение, первичная консультация 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
   ["Где почитать отзывы о врачах?", "На странице каждого врача собраны отзывы пациентов с ПроДокторов, у каждого отзыва ссылка на оригинал."],
@@ -1402,7 +1402,7 @@ function pageDoctors() {
   const list = docGroups.flatMap((g) => g.ids.map((id) => docById[id]));
   const ld = { "@context": "https://schema.org", "@type": "ItemList", itemListElement: list.map((d, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + docHref(d.id, "/").replace(/\.html$/, ""), name: d.name })) };
   const cards = (ids) => `<div class="team__grid dl-grid">${ids.map((id) => doctorCard(docById[id], depth, { go: true, more: docCardMore(docById[id]) })).join("")}</div>`;
-  return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты", desc: "Врачи стоматологии «Умная Медицина» в Удельной: хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. Образование, отзывы пациентов, запись к врачу.", canonical: "/vrachi/", depth, jsonld: [crumbsLd([["vrachi/", "Врачи"]]), ld, faqLd(docFaq)] })
+  return head({ title: "Врачи стоматологии в Удельной: хирурги, ортопеды, терапевты", desc: "Врачи стоматологии «Умная Медицина» в Удельной: хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. Образование и отзывы.", canonical: "/vrachi/", depth, jsonld: [crumbsLd([["vrachi/", "Врачи"]]), ld, faqLd(docFaq)] })
   + header(depth) + `
 <main id="main" class="dl-page">
 ${picHero({ name: "vrachi", alt: "Три тёмно-зелёных медицинских костюма на вешалках", depth, text: `<nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Врачи</span></nav><h1 id="h1" data-split>Врачи стоматологии</h1><p class="page-hero__lead">Хирурги-имплантологи, ортопеды, терапевты, ортодонт и детский стоматолог. В сложных случаях план лечения хирург, ортопед и терапевт составляют вместе.</p>`, act: act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true }), bottom: `<nav class="sp-nav dl-nav" aria-label="Направления">${docGroups.map((g) => `<a class="sp-pill" href="#${g.id}">${esc(g.title)}</a>`).join("")}</nav>` })}
@@ -1496,7 +1496,7 @@ const priceFacts = [
 function pagePrices() {
   const depth = 1, p = "../";
   const heroImg = pick(priceHero, depth).src, heroSet = srcset(priceHero[0], depth);
-  return head({ title: "Цены на стоматологию в Удельной, рассрочка и вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Консультация с планом лечения 0 ₽ при лечении в клинике, рассрочка, налоговый вычет за лечение зубов.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
+  return head({ title: "Цены на стоматологию в Удельной, рассрочка и вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Консультация с планом лечения 0 ₽ при лечении в клинике, рассрочка, налоговый вычет.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
   + header(depth) + `
 <main id="main" class="sp-page">
 <section class="page-hero sp-hero on-dark" aria-labelledby="h1">
@@ -1516,7 +1516,7 @@ function pagePrices() {
 <section class="section pv" id="prices"><div class="wrap pv-a__in">
   <div class="pv-a__side"><h2 class="section__title" data-split>Цены по разделам</h2><p class="note">${esc(priceNote)}</p><div class="pfilter"><label class="sr" for="p-search">Поиск услуги</label><input id="p-search" type="search" placeholder="Найти услугу: коронка, имплант, КТ…"></div></div>
   <div class="pv-a__main ptables" data-prices="acc">${priceOrder.map((k, i) => `<details class="faqt pacc ptable" data-cat="${k}"${i ? "" : " open"}><summary><span class="pacc__t"><h3>${esc(prices[k].title)}</h3><small>${priceCount(k)}</small></span><span class="pfrom"><b>${esc(priceSecs[k][0])}</b><small>${esc(priceSecs[k][1])}</small></span><i aria-hidden="true"></i></summary><div class="faqt__body"><div class="pacc__body">${plist([k], 99, p)}${priceMore(k, p)}</div></div></details>`).join("")}
-  <p class="pempty note" hidden>Ничего не нашлось. Позвоните, и администратор подскажет цену: <a href="${clinic.phoneHref}">${esc(clinic.phone)}</a></p></div>
+  <p class="pempty note" hidden>Ничего не нашлось. <a href="${fallbackHref("call", p)}" data-modal="call" data-reason="Цены: не нашёл услугу">Оставьте номер</a>, и администратор подскажет цену.</p></div>
 </div></section>
 <section class="section section--sage pinfo"><div class="wrap">
   <div class="sp-cards sp-cards--3">${priceInfo.map(([t, x, ask]) => `<article class="sp-card" data-reveal><h2>${esc(t)}</h2><p>${esc(x)}${ask ? ` ${priceAsk(ask)}` : ""}</p></article>`).join("")}</div>
@@ -1613,7 +1613,7 @@ function pageCatalog() {
 <section class="section section--sage uk-help" aria-labelledby="uk-help-t"><div class="wrap">
   <h2 id="uk-help-t" class="section__title" data-split>Не знаете, какая услуга нужна?</h2>
   <p class="uk-help__lead">Запишитесь на консультацию: врач осмотрит, при необходимости сделает снимок и предложит план лечения с ценой по этапам. Консультация терапевта, хирурга или ортопеда 500 ₽, 0 ₽, если остаётесь на лечение.</p>
-  <div class="uk-help__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", reason: "Все услуги: не знаю, какая услуга нужна" })}<a class="link" href="${clinic.phoneHref}">${esc(clinic.phone)}</a></div>
+  <div class="uk-help__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", reason: "Все услуги: не знаю, какая услуга нужна" })}<a class="link" href="${fallbackHref("call", p)}" data-modal="call" data-reason="Все услуги: не знаю, какая услуга нужна">Перезвоните мне</a></div>
   <p class="uk-help__addr"><b>Адрес.</b> ${esc(clinic.addressShort)}, ${esc(clinic.near)}. ${esc(clinic.hours)}.${geoLinks.length ? ` Для жителей Жуковского: ${geoLinks.map((x) => `<a href="${p}${x.path}">${esc(x.procedure.toLowerCase())}</a>`).join(" и ")}.` : ""}</p>
 </div></section>
 </main>` + footer(depth) + end;
@@ -1688,7 +1688,7 @@ function pageBooking() {
       <div><dt>Дата и время</dt><dd data-sum="date" class="is-empty">не выбрано</dd></div>
       <div><dt>Адрес</dt><dd itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">${esc(clinic.addressShort)}<meta itemprop="streetAddress" content="${esc(clinic.addr.street)}"><meta itemprop="addressLocality" content="${esc(clinic.addr.locality)}"><meta itemprop="addressRegion" content="${esc(clinic.addr.region)}"><meta itemprop="postalCode" content="${clinic.addr.postal}"><meta itemprop="addressCountry" content="RU"></dd></div>
     </dl>
-    <p class="note">Есть вопросы? Позвоните: <a href="${clinic.phoneHref}" style="color:#fff"><span itemprop="telephone">${esc(clinic.phone)}</span></a>, ежедневно с 9:00 до 21:00.<meta itemprop="openingHours" content="Mo-Su 09:00-21:00"></p>
+    <p class="note">Администратор перезвонит, ответит на вопросы и подтвердит запись, ежедневно с 9:00 до 21:00.<meta itemprop="telephone" content="${esc(clinic.phone)}"><meta itemprop="openingHours" content="Mo-Su 09:00-21:00"></p>
     <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="${SITE}/">
 ${footerLegal("", "footer__legal booking__legal")}
   </aside>
@@ -1761,7 +1761,7 @@ function pageThanks() {
   return head({ title: "Спасибо, заявка принята | Умная Медицина. Стоматология", desc: "Заявка в стоматологию «Умная Медицина» принята, администратор перезвонит.", canonical: "/spasibo/", depth, noindex: true, page: "thanks" })
   + header(depth) + `
 <main id="main">
-${picHero({ name: "spasibo", alt: "Смартфон с входящим звонком на подлокотнике стоматологического кресла", depth, text: `<span class="label label--light">Заявка принята</span><h1 id="h1" data-split>Спасибо!</h1><p class="page-hero__lead">Администратор перезвонит за 5 минут с номера <span class="nobr">${esc(clinic.phone)}</span>. Если клиника сейчас закрыта, перезвоним утром, после 9:00.</p>`, act: `<a class="btn btn--lg btn--light" href="${p}index.html">На главную</a>` })}
+${picHero({ name: "spasibo", alt: "Смартфон с входящим звонком на подлокотнике стоматологического кресла", depth, text: `<span class="label label--light">Заявка принята</span><h1 id="h1" data-split>Спасибо!</h1><p class="page-hero__lead">Администратор перезвонит за 5 минут. Если клиника сейчас закрыта, перезвоним утром, после 9:00.</p>`, act: `<a class="btn btn--lg btn--light" href="${p}index.html">На главную</a>` })}
 <section class="section"><div class="wrap">
   <div class="sp-cards sp-cards--3">
     <article class="sp-card"><h2>Пока ждёте звонка</h2><p>Можете прислать снимок${msgrLinks().length ? ` в ${msgrSay()}` : ""}, врач посмотрит его до визита.</p><div class="modal__msgr">${msgrLinks().length ? msgrLinks().map(([n, u], i) => `<a class="btn${i ? " btn--ghost" : ""}" href="${u}"${ext}>${n}</a>`).join("") : `<a class="btn" href="${p}zapis.html" data-modal="xray">Прислать снимок</a>`}</div></article>
@@ -1907,7 +1907,7 @@ await Promise.all(jobs);
 
 // robots.txt: демо закрыто целиком. Боевой сайт открыт всем; YandexAdditional и YandexAdditionalBot (ответы Алисы и Нейропоиска)
 // не слушают группы «*» и «Yandex», поэтому у них своя группа. Отдельных разрешений и запретов для других нейросетей нет
-out("robots.txt", PUBLISH ? `User-agent: *\nAllow: /\n\nUser-agent: Yandex\nAllow: /\n\nUser-agent: YandexAdditional\nUser-agent: YandexAdditionalBot\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n` : "User-agent: *\nDisallow: /\n");
+out("robots.txt", PUBLISH ? `User-agent: *\nAllow: /\n\nUser-agent: Yandex\nAllow: /\nClean-param: doctor&service /zapis\n\nUser-agent: YandexAdditional\nUser-agent: YandexAdditionalBot\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n` : "User-agent: *\nDisallow: /\n");
 out(".nojekyll", "");
 // приёмник заявок: только в сборке с LEADS, на GitHub Pages PHP не работает
 if (LEADS) copyFileSync(path.join(root, "server/lead.php"), path.join(dist, "lead.php"));

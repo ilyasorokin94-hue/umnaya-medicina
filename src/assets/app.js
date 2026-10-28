@@ -759,8 +759,8 @@
       btn.disabled = true; btn.textContent = "Отправляем";
       sendLead(cb, "final").then(() => {
         $("[data-done-s]", cbDone).textContent = isOpen()
-          ? "Администратор перезвонит за 5 минут с номера +7 495 150-36-15."
-          : "Сейчас клиника закрыта. Перезвоним утром, после 9:00, с номера +7 495 150-36-15.";
+          ? "Администратор перезвонит за 5 минут."
+          : "Сейчас клиника закрыта. Перезвоним утром, после 9:00.";
         const h0 = cb.offsetHeight;
         cb.hidden = true; cbDone.hidden = false; cbDone.focus({ preventScroll: true });
         document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "final" } }));

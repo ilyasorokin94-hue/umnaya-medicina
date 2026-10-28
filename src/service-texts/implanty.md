@@ -1,7 +1,7 @@
 <!-- pid: implanty · картинка: hero-implanty.png -->
 
 Title: Импланты Osstem и Straumann в Удельной — от 19 300 ₽ | Умная Медицина
-Description: Импланты Osstem, Dentium, Straumann и Riellen's в Удельной: установка от 19 300 ₽. Консультация имплантолога — 0 ₽, подбор системы по КТ.
+Description: Импланты Osstem, Dentium, Straumann и Riellen's в Удельной: установка от 19 300 ₽. Подбор системы по КТ, консультация имплантолога, рассрочка.
 H1: Импланты Osstem, Dentium, Straumann: какие выбрать
 URL: /implantaciya/implanty/
 Проверил: [ВРАЧ — ФИО, специальность]
