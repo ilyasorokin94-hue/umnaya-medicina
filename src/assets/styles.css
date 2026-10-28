@@ -2291,3 +2291,13 @@ html.has-ck .footer__in { padding-bottom: calc(28px + var(--ck-h, 0px)); }
   .uk-row__name, .uk-row__price { font-size: clamp(1.0625rem, 4.6vw, 1.25rem); }
   .uk-help__act .btn { width: 100%; }
 }
+
+/* виджет ПроДокторов «Цитата из отзыва» перед подвалом (Ilya 28.10): содержимое и стили подставляет скрипт ПроДокторов,
+   здесь только место на странице, ширина до 1000 px по правилам виджета и прямые углы, как везде на сайте */
+.pdw { background: var(--paper); border-top: 1px solid var(--line); padding: 40px 0; }
+.pdw__in { max-width: 1000px; }
+.pdw .pd_widget_footer, .pdw .pd_widget_footer * { border-radius: 0 !important; }
+.pdw .pd_lpu_name { color: var(--text); font-weight: 500; }
+.pdw .pd_powered_by { margin-top: 12px; }
+.pdw .pd_logo { display: block; height: auto; }
+@media (max-width: 760px) { .pdw { padding: 28px 0; } }

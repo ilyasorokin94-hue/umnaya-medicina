@@ -373,10 +373,22 @@ const footerLegal = (p, cls = "footer__legal") => `  <div class="${cls}">
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
     <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a><a href="${legalHref("svedeniya", p)}">Сведения о медицинской организации</a><a href="${legalHref("gosgarantii", p)}">Информация о возможности получения медицинской помощи в рамках программы государственных гарантий</a></span>
   </div>`;
-function footer(depth) {
+// виджет ПроДокторов «Цитата из отзыва о клинике» (Ilya 28.10): внизу страницы перед подвалом, код из кабинета ПроДокторов.
+// Без скрипта видно название клиники ссылкой; скрипт подставляет рейтинг, число отзывов и цитату. defer: не держит первый экран
+const pdWidget = () => `
+<section class="pdw" aria-label="Отзывы о клинике на ПроДокторов"><div class="wrap pdw__in">
+  <div id="pd_widget_footer95133" class="pd_widget_footer" data-lpu="95133">
+    <div class="pd_left"><a target="_blank" rel="noopener" class="pd_lpu_name" href="${clinic.prodoctorov}"><span class="lpu_name">Стоматология «Умная Медицина»</span></a></div>
+    <div class="pd_middle"><div id="pd_widget_footer_content_middle95133"></div></div>
+    <div class="pd_right"><div id="pd_widget_footer_content_right95133"></div></div>
+  </div>
+  <div class="pd_powered_by"><a target="_blank" rel="noopener" href="https://prodoctorov.ru/"><img class="pd_logo" width="132" src="https://prodoctorov.ru/static/_v1/pd/logos/logo-pd-widget.png" alt="ПроДокторов" loading="lazy" decoding="async"></a></div>
+  <script src="https://prodoctorov.ru/static/js/widget_footer.js?v06" defer></script>
+</div></section>`;
+function footer(depth, { pd = true } = {}) {
   const p = pre(depth);
   const { lat, lon } = clinic.geo;
-  return `
+  return (pd ? pdWidget() : "") + `
 <footer class="footer on-dark"><div class="wrap footer__in">
   <div class="footer__cta footer__cta--big">
     <form class="cb big" data-lead="final" method="post" action="${leadAction(p)}" novalidate>
@@ -1717,7 +1729,7 @@ ${picHero({ cls: " legal-hero", depth, ...legalPic[page.slug], text: `<nav class
   <ol class="legal__list">${page.sections.map(([h, blocks], i) => `<li class="legal__sec" id="p${i + 1}"><span class="legal__n" aria-hidden="true">${i + 1}</span><div class="legal__body"><h2>${esc(h)}</h2>${blocks.map((b) => legalBlock(b, page, p)).join("")}</div></li>`).join("")}</ol>
   <nav class="legal__docs" aria-label="Документы">${legal.filter((d) => d !== page).map((d) => `<a href="${legalHref(d.slug, p)}">${esc(d.h1)}</a>`).join("")}</nav>
 </div></section>
-</main>` + footer(depth) + end;
+</main>` + footer(depth, { pd: false }) + end;
 }
 
 // первый экран служебных страниц как у услуг: картинка справа, на телефоне под текстом (Ilya 22.10: где по смыслу нужна картинка, она есть)
@@ -1757,7 +1769,7 @@ ${picHero({ name: "spasibo", alt: "Смартфон с входящим звон
     <article class="sp-card"><h2><a href="${p}vrachi/">Врачи</a></h2><p>Врачи клиники по направлениям, у каждого своя страница.</p></article>
   </div>
 </div></section>
-</main>` + footer(depth) + end;
+</main>` + footer(depth, { pd: false }) + end;
 }
 // 404: сервер отдаёт её по любому несуществующему адресу, поэтому все ссылки считаются от корня сайта (<base>).
 // На боевом сайте это корень домена; на демо (папка на GitHub Pages) корень берётся из адреса самой страницы
@@ -1770,7 +1782,7 @@ ${picHero({ name: "404", alt: "Пустой стоматологический �
 <section class="section"><div class="wrap">
   <div class="sp-cards sp-cards--4">${helpCards("")}</div>
 </div></section>
-</main>` + footer(0) + end)
+</main>` + footer(0, { pd: false }) + end)
     // ссылка «К содержанию» не должна уводить на главную из-за <base>
     .replace('<a class="skip" href="#main">', `<a class="skip" href="#main" onclick="document.getElementById('main').focus();return false">`);
 }
@@ -1908,11 +1920,11 @@ if (LEADS) copyFileSync(path.join(root, "server/lead.php"), path.join(dist, "lea
 const host = new URL(SITE).host.replace(/^www\./, "");
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://mc.yandex.ru https://mc.yandex.com https://yastatic.net",
-  "style-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://mc.yandex.ru https://mc.yandex.com https://yastatic.net https://prodoctorov.ru https://*.prodoctorov.ru",
+  "style-src 'self' 'unsafe-inline' https://prodoctorov.ru https://*.prodoctorov.ru",
   "img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com https://*.yandex.ru https://*.yandex.net https://prodoctorov.ru https://*.prodoctorov.ru",
-  "font-src 'self'",
-  "connect-src 'self' https://mc.yandex.ru https://mc.yandex.com wss://mc.yandex.ru wss://mc.yandex.com",
+  "font-src 'self' https://prodoctorov.ru https://*.prodoctorov.ru",
+  "connect-src 'self' https://mc.yandex.ru https://mc.yandex.com wss://mc.yandex.ru wss://mc.yandex.com https://prodoctorov.ru https://*.prodoctorov.ru",
   "frame-src blob: https://yandex.ru https://*.yandex.ru https://mc.yandex.ru https://mc.yandex.com https://prodoctorov.ru https://*.prodoctorov.ru",
   "child-src blob: https://mc.yandex.ru https://mc.yandex.com",
   "frame-ancestors 'self' https://metrika.yandex.ru https://metrica.yandex.com https://*.webvisor.com https://webvisor.com",
