@@ -401,7 +401,7 @@ html:not(.js-intro) .intro { display: none; }
   .steps li { border-right: 0; padding-left: 0; border-bottom: 1px solid var(--line-on-dark); padding-bottom: 24px; }
   .svc-row { gap: 14px; }
   .svc-row .svc__from { font-size: 14px; }
-  .mobilebar { display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; position: fixed; z-index: 90; left: 10px; right: 10px; bottom: 10px; padding: 8px; border-radius: 999px; background: rgba(12, 36, 16, .92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .mobilebar { display: grid; grid-template-columns: 1fr; gap: 8px; position: fixed; z-index: 90; left: 10px; right: 10px; bottom: 10px; padding: 8px; border-radius: 999px; background: rgba(12, 36, 16, .92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
   .mobilebar a { min-height: 48px; border-radius: 999px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; color: #fff; font-weight: 500; font-size: 15px; }
   .mobilebar a svg { width: 18px; height: 18px; fill: currentColor; }
   .mobilebar a:last-child { background: var(--green-btn); }
@@ -1323,8 +1323,8 @@ html:not(.js-intro) .intro { display: none; }
 /* нижняя панель на телефоне как шапка (Ilya 17.10): на всю ширину, снизу тёмная дымка сходит на нет, под ней размыто;
    две кнопки, «Написать» убрана. «Позвонить» в тонкой рамке, чтобы читалась как кнопка без плашки */
 @media (max-width: 760px) {
-  .mobilebar { left: 0; right: 0; bottom: 0; grid-template-columns: 1fr 1.3fr; gap: 10px; padding: 26px var(--gutter) calc(10px + env(safe-area-inset-bottom)); border-radius: 0; background: linear-gradient(0deg, rgba(12, 36, 16, .88), rgba(12, 36, 16, .66) 60%, rgba(12, 36, 16, 0)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: none; }
-  .mobilebar a:first-child { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); text-shadow: 0 1px 3px rgba(12, 36, 16, .6); }
+  .mobilebar { left: 0; right: 0; bottom: 0; grid-template-columns: 1fr; gap: 10px; padding: 26px var(--gutter) calc(10px + env(safe-area-inset-bottom)); border-radius: 0; background: linear-gradient(0deg, rgba(12, 36, 16, .88), rgba(12, 36, 16, .66) 60%, rgba(12, 36, 16, 0)); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: none; }
+  .mobilebar a:first-child:not(:last-child) { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3); text-shadow: 0 1px 3px rgba(12, 36, 16, .6); }
   /* размытие сходит на нет вместе с дымкой, без резкой линии у её верха */
   .mobilebar { -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 26px), transparent); mask-image: linear-gradient(to top, #000 calc(100% - 26px), transparent); }
   /* прозрачная верхняя полоса панели пропускает нажатия к тому, что сквозь неё видно; ловят только кнопки и плотная часть */

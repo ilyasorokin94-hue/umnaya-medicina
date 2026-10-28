@@ -441,7 +441,7 @@ function footer(depth, { pd = true } = {}) {
   </div>
 ${footerLegal(p)}
 </div></footer>
-<div class="mobilebar"><a href="${fallbackHref("call", p)}" data-modal="call">${icon.phone}Перезвоните</a><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
+<div class="mobilebar"><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
 ${modals(depth)}`;
 }
 const end = `\n</body>\n</html>\n`;
