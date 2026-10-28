@@ -2296,7 +2296,7 @@ html.has-ck .footer__in { padding-bottom: calc(28px + var(--ck-h, 0px)); }
    здесь только место на странице, ширина до 1000 px по правилам виджета и прямые углы, как везде на сайте */
 .pdw { background: var(--paper); border-top: 1px solid var(--line); padding: 40px 0; }
 .pdw__in { max-width: 1000px; }
-.pdw .pd_widget_footer, .pdw .pd_widget_footer * { border-radius: 0 !important; }
+.pdw .pd_widget_footer[id], .pdw .pd_widget_footer[id] *, .pdw .pd_widget_footer[id] *::before, .pdw .pd_widget_footer[id] *::after { border-radius: 0 !important; }
 .pdw .pd_lpu_name { color: var(--text); font-weight: 500; }
 .pdw .pd_powered_by { margin-top: 12px; }
 .pdw .pd_logo { display: block; height: auto; }
