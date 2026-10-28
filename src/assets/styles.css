@@ -414,9 +414,15 @@ html:not(.js-intro) .intro { display: none; }
 
 /* разбивка слов для анимации заголовков */
 .sw { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .12em; margin-bottom: -.12em; }
-.sw > span { display: inline-block; will-change: transform; }
+.sw > span { display: inline-block; } /* без will-change: 56 постоянных слоёв на главной грузили телефон, GSAP сам поднимает слой на время анимации */
 .js-anim [data-split] { visibility: hidden; }
 .js-anim [data-split="on"] { visibility: visible; }
+/* первый экран внутренних страниц проявляется по CSS с первого кадра: на среднем телефоне скрипты готовы только
+   через 3–4 с, и текст ждал их (LCP страницы врача 4,1 с, замер 28.10) */
+@keyframes um-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+.js-anim .page-hero [data-split] { visibility: visible; animation: um-rise 1s cubic-bezier(.2, .7, .2, 1) .05s both; }
+.js-anim .page-hero :is(.kicker, .label, .crumbs, .page-hero__lead, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav) { opacity: 1; animation: um-rise 1s cubic-bezier(.2, .7, .2, 1) .25s both; }
+.js-anim .page-hero :is(.page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav) { animation-delay: .4s; }
 /* первый экран: подписи, кнопки и факты поднимаются в app.js (heroIn, fromTo до видимых); до этого их нет, иначе кнопка «Записаться»
    мелькала готовой, пропадала и появлялась снова */
 .js-anim :is(.hero, .page-hero) :is(.kicker, .label, .crumbs, .page-hero__lead, .hero__facts > *, .hero__actions > *, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav) { opacity: 0; }

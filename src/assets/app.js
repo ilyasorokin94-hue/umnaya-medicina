@@ -704,8 +704,19 @@
     m.addEventListener("mouseleave", () => m.classList.remove("is-active"));
   });
   document.addEventListener("pointerdown", (e) => { $$(".ctmap.is-active").forEach((m) => { if (!m.contains(e.target)) m.classList.remove("is-active"); }); });
-  // на телефоне метка по центру карты, на компьютере справа от карточки
-  if (matchMedia("(max-width: 1024px)").matches) later.push(() => $$("iframe[data-src-phone]").forEach((f) => { f.src = f.dataset.srcPhone; }));
+  // карта Яндекса тяжёлая: если она грузится, пока человек листает к ней, прокрутка дёргается. Грузим её в паузе,
+  // когда до неё 4 экрана, или сразу, когда до неё экран. На телефоне метка по центру карты, на компьютере справа от карточки
+  const maps = $$(".ctmap iframe[data-src]");
+  if (maps.length) {
+    const url = (f) => (matchMedia("(max-width: 1024px)").matches && f.dataset.srcPhone) || f.dataset.src;
+    const load = (f) => { if (!f.getAttribute("src")) f.src = url(f); };
+    let near = false, quiet = 0;
+    const idle = () => { clearTimeout(quiet); if (near) quiet = setTimeout(() => (window.requestIdleCallback || setTimeout)(() => maps.forEach(load)), 700); };
+    const io = (margin, fn) => { const o = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { o.unobserve(e.target); fn(e.target); } }), { rootMargin: margin }); maps.forEach((f) => o.observe(f)); };
+    io("400% 0px", () => { near = true; idle(); });
+    io("100% 0px", load);
+    addEventListener("scroll", idle, { passive: true });
+  }
   // отправить адрес себе или тому, кто повезёт
   const shareBtn = $("[data-share]");
   shareBtn?.addEventListener("click", async () => {
@@ -842,7 +853,8 @@
     if (!h) return;
     // главная на компьютере: «Один план лечения.» собирается из разлетевшихся букв, остальные слова поднимаются из-под строки
     const conv = !phoneMQ.matches && h.classList.contains("hero--v1") && $(".hv__l2", h);
-    const words = $$("[data-split] .sw > span", h).filter((w) => !conv || !conv.contains(w));
+    const page = h.classList.contains("page-hero");
+    const words = page ? [] : $$("[data-split] .sw > span", h).filter((w) => !conv || !conv.contains(w));
     const tl = G.timeline();
     const media = h.classList.contains("hero") ? $(".hero__media", h) : $(".sp-hero__media", h);
     const small = phoneMQ.matches;
@@ -851,7 +863,7 @@
     if (mimg) tl.from(mimg, { scale: 1.18, duration: 2.4, ease: "power2.out" }, 0);
     if (words.length) tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1);
     const rise = $$(".kicker, .label, .crumbs, .page-hero__lead, .hero__facts > *, .hero__actions > *, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav", h).filter((el) => !conv || !el.closest(".hero__actions"));
-    if (rise.length) tl.fromTo(rise, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
+    if (rise.length && !page) tl.fromTo(rise, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
     if (bar && !matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
     if (conv) {
       // буквы съезжаются сдвигом, а не letter-spacing: тот же рисунок (разрядка 0.5em → −0.055em), но раскладка

@@ -178,7 +178,7 @@ ${canonical ? `<meta property="og:url" content="${SITE}${canonical}">` : ""}
 ${fontPreload.map((f) => `<link rel="preload" href="${p}assets/fonts/${f}.woff2" as="font" type="font/woff2" crossorigin>`).join("\n")}
 <link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
-(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim");if(d.dataset.page==="home"&&!sessionStorage.getItem("um2-intro"))d.classList.add("js-intro")}}catch(e){}
+(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim")}}catch(e){}
 setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
 (function(d){try{if(!matchMedia("(pointer: coarse)").matches)return;var w=-1;function m(u){var e=document.createElement("i");e.style.cssText="position:absolute;top:0;left:0;width:0;visibility:hidden;height:100"+u;d.appendChild(e);var h=e.getBoundingClientRect().height;d.removeChild(e);return h}function s(){if(innerWidth===w)return;w=innerWidth;var l=m("vh"),v=m("svh")||l;if(!l)return;d.style.setProperty("--vh",l/100+"px");d.style.setProperty("--svh",v/100+"px")}s();addEventListener("resize",s)}catch(e){}})(document.documentElement);
 window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.removeAttribute("srcset");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
@@ -198,9 +198,6 @@ ${PUBLISH ? "" : `<div class="demo-bar">Демонстрационный мак�
 
 // демо-полосу меряем сразу после неё, до первого кадра: иначе до app.js шапка лежит поверх полосы, а потом прыгает вниз
 // заставка (Ilya 17.10, вариант 5 из пяти): логотип проявляется по центру и перелетает на своё место в шапке, тёмный фон тает
-function intro(depth) {
-  return `<div class="intro" aria-hidden="true"><div class="intro__bg"></div><img class="intro__mark" src="${pre(depth)}images/brand/header-logo-light.svg" alt=""></div>`;
-}
 
 // мессенджеры клиники: пока в data.mjs только адрес сервиса без канала, кнопок нет (Ilya 22.10: никуда не уводим)
 const msgrLinks = () => [["Telegram", clinic.telegram], ["MAX", clinic.max]].filter(([, u]) => u && !/^https?:\/\/[^/]+\/?$/.test(u));
@@ -561,7 +558,7 @@ const ymapPin = (z, dx = 0) => `https://yandex.ru/map-widget/v1/?ll=${(clinic.ge
 function place(o = {}) {
   const { lat, lon } = clinic.geo;
   const W = v2.way;
-  const map = (src, phone) => `<div class="ctmap ct__map"><iframe title="Карта: стоматология на Громова, 10/2" data-src-phone="${phone}" loading="lazy" src="${src}"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button></div>`;
+  const map = (src, phone) => `<div class="ctmap ct__map"><iframe title="Карта: стоматология на Громова, 10/2" data-src-phone="${phone}" data-src="${src}"></iframe><button class="place__unlock" type="button">Нажмите, чтобы двигать карту</button></div>`;
   return `<section class="way ct" id="contacts" aria-labelledby="ct-title">
   <div class="wrap ct__layer">
     <div class="ct__card">
@@ -648,7 +645,7 @@ function pageHome() {
   const brandImg = (file, alt = "") => `<img src="${pick([`images/brand/${file}`], depth).src}" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 
   return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq.flatMap(([, qs]) => qs).map(([q, a]) => [q, a.replace(/\[([^\]]+)\]\((\w+)\)/g, "$1")]))] })
-  + intro(depth) + header(depth, true) + `
+  + header(depth, true) + `
 <main id="main">
 
 <div class="opening">
