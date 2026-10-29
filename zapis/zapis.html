@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Записаться на приём | Умная Медицина. Стоматология</title>
-<meta name="description" content="Онлайн-запись в стоматологию «Умная Медицина»: выберите услугу, врача и удобное время.">
+<meta name="description" content="Онлайн-запись в стоматологию «Умная Медицина»: оставьте телефон, администратор перезвонит и подберёт удобное время.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://smartmed.clinic/zapis">
 <link rel="icon" href="favicon.ico" sizes="48x48">
@@ -14,7 +14,7 @@
 <meta property="og:site_name" content="Умная Медицина. Стоматология">
 <meta property="og:url" content="https://smartmed.clinic/zapis">
 <meta property="og:title" content="Записаться на приём | Умная Медицина. Стоматология">
-<meta property="og:description" content="Онлайн-запись в стоматологию «Умная Медицина»: выберите услугу, врача и удобное время.">
+<meta property="og:description" content="Онлайн-запись в стоматологию «Умная Медицина»: оставьте телефон, администратор перезвонит и подберёт удобное время.">
 <meta property="og:image" content="https://smartmed.clinic/images/og/clinic.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -26,7 +26,7 @@
 <link rel="preload" href="assets/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/styles.css?v=80296c8c">
+<link rel="stylesheet" href="assets/styles.css?v=f62bb8d8">
 <script>
 (function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim")}}catch(e){}
 setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
@@ -37,7 +37,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <script src="assets/vendor/gsap.min.js" defer></script>
 <script src="assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="assets/vendor/lenis.min.js" defer></script>
-<script src="assets/app.js?v=0cc112e4" defer></script>
+<script src="assets/app.js?v=c39ec008" defer></script>
 <script src="assets/cookie.js?v=f14686e3" data-privacy="privacy/" data-ym="113739978" defer></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"https://smartmed.clinic"},{"@type":"ListItem","position":2,"name":"Записаться на приём","item":"https://smartmed.clinic/zapis"}]}</script>
 </head>
@@ -50,48 +50,24 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
       <a class="logo" href="./" aria-label="На главную"><img class="logo__img" src="images/brand/header-logo.svg" alt="" width="298" height="56" referrerpolicy="no-referrer" onerror="umLogo(this)"><span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
       <a class="btn btn--ghost btn--sm" href="./">Отменить</a>
     </div>
-    <div>
-      <section class="bstep bstart" data-step="0">
+    <div class="bform">
+      <section class="bstep" data-step="0">
         <span class="label">Онлайн-запись</span>
         <h1 tabindex="-1">Записаться на приём</h1>
-        <p>Выберите услугу, врача и удобное время, а администратор подтвердит запись. Консультация с планом лечения бесплатная, если остаётесь на лечение.</p>
-        <button class="btn btn--lg" type="button" data-start data-magnet>Перейти к записи</button>
-        <figure class="bstart__pic"><img src="images/page-hero/zapis.webp" srcset="images/page-hero/zapis-480w.webp 480w, images/page-hero/zapis-828w.webp 828w, images/page-hero/zapis-1200w.webp 1200w, images/page-hero/zapis.webp 1536w" sizes="(max-width: 760px) 100vw, 46vw" alt="Раскрытый ежедневник с отмеченным временем, часы и стоматологическое зеркало" width="1536" height="1024" decoding="async"></figure>
-      </section>
-      <section class="bstep" data-step="1" hidden>
-        <div class="bsteps" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <h2 tabindex="-1">Что нужно сделать?</h2>
-        <div class="opts" id="b-services"></div>
-      </section>
-      <section class="bstep" data-step="2" hidden>
-        <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <h2 tabindex="-1">К какому врачу?</h2>
-        <div class="opts" id="b-doctors"></div>
-        <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button></div>
-      </section>
-      <section class="bstep" data-step="3" hidden>
-        <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span><span><i></i></span></div>
-        <h2 tabindex="-1">Когда удобно прийти?</h2>
-        <p class="bwhen__label label" id="b-day-l">День</p>
-        <div class="slots slots--when" id="b-days" role="group" aria-labelledby="b-day-l"><button type="button" class="slot" data-v="Как можно скорее" aria-pressed="false">Как можно скорее</button><button type="button" class="slot" data-v="Сегодня" aria-pressed="false">Сегодня</button><button type="button" class="slot" data-v="Завтра" aria-pressed="false">Завтра</button><button type="button" class="slot" data-v="На этой неделе" aria-pressed="false">На этой неделе</button><button type="button" class="slot" data-v="На следующей неделе" aria-pressed="false">На следующей неделе</button></div>
-        <p class="bwhen__label label" id="b-time-l">Время</p>
-        <div class="slots slots--when" id="b-times" role="group" aria-labelledby="b-time-l"><button type="button" class="slot" data-v="утром" aria-pressed="false">Утром, 9⁠–⁠12</button><button type="button" class="slot" data-v="днём" aria-pressed="false">Днём, 12⁠–⁠17</button><button type="button" class="slot" data-v="вечером" aria-pressed="false">Вечером, 17⁠–⁠21</button><button type="button" class="slot" data-v="" aria-pressed="false">Любое время</button></div>
-        <p class="note bwhen__note">Администратор перезвонит и подберёт точное время у врача.</p>
-        <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn btn--sm" type="button" data-next-time disabled>Дальше</button></div>
-      </section>
-      <section class="bstep" data-step="4" hidden>
-        <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span></div>
-        <h2 tabindex="-1">Как с вами связаться?</h2>
+        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. Консультация с планом лечения бесплатная, если остаётесь на лечение.</p>
         <form class="form" id="b-form" method="post" action="lead.php">
           <label>Имя<input name="name" required autocomplete="name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
-          <label>Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
+          <label>Услуга<select name="service"><option value="Консультация">Не знаю, нужна консультация</option><option value="КТ и снимки" data-slug="diagnostika">КТ и снимки</option><option value="Профгигиена Air-Flow" data-slug="gigiena">Профгигиена Air-Flow</option><option value="Лечение зубов" data-slug="lechenie-zubov">Лечение зубов</option><option value="Имплантация зубов" data-slug="implantaciya">Имплантация зубов</option><option value="All-on-4 и All-on-6" data-slug="all-on-4">All-on-4 и All-on-6</option><option value="Лечение под микроскопом" data-slug="mikroskop">Лечение под микроскопом</option><option value="Протезирование" data-slug="protezirovanie">Протезирование</option><option value="Удаление зубов" data-slug="hirurgiya">Удаление зубов</option><option value="Брекеты и элайнеры" data-slug="ortodontiya">Брекеты и элайнеры</option><option value="Детская стоматология" data-slug="detskaya">Детская стоматология</option></select></label>
+          <input type="hidden" name="doctor" value="">
+          <p class="bform__doc" data-doc hidden></p>
+          <fieldset class="bform__when"><legend>Когда удобно</legend><div class="chips"><label class="chip chip--pick"><input type="radio" name="when" value="Как можно скорее" checked>Как можно скорее</label><label class="chip chip--pick"><input type="radio" name="when" value="Сегодня">Сегодня</label><label class="chip chip--pick"><input type="radio" name="when" value="Завтра">Завтра</label><label class="chip chip--pick"><input type="radio" name="when" value="В выходные">В выходные</label><label class="chip chip--pick"><input type="radio" name="when" value="Вечером, после 17">Вечером, после 17</label></div></fieldset>
           <input type="hidden" name="consent" value="1">
-          <div class="bnav" style="margin-top:6px"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn">Записаться</button></div>
+          <button class="btn btn--lg" data-magnet>Записаться</button>
           <p class="modal__note">Нажимая кнопку, вы соглашаетесь с <a href="soglasie/" target="_blank" rel="noopener">обработкой персональных данных</a> и <a href="privacy/" target="_blank" rel="noopener">Политикой конфиденциальности</a>.</p>
         </form>
       </section>
-      <section class="bstep bdone" data-step="5" hidden>
+      <section class="bstep bdone" data-step="1" hidden>
         <div class="bdone__ok"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 16.2-4.2-4.2-1.4 1.4 5.6 5.6 11-11-1.4-1.4z"/></svg></div>
         <h2 tabindex="-1">Заявка отправлена</h2>
         <p class="muted">Администратор перезвонит и подтвердит время приёма.</p>
@@ -102,9 +78,6 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   <aside class="booking__aside on-dark" aria-label="Ваша запись" itemscope itemtype="https://schema.org/Dentist" itemid="https://smartmed.clinic/#clinic">
     <span class="label label--light">Ваша запись</span>
     <dl class="summary">
-      <div><dt>Услуга</dt><dd data-sum="service" class="is-empty">не выбрано</dd></div>
-      <div><dt>Врач</dt><dd data-sum="doctor" class="is-empty">не выбрано</dd></div>
-      <div><dt>Когда удобно</dt><dd data-sum="date" class="is-empty">не выбрано</dd></div>
       <div><dt>Адрес</dt><dd itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">Удельная, ул. Громова, 10/2<meta itemprop="streetAddress" content="ул. Громова, 10/2"><meta itemprop="addressLocality" content="пгт Удельная"><meta itemprop="addressRegion" content="Московская обл."><meta itemprop="postalCode" content="140140"><meta itemprop="addressCountry" content="RU"></dd></div>
     </dl>
     <p class="note">Администратор перезвонит, ответит на вопросы и подтвердит запись, ежедневно с 9:00 до 21:00.<meta itemprop="telephone" content="+7 495 150-36-15"><meta itemprop="openingHours" content="Mo-Su 09:00-21:00"></p>
@@ -116,6 +89,6 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   </div>
   </aside>
 </div>
-<script type="application/json" id="bdata">{"services":[{"slug":"diagnostika","title":"КТ и снимки","short":"3D-снимок, ОПТГ, прицельный снимок","from":"от 500 ₽"},{"slug":"gigiena","title":"Профгигиена Air-Flow","short":"Air-Flow, ультразвук","from":"от 4 500 ₽"},{"slug":"lechenie-zubov","title":"Лечение зубов","short":"Кариес, пульпит, реставрация","from":"от 4 000 ₽"},{"slug":"implantaciya","title":"Имплантация зубов","short":"Straumann, Dentium, OSSTEM","from":"от 19 300 ₽"},{"slug":"all-on-4","title":"All-on-4 и All-on-6","short":"Вся челюсть на 4–8 имплантах","from":"от 114 000 ₽"},{"slug":"mikroskop","title":"Лечение под микроскопом","short":"Каналы, перфорации, трещины","from":"Цена после осмотра"},{"slug":"protezirovanie","title":"Протезирование","short":"Коронки, виниры, протезы","from":"от 26 400 ₽"},{"slug":"hirurgiya","title":"Удаление зубов","short":"Зубы мудрости, пьезохирургия","from":"от 2 100 ₽"},{"slug":"ortodontiya","title":"Брекеты и элайнеры","short":"Damon, 3M, элайнеры","from":"от 28 500 ₽"},{"slug":"detskaya","title":"Детская стоматология","short":"Лечение молочных зубов","from":"от 450 ₽"}],"doctors":[{"id":"solodukhin","short":"Евгений Солодухин","role":"Главный врач, ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/solodukhin.webp","initials":"ЕС"},{"id":"hludnevskiy","short":"Михаил Хлудневский","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/hludnevskiy.webp","initials":"МХ"},{"id":"radzhabov","short":"Азамат Раджабов","role":"Хирург, имплантолог","tags":["implantaciya","all-on-4","hirurgiya"],"photo":"images/doctors/radzhabov.webp","initials":"АР"},{"id":"chitaykin","short":"Артём Читайкин","role":"Терапевт, эндодонтист","tags":["lechenie-zubov","mikroskop","gigiena"],"photo":"images/doctors/chitaykin.webp","initials":"АЧ"},{"id":"kashtanova","short":"Екатерина Каштанова","role":"Терапевт, ортодонт","tags":["lechenie-zubov","ortodontiya","gigiena","mikroskop"],"photo":"images/doctors/kashtanova.webp","initials":"ЕК"},{"id":"alikhanova","short":"Светлана Алиханова","role":"Ортопед","tags":["protezirovanie","all-on-4"],"photo":"images/doctors/alikhanova.webp","initials":"СА"},{"id":"troitskiy","short":"Даниил Троицкий","role":"Детский стоматолог","tags":["detskaya"],"photo":"images/doctors/troitskiy.webp","initials":"ДТ"}]}</script>
+<script type="application/json" id="um-docs">{"solodukhin":"Евгений Солодухин","hludnevskiy":"Михаил Хлудневский","radzhabov":"Азамат Раджабов","chitaykin":"Артём Читайкин","kashtanova":"Екатерина Каштанова","alikhanova":"Светлана Алиханова","troitskiy":"Даниил Троицкий"}</script>
 </body>
 </html>
