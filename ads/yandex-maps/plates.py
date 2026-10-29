@@ -21,15 +21,26 @@ HOOKS = {
     "10-karies": ("Без боли. −10% в день консультации", "#D8342B", "#FFFFFF", DISPLAY),
     "11-detskaya": ("Молочные зубы без боли и слёз", "#C92A2A", "#FFFFFF", INTER),
     "12-gigiena": ("Чистка по средам −22%", "#FFFFFF", "#0E4D47", DISPLAY),
-    "13-otbelivanie": ("Белее за один визит", "#FFFFFF", "#A3271A", SERIF),
-    "14-konsultaciya": ("0 ₽, если лечитесь у нас", "#143327", "#F5EBDD", INTER),
+    "13-otbelivanie": ("Белее за один визит", "#FFFFFF", "#A3271A", SERIF),
+    "14-konsultaciya": ("0 ₽, если лечитесь у нас", "#143327", "#F5EBDD", INTER),
 }
 SIDE = 1080          # итоговый квадрат, у Яндекса минимум 450
 MAX_SHARE = 0.18     # плашка не больше 18% площади (правило Яндекса: текст до 20%)
 
 
 def wrap(draw, text, font, width):
-    words, lines, cur = text.split(" "), [], ""
+    # однобуквенные предлоги и союзы держим со следующим словом, как в вёрстке
+    words, buf = [], ""
+    for w in text.split(" "):
+        if buf:
+            w, buf = buf + "\u00a0" + w, ""
+        if len(w) <= 1:
+            buf = w
+        else:
+            words.append(w)
+    if buf:
+        words.append(buf)
+    lines, cur = [], ""
     for w in words:
         t = (cur + " " + w).strip()
         if draw.textlength(t, font=font) <= width or not cur:
@@ -77,8 +88,9 @@ def banner(path, out, until):
     im = im.crop(((im.width - W) // 2, (im.height - H) // 2, (im.width - W) // 2 + W, (im.height - H) // 2 + H))
     d = ImageDraw.Draw(im)
     x = 96
-    d.rounded_rectangle([x, 96, x + 400, 160], radius=32, fill="#FFFFFF")
-    d.text((x + 28, 104), f"Акция до {until}", font=ImageFont.truetype(INTER, 36), fill="#1F3A93")
+    pf = ImageFont.truetype(INTER, 36); pt = f"Акция до {until}"
+    d.rounded_rectangle([x, 96, x + d.textlength(pt, font=pf) + 56, 160], radius=32, fill="#FFFFFF")
+    d.text((x + 28, 104), pt, font=pf, fill="#1F3A93")
     d.text((x, 300), "Имплант", font=ImageFont.truetype(DISPLAY, 120), fill="#FFFFFF")
     d.text((x, 430), "от 17 500 ₽", font=ImageFont.truetype(DISPLAY, 150), fill="#FFFFFF")
     sub = ImageFont.truetype(INTER, 50)
