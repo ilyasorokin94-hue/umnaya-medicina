@@ -450,12 +450,12 @@
     });
   }
 
-  // ---------- онлайн-запись ----------
-  const bk = $("#booking");
-  if (bk) booking(bk);
-
   // ---------- окна: запись, перезвон, снимок, расчёт, мессенджеры ----------
   const docs = (() => { try { return JSON.parse($("#um-docs")?.textContent || "{}"); } catch (e) { return {}; } })();
+
+  // ---------- онлайн-запись (после docs: форма сразу подставляет врача из ссылки) ----------
+  const bk = $("#booking");
+  if (bk) booking(bk);
 
   // ---------- отправка заявок ----------
   // На рабочем сайте формы ведут на lead.php: заявка уходит fetch'ем, а без скриптов форма отправится сама и вернётся на «Спасибо».
@@ -1281,84 +1281,24 @@
   if (introOn || location.hash || scrollY > 0) runLater();
   else { setTimeout(runLater, 2200); addEventListener("scroll", runLater, { passive: true }); }
 
-  // ---------- запись: шаги ----------
+  // ---------- запись: одна форма ----------
+  // услуга и врач подставляются из ссылки (zapis.html?service=implantaciya&doctor=hludnevskiy), «когда удобно» это пожелание, время подбирает администратор
   function booking(box) {
-    const data = JSON.parse($("#bdata").textContent);
-    const state = { service: null, doctor: null, date: null, time: null };
-    const steps = $$(".bstep", box);
-    const bars = $$(".bsteps span", box);
-    const sum = Object.fromEntries($$("[data-sum]").map((d) => [d.dataset.sum, d]));
-    const params = new URLSearchParams(location.search);
-    let cur = 0;
-
-    const setSum = (k, v) => { const d = sum[k]; if (!d) return; d.textContent = v || "не выбрано"; d.classList.toggle("is-empty", !v); };
-    const go = (n) => {
-      const from = steps[cur], to = steps[n];
-      cur = n;
-      bars.forEach((b, i) => b.classList.toggle("is-done", i < n));
-      const show = () => { steps.forEach((s) => (s.hidden = s !== to)); if (anim) G.fromTo(to, { opacity: 0, x: 40 }, { opacity: 1, x: 0, duration: 0.7, ease: "expo.out", clearProps: "transform" }); scrollTo({ top: 0, behavior: anim ? "smooth" : "auto" }); $("h1, h2", to)?.focus({ preventScroll: true }); };
-      if (anim && from && from !== to) G.to(from, { opacity: 0, x: -40, duration: 0.3, ease: "power2.in", onComplete: show });
-      else show();
-    };
-
-    // шаг 1: услуга
-    const svcBox = $("#b-services", box);
-    svcBox.innerHTML = data.services.map((s) => `<button type="button" class="opt" data-v="${s.slug}" aria-pressed="false"><b>${s.title}</b><small>${s.short} · ${s.from}</small></button>`).join("") +
-      `<button type="button" class="opt" data-v="consult" aria-pressed="false"><b>Не знаю, нужна консультация</b><small>Врач осмотрит и составит план</small></button>`;
-    // шаг 2: врач
-    const renderDocs = () => {
-      const list = data.doctors.filter((d) => !state.service || state.service === "consult" || d.tags.includes(state.service));
-      $("#b-doctors", box).innerHTML = `<button type="button" class="opt opt--doc" data-v="any" aria-pressed="false"><span class="opt__ph">✦</span><b>Любой врач</b><small>Ближайшее свободное время</small></button>` +
-        list.map((d) => `<button type="button" class="opt opt--doc" data-v="${d.id}" aria-pressed="false"><span class="opt__ph">${d.photo ? `<img src="${d.photo}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${d.initials}</span><b>${d.short}</b><small>${d.role}</small></button>`).join("");
-    };
-    // шаг 3: когда удобно прийти, без расписания: день и время суток уходят в заявку пожеланием, точное время подбирает администратор
-    const dayBox = $("#b-days", box), timeBox = $("#b-times", box);
-    if (new Date().getHours() >= 19) dayBox.querySelector('[data-v="Сегодня"]')?.remove();
-    const setWhen = () => setSum("date", state.date ? state.date + (state.time ? ", " + state.time : "") : "");
-
-    const pick = (wrap, btn) => { $$("[aria-pressed]", wrap).forEach((b) => b.setAttribute("aria-pressed", String(b === btn))); };
-    box.addEventListener("click", (e) => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      if (b.matches("[data-start]")) return go(1);
-      if (b.matches("[data-back]")) return go(Math.max(0, cur - 1));
-      if (b.closest("#b-services")) {
-        pick(svcBox, b); state.service = b.dataset.v; state.doctor = null;
-        setSum("service", $("b", b).textContent); setSum("doctor", ""); renderDocs(); setTimeout(() => go(2), 250); return;
-      }
-      if (b.closest("#b-doctors")) {
-        pick($("#b-doctors", box), b); state.doctor = b.dataset.v;
-        setSum("doctor", $("b", b).textContent); setTimeout(() => go(3), 250); return;
-      }
-      if (b.closest("#b-days")) {
-        pick(dayBox, b); state.date = b.dataset.v; setWhen(); $("[data-next-time]", box).disabled = false; return;
-      }
-      if (b.closest("#b-times")) {
-        pick(timeBox, b); state.time = b.dataset.v; setWhen(); return;
-      }
-      if (b.matches("[data-next-time]")) return go(4);
-    });
-    // услуга, врач и время уходят в заявку словами, как на экране; время это пожелание, администратор его подтвердит
-    const bf = $("#b-form", box);
+    const bf = $("#b-form", box), steps = $$(".bstep", box), params = new URLSearchParams(location.search);
+    const ps = params.get("service"), pd = params.get("doctor");
+    const so = ps && $(`select[name=service] option[data-slug="${ps}"]`, bf); if (so) so.selected = true;
+    if (pd && docs[pd]) { $("[name=doctor]", bf).value = pd; const n = $("[data-doc]", box); n.textContent = "Врач: " + docs[pd]; n.hidden = false; }
+    if (new Date().getHours() >= 19) $('input[name=when][value="Сегодня"]', bf)?.closest("label").remove();
     bf.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (bf.dataset.sending) return;
-      const said = (k) => (sum[k] && !sum[k].classList.contains("is-empty") ? sum[k].textContent : "");
       bf.dataset.sending = "1"; busy(bf, true); if (bf._err) bf._err.hidden = true;
-      try { await sendLead(bf, "zapis", { service: said("service"), doctor: said("doctor"), when: said("date") }); }
+      try { await sendLead(bf, "zapis"); }
       catch (err) { leadError(bf, err.message); return; }
       finally { delete bf.dataset.sending; busy(bf, false); }
       document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "zapis" } }));
-      go(5);
+      steps.forEach((s, i) => (s.hidden = i !== 1));
+      scrollTo({ top: 0, behavior: anim ? "smooth" : "auto" }); $("h2", steps[1])?.focus({ preventScroll: true });
     });
-
-    // предвыбор из ссылки: zapis.html?service=implantaciya&doctor=hludnevskiy
-    renderDocs();
-    const ps = params.get("service"), pd = params.get("doctor");
-    // неизвестная услуга или врач в ссылке: остаёмся на шаге выбора, а не прыгаем дальше с «не выбрано»
-    let okS = false, okD = false;
-    if (ps) { const b = $(`#b-services [data-v="${ps}"]`, box); if (b) { pick(svcBox, b); state.service = ps; setSum("service", $("b", b).textContent); renderDocs(); okS = true; } }
-    if (pd) { const b = $(`#b-doctors [data-v="${pd}"]`, box); if (b) { pick($("#b-doctors", box), b); state.doctor = pd; setSum("doctor", $("b", b).textContent); okD = true; } }
-    if (okS || okD) go(okD ? 3 : 2);
   }
 })();

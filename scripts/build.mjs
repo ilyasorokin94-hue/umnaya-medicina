@@ -1621,60 +1621,35 @@ function pageBooking() {
   const depth = 0;
   const bdata = {
     services: homeOrder.map((k) => ({ slug: k, title: svc[k].title, short: svc[k].short, from: svc[k].from })),
-    doctors: doctors.map((d) => ({ id: d.id, short: d.short, role: d.role, tags: d.tags, photo: pick(docPhoto(d), 0).src || null, initials: initialsOf(d) })),
   };
-  return head({ title: "Записаться на приём | Умная Медицина. Стоматология", desc: "Онлайн-запись в стоматологию «Умная Медицина»: выберите услугу, врача и удобное время.", canonical: "/zapis", depth, page: "booking", jsonld: [crumbsLd([["zapis", "Записаться на приём"]])] }) + `
+  return head({ title: "Записаться на приём | Умная Медицина. Стоматология", desc: "Онлайн-запись в стоматологию «Умная Медицина»: оставьте телефон, администратор перезвонит и подберёт удобное время.", canonical: "/zapis", depth, page: "booking", jsonld: [crumbsLd([["zapis", "Записаться на приём"]])] }) + `
 <div class="booking" id="booking">
   <main class="booking__main" id="main">
     <div class="booking__top">
       <a class="logo" href="index.html" aria-label="На главную">${logoImg(depth)}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
       <a class="btn btn--ghost btn--sm" href="index.html">Отменить</a>
     </div>
-    <div>
-      <section class="bstep bstart" data-step="0">
+    <div class="bform">
+      <section class="bstep" data-step="0">
         <span class="label">Онлайн-запись</span>
         <h1 tabindex="-1">Записаться на приём</h1>
-        <p>Выберите услугу, врача и удобное время, а администратор подтвердит запись. Консультация с планом лечения бесплатная, если остаётесь на лечение.</p>
-        <button class="btn btn--lg" type="button" data-start data-magnet>Перейти к записи</button>
-        <figure class="bstart__pic">${(() => { const rel = "images/page-hero/zapis.png", set = srcset(rel, depth); return `<img src="${pick([rel], depth).src}"${set ? ` srcset="${set}" sizes="(max-width: 760px) 100vw, 46vw"` : ""} alt="Раскрытый ежедневник с отмеченным временем, часы и стоматологическое зеркало" width="1536" height="1024" decoding="async">`; })()}</figure>
-      </section>
-      <section class="bstep" data-step="1" hidden>
-        <div class="bsteps" aria-hidden="true"><span><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <h2 tabindex="-1">Что нужно сделать?</h2>
-        <div class="opts" id="b-services"></div>
-      </section>
-      <section class="bstep" data-step="2" hidden>
-        <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span><i></i></span><span><i></i></span><span><i></i></span></div>
-        <h2 tabindex="-1">К какому врачу?</h2>
-        <div class="opts" id="b-doctors"></div>
-        <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button></div>
-      </section>
-      <section class="bstep" data-step="3" hidden>
-        <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span><span><i></i></span></div>
-        <h2 tabindex="-1">Когда удобно прийти?</h2>
-        <p class="bwhen__label label" id="b-day-l">День</p>
-        <div class="slots slots--when" id="b-days" role="group" aria-labelledby="b-day-l">${["Как можно скорее", "Сегодня", "Завтра", "На этой неделе", "На следующей неделе"].map((t) => `<button type="button" class="slot" data-v="${t}" aria-pressed="false">${t}</button>`).join("")}</div>
-        <p class="bwhen__label label" id="b-time-l">Время</p>
-        <div class="slots slots--when" id="b-times" role="group" aria-labelledby="b-time-l">${[["утром", "Утром, 9–12"], ["днём", "Днём, 12–17"], ["вечером", "Вечером, 17–21"], ["", "Любое время"]].map(([v, t]) => `<button type="button" class="slot" data-v="${v}" aria-pressed="false">${t.replace("–", "\u2060–\u2060")}</button>`).join("")}</div>
-        <p class="note bwhen__note">Администратор перезвонит и подберёт точное время у врача.</p>
-        <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn btn--sm" type="button" data-next-time disabled>Дальше</button></div>
-      </section>
-      <section class="bstep" data-step="4" hidden>
-        <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span></div>
-        <h2 tabindex="-1">Как с вами связаться?</h2>
+        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. Консультация с планом лечения бесплатная, если остаётесь на лечение.</p>
         <form class="form" id="b-form" method="post" action="${leadAction("")}">
           <label>Имя<input name="name" required autocomplete="name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
-          <label>Комментарий<textarea name="comment" placeholder="Например, болит зуб слева внизу"></textarea></label>
+          <label>Услуга<select name="service"><option value="Консультация">Не знаю, нужна консультация</option>${bdata.services.map((x) => `<option value="${esc(x.title)}" data-slug="${x.slug}">${esc(x.title)}</option>`).join("")}</select></label>
+          <input type="hidden" name="doctor" value="">
+          <p class="bform__doc" data-doc hidden></p>
+          <fieldset class="bform__when"><legend>Когда удобно</legend><div class="chips">${["Как можно скорее", "Сегодня", "Завтра", "В выходные", "Вечером, после 17"].map((t, i) => `<label class="chip chip--pick"><input type="radio" name="when" value="${t}"${i ? "" : " checked"}>${t}</label>`).join("")}</div></fieldset>
           ${consentField("")}
-          <div class="bnav" style="margin-top:6px"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn">Записаться</button></div>${CONSENT_CHECKBOX ? "" : `
+          <button class="btn btn--lg" data-magnet>Записаться</button>${CONSENT_CHECKBOX ? "" : `
           <p class="modal__note">${consentNote("")}</p>`}
         </form>
       </section>
-      <section class="bstep bdone" data-step="5" hidden>
+      <section class="bstep bdone" data-step="1" hidden>
         <div class="bdone__ok">${icon.check}</div>
         <h2 tabindex="-1">Заявка отправлена</h2>
-        <p class="muted">${LEADS ? "Администратор перезвонит и подтвердит время приёма." : "Это демонстрация. На рабочем сайте запись попадёт в расписание клиники и в amoCRM с меткой источника, а пациенту придёт подтверждение."}</p>
+        <p class="muted">${LEADS ? "Администратор перезвонит и подтвердит время приёма." : "Это демонстрация. На рабочем сайте заявка попадёт в amoCRM с меткой источника."}</p>
         <div class="bnav"><a class="btn" href="index.html">На главную</a></div>
       </section>
     </div>
@@ -1682,9 +1657,6 @@ function pageBooking() {
   <aside class="booking__aside on-dark" aria-label="Ваша запись" itemscope itemtype="https://schema.org/Dentist" itemid="${CLINIC_ID}">
     <span class="label label--light">Ваша запись</span>
     <dl class="summary">
-      <div><dt>Услуга</dt><dd data-sum="service" class="is-empty">не выбрано</dd></div>
-      <div><dt>Врач</dt><dd data-sum="doctor" class="is-empty">не выбрано</dd></div>
-      <div><dt>Когда удобно</dt><dd data-sum="date" class="is-empty">не выбрано</dd></div>
       <div><dt>Адрес</dt><dd itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">${esc(clinic.addressShort)}<meta itemprop="streetAddress" content="${esc(clinic.addr.street)}"><meta itemprop="addressLocality" content="${esc(clinic.addr.locality)}"><meta itemprop="addressRegion" content="${esc(clinic.addr.region)}"><meta itemprop="postalCode" content="${clinic.addr.postal}"><meta itemprop="addressCountry" content="RU"></dd></div>
     </dl>
     <p class="note">Администратор перезвонит, ответит на вопросы и подтвердит запись, ежедневно с 9:00 до 21:00.<meta itemprop="telephone" content="${esc(clinic.phone)}"><meta itemprop="openingHours" content="Mo-Su 09:00-21:00"></p>
@@ -1692,7 +1664,7 @@ function pageBooking() {
 ${footerLegal("", "footer__legal booking__legal")}
   </aside>
 </div>
-<script type="application/json" id="bdata">${JSON.stringify(bdata).replace(/</g, "\\u003c")}</script>` + end;
+<script type="application/json" id="um-docs">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, d.short])))}</script>` + end;
 }
 
 // ---------- политика конфиденциальности, согласие, соглашение ----------
