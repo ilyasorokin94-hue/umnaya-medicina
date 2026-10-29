@@ -625,9 +625,11 @@
   // После 60 секунд показываем, когда на текущей странице пролистан первый экран; на компьютере ещё и когда курсор уходит
   // к вкладкам, но не раньше 20 секунд. Один раз за визит, после показа молчит 3 дня. Не всплывает поверх других окон и меню,
   // во время ввода, пока на экране контакты, и у тех, кто уже открывал запись. Закрывается крестиком, Esc и кликом мимо.
+  // Пришедшим из рекламы Яндекс Бизнеса (utm_source=yandex_business) весь визит не показываем: модерация запрещает всплывающие окна.
   const offer = $("#m-offer");
   if (offer) {
-    const quiet = () => { try { return !!sessionStorage.getItem("um2-exit") || Date.now() - (+localStorage.getItem("um2-offer") || 0) < 3 * 864e5; } catch (err) { return true; } };
+    try { if (/[?&]utm_source=yandex_business(&|$)/.test(location.search)) sessionStorage.setItem("um2-yb", "1"); } catch (err) {}
+    const quiet = () => { try { return !!sessionStorage.getItem("um2-exit") || !!sessionStorage.getItem("um2-yb") || Date.now() - (+localStorage.getItem("um2-offer") || 0) < 3 * 864e5; } catch (err) { return true; } };
     // пролистан ли первый экран: проверяем раз в кадр и снимаем слушатель, как только да (чтение размеров окна на каждом событии прокрутки заставляет браузер пересчитывать раскладку)
     let deep = false, dq = 0;
     const onDeep = () => { if (dq) return; dq = requestAnimationFrame(() => { dq = 0; if (scrollY > innerHeight * 0.7) { deep = true; removeEventListener("scroll", onDeep); } }); };

@@ -25,6 +25,7 @@ export const servicePages = [
   {
     slug: "implantaciya", path: "implantaciya/", old: "implantaciya", crumb: "Имплантация зубов", procedure: "Имплантация зубов", hero: hero("implantaciya"),
     facts: [["от 19 300 ₽","установка импланта"], ["4 500 ₽","КТ двух челюстей"], ["4 системы","Osstem, Dentium, Straumann, Riellen's"], ["3 врача","хирург, ортопед и терапевт составляют план"]],
+    factsNote: "Имплант Osstem по акции от 17 500 ₽ до 31\u00a0декабря, консультация хирурга и 3D-снимок в подарок.",
     nav: [["All-on-4","implantaciya/all-on-4/"], ["All-on-6","implantaciya/all-on-6/"], ["Вся челюсть на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Синус-лифтинг","implantaciya/sinus-lifting/"], ["Костная пластика","implantaciya/kostnaya-plastika/"], ["Какие импланты","implantaciya/implanty/"]],
   },
   {
@@ -202,6 +203,7 @@ export const servicePages = [
     slug: "zhukovskiy-implantaciya", path: "goroda/zhukovskiy/implantaciya/", geo: "Жуковский", crumb: "Имплантация для жителей Жуковского", procedure: "Имплантация зубов",
     hero: hero("zhukovskiy-implantaciya"), photo: "images/clinic/yandex-08.jpg", photoPos: "38% 50%", photoCap: "Вход в стоматологию: Громова, 10/2, Удельная",
     facts: [["Рядом","с Жуковским, в соседней Удельной"], ["от 19 300 ₽","установка импланта"], ["4 500 ₽","КТ двух челюстей, томограф в клинике"], ["3 врача","хирург, ортопед и терапевт составляют план"]],
+    factsNote: "Имплант Osstem по акции от 17 500 ₽ до 31\u00a0декабря, консультация хирурга и 3D-снимок в подарок.",
     links: [["Имплантация зубов","implantaciya/"], ["All-on-4","implantaciya/all-on-4/"], ["All-on-6","implantaciya/all-on-6/"], ["Вся челюсть на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Синус-лифтинг","implantaciya/sinus-lifting/"], ["Костная пластика","implantaciya/kostnaya-plastika/"]],
   },
   {
