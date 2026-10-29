@@ -1637,10 +1637,9 @@ function pageBooking() {
         <form class="form" id="b-form" method="post" action="${leadAction("")}">
           <label>Имя<input name="name" required autocomplete="name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
-          <label>Услуга<select name="service"><option value="Консультация">Не знаю, нужна консультация</option>${bdata.services.map((x) => `<option value="${esc(x.title)}" data-slug="${x.slug}">${esc(x.title)}</option>`).join("")}</select></label>
+          <input type="hidden" name="service" value="">
           <input type="hidden" name="doctor" value="">
           <p class="bform__doc" data-doc hidden></p>
-          <fieldset class="bform__when"><legend>Когда удобно</legend><div class="chips">${["Как можно скорее", "Сегодня", "Завтра", "В выходные", "Вечером, после 17"].map((t, i) => `<label class="chip chip--pick"><input type="radio" name="when" value="${t}"${i ? "" : " checked"}>${t}</label>`).join("")}</div></fieldset>
           ${consentField("")}
           <button class="btn btn--lg" data-magnet>Записаться</button>${CONSENT_CHECKBOX ? "" : `
           <p class="modal__note">${consentNote("")}</p>`}
@@ -1664,7 +1663,8 @@ function pageBooking() {
 ${footerLegal("", "footer__legal booking__legal")}
   </aside>
 </div>
-<script type="application/json" id="um-docs">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, d.short])))}</script>` + end;
+<script type="application/json" id="um-docs">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, d.short])))}</script>
+<script type="application/json" id="um-svc">${JSON.stringify(Object.fromEntries(bdata.services.map((x) => [x.slug, x.title])))}</script>` + end;
 }
 
 // ---------- политика конфиденциальности, согласие, соглашение ----------

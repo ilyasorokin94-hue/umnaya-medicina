@@ -1282,13 +1282,13 @@
   else { setTimeout(runLater, 2200); addEventListener("scroll", runLater, { passive: true }); }
 
   // ---------- запись: одна форма ----------
-  // услуга и врач подставляются из ссылки (zapis.html?service=implantaciya&doctor=hludnevskiy), «когда удобно» это пожелание, время подбирает администратор
+  // в форме только имя и телефон (Ilya 29.10); услуга и врач из ссылки (zapis.html?service=implantaciya&doctor=hludnevskiy) уходят в заявку скрыто
   function booking(box) {
     const bf = $("#b-form", box), steps = $$(".bstep", box), params = new URLSearchParams(location.search);
     const ps = params.get("service"), pd = params.get("doctor");
-    const so = ps && $(`select[name=service] option[data-slug="${ps}"]`, bf); if (so) so.selected = true;
+    const svcs = (() => { try { return JSON.parse($("#um-svc")?.textContent || "{}"); } catch (e) { return {}; } })();
+    if (ps && svcs[ps]) $("[name=service]", bf).value = svcs[ps];
     if (pd && docs[pd]) { $("[name=doctor]", bf).value = pd; const n = $("[data-doc]", box); n.textContent = "Врач: " + docs[pd]; n.hidden = false; }
-    if (new Date().getHours() >= 19) $('input[name=when][value="Сегодня"]', bf)?.closest("label").remove();
     bf.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (bf.dataset.sending) return;
