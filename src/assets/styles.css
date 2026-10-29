@@ -333,6 +333,10 @@ html:not(.js-intro) .intro { display: none; }
 .slot { min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--white); font-variant-numeric: tabular-nums; }
 .slot:disabled { opacity: .35; text-decoration: line-through; cursor: not-allowed; }
 .slot[aria-pressed="true"] { background: var(--green-btn); color: #fff; border-color: var(--green-btn); }
+.slots--when { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); margin-top: 10px; }
+.slots--when .slot { padding: 10px 14px; text-align: left; font-variant-numeric: normal; }
+.bwhen__label { margin-top: 22px; }
+.bwhen__note { margin-top: 18px; }
 .form { display: grid; gap: 14px; max-width: 560px; }
 .form label { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
 .form input, .form textarea { min-height: 56px; padding: 14px 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--white); font: inherit; color: var(--text); }

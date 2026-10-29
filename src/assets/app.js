@@ -1289,8 +1289,6 @@
     const bars = $$(".bsteps span", box);
     const sum = Object.fromEntries($$("[data-sum]").map((d) => [d.dataset.sum, d]));
     const params = new URLSearchParams(location.search);
-    const fmtDay = new Intl.DateTimeFormat("ru-RU", { weekday: "short" });
-    const fmtDate = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", weekday: "long" });
     let cur = 0;
 
     const setSum = (k, v) => { const d = sum[k]; if (!d) return; d.textContent = v || "не выбрано"; d.classList.toggle("is-empty", !v); };
@@ -1313,22 +1311,10 @@
       $("#b-doctors", box).innerHTML = `<button type="button" class="opt opt--doc" data-v="any" aria-pressed="false"><span class="opt__ph">✦</span><b>Любой врач</b><small>Ближайшее свободное время</small></button>` +
         list.map((d) => `<button type="button" class="opt opt--doc" data-v="${d.id}" aria-pressed="false"><span class="opt__ph">${d.photo ? `<img src="${d.photo}" alt="" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}${d.initials}</span><b>${d.short}</b><small>${d.role}</small></button>`).join("");
     };
-    // шаг 3: дата и время (пример расписания)
-    const days = [];
-    const today = new Date();
-    for (let i = 0; i < 14; i++) { const d = new Date(today); d.setDate(today.getDate() + i); days.push(d); }
-    $("#b-days", box).innerHTML = days.map((d, i) => `<button type="button" class="day" data-i="${i}" aria-pressed="false"><small>${i === 0 ? "сегодня" : fmtDay.format(d)}</small><b>${d.getDate()}</b></button>`).join("");
-    const times = []; for (let h = 9; h < 21; h++) for (const m of ["00", "30"]) times.push(`${h}:${m}`);
-    const renderSlots = () => {
-      const seed = (state.date?.getDate() || 1) * 7 + (state.doctor ? state.doctor.length : 3);
-      const now = new Date();
-      $("#b-slots", box).innerHTML = times.map((t, i) => {
-        const [h, m] = t.split(":").map(Number);
-        const past = state.date && state.date.toDateString() === now.toDateString() && (h < now.getHours() + 1 || (h === now.getHours() + 1 && m < now.getMinutes()));
-        const busy = past || (i * 13 + seed * 5) % 7 < 3;
-        return `<button type="button" class="slot" data-v="${t}" aria-pressed="false"${busy ? " disabled" : ""}>${t}</button>`;
-      }).join("");
-    };
+    // шаг 3: когда удобно прийти, без расписания: день и время суток уходят в заявку пожеланием, точное время подбирает администратор
+    const dayBox = $("#b-days", box), timeBox = $("#b-times", box);
+    if (new Date().getHours() >= 19) dayBox.querySelector('[data-v="Сегодня"]')?.remove();
+    const setWhen = () => setSum("date", state.date ? state.date + (state.time ? ", " + state.time : "") : "");
 
     const pick = (wrap, btn) => { $$("[aria-pressed]", wrap).forEach((b) => b.setAttribute("aria-pressed", String(b === btn))); };
     box.addEventListener("click", (e) => {
@@ -1342,17 +1328,13 @@
       }
       if (b.closest("#b-doctors")) {
         pick($("#b-doctors", box), b); state.doctor = b.dataset.v;
-        setSum("doctor", $("b", b).textContent); renderSlots(); setTimeout(() => go(3), 250); return;
+        setSum("doctor", $("b", b).textContent); setTimeout(() => go(3), 250); return;
       }
       if (b.closest("#b-days")) {
-        pick($("#b-days", box), b); state.date = days[+b.dataset.i]; state.time = null;
-        setSum("date", fmtDate.format(state.date)); renderSlots(); $("[data-next-time]", box).disabled = true;
-        if (anim) G.from("#b-slots .slot", { opacity: 0, y: 12, stagger: 0.012, duration: 0.4 });
-        return;
+        pick(dayBox, b); state.date = b.dataset.v; setWhen(); $("[data-next-time]", box).disabled = false; return;
       }
-      if (b.closest("#b-slots")) {
-        pick($("#b-slots", box), b); state.time = b.dataset.v;
-        setSum("date", fmtDate.format(state.date) + ", " + state.time); $("[data-next-time]", box).disabled = false; return;
+      if (b.closest("#b-times")) {
+        pick(timeBox, b); state.time = b.dataset.v; setWhen(); return;
       }
       if (b.matches("[data-next-time]")) return go(4);
     });
@@ -1377,8 +1359,6 @@
     let okS = false, okD = false;
     if (ps) { const b = $(`#b-services [data-v="${ps}"]`, box); if (b) { pick(svcBox, b); state.service = ps; setSum("service", $("b", b).textContent); renderDocs(); okS = true; } }
     if (pd) { const b = $(`#b-doctors [data-v="${pd}"]`, box); if (b) { pick($("#b-doctors", box), b); state.doctor = pd; setSum("doctor", $("b", b).textContent); okD = true; } }
-    // выбираем первый день, где есть окна
-    const d0 = $("#b-days .day", box); if (d0) { pick($("#b-days", box), d0); state.date = days[0]; setSum("date", fmtDate.format(days[0])); renderSlots(); }
     if (okS || okD) go(okD ? 3 : 2);
   }
 })();

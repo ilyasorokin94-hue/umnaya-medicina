@@ -1651,10 +1651,12 @@ function pageBooking() {
       </section>
       <section class="bstep" data-step="3" hidden>
         <div class="bsteps" aria-hidden="true"><span class="is-done"><i></i></span><span class="is-done"><i></i></span><span><i></i></span><span><i></i></span></div>
-        <h2 tabindex="-1">Когда удобно?</h2>
-        <div class="days" id="b-days"></div>
-        <div class="slots" id="b-slots"></div>
-        <p class="note" style="margin-top:14px">Пример расписания. В рабочей версии здесь живые окна врачей из МИС клиники.</p>
+        <h2 tabindex="-1">Когда удобно прийти?</h2>
+        <p class="bwhen__label label" id="b-day-l">День</p>
+        <div class="slots slots--when" id="b-days" role="group" aria-labelledby="b-day-l">${["Как можно скорее", "Сегодня", "Завтра", "На этой неделе", "На следующей неделе"].map((t) => `<button type="button" class="slot" data-v="${t}" aria-pressed="false">${t}</button>`).join("")}</div>
+        <p class="bwhen__label label" id="b-time-l">Время</p>
+        <div class="slots slots--when" id="b-times" role="group" aria-labelledby="b-time-l">${[["утром", "Утром, 9–12"], ["днём", "Днём, 12–17"], ["вечером", "Вечером, 17–21"], ["", "Любое время"]].map(([v, t]) => `<button type="button" class="slot" data-v="${v}" aria-pressed="false">${t.replace("–", "\u2060–\u2060")}</button>`).join("")}</div>
+        <p class="note bwhen__note">Администратор перезвонит и подберёт точное время у врача.</p>
         <div class="bnav"><button class="btn btn--ghost btn--sm" type="button" data-back>Назад</button><button class="btn btn--sm" type="button" data-next-time disabled>Дальше</button></div>
       </section>
       <section class="bstep" data-step="4" hidden>
@@ -1682,7 +1684,7 @@ function pageBooking() {
     <dl class="summary">
       <div><dt>Услуга</dt><dd data-sum="service" class="is-empty">не выбрано</dd></div>
       <div><dt>Врач</dt><dd data-sum="doctor" class="is-empty">не выбрано</dd></div>
-      <div><dt>Дата и время</dt><dd data-sum="date" class="is-empty">не выбрано</dd></div>
+      <div><dt>Когда удобно</dt><dd data-sum="date" class="is-empty">не выбрано</dd></div>
       <div><dt>Адрес</dt><dd itemprop="address" itemscope itemtype="https://schema.org/PostalAddress">${esc(clinic.addressShort)}<meta itemprop="streetAddress" content="${esc(clinic.addr.street)}"><meta itemprop="addressLocality" content="${esc(clinic.addr.locality)}"><meta itemprop="addressRegion" content="${esc(clinic.addr.region)}"><meta itemprop="postalCode" content="${clinic.addr.postal}"><meta itemprop="addressCountry" content="RU"></dd></div>
     </dl>
     <p class="note">Администратор перезвонит, ответит на вопросы и подтвердит запись, ежедневно с 9:00 до 21:00.<meta itemprop="telephone" content="${esc(clinic.phone)}"><meta itemprop="openingHours" content="Mo-Su 09:00-21:00"></p>
