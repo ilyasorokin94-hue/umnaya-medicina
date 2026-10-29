@@ -37,7 +37,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <script src="assets/vendor/gsap.min.js" defer></script>
 <script src="assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="assets/vendor/lenis.min.js" defer></script>
-<script src="assets/app.js?v=c39ec008" defer></script>
+<script src="assets/app.js?v=330fa1bb" defer></script>
 <script src="assets/cookie.js?v=f14686e3" data-privacy="privacy/" data-ym="113739978" defer></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"https://smartmed.clinic"},{"@type":"ListItem","position":2,"name":"Записаться на приём","item":"https://smartmed.clinic/zapis"}]}</script>
 </head>
@@ -58,10 +58,9 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
         <form class="form" id="b-form" method="post" action="lead.php">
           <label>Имя<input name="name" required autocomplete="name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
-          <label>Услуга<select name="service"><option value="Консультация">Не знаю, нужна консультация</option><option value="КТ и снимки" data-slug="diagnostika">КТ и снимки</option><option value="Профгигиена Air-Flow" data-slug="gigiena">Профгигиена Air-Flow</option><option value="Лечение зубов" data-slug="lechenie-zubov">Лечение зубов</option><option value="Имплантация зубов" data-slug="implantaciya">Имплантация зубов</option><option value="All-on-4 и All-on-6" data-slug="all-on-4">All-on-4 и All-on-6</option><option value="Лечение под микроскопом" data-slug="mikroskop">Лечение под микроскопом</option><option value="Протезирование" data-slug="protezirovanie">Протезирование</option><option value="Удаление зубов" data-slug="hirurgiya">Удаление зубов</option><option value="Брекеты и элайнеры" data-slug="ortodontiya">Брекеты и элайнеры</option><option value="Детская стоматология" data-slug="detskaya">Детская стоматология</option></select></label>
+          <input type="hidden" name="service" value="">
           <input type="hidden" name="doctor" value="">
           <p class="bform__doc" data-doc hidden></p>
-          <fieldset class="bform__when"><legend>Когда удобно</legend><div class="chips"><label class="chip chip--pick"><input type="radio" name="when" value="Как можно скорее" checked>Как можно скорее</label><label class="chip chip--pick"><input type="radio" name="when" value="Сегодня">Сегодня</label><label class="chip chip--pick"><input type="radio" name="when" value="Завтра">Завтра</label><label class="chip chip--pick"><input type="radio" name="when" value="В выходные">В выходные</label><label class="chip chip--pick"><input type="radio" name="when" value="Вечером, после 17">Вечером, после 17</label></div></fieldset>
           <input type="hidden" name="consent" value="1">
           <button class="btn btn--lg" data-magnet>Записаться</button>
           <p class="modal__note">Нажимая кнопку, вы соглашаетесь с <a href="soglasie/" target="_blank" rel="noopener">обработкой персональных данных</a> и <a href="privacy/" target="_blank" rel="noopener">Политикой конфиденциальности</a>.</p>
@@ -90,5 +89,6 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   </aside>
 </div>
 <script type="application/json" id="um-docs">{"solodukhin":"Евгений Солодухин","hludnevskiy":"Михаил Хлудневский","radzhabov":"Азамат Раджабов","chitaykin":"Артём Читайкин","kashtanova":"Екатерина Каштанова","alikhanova":"Светлана Алиханова","troitskiy":"Даниил Троицкий"}</script>
+<script type="application/json" id="um-svc">{"diagnostika":"КТ и снимки","gigiena":"Профгигиена Air-Flow","lechenie-zubov":"Лечение зубов","implantaciya":"Имплантация зубов","all-on-4":"All-on-4 и All-on-6","mikroskop":"Лечение под микроскопом","protezirovanie":"Протезирование","hirurgiya":"Удаление зубов","ortodontiya":"Брекеты и элайнеры","detskaya":"Детская стоматология"}</script>
 </body>
 </html>
