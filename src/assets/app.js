@@ -795,6 +795,14 @@
     $("[data-again]", cbDone)?.addEventListener("click", () => { cbDone.hidden = true; cb.hidden = false; cbIn.focus(); });
   }
 
+  // ---------- тур на телефоне свайпом: счётчик фото ----------
+  const ptw = $(".ptw__strip");
+  if (ptw && "IntersectionObserver" in window) {
+    const num = $(".ptw__count b"), items = [...ptw.children];
+    const io = new IntersectionObserver((ens) => ens.forEach((en) => { if (en.isIntersecting && num) num.textContent = String(items.indexOf(en.target) + 1); }), { root: ptw, threshold: 0.6 });
+    items.forEach((it) => io.observe(it));
+  }
+
   // ---------- тур на телефоне как вторая секция Лава Дент ----------
   const pt = $(".ptour");
   if (pt) {

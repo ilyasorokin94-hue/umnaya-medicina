@@ -216,6 +216,21 @@ const bookSlug = (slug) => {
   return slug;
 };
 const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""}" href="${fallbackHref(kind, p, o)}" data-modal="${kind}"${o.reason ? ` data-reason="${esc(o.reason)}"` : ""}${o.promo ? ` data-promo="${esc(o.promo)}"` : ""}${o.doctor ? ` data-doctor="${o.doctor}"` : ""}${o.magnet ? " data-magnet" : ""}>${esc(label)}</a>`;
+// тур на телефоне, вариант «свайп» (Ilya 30.10: лента от прокрутки двигалась ненативно): обычная горизонтальная лента
+// со scroll-snap, листается пальцем вбок, страница при этом прокручивается как обычно; без JS-анимаций, только счётчик
+function phoneTourSwipe(depth) {
+  const P = v2.clinic.phone;
+  const pos = (o) => (o && o.pan ? `${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}% ${o.y || "50%"}` : typeof o === "string" ? `${o} 50%` : "");
+  const all = [...P.car, P.right, [v2.clinic.frame, "Лечебный кабинет"], ...P.gallery.map(([f, cap, , x]) => [f, cap, x])];
+  const card = ([f, cap, o], i) => `<figure class="ptw__item"><span class="ptw__pic">${img(Array.isArray(f) ? f : [f], cap, depth, ` loading="${i < 2 ? "eager" : "lazy"}"${pos(o) ? ` style="object-position:${pos(o)}"` : ""}`)}</span><figcaption>${esc(cap)}</figcaption></figure>`;
+  return `<div class="ptw">
+    <div class="ptw__head"><span class="label label--light">${esc(v2.clinic.label)}</span><h2 class="ptw__title">${esc(v2.clinic.title)}</h2></div>
+    <div class="ptw__strip" tabindex="0" aria-label="Фото клиники, листайте вбок">${all.map(card).join("")}</div>
+    <p class="ptw__count" aria-hidden="true"><b>1</b> / ${all.length}</p>
+    <div class="ptw__text"><p>${esc(v2.clinic.text)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>
+  </div>`;
+}
+
 // тур на телефоне как вторая секция Лава Дент: лента карточек стоит на месте и едет вбок от прокрутки,
 // кабинет раскрывается на весь экран, заголовок проявляется по словам, поверх проходят остальные фото, потом текст
 function phoneTour(depth) {
@@ -673,7 +688,7 @@ function pageHome() {
   <div class="tour__rows" aria-label="Фото клиники">
     ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
   </div>
-  ${phoneTour(depth)}
+  ${phoneTourSwipe(depth)}
 </section>
 
 <section class="foil on-dark" id="path" aria-labelledby="ph-title">
