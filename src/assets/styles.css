@@ -42,7 +42,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; overflow-x: clip; overscroll-behavior-x: none; scroll-padding-top: calc(var(--header-h) + 12px); }
+html { -webkit-text-size-adjust: 100%; overflow-x: clip; overscroll-behavior-x: none; scroll-padding-top: calc(var(--hdr-stick, var(--header-h)) + 12px); }
 html:not(.lenis) { scroll-behavior: smooth; }
 html.lenis, html.lenis body { height: auto; }
 .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
@@ -280,7 +280,7 @@ html:not(.js-intro) .intro { display: none; }
 .prose { display: grid; gap: 18px; max-width: 760px; font-size: clamp(17px, 1.3vw, 19px); color: var(--muted); }
 .prose p:first-child { color: var(--text); font: 500 clamp(22px, 2vw, 30px)/1.3 var(--display); letter-spacing: -.02em; }
 .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 90px); align-items: start; }
-.split__img { overflow: hidden; aspect-ratio: 4 / 5; background: var(--paper-2); position: sticky; top: calc(var(--header-h) + 30px); }
+.split__img { overflow: hidden; aspect-ratio: 4 / 5; background: var(--paper-2); position: sticky; top: calc(var(--hdr-stick, var(--header-h)) + 30px); }
 .split__img img { width: 100%; height: 115%; object-fit: cover; }
 .svc-list { display: grid; border-top: 1px solid var(--line); }
 .svc-row { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: center; padding: 22px 0; border-bottom: 1px solid var(--line); text-decoration: none; transition: padding .5s var(--ease), color .3s; }
@@ -920,11 +920,11 @@ html:not(.js-intro) .intro { display: none; }
   .feat__pin { overflow: visible; }
   .feat__track { gap: 0; }
   .fcard--intro { overflow: visible; margin-bottom: 26px; }
-  .feat__track > .fcard:not(.fcard--intro) { position: sticky; top: calc(var(--header-h) + 24px); min-height: 280px; margin-bottom: 16px; background: linear-gradient(165deg, #1f3e25, #13301a); border-color: rgba(223, 232, 220, .16); box-shadow: 0 -24px 44px -26px rgba(0, 0, 0, .7); transform-origin: 50% 0; will-change: transform; }
-  .feat__track > .fcard:nth-child(3) { top: calc(var(--header-h) + 36px); }
-  .feat__track > .fcard:nth-child(4) { top: calc(var(--header-h) + 48px); }
-  .feat__track > .fcard:nth-child(5) { top: calc(var(--header-h) + 60px); }
-  .feat__track > .fcard:nth-child(6) { top: calc(var(--header-h) + 72px); margin-bottom: 0; }
+  .feat__track > .fcard:not(.fcard--intro) { position: sticky; top: calc(var(--hdr-stick, var(--header-h)) + 24px); min-height: 280px; margin-bottom: 16px; background: linear-gradient(165deg, #1f3e25, #13301a); border-color: rgba(223, 232, 220, .16); box-shadow: 0 -24px 44px -26px rgba(0, 0, 0, .7); transform-origin: 50% 0; will-change: transform; }
+  .feat__track > .fcard:nth-child(3) { top: calc(var(--hdr-stick, var(--header-h)) + 36px); }
+  .feat__track > .fcard:nth-child(4) { top: calc(var(--hdr-stick, var(--header-h)) + 48px); }
+  .feat__track > .fcard:nth-child(5) { top: calc(var(--hdr-stick, var(--header-h)) + 60px); }
+  .feat__track > .fcard:nth-child(6) { top: calc(var(--hdr-stick, var(--header-h)) + 72px); margin-bottom: 0; }
   .fcard__body { padding: 26px 24px 28px; gap: 12px; grid-template-rows: auto auto 1fr; }
   /* путь: карточки по очереди тёмно-зелёная и светлая; механика стопки та же */
   .feat__track > .fcard:nth-child(odd):not(.fcard--intro) { background: linear-gradient(165deg, #f7f6f0, #dfe8dc); border-color: rgba(12, 36, 16, .1); color: var(--ink); }
@@ -1568,7 +1568,7 @@ html:not(.js-intro) .intro { display: none; }
    При загрузке шапка въезжает сверху и проявляется, а светлая линия под разделами убегает влево */
 @media (min-width: 1025px) {
   :root { --hdr-d: calc(2 * clamp(1.5rem, 1.1364rem + 1.6162vw, 2.5rem) + 2 * clamp(.5rem, .4545rem + .202vw, .625rem) + 1.4 * clamp(.8rem, .7499rem + .2226vw, .9377rem)); }
-  html { scroll-padding-top: calc(var(--hdr-d) + 12px); }
+  html { scroll-padding-top: calc(var(--hdr-stick, var(--hdr-d)) + 12px); }
   .demo-bar { z-index: 101; }
   .header a:focus-visible { outline-color: rgb(var(--hc)); box-shadow: 0 0 0 3px var(--ink); }
   body { timeline-scope: --tl-services, --tl-clinic, --tl-akcii, --tl-team, --tl-reviews, --tl-faq, --tl-contacts; }
@@ -1757,7 +1757,7 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
 .pr .btn { margin-top: 24px; align-self: flex-start; }
 
 .pr4 { display: grid; grid-auto-rows: 1fr; gap: clamp(16px, 2vw, 28px); }
-.pr4-card { position: sticky; top: calc(var(--hdr-d, var(--header-h)) + 12px + var(--i) * 16px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 72px); min-height: min(calc(var(--svh, 1svh) * 68), 620px); padding: clamp(10px, 1vw, 14px); border-radius: var(--radius); background: var(--paper); color: var(--text); transform-origin: 50% 0; box-shadow: 0 -18px 40px rgba(0, 0, 0, .18); }
+.pr4-card { position: sticky; top: calc(var(--hdr-stick, var(--header-h)) + 12px + var(--i) * 16px); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 72px); min-height: min(calc(var(--svh, 1svh) * 68), 620px); padding: clamp(10px, 1vw, 14px); border-radius: var(--radius); background: var(--paper); color: var(--text); transform-origin: 50% 0; box-shadow: 0 -18px 40px rgba(0, 0, 0, .18); }
 /* картинка не задаёт высоту карточки: высоту дают min-height и текст, поэтому карточка не выше экрана и не растёт, когда картинка догрузится */
 .pr4-card__pic { position: relative; overflow: hidden; background: var(--paper-2); }
 .pr4-card__pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -1862,7 +1862,7 @@ a.sp-pill:hover { background: var(--paper); color: var(--ink); }
 .sp-head { display: grid; gap: 22px; margin-bottom: clamp(36px, 5vw, 72px); }
 .sp-head h2, .sp-grid__aside h2 { font-size: var(--fs-4); line-height: 1.1; letter-spacing: -.035em; max-width: 20ch; text-wrap: balance; }
 .sp-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px clamp(40px, 6vw, 120px); align-items: start; }
-.sp-grid__aside { position: sticky; top: calc(var(--header-h) + 40px); display: grid; gap: 28px; justify-items: start; }
+.sp-grid__aside { position: sticky; top: calc(var(--hdr-stick, var(--header-h)) + 32px); display: grid; gap: 28px; justify-items: start; }
 .sp-sub { margin-top: clamp(40px, 4.5vw, 64px); display: grid; gap: 18px; }
 .sp-sub h3 { font-size: var(--fs-2); line-height: 1.2; letter-spacing: -.025em; }
 .sp-more { margin-top: clamp(32px, 3.5vw, 48px); max-width: 52em; }
@@ -2082,7 +2082,7 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
 .pv .plist b mark { white-space: nowrap; }
 /* слева заголовок, пояснение к ценам и поиск, справа разделы */
 .pv-a__in { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.6fr); gap: clamp(32px, 5vw, 96px); align-items: start; }
-.pv-a__side { position: sticky; top: calc(var(--header-h) + 40px); display: grid; gap: 22px; }
+.pv-a__side { position: sticky; top: calc(var(--hdr-stick, var(--header-h)) + 32px); display: grid; gap: 22px; }
 .pv-a__side .section__title { font-size: var(--fs-3); }
 .pv-a__side .pfilter { margin: 0; }
 .pv-a__main.ptables { display: block; }
@@ -2122,7 +2122,7 @@ p.way__addr { font: 500 var(--fs-4)/1.05 var(--display); letter-spacing: -.035em
 .legal__meta dt, .legal__req dt { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .legal__meta dd { margin: 8px 0 0; font: 500 17px/1.35 var(--display); overflow-wrap: anywhere; }
 .legal__list { list-style: none; margin: 0; padding: 0; max-width: 980px; }
-.legal__sec { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 24px; padding: clamp(26px, 3vw, 40px) 0; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--header-h) + 20px); }
+.legal__sec { display: grid; grid-template-columns: 80px minmax(0, 1fr); gap: 24px; padding: clamp(26px, 3vw, 40px) 0; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--hdr-stick, var(--header-h)) + 20px); }
 .legal__n { font: 500 clamp(26px, 2.4vw, 36px)/1 var(--display); letter-spacing: -.03em; color: var(--green); }
 .legal__body { display: grid; gap: 14px; max-width: 760px; font-size: 17px; line-height: 1.6; color: var(--muted); overflow-wrap: anywhere; }
 .legal__body h2 { font: 500 clamp(22px, 2vw, 30px)/1.2 var(--display); letter-spacing: -.02em; color: var(--text); }
@@ -2256,7 +2256,7 @@ html.has-ck .footer__in { padding-bottom: calc(28px + var(--ck-h, 0px)); }
 .uk-inside__list span { font-size: var(--fs--1); color: var(--muted); }
 
 .uk-cat { padding-top: clamp(72px, 8vw, 120px); }
-.uk-group { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px clamp(40px, 6vw, 120px); align-items: start; padding: clamp(48px, 5vw, 80px) 0; border-bottom: 1px solid var(--line); scroll-margin-top: calc(var(--header-h) + 16px); }
+.uk-group { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 32px clamp(40px, 6vw, 120px); align-items: start; padding: clamp(48px, 5vw, 80px) 0; border-bottom: 1px solid var(--line); scroll-margin-top: calc(var(--hdr-stick, var(--header-h)) + 16px); }
 .uk-group:first-child { padding-top: 0; }
 .uk-group__side { display: grid; justify-items: start; gap: 16px; }
 .uk-group__pic { display: block; width: 100%; aspect-ratio: 3 / 2; overflow: hidden; background: var(--ink); margin-bottom: 12px; }

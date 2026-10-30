@@ -110,6 +110,13 @@
 
   // ---------- шапка: всегда на месте, уезжает вверх ровно вместе с демо-полосой ----------
   const header = $(".header");
+  // настоящая высота шапки (Ilya 30.10): по ней встают закреплённые колонки и якоря, чтобы не уезжать под полупрозрачную шапку
+  if (header) {
+    let hh = 0;
+    const setHdr = () => { const h = header.offsetHeight; if (h && h !== hh) { hh = h; root.style.setProperty("--hdr-stick", h + "px"); } };
+    setHdr();
+    if ("ResizeObserver" in window) new ResizeObserver(setHdr).observe(header); else addEventListener("resize", setHdr);
+  }
   const demo = $(".demo-bar");
   let demoH = 0;
   const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; root.style.setProperty("--demo-h", demoH + "px"); hdrTop = null; onScrollHeader(); };
