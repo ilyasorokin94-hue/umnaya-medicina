@@ -223,10 +223,9 @@ function phoneTour(depth) {
   // фото ленты и галереи: в Chromium app.js переключает их на синхронное декодирование (иначе пустые карточки), в Safari остаётся фоновое
   const pic = (entry, alt, x, y = "50%") => img(entry, alt, depth, ` class="ptour__img"${x ? ` style="object-position:${x} ${y}"` : ""}`);
   // карточка ленты; у широких фото (pan) окно карточки ведёт по фото слева направо, пока лента едет: доля p0..p1 от того, что не влезло
+  // Ilya 30.10: без окна, которое ехало по широкому фото внутри карточки (второе движение против ленты выглядело рывком), фото стоит по середине того пути
   const card = ([f, cap, o], cls = "") => {
-    const body = o && o.pan
-      ? `<div class="ptour__win" style="--ar:${o.ar};--p0:${o.pan[0]};--p1:${o.pan[1]}"><span class="ptour__rail">${pic([f], cap, `${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}%`, o.y)}</span></div>`
-      : pic([f], cap, o);
+    const body = o && o.pan ? pic([f], cap, `${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}%`, o.y) : pic([f], cap, o);
     return `<div class="ptour__item${cls}">${body}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
   };
   const words = (t, from) => t.split(" ").map((w, i) => `<span class="w" style="--i:${from + i}">${esc(w)}</span>`).join(" ");
@@ -240,7 +239,7 @@ function phoneTour(depth) {
     </div></div>
     <div class="ptour__spacer"></div>
     <div class="ptour__after">
-      <div class="ptour__grid">${P.gallery.map(([f, cap, r, x], i) => `<figure class="ptour__fig"${i % 2 ? " data-par" : ""} style="--r:${r}"><span class="ptour__pic">${img([f], cap, depth, x ? ` style="object-position:${x} 50%"` : "")}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>
+      <div class="ptour__grid">${P.gallery.map(([f, cap, r, x], i) => `<figure class="ptour__fig" style="--r:${r}"><span class="ptour__pic">${img([f], cap, depth, x ? ` style="object-position:${x} 50%"` : "")}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>
       <div class="ptour__text"><p>${esc(v2.clinic.text)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>
     </div>
   </div>`;

@@ -1517,7 +1517,8 @@ html:not(.js-intro) .intro { display: none; }
   .js-anim .ptour__shade { opacity: 0; }
   .js-anim .ptour__cap { display: block; position: absolute; left: 13.75%; right: 13.75%; top: calc(var(--pt-s) * .79 + 12px); margin: 0; font: 400 var(--fs--1)/1.35 var(--body); color: var(--muted-on-dark); }
   /* отступ шапки (scroll-padding) не должен сдвигать шкалы: лента едет ровно с момента, как встала */
-  .js-anim .ptour__spacer { display: block; height: calc(var(--vh, 1vh) * 400); margin-top: calc(var(--vh, 1vh) * -100); view-timeline: --pt-car block; view-timeline-inset: 0px; }
+  /* Ilya 30.10: лента идёт почти вровень с пальцем (было 300vh прокрутки на 225vw ленты, фото ползли втрое медленнее пальца) */
+  .js-anim .ptour__spacer { display: block; height: calc(var(--vh, 1vh) * 240); margin-top: calc(var(--vh, 1vh) * -100); view-timeline: --pt-car block; view-timeline-inset: 0px; }
   /* после раскрытия кабинета пауза, как у Лава Дент (их отступ 3xl), потом поднимаются фото и проявляется заголовок */
   .js-anim .ptour__after { padding-top: calc(calc(var(--vh, 1vh) * 50) + min(clamp(96px, 87.27px + 2.4242vw, 120px), calc(var(--vh, 1vh) * 11.5))); view-timeline: --pt-end block; view-timeline-inset: 0px; }
   .js-anim .ptour__text { margin-top: calc(var(--svh, 1svh) * 40); }
