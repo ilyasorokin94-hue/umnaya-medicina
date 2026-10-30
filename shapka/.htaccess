@@ -1,0 +1,94 @@
+# Стоматология «Умная Медицина», https://smartmed.clinic. Собирается из scripts/build.mjs, руками не править
+AddDefaultCharset utf-8
+Options -Indexes -MultiViews
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+# https и один адрес сайта, без www
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+RewriteRule ^ https://smartmed.clinic%{REQUEST_URI} [R=301,L,NE]
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L,NE]
+
+# старые адреса
+RewriteRule ^ceny\.html$ https://%{HTTP_HOST}/ceny/ [R=301,L]
+RewriteRule ^vrachi\.html$ https://%{HTTP_HOST}/vrachi/ [R=301,L]
+RewriteRule ^vrachi/sikacheva(?:\.html)?$ https://%{HTTP_HOST}/vrachi/ [R=301,L]
+RewriteRule ^uslugi/lechenie-zubov(?:\.html)?$ https://%{HTTP_HOST}/lechenie/ [R=301,L]
+RewriteRule ^uslugi/mikroskop(?:\.html)?$ https://%{HTTP_HOST}/lechenie/pod-mikroskopom/ [R=301,L]
+RewriteRule ^uslugi/implantaciya(?:\.html)?$ https://%{HTTP_HOST}/implantaciya/ [R=301,L]
+RewriteRule ^uslugi/all-on-4(?:\.html)?$ https://%{HTTP_HOST}/implantaciya/all-on-4/ [R=301,L]
+RewriteRule ^uslugi/protezirovanie(?:\.html)?$ https://%{HTTP_HOST}/protezirovanie/ [R=301,L]
+RewriteRule ^uslugi/ortodontiya(?:\.html)?$ https://%{HTTP_HOST}/ortodontiya/ [R=301,L]
+RewriteRule ^uslugi/hirurgiya(?:\.html)?$ https://%{HTTP_HOST}/hirurgiya/ [R=301,L]
+RewriteRule ^uslugi/detskaya(?:\.html)?$ https://%{HTTP_HOST}/detskaya-stomatologiya/ [R=301,L]
+RewriteRule ^uslugi/gigiena(?:\.html)?$ https://%{HTTP_HOST}/gigiena/ [R=301,L]
+RewriteRule ^uslugi/diagnostika(?:\.html)?$ https://%{HTTP_HOST}/diagnostika/ [R=301,L]
+
+# /index.html → /, /zapis.html → /zapis (только то, что набрано в адресе, без петли с внутренней подстановкой)
+RewriteCond %{THE_REQUEST} \s/+((?:[^?\s]*/)?)index\.html[?\s]
+RewriteRule ^ https://%{HTTP_HOST}/%1 [R=301,L,NE]
+RewriteCond %{THE_REQUEST} \s/+([^?\s]+?)\.html[?\s]
+RewriteCond %1 !^404$
+RewriteRule ^ https://%{HTTP_HOST}/%1 [R=301,L,NE]
+# /ceny → /ceny/ сразу на https (mod_dir сам отправил бы на http за прокси)
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^(.+[^/])$ https://%{HTTP_HOST}/$1/ [R=301,L]
+# /zapis/ → /zapis
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.+)/$ https://%{HTTP_HOST}/$1 [R=301,L]
+# /zapis отдаёт zapis.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+RewriteRule ^(.+)$ $1.html [L]
+</IfModule>
+
+# PHP исполняется только у приёмника заявок lead.php, остальные .php закрыты
+<IfModule mod_authz_core.c>
+<FilesMatch "\.(php|phtml|phar|inc)$">
+Require all denied
+</FilesMatch>
+<Files "lead.php">
+Require all granted
+</Files>
+</IfModule>
+
+# сжатие текста
+<IfModule mod_brotli.c>
+AddOutputFilterByType BROTLI_COMPRESS text/html text/css text/plain text/xml application/javascript text/javascript application/json application/xml image/svg+xml
+</IfModule>
+<IfModule mod_deflate.c>
+AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml application/javascript text/javascript application/json application/xml image/svg+xml
+</IfModule>
+
+AddType image/webp .webp
+AddType font/woff2 .woff2
+AddType image/svg+xml .svg
+
+# кэш: стили и скрипты с версией в адресе (?v=) и шрифты на год, картинки на месяц, страницы всегда свежие
+<IfModule mod_headers.c>
+<FilesMatch "\.(css|js|woff2)$">
+Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+<FilesMatch "\.(webp|jpe?g|png|svg|avif|ico)$">
+Header set Cache-Control "public, max-age=2592000"
+</FilesMatch>
+<FilesMatch "\.(html|xml|txt)$">
+Header set Cache-Control "no-cache"
+</FilesMatch>
+
+# защита
+Header always set X-Content-Type-Options "nosniff"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+Header always set Strict-Transport-Security "max-age=31536000" "expr=%{HTTPS} == 'on'"
+Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://mc.yandex.ru https://mc.yandex.com https://yastatic.net https://prodoctorov.ru https://*.prodoctorov.ru; style-src 'self' 'unsafe-inline' https://prodoctorov.ru https://*.prodoctorov.ru; img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com https://*.yandex.ru https://*.yandex.net https://prodoctorov.ru https://*.prodoctorov.ru; font-src 'self' https://prodoctorov.ru https://*.prodoctorov.ru; connect-src 'self' https://mc.yandex.ru https://mc.yandex.com wss://mc.yandex.ru wss://mc.yandex.com https://prodoctorov.ru https://*.prodoctorov.ru; frame-src blob: https://yandex.ru https://*.yandex.ru https://mc.yandex.ru https://mc.yandex.com https://prodoctorov.ru https://*.prodoctorov.ru; child-src blob: https://mc.yandex.ru https://mc.yandex.com; frame-ancestors 'self' https://metrika.yandex.ru https://metrica.yandex.com https://*.webvisor.com https://webvisor.com; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+Header unset X-Powered-By
+</IfModule>
