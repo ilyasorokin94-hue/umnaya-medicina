@@ -1,4 +1,5 @@
 // Уведомление о cookie и Яндекс Метрика (Ilya 19.10, формат Юкки Дент; 23.10 схема как у Зубной Гармонии).
+// Текст плашки без названия сервиса, общими словами (Ilya 31.10); сервис назван в Политике, раздел 9.
 // Одна кнопка «Принять» (Ilya 23.10): до неё Метрика не грузится и к Яндексу запросов нет, плашка видна на каждой странице.
 // Согласие в localStorage «um2-cookie» = "all"; отозвать его можно ссылкой «Настройки cookie» в подвале.
 // Плашка внизу, страницу не закрывает (фид «Врачи» не принимает модальные окна) и не закрывает кнопки записи.
@@ -150,9 +151,9 @@
     }
     var on = get() === "all", more = '<a href="' + privacy + '#p9">Подробнее в Политике конфиденциальности</a>';
     bar.innerHTML = on
-      ? '<p class="cookie__t">Яндекс Метрика включена с вашего согласия. Отключить её можно здесь. ' + more + '</p>'
-        + '<div class="cookie__btns"><button class="btn btn--sm btn--ghost" type="button" data-ck="off">Отключить Метрику</button><button class="btn btn--sm" type="button" data-ck="keep">Оставить</button></div>'
-      : '<p class="cookie__t">Сайт использует технические cookie. С вашего согласия мы также включим Яндекс Метрику, чтобы понимать, как пациенты пользуются сайтом. ' + more + '</p>'
+      ? '<p class="cookie__t">Аналитические cookie включены с вашего согласия. Отключить их можно здесь. ' + more + '</p>'
+        + '<div class="cookie__btns"><button class="btn btn--sm btn--ghost" type="button" data-ck="off">Отключить аналитику</button><button class="btn btn--sm" type="button" data-ck="keep">Оставить</button></div>'
+      : '<p class="cookie__t">Сайт использует технические cookie, а с вашего согласия также аналитические, чтобы делать сайт удобнее для пациентов. ' + more + '</p>'
         + '<div class="cookie__btns"><button class="btn btn--sm" type="button" data-ck="all">Принять</button></div>';
     bar.hidden = false;
     room();
