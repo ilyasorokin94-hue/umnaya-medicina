@@ -1843,6 +1843,156 @@ for (const d of doctors) {
   mkdirSync(path.join(dist, "vrachi", d.id), { recursive: true });
   out(`vrachi/${d.id}/index.html`, pageDoc(d, doctorPages[d.id]));
 }
+// Фид «Врачи» для Яндекс Вебмастера (Услуги и предложения в поиске → Фиды и ошибки → Врачи), YML 2.0 по
+// https://yandex.ru/support/webmaster/ru/search-appearance/doctors.html. Боевая сборка кладёт его в dist/feeds/doctors.xml,
+// в Вебмастер даётся ссылка https://smartmed.clinic/feeds/doctors.xml; демо-сборка фид не пишет (у неё домен-пример).
+// Расширение .xml: Apache отдаёт его как application/xml, nginx как text/xml, оба типа Вебмастер принимает.
+// В фиде врачи со страницей нового формата и строкой в feedSpec. На каждую специальность врача одно предложение: первичная
+// консультация со страницы врача (базовая услуга) по её цене, ссылка — страница врача. У предложений одного врача ссылка общая,
+// у разных врачей разная (group_id в YML 2.0 нет). Специальность Яндекс берёт только из своего перечня («детского стоматолога»
+// в нём нет), поэтому специальности и приём детей и взрослых заданы здесь. Цены сборка не задаёт и не сверяет: они берутся
+// из consult на странице врача, правило о ценах консультаций проверяет validate_feed.cjs. Врач без страницы нового формата
+// или без строки в feedSpec в фид не попадает (сборка предупреждает); ошибки, с которыми Вебмастер фид не примет,
+// останавливают боевую сборку, на демо печатаются. Стажа, степеней, фото и отзывов в фиде нет: стаж сайт не показывает,
+// портреты ждут согласия врачей, отзывы с ПроДокторов. Клиника — карточка стоматологии в Яндекс Бизнесе (номер из
+// clinic.yandex), название и адрес как в карточке; многопрофильного центра (Громова, 10, um-med.com) в фиде нет. Сикачевой нет.
+// specs: специальности из перечня Яндекса, первая основная (её предложение offer-<id>, у остальных offer-<id>-<латиница>);
+// skip: специальности из подписи на странице врача, которых в фиде нет нарочно (о них сборка не предупреждает)
+const feedSpec = {
+  solodukhin: { specs: ["стоматолог-ортопед"], adult: true, kids: false },
+  hludnevskiy: { specs: ["стоматолог-хирург", "стоматолог-имплантолог"], adult: true, kids: false },
+  radzhabov: { specs: ["стоматолог-хирург", "стоматолог-имплантолог"], adult: true, kids: false },
+  chitaykin: { specs: ["стоматолог-терапевт", "стоматолог-эндодонт"], adult: true, kids: false },
+  // на её странице одна консультация, ортодонта (своей консультации терапевта там нет); пластинки и трейнеры для детей
+  kashtanova: { specs: ["стоматолог-ортодонт"], skip: ["стоматолог-терапевт"], adult: true, kids: true },
+  alikhanova: { specs: ["стоматолог-ортопед"], adult: true, kids: false },
+  troitskiy: { specs: ["стоматолог"], adult: false, kids: true }, // детский стоматолог
+};
+// название, город и адрес как в карточке 62624439627 («Указывайте, как в карточке клиники в Яндекс Бизнесе»), на сайте «пгт Удельная», «ул. Громова, 10/2»
+const feedCard = { id: "udelnaya", name: clinic.name, city: "посёлок городского типа Удельная", address: "улица Громова, 10, стр. 2", companyId: (/\/(\d+)\/?$/.exec(clinic.yandex) || [])[1] };
+// бесплатная консультация уходит ценой 0 ₽, как на сайте; если Вебмастер не примет 0, false уберёт цену у таких предложений
+const feedZeroPrice = true;
+{
+  // стоматологическая часть «Перечня специальностей» Яндекса: значение → латиница для id предложения и слово, по которому
+  // специальность видна в подписи врача на странице
+  const yaDental = {
+    "стоматолог": ["stomatolog", /стоматолог/i], "стоматолог-гигиенист": ["gigienist", /гигиенист/i],
+    "стоматолог-имплантолог": ["implantolog", /имплантолог/i], "стоматолог-ортодонт": ["ortodont", /ортодонт/i],
+    "стоматолог-ортопед": ["ortoped", /ортопед/i], "стоматолог-пародонтолог": ["parodontolog", /пародонтолог/i],
+    "стоматолог-терапевт": ["terapevt", /терапевт/i], "стоматолог-хирург": ["hirurg", /(?<!лицевой )хирург/i],
+    "стоматолог-эндодонт": ["endodont", /эндодонт/i], "челюстно-лицевой хирург": ["chlh", /челюстно-лицев/i], "гнатолог": ["gnatolog", /гнатолог/i],
+  };
+  const bad = [], warn = (t) => console.warn(`Фид врачей: ${t}`);
+  // значения без кавычек, апострофов, < > и эмодзи (Вебмастер их не поддерживает), & пишется словом «и»
+  const x = (t) => String(t).replace(/[«»„“”"'‘’<>]|\p{Extended_Pictographic}|\uFE0F/gu, "").replace(/\s*&\s*/g, " и ").replace(/\s+/g, " ").trim();
+  const el = (pad, name, v) => `${pad}<${name}>${x(v)}</${name}>`;
+  // точная цена консультации: число или «1 700 ₽»; «от …» и пустое не подходят
+  const rubles = (v) => { if (typeof v === "number") return v >= 0 ? v : NaN; const m = /^(\d[\d\s]*)\s?₽$/.exec(String(v ?? "").trim()); return m ? Number(m[1].replace(/\D/g, "")) : NaN; };
+  const shopName = `${clinic.name}. ${clinic.unit}`;
+  if ([...shopName].length > 30) bad.push(`название «${shopName}» длиннее 30 символов`);
+  if (!feedCard.companyId) bad.push("нет номера карточки Яндекс Бизнеса в clinic.yandex");
+  if (PUBLISH && !sharp) bad.push("нет sharp (npm install): без него нет логотипа images/brand/apple-touch-icon.png, а без фида ссылка в Вебмастере даст 404");
+  // дата формирования фида: с BUILD_DATE «<BUILD_DATE> 00:00», без него время сборки по Москве. В боевой команде BUILD_DATE
+  // ставят днём выкладки: со старой датой из прошлой команды и фид, и карта сайта получат устаревшую дату
+  const buildDate = process.env.BUILD_DATE;
+  if (buildDate && !/^\d{4}-\d{2}-\d{2}$/.test(buildDate)) bad.push(`BUILD_DATE «${buildDate}» не в виде ГГГГ-ММ-ДД`);
+  const list = doctors.filter((d) => !/сикачев|sikachev/i.test(`${d.id} ${d.name}`));
+  for (const id of Object.keys(feedSpec)) if (!list.some((d) => d.id === id)) bad.push(`${id}: врача нет на сайте, уберите его строку из feedSpec`);
+  const offers = [], seenId = new Map(), seenUrl = new Map(), seenBase = new Set();
+  for (const d of list) {
+    const page = doctorPages[d.id], f = feedSpec[d.id];
+    if (!page) { warn(`${d.id} не в фиде: нет страницы врача нового формата; нужны страница в src/doctor-pages.mjs и строка в feedSpec (scripts/build.mjs)`); continue; }
+    if (!f) { warn(`${d.id} не в фиде: нет строки в feedSpec (scripts/build.mjs) со специальностями из перечня Яндекса и приёмом взрослых и детей`); continue; }
+    if (!/^[a-z0-9-]+$/.test(d.id)) { bad.push(`${d.id}: в номере врача для фида только a-z, 0-9 и дефис`); continue; }
+    const specs = Array.isArray(f.specs) ? f.specs : [];
+    const wrong = specs.filter((s) => !Object.prototype.hasOwnProperty.call(yaDental, s));
+    if (!specs.length || wrong.length) { bad.push(`${d.id}: ${specs.length ? `специальности ${wrong.map((s) => `«${s}»`).join(", ")} нет в перечне Яндекса` : "в feedSpec нет специальностей"}`); continue; }
+    if (typeof f.adult !== "boolean" || typeof f.kids !== "boolean" || !(f.adult || f.kids)) { bad.push(`${d.id}: в feedSpec нужен приём взрослых или детей (adult и kids: true или false)`); continue; }
+    const price = rubles(page.consult);
+    if (!Number.isFinite(price) || typeof page.consultName !== "string" || !page.consultName.trim()) { bad.push(`${d.id}: у консультации нет точной цены или названия (consult, consultName в src/doctor-pages.mjs)`); continue; }
+    // подпись врача на странице и feedSpec: расхождение фид не ломает, но его стоит проверить
+    const said = `${page.spec || ""}, ${page.consultName}`;
+    for (const s of specs) if (!yaDental[s][1].test(said)) warn(`${d.id}: в feedSpec «${s}», а на странице врача этого нет («${said}»)`);
+    for (const [s, [, re]] of Object.entries(yaDental)) if (s !== "стоматолог" && re.test(said) && !specs.includes(s) && !(f.skip || []).includes(s)) warn(`${d.id}: на странице врача «${said}», а в feedSpec нет «${s}»: добавьте её в specs или в skip`);
+    if ((/детск/i.test(said) && !f.kids) || (f.kids && !f.adult && !/детск/i.test(said))) warn(`${d.id}: приём детей и взрослых в feedSpec не сходится с подписью на странице («${said}»)`);
+    specs.forEach((spec, i) => {
+      const id = i ? `offer-${d.id}-${yaDental[spec][0]}` : `offer-${d.id}`, url = `${SITE}/vrachi/${d.id}/`, base = `${d.id}|${feedCard.id}|${spec}`;
+      if (seenId.has(id)) bad.push(`${id}: такой id предложения уже есть`);
+      if (seenUrl.has(url) && seenUrl.get(url) !== d.id) bad.push(`${url}: этот адрес уже у врача ${seenUrl.get(url)}, у разных врачей адреса разные`);
+      if (seenBase.has(base)) bad.push(`${d.id}: вторая базовая услуга по специальности «${spec}» (одна на врача, клинику и специальность)`);
+      seenId.set(id, d.id); seenUrl.set(url, d.id); seenBase.add(base);
+      offers.push({ id, d, page, f, spec, price, url });
+    });
+  }
+  if (!offers.length) bad.push("в фиде нет ни одного предложения");
+  const day = buildDate || new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Moscow" });
+  const time = buildDate ? "00:00" : new Date().toLocaleTimeString("ru-RU", { timeZone: "Europe/Moscow", hour: "2-digit", minute: "2-digit" });
+  const svcId = (name) => `usluga-${hash(name)}`;
+  const feedDocs = [...new Map(offers.map((o) => [o.d.id, o])).values()];
+  const xml = [
+    '<?xml version="1.0" encoding="utf-8"?>',
+    "<!-- Фид Врачи для Яндекс Вебмастера, YML 2.0. Собирается из scripts/build.mjs, руками не править -->",
+    `<shop version="2.0" date="${day} ${time}">`,
+    el("  ", "name", shopName),
+    el("  ", "company", clinic.legal),
+    el("  ", "url", `${SITE}/`),
+    el("  ", "picture", `${SITE}/images/brand/apple-touch-icon.png`),
+    el("  ", "email", clinic.email),
+    "  <doctors>",
+    ...feedDocs.flatMap(({ d, page, url }) => {
+      const [surname, first, patronymic, ...more] = d.name.split(" ");
+      return [
+        `    <doctor id="${d.id}">`,
+        el("      ", "name", d.name),
+        el("      ", "url", url),
+        ...(typeof page.lead === "string" ? [el("      ", "description", page.lead)] : []),
+        ...(patronymic && !more.length ? [el("      ", "first_name", first), el("      ", "surname", surname), el("      ", "patronymic", patronymic)] : []),
+        "    </doctor>",
+      ];
+    }),
+    "  </doctors>",
+    "  <clinics>",
+    `    <clinic id="${feedCard.id}">`,
+    el("      ", "url", `${SITE}/`),
+    el("      ", "name", feedCard.name),
+    el("      ", "city", feedCard.city),
+    el("      ", "address", feedCard.address),
+    el("      ", "email", clinic.email),
+    el("      ", "phone", clinic.phoneHref.replace(/^tel:/, "")),
+    el("      ", "company_id", feedCard.companyId),
+    "    </clinic>",
+    "  </clinics>",
+    "  <services>",
+    ...[...new Set(offers.map((o) => o.page.consultName))].flatMap((n) => [`    <service id="${svcId(n)}">`, el("      ", "name", n), "    </service>"]),
+    "  </services>",
+    "  <offers>",
+    ...offers.flatMap(({ id, d, page, f, spec, price, url }) => [
+      `    <offer id="${id}">`,
+      el("      ", "url", url),
+      "      <appointment>true</appointment>",
+      ...(price || feedZeroPrice ? ["      <price>", el("        ", "base_price", price), "        <currency>RUB</currency>", "      </price>"] : []),
+      `      <service id="${svcId(page.consultName)}"/>`,
+      `      <clinic id="${feedCard.id}">`,
+      `        <doctor id="${d.id}">`,
+      el("          ", "speciality", spec),
+      el("          ", "children_appointment", f.kids),
+      el("          ", "adult_appointment", f.adult),
+      "          <is_base_service>true</is_base_service>",
+      "        </doctor>",
+      "      </clinic>",
+      "    </offer>",
+    ]),
+    "  </offers>",
+    "</shop>",
+    "",
+  ].join("\n");
+  if (bad.length) { spPending.push(...bad.map((t) => `фид врачей: ${t}`)); if (!PUBLISH) bad.forEach(warn); }
+  else if (PUBLISH) {
+    mkdirSync(path.join(dist, "feeds"), { recursive: true });
+    out("feeds/doctors.xml", xml);
+    console.log(`Фид врачей: врачей ${feedDocs.length}, предложений ${offers.length} → feeds/doctors.xml`);
+  }
+}
 if (spPending.length) {
   // боевая сборка с пометками не оставляет полусобранный dist с «index, follow»
   if (PUBLISH) { rmSync(dist, { recursive: true, force: true }); throw new Error("На страницах услуг и врачей остались пометки:\n" + spPending.join("\n")); }
