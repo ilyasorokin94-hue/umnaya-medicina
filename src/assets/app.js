@@ -979,6 +979,12 @@
   if (rot && anim) setTimeout(rotStart, 6000);
   else rotStart();
 
+  // фото врачей грузим заранее, сразу после загрузки страницы, а не когда до них долистали: на компьютере и телефоне
+  // при быстрой прокрутке они появлялись с задержкой (Ilya 01.11). Файлы лёгкие (16–70 КБ), первый экран к этому времени загружен
+  const warmDocs = () => $$(".doc__photo img[loading=lazy]").forEach((i) => { i.loading = "eager"; });
+  if (document.readyState === "complete") setTimeout(warmDocs, 300);
+  else addEventListener("load", () => setTimeout(warmDocs, 300), { once: true });
+
   if (!anim) { runLater(); return; }
   G.registerPlugin(ST);
   G.defaults({ ease: "power3.out" });
