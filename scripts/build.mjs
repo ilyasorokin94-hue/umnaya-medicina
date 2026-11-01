@@ -312,6 +312,18 @@ const consentField = (p, form = "") => (CONSENT_CHECKBOX ? consentCheck(p, form)
 // галочка согласия (CONSENT_CHECKBOX, как у Зубной Гармонии): без неё заявка не уходит; form="…" связывает её с формой, если галочка стоит вне формы
 const consentCheck = (p, form = "") => `<label class="consent"><input type="checkbox" name="consent" required${form ? ` form="${form}"` : ""}><span>Даю <a href="${legalHref("consent", p)}"${ext}>согласие на обработку персональных данных</a> и принимаю <a href="${legalHref("privacy", p)}"${ext}>Политику конфиденциальности</a></span></label>`;
 
+// консультация врача в окне записи и на /zapis?doctor= (условие Яндекса для фида «Врачи»: запись на условиях оффера, цена как в фиде):
+// consult и consultName из src/doctor-pages.mjs, те же, что в первом экране страницы врача. Скрипт вставляет строку текстом, поэтому
+// неразрывные пробелы ставим здесь (как nb и typo в вёрстке), а перед ценой двоеточие вместо тире (правило noDash)
+const consultLine = (pg) => {
+  if (!pg || !pg.consultName || pg.consult == null || pg.consult.todo) return "";
+  const v = priceText(pg.consult), n = pg.consultName;
+  return nb(v === "0 ₽" ? `Бесплатная ${n[0].toLowerCase()}${n.slice(1)}, 0 ₽` : `${n}: ${v}`).replace(/(?<=^|[\s(«])([А-Яа-яЁё]{1,2}) (?=\S|$)/g, "$1\u00a0");
+};
+const consultJson = () => `<script type="application/json" id="um-consult">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, consultLine(doctorPages[d.id])]).filter(([, t]) => t)))}</script>`;
+// /zapis без выбранного врача и без скриптов: правило для всех врачей словами страницы /ceny/ (первый экран и вопрос о консультации)
+const zapisConsult = "Бесплатная консультация терапевта, ортопеда и хирурга с планом лечения, 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽.";
+
 // окна: запись, перезвон, снимок на второе мнение, расчёт All-on-4, мессенджеры, при уходе, «спасибо»
 function modals(depth) {
   const p = pre(depth);
@@ -330,6 +342,7 @@ function modals(depth) {
 </div></div>`;
   return `
 <script type="application/json" id="um-docs">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, d.short])))}</script>
+${consultJson()}
 <div class="modals">
 ${box("book", "Запишитесь на консультацию", `<p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
   <p class="modal__doc" hidden></p>${promoLine}
@@ -1511,7 +1524,7 @@ const priceFacts = [
 function pagePrices() {
   const depth = 1, p = "../";
   const heroImg = pick(priceHero, depth).src, heroSet = srcset(priceHero[0], depth);
-  return head({ title: "Цены на стоматологию в Удельной, рассрочка и вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Консультация с планом лечения 0 ₽ при лечении в клинике, рассрочка, налоговый вычет.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
+  return head({ title: "Цены на стоматологию в Удельной, рассрочка и вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Бесплатная консультация терапевта, ортопеда и хирурга с планом лечения, 0 ₽, рассрочка, налоговый вычет.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
   + header(depth) + `
 <main id="main" class="sp-page">
 <section class="page-hero sp-hero on-dark" aria-labelledby="h1">
@@ -1651,7 +1664,7 @@ function pageBooking() {
       <section class="bstep" data-step="0">
         <span class="label">Онлайн-запись</span>
         <h1 tabindex="-1">Записаться на приём</h1>
-        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. Консультация с планом лечения бесплатная.</p>
+        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. <span data-consult>${esc(zapisConsult)}</span></p>
         <form class="form" id="b-form" method="post" action="${leadAction("")}">
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
           <label><span>Имя <span class="form__opt">(можно не указывать)</span></span><input name="name" autocomplete="given-name"></label>
@@ -1684,6 +1697,7 @@ ${footerLegal("", "footer__legal booking__legal")}
   </aside>
 </div>
 <script type="application/json" id="um-docs">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, d.short])))}</script>
+${consultJson()}
 <script type="application/json" id="um-svc">${JSON.stringify(Object.fromEntries(bdata.services.map((x) => [x.slug, x.title])))}</script>` + end;
 }
 

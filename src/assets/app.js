@@ -477,6 +477,8 @@
 
   // ---------- окна: запись, перезвон, снимок, расчёт, мессенджеры ----------
   const docs = (() => { try { return JSON.parse($("#um-docs")?.textContent || "{}"); } catch (e) { return {}; } })();
+  // консультация каждого врача с ценой, как в первом экране его страницы и в фиде «Врачи» (scripts/build.mjs, consultLine)
+  const consults = (() => { try { return JSON.parse($("#um-consult")?.textContent || "{}"); } catch (e) { return {}; } })();
 
   // ---------- онлайн-запись (после docs: форма сразу подставляет врача из ссылки) ----------
   const bk = $("#booking");
@@ -664,6 +666,11 @@
       $('input[name="doctor"]', m).value = doc || "";
       info.hidden = !doc;
       info.textContent = doc ? "Врач: " + (docs[doc] || doc) : "";
+      // строкой ниже консультация этого врача с ценой (условие Яндекса для фида «Врачи»: запись на условиях оффера)
+      if (doc && consults[doc]) info.append(document.createElement("br"), consults[doc]);
+      // врач уже выбран кнопкой: в подзаголовке «подберём удобное время» вместо «подберём врача и удобное время»
+      const sub = $(".modal__sub", m);
+      if (sub) { sub.dataset.text ??= sub.textContent; sub.textContent = doc ? sub.dataset.text.replace(/подберём врача и\s/, "подберём ") : sub.dataset.text; }
       // повод от кнопки («Сказали удалить» и т. п.) уходит в заявку скрытым полем, выбирать его в окне не нужно (Ilya 22.10)
       $('input[name="reason"]', m).value = reason || "";
     }
@@ -1497,6 +1504,9 @@
     const svcs = (() => { try { return JSON.parse($("#um-svc")?.textContent || "{}"); } catch (e) { return {}; } })();
     if (ps && svcs[ps]) $("[name=service]", bf).value = svcs[ps];
     if (pd && docs[pd]) { $("[name=doctor]", bf).value = pd; const n = $("[data-doc]", box); n.textContent = "Врач: " + docs[pd]; n.hidden = false; }
+    // врач из ссылки: вместо общего правила о консультациях его консультация с ценой (условие Яндекса для фида «Врачи»)
+    const pc = pd && docs[pd] && consults[pd], pl = $("[data-consult]", box);
+    if (pc && pl) pl.textContent = pc + ".";
     // форма для старшего возраста (Ilya 01.11): телефон первым, имя последним, поэтому с имени клавиатура сразу отправляет
     const tel = $("[name=phone]", bf), btn = $("button", bf);
     $("[name=name]", bf)?.setAttribute("enterkeyhint", "send");
