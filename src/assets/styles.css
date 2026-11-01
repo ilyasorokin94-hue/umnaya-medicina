@@ -2348,3 +2348,11 @@ html:not(.menu-open) .header.is-hidden { transform: translate3d(0, calc(-100% - 
 @media (min-width: 1025px) and (max-width: 1439px) {
   .header .header__cta .header__phone { display: none; }
 }
+
+/* поля заявок (Ilya 01.11): подсказка под полем вместо всплывающей подсказки браузера, неверное поле с красной рамкой */
+.form__hint { margin: -4px 0 0; font-size: 14px; line-height: 1.4; color: #b3261e; text-align: left; }
+.form label > .form__hint { margin-top: 2px; }
+.invite__form + .form__hint { margin: 10px 0 0; }
+.form input[aria-invalid="true"] { border-color: #b3261e; box-shadow: inset 0 0 0 1px #b3261e; }
+.invite__form:has(input[aria-invalid="true"]) { box-shadow: inset 0 0 0 2px #b3261e; }
+.form input[type="tel"], .invite__field input[type="tel"] { font-variant-numeric: tabular-nums; letter-spacing: .02em; }

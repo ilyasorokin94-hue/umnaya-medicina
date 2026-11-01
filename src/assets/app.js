@@ -489,6 +489,77 @@
   const isLive = (f) => /lead\.php$/.test(f.getAttribute("action") || "");
   // ловушка для ботов: поле, которого человек не видит
   $$("form").forEach((f) => { if (isLive(f)) f.insertAdjacentHTML("beforeend", '<input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">'); });
+  // ---------- телефон и имя в формах (Ilya 01.11): маска +7 999 123-45-67, которая не мешает вводу ----------
+  // Номер можно набрать, вставить или подставить автозаполнением в любом виде (8 964…, +7 (964)…, 964…): пробелы и чёрточки
+  // встают сами, курсор остаётся после той же цифры, правка в середине номера работает. Стёрли пробел или чёрточку —
+  // стирается цифра перед ней. Лишняя цифра в полном номере не сдвигает его, а не принимается.
+  // Неполный номер не отправляется: вместо всплывающей подсказки браузера строка под полем. В подвале у большого номера своя маска.
+  const telNorm = (d) => (!d ? "" : d[0] === "7" ? d : d[0] === "8" ? "7" + d.slice(1) : "7" + d);
+  const telFmt = (d) => { if (!d) return ""; const r = d.slice(1); let t = "+7 " + r.slice(0, 3); if (r.length > 3) t += " " + r.slice(3, 6); if (r.length > 6) t += "-" + r.slice(6, 8); if (r.length > 8) t += "-" + r.slice(8, 10); return t; };
+  const telCaret = (t, n) => { if (n <= 1) return Math.min(t.length, 3); let k = 0; for (let i = 0; i < t.length; i++) if (/\d/.test(t[i]) && ++k === n) return i + 1; return t.length; };
+  const telMsg = (v) => {
+    const d = telNorm(v.replace(/\D/g, ""));
+    if (d.length <= 1) return "Введите номер телефона";
+    if (d.length < 11) return `Не хватает цифр: после +7 нужно 10, сейчас ${d.length - 1}`;
+    if (!/^7[3-9]/.test(d)) return "Проверьте номер: после +7 код начинается с 3–9, например +7 964…";
+    return "";
+  };
+  const fieldHint = (inp, msg) => {
+    const wrap = inp.closest(".invite__form");
+    let p = inp._hint;
+    if (!msg) { if (p) p.hidden = true; inp.removeAttribute("aria-invalid"); return; }
+    if (!p) {
+      p = inp._hint = document.createElement("p"); p.className = "form__hint"; p.id = (inp.id || inp.name + "-" + Math.random().toString(36).slice(2, 7)) + "-hint";
+      p.setAttribute("aria-live", "polite");
+      if (wrap) wrap.after(p); else inp.after(p);
+      inp.setAttribute("aria-describedby", [inp.getAttribute("aria-describedby"), p.id].filter(Boolean).join(" "));
+    }
+    p.textContent = msg; p.hidden = false; inp.setAttribute("aria-invalid", "true");
+  };
+  $$('input[type="tel"]').forEach((inp) => {
+    if (inp.id === "cb-phone") return;
+    inp.setAttribute("inputmode", "tel"); inp.setAttribute("autocomplete", "tel"); inp.setAttribute("enterkeyhint", "send");
+    let prev = inp.value;
+    const check = () => { const m = inp.value ? telMsg(inp.value) : ""; inp.setCustomValidity(inp.value || inp.required ? (m || "") : ""); return m; };
+    inp.addEventListener("input", (e) => {
+      const raw = inp.value, type = e.inputType || "";
+      const at = inp.selectionStart ?? raw.length;
+      let rd = raw.replace(/\D/g, ""), n = raw.slice(0, at).replace(/\D/g, "").length;
+      // стёрли пробел, чёрточку или скобку: стираем цифру рядом, как ждёт человек
+      if (type.startsWith("delete") && rd === prev.replace(/\D/g, "") && raw !== prev && rd) {
+        const i = type === "deleteContentForward" ? n : n - 1;
+        if (i >= 0 && i < rd.length) { rd = rd.slice(0, i) + rd.slice(i + 1); n = i; }
+      }
+      let d = telNorm(rd);
+      n += d.length - rd.length;
+      if (d === "78") { d = "7"; n = 1; } // привычная 8 сразу после «+7» не становится первой цифрой номера
+      if (d.length > 11) {
+        // вставили или подставили целый номер поверх «+7»: берём последние 10 цифр; лишнюю цифру при наборе не принимаем
+        if (raw.length - prev.length > 1 || !type.startsWith("insertText")) { d = "7" + d.slice(-10); n = 11; }
+        else { const pc = Math.max(0, at - (raw.length - prev.length)); inp.value = prev; inp.setSelectionRange(pc, pc); return; }
+      }
+      const t = d.length <= 1 && type.startsWith("delete") ? "" : telFmt(d);
+      inp.value = prev = t;
+      if (document.activeElement === inp) { const c = telCaret(t, Math.max(1, Math.min(n, d.length))); inp.setSelectionRange(c, c); }
+      const m = check();
+      if (!m) fieldHint(inp, ""); else if (inp.getAttribute("aria-invalid")) fieldHint(inp, m);
+    });
+    inp.addEventListener("blur", () => { const m = check(); const d = inp.value.replace(/\D/g, "").length; if (d > 1 && m) fieldHint(inp, m); });
+    inp.form?.addEventListener("reset", () => setTimeout(() => { prev = inp.value = ""; inp.setCustomValidity(""); fieldHint(inp, ""); }));
+    if (inp.value) { inp.value = prev = telFmt(telNorm(inp.value.replace(/\D/g, "")).slice(0, 11)); }
+    check();
+  });
+  // имя: с заглавной буквы на телефоне, поле «далее» на клавиатуре
+  $$('form input[name="name"]').forEach((inp) => { inp.setAttribute("autocapitalize", "words"); inp.setAttribute("enterkeyhint", "next"); inp.addEventListener("input", () => { if (inp.value.trim()) fieldHint(inp, ""); }); });
+  // незаполненное поле: строка под ним вместо всплывающей подсказки браузера, курсор в первое такое поле
+  let invalidAt = 0;
+  document.addEventListener("invalid", (e) => {
+    const inp = e.target;
+    if (!inp.matches?.('input[type="tel"], input[name="name"]') || inp.id === "cb-phone") return;
+    e.preventDefault();
+    fieldHint(inp, inp.type === "tel" ? telMsg(inp.value) || inp.validationMessage : "Как к вам обращаться?");
+    if (Date.now() - invalidAt > 300) { invalidAt = Date.now(); inp.focus(); }
+  }, true);
   const sendLead = async (form, kind, extra = {}) => {
     if (!isLive(form)) return new Promise((r) => setTimeout(r, 700));
     const fd = new FormData(form);
