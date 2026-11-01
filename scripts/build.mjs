@@ -1614,7 +1614,7 @@ function pageBooking() {
   <main class="booking__main" id="main">
     <div class="booking__top">
       <a class="logo" href="index.html" aria-label="На главную">${logoImg(depth)}<span class="logo__text">Умная Медицина<small>стоматология</small></span><span class="logo__unit">Стоматология</span></a>
-      <a class="btn btn--ghost btn--sm" href="index.html">Отменить</a>
+      <a class="btn btn--ghost btn--sm booking__home" href="index.html">На главную</a>
     </div>
     <div class="bform">
       <section class="bstep" data-step="0">
@@ -1622,8 +1622,8 @@ function pageBooking() {
         <h1 tabindex="-1">Записаться на приём</h1>
         <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. Консультация с планом лечения бесплатная.</p>
         <form class="form" id="b-form" method="post" action="${leadAction("")}">
-          <label>Имя (необязательно)<input name="name" autocomplete="given-name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
+          <label><span>Имя <span class="bform__opt">(можно не указывать)</span></span><input name="name" autocomplete="given-name"></label>
           <input type="hidden" name="service" value="">
           <input type="hidden" name="doctor" value="">
           <p class="bform__doc" data-doc hidden></p>
@@ -1634,9 +1634,11 @@ function pageBooking() {
       </section>
       <section class="bstep bdone" data-step="1" hidden>
         <div class="bdone__ok">${icon.check}</div>
-        <h2 tabindex="-1">Заявка отправлена</h2>
-        <p class="muted">${LEADS ? "Администратор перезвонит и подтвердит время приёма." : "Это демонстрация. На рабочем сайте заявка попадёт в amoCRM с меткой источника."}</p>
-        <div class="bnav"><a class="btn" href="index.html">На главную</a></div>
+        <h2 tabindex="-1">Спасибо, заявка принята</h2>
+        <p class="bdone__txt">Администратор перезвонит<span data-done-tel hidden> на номер <b class="nobr"></b></span> и подберёт удобное время у врача.</p>
+        <p class="bdone__txt">Звонит администратор ${esc(clinic.hours.toLowerCase())}.</p>${LEADS ? "" : `
+        <p class="muted">Это демонстрация. На рабочем сайте заявка попадёт в amoCRM с меткой источника.</p>`}
+        <div class="bnav"><a class="btn btn--lg" href="index.html">На главную</a><button class="link bdone__fix" type="button" data-fix-tel>Ошиблись в номере? Исправить</button></div>
       </section>
     </div>
   </main>

@@ -149,11 +149,12 @@
       addEventListener("resize", room);
       document.body.appendChild(bar);
     }
-    var on = get() === "all", more = '<a href="' + privacy + '#p9">Подробнее в Политике конфиденциальности</a>';
+    // на телефоне короткий текст в две строки (Ilya 01.11): плашка не закрывает кнопку «Записаться» на странице записи
+    var on = get() === "all", more = '<a href="' + privacy + '#p9">Подробнее<span class="cookie__full"> в Политике конфиденциальности</span></a>';
     bar.innerHTML = on
       ? '<p class="cookie__t">Аналитические cookie включены с вашего согласия. Отключить их можно здесь. ' + more + '</p>'
         + '<div class="cookie__btns"><button class="btn btn--sm btn--ghost" type="button" data-ck="off">Отключить аналитику</button><button class="btn btn--sm" type="button" data-ck="keep">Оставить</button></div>'
-      : '<p class="cookie__t">Сайт использует технические cookie, а с вашего согласия также аналитические, чтобы делать сайт удобнее для пациентов. ' + more + '</p>'
+      : '<p class="cookie__t"><span class="cookie__full">Сайт использует технические cookie, а с вашего согласия также аналитические, чтобы делать сайт удобнее для пациентов. </span><span class="cookie__short">Сайт использует cookie, аналитические только с вашего согласия. </span>' + more + '</p>'
         + '<div class="cookie__btns"><button class="btn btn--sm" type="button" data-ck="all">Принять</button></div>';
     bar.hidden = false;
     room();

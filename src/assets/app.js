@@ -1384,6 +1384,42 @@
     const svcs = (() => { try { return JSON.parse($("#um-svc")?.textContent || "{}"); } catch (e) { return {}; } })();
     if (ps && svcs[ps]) $("[name=service]", bf).value = svcs[ps];
     if (pd && docs[pd]) { $("[name=doctor]", bf).value = pd; const n = $("[data-doc]", box); n.textContent = "Врач: " + docs[pd]; n.hidden = false; }
+    // форма для старшего возраста (Ilya 01.11): телефон первым, имя последним, поэтому с имени клавиатура сразу отправляет
+    const tel = $("[name=phone]", bf), btn = $("button", bf);
+    $("[name=name]", bf)?.setAttribute("enterkeyhint", "send");
+    // открылась клавиатура: докручиваем так, чтобы над ней была видна кнопка «Записаться», а поле осталось на экране
+    const vv = window.visualViewport;
+    const keepBtn = () => {
+      const f = document.activeElement;
+      if (!vv || !phoneMQ.matches || !f || !bf.contains(f) || !f.matches("input")) return;
+      const top = vv.offsetTop, bottom = top + vv.height, b = btn.getBoundingClientRect(), fr = f.getBoundingClientRect();
+      const dy = Math.min(b.bottom + 12 - bottom, fr.top - top - 12);
+      if (dy > 4) scrollBy({ top: dy, behavior: "instant" });
+    };
+    let kt = 0;
+    const later = () => { clearTimeout(kt); kt = setTimeout(keepBtn, 320); };
+    bf.addEventListener("focusin", later);
+    vv?.addEventListener("resize", later);
+    // плашка cookie ждёт, пока она закрыла бы кнопку «Записаться» (маленький экран): появляется, когда кнопку пролистали
+    // или заявку отправили. Высоту плашки даёт cookie.js (--ck-h = высота + 16 px), класс has-ck пока она на экране
+    let cq = 0;
+    const ckFit = () => {
+      cq = 0;
+      const h = root.classList.contains("has-ck") ? parseFloat(getComputedStyle(root).getPropertyValue("--ck-h")) || 0 : 0;
+      const r = btn.getBoundingClientRect();
+      root.classList.toggle("ck-wait", !!h && phoneMQ.matches && !steps[0].hidden && r.bottom > innerHeight - h - 6 && r.top < innerHeight);
+    };
+    const ckLater = () => { if (!cq) cq = requestAnimationFrame(ckFit); };
+    addEventListener("scroll", ckLater, { passive: true });
+    addEventListener("resize", ckLater);
+    let ckWas = null;
+    new MutationObserver(() => { const on = root.classList.contains("has-ck"); if (on !== ckWas) { ckWas = on; ckLater(); } }).observe(root, { attributes: true, attributeFilter: ["class", "style"] });
+    // «Ошиблись в номере?» на экране «Спасибо»: назад к форме, номер выделен для исправления
+    $("[data-fix-tel]", box)?.addEventListener("click", () => {
+      steps.forEach((s, i) => (s.hidden = i !== 0));
+      scrollTo({ top: 0, behavior: "auto" }); ckLater();
+      tel.focus(); tel.select?.();
+    });
     bf.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (bf.dataset.sending) return;
@@ -1392,7 +1428,12 @@
       catch (err) { leadError(bf, err.message); return; }
       finally { delete bf.dataset.sending; busy(bf, false); }
       document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "zapis" } }));
+      // на экране «Спасибо» номер, на который перезвонят: человек видит, что не ошибся
+      const dt = $("[data-done-tel]", box);
+      if (dt) { $("b", dt).textContent = tel.value; dt.hidden = !tel.value; }
+      document.activeElement?.blur?.();
       steps.forEach((s, i) => (s.hidden = i !== 1));
+      ckLater();
       scrollTo({ top: 0, behavior: anim ? "smooth" : "auto" }); $("h2", steps[1])?.focus({ preventScroll: true });
     });
   }
