@@ -502,7 +502,11 @@ const dentistLd = {
   areaServed: ["Удельная", "Жуковский", "Раменское", "Быково", "Ильинский", "Красково", "Малаховка", "Островцы", "Люберцы", "Балашиха"],
   sameAs: [clinic.yandex, clinic.gis, clinic.prodoctorov, clinic.vk],
   priceRange: "₽₽",
+  ...(clinic.payments?.length ? { paymentAccepted: clinic.payments.join(", ") } : {}),
 };
+// способы оплаты (условие Яндекса для фида «Врачи»: «На сайте должны быть указаны способы оплаты»): строка на /ceny/ и /svedeniya/
+// и paymentAccepted в разметке клиники выше. Список в clinic.payments (src/data.mjs); пока он пуст, не выводится ничего
+const payLine = (cls = "") => (clinic.payments?.length ? `<p${cls ? ` class="${cls}"` : ""} data-payment-methods>${esc(`Способы оплаты: ${clinic.payments.join(", ")}.`)}</p>` : "");
 const crumbsLd = (items) => ({
   "@context": "https://schema.org", "@type": "BreadcrumbList",
   itemListElement: [["/", "Главная"], ...items].map(([href, name], i) => ({ "@type": "ListItem", position: i + 1, name, item: SITE + (href === "/" ? "" : "/" + href) })),
@@ -1547,7 +1551,7 @@ function pagePrices() {
   <p class="pempty note" hidden>Ничего не нашлось. <a href="${fallbackHref("call", p)}" data-modal="call" data-reason="Цены: не нашёл услугу">Оставьте номер</a>, и администратор подскажет цену.</p></div>
 </div></section>
 <section class="section section--sage pinfo"><div class="wrap">
-  <div class="sp-cards sp-cards--3">${priceInfo.map(([t, x, ask]) => `<article class="sp-card" data-reveal><h2>${esc(t)}</h2><p>${esc(x)}${ask ? ` ${priceAsk(ask)}` : ""}</p></article>`).join("")}</div>
+  <div class="sp-cards sp-cards--3">${priceInfo.map(([t, x, ask]) => `<article class="sp-card" data-reveal><h2>${esc(t)}</h2><p>${esc(x)}${ask ? ` ${priceAsk(ask)}` : ""}</p></article>`).join("")}</div>${payLine("sp-more")}
 </div></section>
 <section class="section faqv pfaq" aria-labelledby="pq-title"><div class="wrap">
   <h2 id="pq-title" class="section__title faqv__title" data-split>Частые вопросы о ценах</h2>
@@ -1713,6 +1717,7 @@ const legalText = (t, page, p) => esc(t)
   .replace(/\[([^\]]+)\]\((privacy|consent|agreement|gosgarantii|svedeniya|ceny|vrachi)\)/g, (m, txt, to) => `<a href="${legalLink(to, p)}">${txt}</a>`)
   .replace(/\{\{([^}]+)\}\}/g, (m, note) => spTag("уточняем у клиники", note, page));
 const legalBlock = (b, page, p) => typeof b === "string" ? `<p>${legalText(b, page, p)}</p>`
+  : b.payments ? payLine()
   : b.ul ? `<ul>${b.ul.map((li) => `<li>${legalText(li, page, p)}</li>`).join("")}</ul>`
   : `${b.org ? `<h3 class="legal__org">${esc(b.org)}</h3><p>${esc(b.note)}</p>` : ""}<dl class="legal__req">${b.rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>`;
 const legalPic = {
