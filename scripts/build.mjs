@@ -171,6 +171,11 @@ const ymCode = `<!-- Yandex.Metrika counter -->
 </script>
 <!-- /Yandex.Metrika counter -->`;
 
+// «Три врача» (#m-offer) само не открывается на главной и на страницах врачей /vrachi/<id>/ (страницы предложений фида): data-no-auto-offer
+// у <body>, его смотрит app.js. Условие Яндекса для фида «Врачи»: «На страницах предложений и на главной странице сайта не должны открываться
+// дополнительные окна». В списке врачей /vrachi/ и на остальных страницах условия рамки прежние
+const noAutoOffer = (canonical) => canonical === "/" || /^\/vrachi\/[^/]+\/$/.test(canonical || "");
+
 // В <head> каждой страницы: телефоны и планшеты замеряют высоту экрана один раз (--vh, --svh) и меняют её только при повороте.
 // Во встроенных браузерах (Telegram, VK, Instagram) окно меняет высоту, когда прячется панель, и всё, что в styles.css задано
 // в vh и svh, вместе со страницей прыгало на сотни пикселей. Поэтому в styles.css высоты экрана пишем через var(--vh)/var(--svh)
@@ -217,7 +222,7 @@ ${ymCode}
 <script src="${p}assets/cookie.js?v=${V.cookie}" data-privacy="${p}privacy/" data-ym="${METRIKA_ID}" defer></script>
 ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</script>`).join("\n")}
 </head>
-<body${page === "booking" ? ' class="booking-page"' : ""}>
+<body${page === "booking" ? ' class="booking-page"' : ""}${noAutoOffer(canonical) ? " data-no-auto-offer" : ""}>
 <a class="skip" href="#main">К содержанию</a>
 ${PUBLISH ? "" : `<div class="demo-bar">Демонстрационный макет нового сайта стоматологии «Умная Медицина». ${LEADS ? "Заявки уходят в тестовом режиме." : "Заявки из форм пока никуда не отправляются."}</div><script>(function(d,b){var h=b.offsetHeight;d.style.setProperty("--demo-h",h+"px");d.style.setProperty("--hdr-top",h+"px")})(document.documentElement,document.currentScript.previousElementSibling)</script>`}`;
 }
@@ -384,7 +389,7 @@ ${LEADS ? "" : `
 </div>`;
 }
 
-// окно с предложением: всплывает само через время на сайте. Одно поле, три врача крупно, крестик виден сразу
+// окно с предложением: всплывает само через время на сайте, кроме главной и страниц врачей (noAutoOffer). Одно поле, три врача крупно, крестик виден сразу
 function offer(depth, consent, p) {
   const o = home.offer;
   return `<div class="modal modal--offer" id="m-offer" role="dialog" aria-modal="true" aria-labelledby="m-offer-t" hidden><div class="modal__box invite" data-lenis-prevent>

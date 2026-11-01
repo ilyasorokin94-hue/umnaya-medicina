@@ -796,8 +796,12 @@
   // к вкладкам, но не раньше 20 секунд. Один раз за визит, после показа молчит 3 дня. Не всплывает поверх других окон и меню,
   // во время ввода, пока на экране контакты, и у тех, кто уже открывал запись. Закрывается крестиком, Esc и кликом мимо.
   // Пришедшим из рекламы Яндекс Бизнеса (utm_source=yandex_business) весь визит не показываем: модерация запрещает всплывающие окна.
+  // На страницах с data-no-auto-offer у <body> (scripts/build.mjs) рамка сама не открывается: условие Яндекса для фида «Врачи»
+  // («На страницах предложений и на главной странице сайта не должны открываться дополнительные окна»). Секунды визита и метка
+  // utm_source=yandex_business там считаются как везде, кнопкой (data-modal="offer") рамка открывается
   const offer = $("#m-offer");
   if (offer) {
+    const noAuto = document.body.hasAttribute("data-no-auto-offer");
     try { if (/[?&]utm_source=yandex_business(&|$)/.test(location.search)) sessionStorage.setItem("um2-yb", "1"); } catch (err) {}
     const quiet = () => { try { return !!sessionStorage.getItem("um2-exit") || !!sessionStorage.getItem("um2-yb") || Date.now() - (+localStorage.getItem("um2-offer") || 0) < 3 * 864e5; } catch (err) { return true; } };
     // пролистан ли первый экран: проверяем раз в кадр и снимаем слушатель, как только да (чтение размеров окна на каждом событии прокрутки заставляет браузер пересчитывать раскладку)
@@ -812,7 +816,7 @@
     try { seen = +sessionStorage.getItem("um2-active") || 0; } catch (err) {}
     const tryShow = () => {
       if (quiet() || anyModal) return clearInterval(tick);
-      if (openM || atContacts || menu?.classList.contains("is-open") || document.activeElement?.matches?.("input, textarea, select")) return;
+      if (noAuto || openM || atContacts || menu?.classList.contains("is-open") || document.activeElement?.matches?.("input, textarea, select")) return;
       try { sessionStorage.setItem("um2-exit", "1"); localStorage.setItem("um2-offer", String(Date.now())); } catch (err) {}
       clearInterval(tick);
       showModal("offer");
