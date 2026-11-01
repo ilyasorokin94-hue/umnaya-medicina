@@ -122,12 +122,29 @@
   const setDemo = () => { demoH = demo ? demo.offsetHeight : 0; root.style.setProperty("--demo-h", demoH + "px"); hdrTop = null; onScrollHeader(); };
   // переменную на корне пишем, только когда она меняется: иначе каждый кадр прокрутки Safari пересчитывает стили всей страницы
   let hdrTop = null;
+  // умная шапка (Ilya 01.11): листаем вниз — шапка уезжает вверх, чуть потянули вверх — сразу возвращается.
+  // У верха страницы и при открытом меню всегда на месте; отскок iPhone у низа страницы шапку не дёргает
+  let lastY = 0, downRun = 0, upRun = 0, hdrHidden = false;
+  const hideHdr = (h) => {
+    if (h === hdrHidden || !header) return;
+    hdrHidden = h;
+    header.classList.add("is-smart");
+    header.classList.toggle("is-hidden", h);
+  };
   const onScrollHeader = () => {
     const y = lenis ? lenis.scroll : scrollY;
     const t = Math.max(0, demoH - y);
     if (t !== hdrTop) { hdrTop = t; root.style.setProperty("--hdr-top", t + "px"); }
     header?.classList.toggle("is-scrolled", y > demoH + 10);
+    const dy = y - lastY;
+    lastY = y;
+    const max = root.scrollHeight - innerHeight;
+    if (y <= demoH + (header ? header.offsetHeight : 80) || root.classList.contains("menu-open")) { downRun = upRun = 0; hideHdr(false); }
+    else if (dy > 0) { upRun = 0; downRun += dy; if (downRun > 8) hideHdr(true); }
+    else if (dy < 0 && y < max - 4) { downRun = 0; upRun -= dy; if (upRun >= 3) hideHdr(false); }
   };
+  // с клавиатуры: фокус на ссылке шапки возвращает её
+  header?.addEventListener("focusin", () => hideHdr(false));
   if (lenis) lenis.on("scroll", onScrollHeader); else addEventListener("scroll", onScrollHeader, { passive: true });
   addEventListener("resize", setDemo);
   setDemo();

@@ -2317,3 +2317,33 @@ html.has-ck .footer__in { padding-bottom: calc(28px + var(--ck-h, 0px)); }
 .pdw .pd_powered_by { margin-top: 12px; }
 .pdw .pd_logo { display: block; height: auto; }
 @media (max-width: 760px) { .pdw { padding: 28px 0; } }
+
+/* умная шапка (Ilya 01.11): при прокрутке вниз уезжает вверх, при малейшей прокрутке вверх сразу возвращается (app.js, is-hidden).
+   Быстрый ход включается после первого скрытия (is-smart), чтобы въезд шапки при загрузке компьютера шёл как раньше */
+.header.is-smart { transition: transform .4s cubic-bezier(.33, 0, .11, 1); }
+@media (min-width: 1025px) {
+  .header.is-smart { transition: color .5s var(--hease), opacity 1s var(--hease), transform .4s var(--hease); }
+}
+html:not(.menu-open) .header.is-hidden { transform: translate3d(0, calc(-100% - var(--hdr-top, 0px) - 8px), 0); pointer-events: none; }
+
+/* нижняя кнопка «Записаться» на телефоне крупнее и заметнее (Ilya 01.11): выше, крупный жирный текст, зелёное свечение */
+@media (max-width: 760px) {
+  .mobilebar { padding-top: 22px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .mobilebar { -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to top, #000 calc(100% - 22px), transparent); }
+  .mobilebar::before { inset: 22px 0 0; }
+  .mobilebar a:last-child { min-height: 64px; font-size: 19px; font-weight: 600; letter-spacing: .01em; box-shadow: 0 10px 28px -8px rgba(76, 193, 72, .55), inset 0 1px 0 rgba(255, 255, 255, .18); }
+  .footer__in { padding-bottom: calc(108px + env(safe-area-inset-bottom)); }
+  html.has-ck .footer__in { padding-bottom: calc(108px + env(safe-area-inset-bottom) + var(--ck-h, 0px)); }
+  .cookie { bottom: calc(86px + env(safe-area-inset-bottom)); }
+  body:not(:has(.mobilebar)) .cookie { bottom: calc(10px + env(safe-area-inset-bottom)); }
+}
+
+/* «Записаться» в шапке компьютера (Ilya 01.11): справа после «Перезвоним за 5 минут», кнопка всегда под рукой вместе с умной шапкой */
+@media (min-width: 1025px) {
+  .header .header__cta { display: flex; align-items: center; gap: clamp(16px, 1.6vw, 28px); }
+  .header .header__cta .header__book { display: inline-flex; min-height: 44px; padding: 0 22px; font-size: clamp(.8rem, .7499rem + .2226vw, .9377rem); font-weight: 500; }
+}
+/* узкий компьютер: «Перезвоним за 5 минут» уступает место кнопке, иначе разделы наезжают на правую часть шапки */
+@media (min-width: 1025px) and (max-width: 1439px) {
+  .header .header__cta .header__phone { display: none; }
+}
