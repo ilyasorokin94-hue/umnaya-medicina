@@ -1215,20 +1215,20 @@
     });
 
     // телефон: первый экран уходит под шторку слогана, как у Лава Дент (стили и сама механика в styles.css).
-    // Строки слогана загораются по очереди, когда верх шторки прошёл середину экрана, один раз.
+    // Строки слогана загораются по очереди, когда верх шторки поднялся на 15% экрана, один раз.
     // Где нет CSS scroll-driven animations, то же самое по прокрутке делает GSAP
     const opening = $(".opening");
     const sHead = opening && $(".slogan__head", opening);
     if (sHead) {
-      const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { sHead.classList.add("is-visible"); io.disconnect(); } }, { threshold: 0, rootMargin: "0px 0px -50% 0px" });
+      const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { sHead.classList.add("is-visible"); io.disconnect(); } }, { threshold: 0, rootMargin: "0px 0px -15% 0px" });
       io.observe(sHead);
     }
     // шторке нужны именованные шкалы прокрутки соседних блоков (timeline-scope); без них слоган ведёт GSAP
     if (sHead && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
       const sl = $(".slogan", opening), more = $(".slogan__more", opening);
       const tl = [
-        G.fromTo($(".slogan__title", sHead), { y: () => -innerHeight, autoAlpha: 0 }, { y: 0, autoAlpha: 1, ease: "none", immediateRender: true,
-          scrollTrigger: { trigger: sl, start: "top bottom", end: "top top", scrub: true, invalidateOnRefresh: true } }),
+        G.fromTo($(".slogan__title", sHead), { autoAlpha: 0 }, { autoAlpha: 1, ease: "none", immediateRender: true,
+          scrollTrigger: { trigger: sl, start: "top 75%", end: "top 30%", scrub: true, invalidateOnRefresh: true } }),
         G.to(sHead, { autoAlpha: 0, ease: "power1.in", scrollTrigger: { trigger: more, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } }),
       ];
       return () => tl.forEach((t) => { t.scrollTrigger?.kill(); t.kill(); });

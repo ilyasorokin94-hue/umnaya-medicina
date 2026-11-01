@@ -1389,7 +1389,8 @@ html:not(.js-intro) .intro { display: none; }
   .opening .hero .hero__facts, .opening .hero .hero__trio { display: none; }
   .opening .slogan { position: relative; z-index: 1; overflow: clip; view-timeline: --um-slogan block; }
   .opening .slogan .marquee { display: none; }
-  .slogan__head { display: flex; position: sticky; top: 0; min-height: calc(var(--svh, 1svh) * 100); padding: 0 var(--gutter); align-items: center; justify-content: center; text-align: center; overflow: clip; }
+  /* слоган выше середины экрана и едет вместе со шторкой (Ilya 01.11): виден, как только шторка поднялась на треть экрана, и встаёт на четверть сверху */
+  .slogan__head { display: flex; position: sticky; top: 0; min-height: calc(var(--svh, 1svh) * 100); padding: calc(var(--svh, 1svh) * 24) var(--gutter) 0; align-items: flex-start; justify-content: center; text-align: center; overflow: clip; }
   .slogan__title { margin: 0; font: 500 var(--fs-4)/1.1 var(--display); letter-spacing: -.03em; color: #dfe8dc; text-wrap: balance; }
   .slogan__title .line { display: block; }
   .js-anim .slogan__title .line { opacity: 0; transition: opacity 2.5s cubic-bezier(.33, 0, .11, 1); }
@@ -1406,11 +1407,11 @@ html:not(.js-intro) .intro { display: none; }
 /* сама механика на прокрутке, как у Лава Дент: CSS scroll-driven animations; где их нет, то же делает app.js */
 @supports (animation-timeline: view()) {
   @media (max-width: 760px) and (prefers-reduced-motion: no-preference) {
-    .js-anim .slogan__title { animation: um-slogan-enter linear both; animation-timeline: --um-slogan; animation-range: 0 calc(var(--vh, 1vh) * 100); }
+    .js-anim .slogan__title { animation: um-slogan-enter linear both; animation-timeline: --um-slogan; animation-range: calc(var(--vh, 1vh) * 25) calc(var(--vh, 1vh) * 70); }
     .js-anim .slogan__head { animation: um-slogan-leave ease-in both; animation-timeline: --um-more; animation-range: 0 calc(var(--vh, 1vh) * 50); }
   }
 }
-@keyframes um-slogan-enter { from { transform: translateY(-100svh); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes um-slogan-enter { from { opacity: 0; } to { opacity: 1; } }
 @keyframes um-slogan-leave { to { opacity: 0; } }
 
 /* меню телефона как у Лава Дент (Ilya 16.10): шалфейный фон #779e91 проявляется целиком за .5s,
