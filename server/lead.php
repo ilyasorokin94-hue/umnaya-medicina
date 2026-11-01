@@ -553,11 +553,22 @@ function done(array $r, bool $end = true): void {
   global $json;
   ignore_user_abort(true);
   header('Cache-Control: no-store');
-  if ($json) { header('Content-Type: application/json; charset=utf-8'); echo json_encode($r, JSON_UNESCAPED_UNICODE); }
+  $body = '';
+  if ($json) { header('Content-Type: application/json; charset=utf-8'); $body = (string)json_encode($r, JSON_UNESCAPED_UNICODE); }
   else { header('Location: /spasibo/', true, 303); }
-  if ($end) exit;
-  if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
-  else { header('Connection: close'); while (ob_get_level()) ob_end_flush(); flush(); }
+  if ($end) { echo $body; exit; }
+  // «Спасибо» без ожидания (Ilya 01.11): заявка уже в журнале, ответ уходит браузеру сразу, а amoCRM, таблица и почта
+  // отправляются после него. На PHP-FPM соединение закрывает fastcgi_finish_request. На Apache (mod_php) и за nginx
+  // браузер считает ответ полным по Content-Length, поэтому сжатие и буферы для этого ответа выключаем
+  if (function_exists('fastcgi_finish_request')) { echo $body; fastcgi_finish_request(); return; }
+  if (function_exists('apache_setenv')) @apache_setenv('no-gzip', '1');
+  @ini_set('zlib.output_compression', '0');
+  while (ob_get_level()) ob_end_clean();
+  header('X-Accel-Buffering: no');
+  header('Content-Length: ' . strlen($body));
+  header('Connection: close');
+  echo $body;
+  flush();
 }
 
 function fail(int $code, string $msg): never {

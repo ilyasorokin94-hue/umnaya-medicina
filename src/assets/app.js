@@ -561,7 +561,7 @@
     if (Date.now() - invalidAt > 300) { invalidAt = Date.now(); inp.focus(); }
   }, true);
   const sendLead = async (form, kind, extra = {}) => {
-    if (!isLive(form)) return new Promise((r) => setTimeout(r, 700));
+    if (!isLive(form)) return new Promise((r) => setTimeout(r, 300));
     const fd = new FormData(form);
     const file = fd.get("file");
     if (file && file.size > FILE_MB * 1048576) throw new Error(`Файл больше ${FILE_MB} МБ. Пришлите снимок в Telegram или MAX.`);
