@@ -239,7 +239,7 @@ function phoneTour(depth) {
     </div></div>
     <div class="ptour__spacer"></div>
     <div class="ptour__after">
-      <div class="ptour__grid">${P.gallery.map(([f, cap, r, x], i) => `<figure class="ptour__fig" style="--r:${r}"><span class="ptour__pic">${img([f], cap, depth, x ? ` style="object-position:${x} 50%"` : "")}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>
+      <div class="ptour__grid">${P.gallery.map(([f, cap, r, x], i) => `<figure class="ptour__fig" style="--r:${r}"><span class="ptour__pic">${img([f], cap, depth, x ? ` style="object-position:${x} 50%"` : "")}</span></figure>`).join("")}</div>
       <div class="ptour__text"><p>${esc(v2.clinic.text)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>
     </div>
   </div>`;
@@ -670,7 +670,7 @@ function pageHome() {
   </div>
   <p class="tour__lead wrap">${esc(D.clinic.text)}</p>
   <div class="tour__rows" aria-label="Фото клиники">
-    ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span><figcaption>${esc(cap)}</figcaption></figure>`).join("")}</div>`).join("")}
+    ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span></figure>`).join("")}</div>`).join("")}
   </div>
   ${phoneTour(depth)}
 </section>
