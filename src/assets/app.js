@@ -572,10 +572,33 @@
   });
   // имя: с заглавной буквы на телефоне, поле «далее» на клавиатуре
   $$('form input[name="name"]').forEach((inp) => { inp.setAttribute("autocapitalize", "words"); inp.setAttribute("enterkeyhint", "next"); inp.addEventListener("input", () => { if (inp.value.trim()) fieldHint(inp, ""); }); });
+  // галочка согласия (Ilya 01.11: «галочка нужна обязательно»): без отметки строка под ней, а не подсказка браузера
+  const consentHint = (c, on) => {
+    const lab = c.closest(".consent");
+    let p = c._hint;
+    if (!lab || (!on && !p)) return;
+    if (!p) {
+      p = c._hint = document.createElement("p"); p.className = "form__hint"; p.id = "consent-hint-" + Math.random().toString(36).slice(2, 7);
+      p.setAttribute("aria-live", "polite"); lab.after(p);
+      c.setAttribute("aria-describedby", p.id);
+    }
+    p.textContent = "Отметьте согласие, чтобы отправить заявку"; p.hidden = !on;
+    lab.classList.toggle("is-error", on); if (on) c.setAttribute("aria-invalid", "true"); else c.removeAttribute("aria-invalid");
+  };
+  $$('input[type="checkbox"][name="consent"]').forEach((c) => {
+    if (c.closest(".cb")) return; // форма подвала проверяет галочку сама
+    c.addEventListener("change", () => { if (c.checked) consentHint(c, false); });
+    c.form?.addEventListener("reset", () => setTimeout(() => consentHint(c, false)));
+  });
   // незаполненное поле: строка под ним вместо всплывающей подсказки браузера, курсор в первое такое поле
   let invalidAt = 0;
   document.addEventListener("invalid", (e) => {
     const inp = e.target;
+    if (inp.matches?.('input[type="checkbox"][name="consent"]') && !inp.closest(".cb")) {
+      e.preventDefault(); consentHint(inp, true);
+      if (Date.now() - invalidAt > 300) { invalidAt = Date.now(); inp.focus(); }
+      return;
+    }
     if (!inp.matches?.('input[type="tel"], input[name="name"]') || inp.id === "cb-phone") return;
     e.preventDefault();
     fieldHint(inp, inp.type === "tel" ? telMsg(inp.value) || inp.validationMessage : "Как к вам обращаться?");
@@ -726,6 +749,9 @@
     showModal(fx.id, fx.opener);
     const t = $('input[type="tel"]', fx.form), n = $('input[name="name"]', fx.form);
     if (n) n.value = fx.name;
+    // согласие человек уже дал этой заявкой: галочка остаётся отмеченной, исправить нужно только номер
+    const ok = $('input[type="checkbox"][name="consent"]', fx.form) || (fx.form.id && $(`input[type="checkbox"][name="consent"][form="${fx.form.id}"]`));
+    if (ok) ok.checked = true;
     if (t) { t.value = fx.tel; t.dispatchEvent(new Event("input")); setTimeout(() => { t.focus(); t.select?.(); }, 60); }
   });
   $$("form[data-lead]").forEach((f) => {

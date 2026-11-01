@@ -2434,3 +2434,16 @@ html:not(.menu-open) .header.is-hidden { transform: translate3d(0, calc(-100% - 
   .cb__consent { font-size: 13px; }
   .big__btn { min-height: 64px; font-size: 20px; font-weight: 600; }
 }
+
+/* галочка согласия во всех формах (Ilya 01.11): строка рядом с квадратом, а не подпись поля; на телефоне квадрат крупный */
+.form label.consent, .modal .form label.consent, .bform .form label.consent { display: flex; flex-direction: row; gap: 12px; align-items: flex-start; font-size: 14px; font-weight: 400; line-height: 1.45; color: var(--muted); }
+label.consent input[type="checkbox"][name="consent"][required],
+.modal .form label.consent input[type="checkbox"][name="consent"][required], .bform .form label.consent input[type="checkbox"][name="consent"][required] { flex: none; width: 20px; height: 20px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 4px; box-shadow: none; }
+.consent.is-error:not(.consent--dark) { color: #b3261e; }
+.consent.is-error:not(.consent--dark) input[type="checkbox"] { outline: 2px solid #b3261e; outline-offset: 2px; }
+.consent + .form__hint { margin: 6px 0 0; }
+@media (max-width: 760px) {
+  .form label.consent, .modal .form label.consent, .bform .form label.consent, .invite__body .consent { font-size: 16px; color: var(--text); }
+  label.consent input[type="checkbox"][name="consent"][required],
+  .modal .form label.consent input[type="checkbox"][name="consent"][required], .bform .form label.consent input[type="checkbox"][name="consent"][required] { width: 26px; height: 26px; }
+}
