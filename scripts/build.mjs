@@ -8,7 +8,7 @@ import { transformSync } from "esbuild";
 import { fileURLToPath } from "node:url";
 import { clinic, doctors, prices, services, brand, pics, homeOrder, home, v2 } from "../src/data.mjs";
 import { reviewsMobile } from "./reviews-mobile.mjs";
-import { servicePages, servicePriceDate, servicePriceHold, consultPrice, consultDeal } from "../src/service-pages.mjs";
+import { servicePages, servicePriceDate, servicePriceHold } from "../src/service-pages.mjs";
 import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { catalogGroups, catalogInside } from "../src/uslugi-catalog.mjs";
@@ -291,7 +291,8 @@ function modals(depth) {
   const consent = CONSENT_CHECKBOX ? "" : `<p class="modal__note modal__legal">${consentNote(p)}</p>`;
   const agree = consentField(p);
   const phone = `<label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>`;
-  const name = `<label>Имя<input name="name" autocomplete="given-name" required></label>`;
+  // имя необязательное (Ilya 01.11): заявку можно оставить одним номером, в amoCRM контакт «Без имени»
+  const name = `<label>Имя (необязательно)<input name="name" autocomplete="given-name"></label>`;
   // строка «Акция: …», если окно открыли кнопкой из блока акций; уходит в заявку скрытым полем promo
   const promoLine = `<p class="modal__promo" hidden></p>`;
   const msgr = msgrLinks().length ? `<div class="modal__msgr">${msgrLinks().map(([n, u]) => `<a class="btn btn--ghost" href="${u}"${ext}>Отправить в ${n}</a>`).join("")}</div>` : "";
@@ -323,7 +324,7 @@ ${box("xray", "Пришлите снимок, и врач скажет, можн
     <button class="btn btn--lg btn--wide">Отправить снимок</button>
     <p class="modal__note">Если зуб можно спасти, скажем, как и сколько это стоит.</p>${consent}
   </form>`)}
-${box("allon", "Консультация по All-on-4", `<p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная, если остаётесь на лечение. Стоимость лечения врач назовёт после осмотра.</p>
+${box("allon", "Консультация по All-on-4", `<p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная. Стоимость лечения врач назовёт после осмотра.</p>
   ${promoLine}
   <form class="form lead" data-lead="allon" method="post" action="${leadAction(p)}"><input type="hidden" name="promo">${name}${phone}
     ${agree}
@@ -811,22 +812,9 @@ const spWarn = `<p class="sp-warn">${warnText}</p>`;
 const spDash = (t) => t.replace(/ — /g, "\u00a0— ");
 // акционная цена без слова «акция» рядом получает «по акции» (как 17 500 ₽ Osstem): на um-med.com она помечена «акция!»
 const promoMark = (t) => t.replace(/от 77 000 ₽(\*\*)?/g, (m, b, off) => (/акци/i.test(t.slice(Math.max(0, off - 70), off + m.length + 30).split(/\n/).slice(-2).join(" ")) ? m : `${m} по акции`));
-// консультация терапевта, хирурга и ортопеда: в строке прайса обычная цена, в тексте 0 ₽ и «бесплатная» — с условием (см. consultDeal);
-// пометки [УТОЧНИТЬ …] не трогаем, ортодонта и детского стоматолога тоже
-const consultLine = (l) => {
-  if (/^\|/.test(l)) {
-    const cells = l.split("|");
-    if (!/онсультаци|при[её]м/i.test(cells[1] || "") || /ортодонт|детск|остаётесь/i.test(cells[1])) return l;
-    return cells.map((c, i) => (i > 1 && /^\s*(?:\*\*)?0 ₽(?:\*\*)?\s*$/.test(c) ? c.replace("0 ₽", consultPrice) : c)).join("|");
-  }
-  // фразы, где условие уже есть («если остаётесь на лечение»), не трогаем
-  return l.split(/(\[[А-ЯЁ]{3,}[^\]]*\]|[^.!?[]*остаётесь[^.!?[]*[.!?]?)/).map((x, i) => (i % 2 ? x : x
-    .replace(/(консультаци|при[её]м|разбор[а-яё]* снимк)([^.;:\n₽[\]]{0,90}?)(?<!\d)0 ₽(\*\*)?(?!,? если остаётесь на лечение)/gi, (m, a, b, c = "") => (/ортодонт|детск/i.test(b) ? m : `${a}${b}0 ₽${c}, ${consultDeal}`))
-    .replace(/(^|[^а-яё])(б)есплатн(?:ая|ую|ой|ом|ый) (\[?)(консультаци|при[её]м)/gi, (m, a, b, k, c) => a + k + (b === "Б" ? c[0].toUpperCase() + c.slice(1) : c))
-    .replace(/(консультаци[а-яё]*|при[её]м[а-яё]*)([^.;:\n[\]]{0,70}?)(бесплатн(?:ая|ые|ый|ы|о|а))(?![а-яё]|,? если остаётесь на лечение)/gi, (m, a, b, c) => (/ортодонт|детск|₽/i.test(b) ? m : `${a}${b}${c}, ${consultDeal}`))
-  )).join("");
-};
-const consult = (t) => t.split("\n").map(consultLine).join("\n");
+// консультация терапевта, хирурга и ортопеда (Ilya 01.11): бесплатная, 0 ₽, без условий; тексты услуг идут как написаны.
+// Прежняя правка при сборке (строка прайса 0 ₽ → 500 ₽, приписка «если остаётесь на лечение») отменена
+const consult = (t) => t;
 const spTexts = Object.fromEntries(servicePages.map((pg) => {
   const f = path.join(root, "src", "service-texts", `${pg.slug}.md`);
   if (!existsSync(f)) throw new Error(`Нет текста страницы услуги: src/service-texts/${pg.slug}.md`);
@@ -1390,7 +1378,7 @@ function docCardMore(d) {
 const docFaq = [
   ["К какому врачу записаться, если не знаю?", "Оставьте заявку на сайте и опишите, что беспокоит. Администратор подберёт врача и время."],
   ["Можно записаться к конкретному врачу?", "Да. Назовите врача администратору или нажмите «Записаться к врачу» в его карточке."],
-  ["Сколько стоит консультация?", "Консультация хирурга, ортопеда или терапевта с планом лечения стоит 500 ₽. Если после консультации вы остаётесь у нас на лечение, первичная консультация 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
+  ["Сколько стоит консультация?", "Первичная консультация терапевта, хирурга-имплантолога или ортопеда с осмотром и планом лечения бесплатная, 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
   ["Где почитать отзывы о врачах?", "На странице каждого врача собраны отзывы пациентов с ПроДокторов, у каждого отзыва ссылка на оригинал."],
 ];
 function pageDoctors() {
@@ -1426,7 +1414,7 @@ ${docGroups.map((g, i) => `
 // не называем (Ilya 18.10: у сайта будет свой домен). В разделе ссылка на страницу услуги и кнопка записи
 const priceDate = "18.10.2026";
 const priceSecs = {
-  consult: ["0 ₽", "если после консультации остаётесь на лечение", "konsultaciya"],
+  consult: ["0 ₽", "бесплатная консультация с планом лечения", "konsultaciya"],
   xray: ["от 500 ₽", "прицельный снимок", "diagnostika"],
   therapy: ["от 4 000 ₽", "лечение кариеса", "lechenie-zubov"],
   hygiene: ["4 500 ₽", "Air-Flow по средам, по акции", "gigiena"],
@@ -1468,7 +1456,7 @@ const priceInfo = [
   ["Скидка −10% при оплате в день консультации", "Если начинаете лечение в день консультации, на оплату действует скидка 10%. На какие услуги она распространяется, подскажет администратор."],
 ];
 const priceFaq = [
-  ["Сколько стоит консультация стоматолога?", "Консультация терапевта, ортопеда, хирурга или имплантолога с планом лечения стоит 500 ₽. Если после консультации вы остаётесь у нас на лечение, первичная консультация 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
+  ["Сколько стоит консультация стоматолога?", "Первичная консультация терапевта, хирурга-имплантолога или ортопеда с осмотром и планом лечения бесплатная, 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽."],
   ["Почему цены указаны «от»?", "Это минимальная стоимость услуги. Итог зависит от клинической ситуации и выбранных материалов, поэтому точную сумму врач называет после осмотра и снимков в плане лечения с ценой по этапам."],
   ["Можно ли получить налоговый вычет за лечение зубов?", "Да. Лечение, имплантация и протезирование зубов относятся к социальному налоговому вычету на лечение: можно вернуть 13% от оплаченной суммы в пределах лимита, установленного Налоговым кодексом. Для вычета нужны договор, чеки и справка об оплате медицинских услуг, которую выдаёт клиника. Как её заказать, подскажет администратор."],
   ["Можно ли оформить вычет за лечение зубов ребёнка или родителей-пенсионеров?", "Да, вычет можно получить за лечение детей до 18 лет (до 24 лет при очной учёбе), супруга и родителей, если оплачивали вы и документы оформлены на вас. Подать документы можно через личный кабинет налогоплательщика или Госуслуги."],
@@ -1483,7 +1471,7 @@ const priceNote = `Цены на ${priceDate}. Цена «от» означае�
 const priceHero = ["images/svc-hero/ceny.png"];
 const priceTotal = priceOrder.reduce((a, k) => a + prices[k].items.length, 0);
 const priceFacts = [
-  ["0 ₽", "консультация с планом лечения, если остаётесь на лечение"],
+  ["0 ₽", "консультация с планом лечения"],
   [priceSecs.therapy[0], priceSecs.therapy[1]],
   [priceSecs.implant[0], priceSecs.implant[1]],
   [String(priceTotal), `${plural(priceTotal, "позиция", "позиции", "позиций")} в ${priceOrder.length} разделах`],
@@ -1501,7 +1489,7 @@ function pagePrices() {
     <div class="sp-hero__text">
       <nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">Цены</span></nav>
       <h1 id="h1" data-split>Цены на стоматологию в Удельной</h1>
-      <p class="page-hero__lead">Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽, если после неё остаётесь у нас на лечение.</p>
+      <p class="page-hero__lead">Стартовые цены на лечение. Бесплатная консультация терапевта, ортопеда и хирурга с планом лечения, 0 ₽.</p>
     </div>
     <div class="sp-hero__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true })}<a class="link" href="#prices">Все цены по разделам</a>${spWarn}</div>
   </div>
@@ -1553,7 +1541,7 @@ function pageCatalog() {
   const heroRel = ukHero.find(local), heroImg = pick(ukHero, depth).src, heroSet = heroRel ? srcset(heroRel, depth) : "";
   const facts = [
     [String(total), `${plural(total, "услуга", "услуги", "услуг")} в ${catalogGroups.length} разделах, у каждой своя страница`],
-    ["0 ₽", "консультация с планом лечения, если остаётесь на лечение"],
+    ["0 ₽", "консультация с планом лечения"],
     ["3 врача", "хирург, ортопед и терапевт составляют план"],
     ["−10%", "при оплате лечения в день консультации"],
   ];
@@ -1608,7 +1596,7 @@ function pageCatalog() {
 </div></section>
 <section class="section section--sage uk-help" aria-labelledby="uk-help-t"><div class="wrap">
   <h2 id="uk-help-t" class="section__title" data-split>Не знаете, какая услуга нужна?</h2>
-  <p class="uk-help__lead">Запишитесь на консультацию: врач осмотрит, при необходимости сделает снимок и предложит план лечения с ценой по этапам. Консультация терапевта, хирурга или ортопеда 500 ₽, 0 ₽, если остаётесь на лечение.</p>
+  <p class="uk-help__lead">Запишитесь на консультацию: врач осмотрит, при необходимости сделает снимок и предложит план лечения с ценой по этапам. Консультация терапевта, хирурга или ортопеда бесплатная, 0 ₽.</p>
   <div class="uk-help__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", reason: "Все услуги: не знаю, какая услуга нужна" })}<a class="link" href="${fallbackHref("call", p)}" data-modal="call" data-reason="Все услуги: не знаю, какая услуга нужна">Перезвоните мне</a></div>
   <p class="uk-help__addr"><b>Адрес.</b> ${esc(clinic.addressShort)}, ${esc(clinic.near)}. ${esc(clinic.hours)}.${geoLinks.length ? ` Для жителей Жуковского: ${geoLinks.map((x) => `<a href="${p}${x.path}">${esc(x.procedure.toLowerCase())}</a>`).join(" и ")}.` : ""}</p>
 </div></section>
@@ -1632,9 +1620,9 @@ function pageBooking() {
       <section class="bstep" data-step="0">
         <span class="label">Онлайн-запись</span>
         <h1 tabindex="-1">Записаться на приём</h1>
-        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. Консультация с планом лечения бесплатная, если остаётесь на лечение.</p>
+        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. Консультация с планом лечения бесплатная.</p>
         <form class="form" id="b-form" method="post" action="${leadAction("")}">
-          <label>Имя<input name="name" required autocomplete="name"></label>
+          <label>Имя (необязательно)<input name="name" autocomplete="given-name"></label>
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
           <input type="hidden" name="service" value="">
           <input type="hidden" name="doctor" value="">
@@ -1721,7 +1709,7 @@ const picHero = ({ cls = "", name, alt, depth, text, act = "", bottom = "" }) =>
 const helpCard = (t, href, x) => `<article class="sp-card"><h2><a href="${href}">${esc(t)}</a></h2><p>${esc(x)}</p></article>`;
 const helpCards = (p) => [
   helpCard("Услуги", `${p}index.html#services`, homeOrder.slice(0, 6).map((k, i) => (i && !/^[А-ЯA-Z]{2}/.test(svc[k].title) ? svc[k].title[0].toLowerCase() + svc[k].title.slice(1) : svc[k].title)).join(", ") + " и другие."),
-  helpCard("Цены", `${p}ceny/`, "Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽, если остаётесь у нас на лечение."),
+  helpCard("Цены", `${p}ceny/`, "Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽."),
   helpCard("Врачи", `${p}vrachi/`, "Врачи клиники по направлениям, у каждого своя страница."),
   helpCard("Контакты", `${p}index.html#contacts`, `${clinic.addressShort}. ${clinic.hours}.`),
 ].join("");
