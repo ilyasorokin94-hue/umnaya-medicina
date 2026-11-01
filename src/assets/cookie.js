@@ -1,17 +1,26 @@
-// Уведомление о cookie и Яндекс Метрика (Ilya 19.10, формат Юкки Дент; 23.10 схема как у Зубной Гармонии).
+// Уведомление о cookie и Яндекс Метрика (Ilya 19.10, формат Юкки Дент; 23.10 схема как у Зубной Гармонии; 01.11 Метрика сразу).
 // Текст плашки без названия сервиса, общими словами (Ilya 31.10); сервис назван в Политике, раздел 9.
-// Одна кнопка «Принять» (Ilya 23.10): до неё Метрика не грузится и к Яндексу запросов нет, плашка видна на каждой странице.
-// Согласие в localStorage «um2-cookie» = "all"; отозвать его можно ссылкой «Настройки cookie» в подвале.
+// Ilya 01.11 (карточка «Метрика без согласия»): Яндекс Бизнес видит для целей подписки 55923423 только счётчик, который пишет визит
+// при открытии страницы. Поэтому код счётчика в <head> каждой страницы (scripts/build.mjs, ymCode) запускается сразу, а правило
+// 23.10 «Метрика только после «Принять»» отменено. Тексты плашки и «Настроек cookie» Ilya оставил слово в слово (01.11, скрин).
+// «Принять» скрывает плашку: localStorage «um2-cookie» = "all". «Настройки cookie» в подвале → «Отключить аналитику»:
+// «um2-cookie» = "off", cookie Метрики стираются, с перезагрузки счётчик не запускается (проверка "off" первой строкой
+// в коде счётчика), плашка больше не появляется; «Принять» в «Настройках cookie» включает аналитику обратно.
+// Отказ на плашках 22–23.10 («Только необходимые», «Нет»: "necessary") тоже считается отключением аналитики.
 // Плашка внизу, страницу не закрывает (фид «Врачи» не принимает модальные окна) и не закрывает кнопки записи.
-// До согласия источник визита и важные цели лежат только в браузере. После «Принять» Метрика получает визит с начала,
-// поэтому заход из Яндекс Карт, Бизнеса или Директа не теряется, даже если человек согласился на третьей странице.
-// Номер счётчика и адрес политики приходят из тега скрипта: data-ym, data-privacy. Сам код счётчика стоит в <head> неактивным
-// (script type="text/plain" id="um-ym", чтобы проверка Яндекс Бизнеса, если она читает HTML, видела счётчик), запускает его load() после «Принять».
+// Номер счётчика и адрес политики приходят из тега скрипта: data-ym, data-privacy.
 (function () {
   var me = document.currentScript, ID = +(me && me.dataset.ym) || 0, privacy = (me && me.dataset.privacy) || "privacy/";
-  var KEY = "um2-cookie";
-  var get = function () { try { return localStorage.getItem(KEY); } catch (e) { return ""; } };
-  var set = function (v) { try { localStorage.setItem(KEY, v); } catch (e) {} };
+  var KEY = "um2-cookie", OFF = /^(off|necessary)$/;
+  // выбор посетителя: localStorage «um2-cookie». Если браузер не даёт сайту localStorage (встроенный браузер приложения
+  // без хранилища, запрет данных сайтов), тот же выбор пишем в cookie «um2-cookie» на год: её читает и код счётчика в <head>,
+  // иначе «Отключить аналитику» в таком браузере не сохранялось бы
+  var ck = function () { try { return (document.cookie.match(/(?:^|; )um2-cookie=([^;]*)/) || [])[1] || ""; } catch (e) { return ""; } };
+  var get = function () { var v = ""; try { v = localStorage.getItem(KEY) || ""; } catch (e) {} return v || ck(); };
+  var set = function (v) {
+    try { localStorage.setItem(KEY, v); return; } catch (e) {}
+    try { document.cookie = KEY + "=" + v + "; path=/; max-age=31536000; SameSite=Lax" + (location.protocol === "https:" ? "; Secure" : ""); } catch (e) {}
+  };
   // хранилища браузера: в приватном режиме или при запрете данных сайтов чтение и запись бросают ошибку
   var read = function (kind, k) { try { return JSON.parse(window[kind].getItem(k) || "null"); } catch (e) { return null; } };
   var write = function (kind, k, v) { try { window[kind].setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -20,7 +29,7 @@
   // ---------- откуда пришёл ----------
   // Визит вкладки (sessionStorage «um2-src»): первая страница, сайт, с которого пришли, метки. Заход с метками или с другого сайта
   // начинает визит заново. Такой заход ещё 30 дней лежит в localStorage «um2-src30»: если человек вернётся по закладке и оставит
-  // заявку, в amoCRM будет видно, откуда он пришёл (как «последний значимый переход» в Метрике). Без заявки и согласия никуда не уходит.
+  // заявку, в amoCRM будет видно, откуда он пришёл (как «последний значимый переход» в Метрике). Без заявки на сервер не уходит.
   var MARKS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "yclid", "gclid"];
   var DAYS30 = 30 * 864e5;
   var marked = function (v) { return MARKS.some(function (k) { return v[k]; }); };
@@ -51,63 +60,35 @@
     return out;
   };
 
-  // поля заявок и набранный номер в подвале не попадают в запись Вебвизора
+  // поля заявок и набранный номер в подвале не попадают в запись Вебвизора. Метрика запускается раньше этого файла, поэтому
+  // классы стоят уже в вёрстке (scripts/build.mjs, ymMask) и у ловушки для ботов (app.js); здесь их получают поля, появившиеся позже
   var mask = function () {
     document.querySelectorAll("input, textarea").forEach(function (el) { el.classList.add("ym-disable-keys"); });
     document.querySelectorAll(".big__ghost, .modal__doc").forEach(function (el) { el.classList.add("ym-hide-content"); });
   };
-  var loaded = false;
-  // Код счётчика стоит в <head> каждой страницы неактивным: <script type="text/plain" id="um-ym"> (scripts/build.mjs, Яндекс Бизнес 01.11).
-  // Браузер такой блок не исполняет: до «Принять» tag.js не грузится и cookie Метрики нет, а проверка, которая читает HTML, видит код счётчика.
-  // После согласия запускаем копию блока; defer для init передаём через window.umYmDefer. Если блока нет на странице
-  // или он не выполнился (CSP без 'unsafe-inline'), грузим tag.js отсюда, как раньше, с теми же параметрами
-  var run = function (opt) {
-    var code = document.getElementById("um-ym");
-    window.umYmDefer = !!opt.defer;
-    if (code && !window.ym) {
-      var s = document.createElement("script");
-      s.text = code.text;
-      code.parentNode.insertBefore(s, code.nextSibling);
-      if (window.ym) return;
-    }
-    (function (m, e, t, r, i, k, a) { m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); }; m[i].l = 1 * new Date(); k = e.createElement(t); a = e.getElementsByTagName(t)[0]; k.async = 1; k.src = r; a.parentNode.insertBefore(k, a); })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=" + ID, "ym");
-    window.ym(ID, "init", opt);
-  };
+  // отказ на плашках 22–23.10 переписываем в "off": дальше он работает как «Отключить аналитику»
+  if (get() === "necessary") set("off");
+  var off = OFF.test(get()), loaded = false;
+  // Счётчик запускает код в <head> (id="um-ym"). Если он не выполнился (CSP без 'unsafe-inline') или не запускался, потому что
+  // аналитику отключали, а теперь в «Настройках cookie» нажали «Принять», грузим tag.js отсюда тем же кодом и с теми же параметрами
   var load = function () {
-    if (loaded || !ID) return;
+    if (loaded || off || !ID) return;
     loaded = true;
     mask();
-    // параметры те же, что в блоке um-ym (scripts/build.mjs, ymCode): нужны запасному пути и для defer
-    var opt = { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true };
-    var here = location.pathname + location.search;
-    if (!visit.ym && visit.landing && visit.landing !== here) {
-      // согласие не на странице входа: визит начинается с неё, с исходным referrer и метками utm/yclid,
-      // иначе Метрика запишет его как переход внутри сайта и не свяжет с Яндекс Картами, Бизнесом или Директом
-      var first = location.origin + visit.landing;
-      opt.defer = true;
-      run(opt);
-      window.ym(ID, "hit", first, { referer: visit.ref || "", title: visit.lt || "" });
-      window.ym(ID, "hit", location.href, { referer: first, title: document.title });
-    } else run(opt);
-    // со следующих страниц визита Метрика ведёт его сама, по своим cookie
-    if (!visit.ym) { visit.ym = 1; write("sessionStorage", "um2-src", visit); }
+    if (!window.ym) {
+      (function (m, e, t, r, i, k, a) { m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); }; m[i].l = 1 * new Date(); k = e.createElement(t); a = e.getElementsByTagName(t)[0]; k.async = 1; k.src = r; a.parentNode.insertBefore(k, a); })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=" + ID, "ym");
+      // параметры те же, что в блоке um-ym (scripts/build.mjs, ymCode)
+      window.ym(ID, "init", { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true });
+    }
     if (/\/ceny(\/|\.html)?$/.test(location.pathname)) goal("prices");
-    // цели, которые случились в этом визите до согласия
-    var wait = read("sessionStorage", "um2-goals") || [];
-    drop("sessionStorage", "um2-goals");
-    wait.forEach(function (g) { goal(g[0], g[1] || undefined); });
   };
-  // цели Метрики (Ilya 22.10): только после согласия и без имени и телефона. Список целей для кабинета:
+  // цели Метрики (Ilya 22.10): без имени и телефона, у отключивших аналитику не уходят. Список целей для кабинета:
   // /mnt/project-files/Заявки_с_сайта/цели_метрики.md
-  // Пока человек не нажал «Принять», заявка, звонок, мессенджер и маршрут ждут в браузере до конца визита
-  // и уходят, если он нажмёт «Принять» на этой или следующей странице.
-  var WAIT = /^(lead|phone|messenger|route)/;
   var goal = function (name, params) {
-    if (loaded && window.ym) return window.ym(ID, "reachGoal", name, params);
-    if (!ID || !WAIT.test(name)) return;
-    var wait = read("sessionStorage", "um2-goals") || [];
-    if (wait.length < 20) { wait.push([name, params || null]); write("sessionStorage", "um2-goals", wait); }
+    if (loaded && !off && window.ym) window.ym(ID, "reachGoal", name, params);
   };
+  // работает ли аналитика у посетителя: app.js кладёт номер посетителя в Метрике (ym_uid) в заявку только тогда
+  window.umAnalytics = function () { return loaded && !off; };
   // заявка: общая цель и отдельная по форме (событие um:lead шлёт app.js после того, как сервер принял заявку)
   document.addEventListener("um:lead", function (e) {
     var f = (e.detail && e.detail.form) || "";
@@ -131,7 +112,7 @@
     else if (/reviews/.test(h)) goal("reviews_out");
     else if (/yandex\.ru\/maps|2gis\.ru/.test(h)) goal("route");
   });
-  // отказ после согласия: убираем cookie и записи Метрики. Метрика ставит cookie на домен сайта (.smartmed.clinic),
+  // «Отключить аналитику»: убираем cookie и записи Метрики. Метрика ставит cookie на домен сайта (.smartmed.clinic),
   // такую cookie удаляет только запись с тем же domain, поэтому стираем и без domain, и на каждый родительский домен
   var forget = function () {
     var h = location.hostname.split("."), doms = [""];
@@ -152,7 +133,7 @@
     else { root.classList.remove("has-ck"); root.style.removeProperty("--ck-h"); }
   };
   var hide = function () { if (!bar) return; bar.classList.remove("is-on"); var b = bar; setTimeout(function () { b.hidden = true; room(); }, 400); };
-  var show = function () {
+  var show = function (settings) {
     if (!bar) {
       bar = document.createElement("div");
       bar.className = "cookie";
@@ -164,18 +145,22 @@
         if (!b) return;
         var v = b.getAttribute("data-ck");
         hide();
-        if (v === "all") { set("all"); load(); }
-        // отзыв согласия из «Настроек cookie»: Метрика выключается, её cookie удаляются, плашка снова на каждой странице
-        else if (v === "off") { set("off"); drop("sessionStorage", "um2-goals"); forget(); location.reload(); }
+        // «Принять» скрывает плашку; если аналитику отключали, включает её обратно без перезагрузки
+        if (v === "all") { set("all"); off = false; load(); }
+        // «Отключить аналитику» из «Настроек cookie»: счётчик выключается, его cookie удаляются, на этой странице он уже
+        // работал, поэтому перезагружаем её без счётчика; плашка больше не появляется
+        else if (v === "off") { set("off"); forget(); location.reload(); }
       });
       addEventListener("resize", room);
       document.body.appendChild(bar);
     }
     // на телефоне короткий текст в две строки (Ilya 01.11): плашка не закрывает кнопку «Записаться» на странице записи
-    var on = get() === "all", more = '<a href="' + privacy + '#p9">Подробнее<span class="cookie__full"> в Политике конфиденциальности</span></a>';
+    // «Настройки cookie»: у кого аналитика работает (все, кроме отключивших), кнопка «Отключить аналитику»; «Оставить» скрывает
+    // плашку, а если «Принять» ещё не нажимали, засчитывается как «Принять». Тексты слово в слово как до 01.11 (Ilya 01.11)
+    var choice = get(), on = settings && loaded && !off, more = '<a href="' + privacy + '#p9">Подробнее<span class="cookie__full"> в Политике конфиденциальности</span></a>';
     bar.innerHTML = on
       ? '<p class="cookie__t">Аналитические cookie включены с вашего согласия. Отключить их можно здесь. ' + more + '</p>'
-        + '<div class="cookie__btns"><button class="btn btn--sm btn--ghost" type="button" data-ck="off">Отключить аналитику</button><button class="btn btn--sm" type="button" data-ck="keep">Оставить</button></div>'
+        + '<div class="cookie__btns"><button class="btn btn--sm btn--ghost" type="button" data-ck="off">Отключить аналитику</button><button class="btn btn--sm" type="button" data-ck="' + (choice === "all" ? "keep" : "all") + '">Оставить</button></div>'
       : '<p class="cookie__t"><span class="cookie__full">Сайт использует технические cookie, а с вашего согласия также аналитические, чтобы делать сайт удобнее для пациентов. </span><span class="cookie__short">Сайт использует cookie, аналитические только с вашего согласия. </span>' + more + '</p>'
         + '<div class="cookie__btns"><button class="btn btn--sm" type="button" data-ck="all">Принять</button></div>';
     bar.hidden = false;
@@ -183,15 +168,30 @@
     requestAnimationFrame(function () { requestAnimationFrame(function () { bar.classList.add("is-on"); }); });
   };
   document.addEventListener("click", function (e) {
-    if (e.target.closest("[data-cookie-settings]")) { e.preventDefault(); show(); }
+    if (e.target.closest("[data-cookie-settings]")) { e.preventDefault(); show(true); }
   });
+  // выбор в другой вкладке. «Отключить аналитику»: здесь цели и номер посетителя в заявке больше не уходят, а скрытая вкладка,
+  // где в полях ничего не набрано, перезагружается без счётчика. «Принять» после отключения включает аналитику и здесь
+  var typed = function () {
+    return [].some.call(document.querySelectorAll("input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not(.hp), textarea"), function (el) { return el.value; });
+  };
+  addEventListener("storage", function (e) {
+    if (e.key !== KEY) return;
+    if (OFF.test(e.newValue || "")) { off = true; if (loaded && document.hidden && !typed()) location.reload(); }
+    else if (e.newValue === "all" && off) { off = false; load(); }
+  });
+  // страница, которую кнопка «Назад» достала из кеша вкладки уже после «Отключить аналитику», перезагружается без счётчика
+  addEventListener("pageshow", function (e) { if (e.persisted && loaded && OFF.test(get())) location.reload(); });
 
   var start = function () {
-    if (get() === "all") return load();
-    // без согласия cookie Метрики быть не должно: подчищаем то, что осталось после отзыва прежней версией сайта
-    forget();
-    // плашка после заставки главной, чтобы не появляться поверх неё
-    setTimeout(show, root.classList.contains("js-intro") ? 2600 : 900);
+    // очередь целей до согласия из версии сайта до 01.11 больше не нужна
+    drop("sessionStorage", "um2-goals");
+    // отключившим аналитику: cookie Метрики быть не должно, плашку больше не показываем
+    if (off) return forget();
+    load();
+    // плашка-уведомление, пока не нажали «Принять»; после заставки главной, чтобы не появляться поверх неё
+    // если до этого человек сам открыл «Настройки cookie», плашка их не подменяет
+    if (get() !== "all") setTimeout(function () { if (get() !== "all" && !off && (!bar || bar.hidden)) show(false); }, root.classList.contains("js-intro") ? 2600 : 900);
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();

@@ -146,24 +146,27 @@ const navLine = {
 // «Услуги» на главной ведут к блоку услуг, на остальных страницах на страницу всех услуг /uslugi/ (Ilya 25.10)
 const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services").startsWith("#") ? "#services" : `${p}uslugi/`, "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi/`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
-// Код счётчика Яндекс Метрики в <head> каждой страницы, как его выдаёт Метрика, но неактивный. Яндекс Бизнес 01.11: «Мы не нашли
-// счётчик Метрики на сайте»: его проверка «Принять» не нажимает, а код счётчика был только внутри cookie.js.
-// type="text/plain" браузер не исполняет (так менеджеры согласия держат счётчики до согласия): до «Принять» tag.js не грузится,
-// cookie Метрики нет, к Яндексу запросов нет (Ilya 23.10), а в HTML страницы виден номер счётчика.
-// После «Принять» cookie.js запускает копию этого блока; defer (window.umYmDefer) он ставит, когда согласие дано не на странице
-// входа: тогда визит с исходным referrer и метками он отправляет сам.
-// Параметры init те же, что в запасном пути cookie.js (var opt): меняете здесь, поменяйте и там.
-// noscript-пикселя нет: у посетителя без скриптов согласие не спросить, а пиксель считал бы визит без него
+// Код счётчика Яндекс Метрики в <head> каждой страницы, как его выдаёт Метрика, и он работает сразу при открытии страницы.
+// Ilya 01.11 (карточка «Метрика без согласия»): Яндекс Бизнес находит для целей подписки 55923423 только счётчик, который пишет визит
+// при открытии страницы; неактивный код (type="text/plain", 01.11 15:18 UTC) проверка 18:22 не засчитала. Правило 23.10
+// «Метрика только после «Принять»» отменено: «Принять» только скрывает плашку (её текст Ilya оставил прежним, 01.11),
+// отключить аналитику можно в «Настройках cookie».
+// Кто нажал «Отключить аналитику» (localStorage «um2-cookie» = "off") или отказался на плашке 22–23.10 ("necessary"), у того
+// счётчик не запускается: первые строки внутри кода. Если localStorage браузер не даёт, выбор лежит в cookie «um2-cookie» (cookie.js).
+// Параметры init те же, что в запасном пути cookie.js (load()): меняете здесь, поменяйте и там.
+// noscript-пикселя нет: у посетителя без скриптов не работает и «Отключить аналитику»
 const ymCode = `<!-- Yandex.Metrika counter -->
-<script type="text/plain" id="um-ym" data-consent="analytics">
+<script type="text/javascript" id="um-ym">
     (function(m,e,t,r,i,k,a){
+        var c; try { c = localStorage.getItem('um2-cookie'); } catch (x) {} try { c = c || (document.cookie.match(/(?:^|; )um2-cookie=([^;]*)/) || [])[1]; } catch (x) {}
+        if (c === 'off' || c === 'necessary') return;
         m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
         m[i].l=1*new Date();
         for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
         k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
     })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=${METRIKA_ID}', 'ym');
 
-    ym(${METRIKA_ID}, 'init', {webvisor:true, clickmap:true, accurateTrackBounce:true, trackLinks:true, defer:!!window.umYmDefer});
+    if (window.ym) ym(${METRIKA_ID}, 'init', {webvisor:true, clickmap:true, accurateTrackBounce:true, trackLinks:true});
 </script>
 <!-- /Yandex.Metrika counter -->`;
 
@@ -1801,8 +1804,16 @@ const cleanHref = (html) => html.replace(/\shref="(?![a-z]+:|\/\/|#)([^"?#]*?)\.
 });
 const pages = [];
 const urls = new Map(); // адрес страницы на сайте → её html, для карты сайта
+// поля форм и набранный номер в подвале скрыты от записи Вебвизора с первой секунды: Метрика с 01.11 запускается сразу,
+// раньше cookie.js, поэтому её классы ym-disable-keys (поля) и ym-hide-content (номер в подвале, врач в окне записи) стоят
+// в самой вёрстке. Полям, которые появятся позже, их ставит cookie.js (mask). На отпечаток страницы для карты сайта не влияет
+const ymMask = (html) => html
+  .replace(/<(input|textarea)\b(?![^>]*\stype="hidden")([^>]*)>/g, (m, tag, attrs) => /\sclass="/.test(attrs)
+    ? m.replace(/\sclass="([^"]*)"/, (c, v) => (/(^|\s)ym-disable-keys(\s|$)/.test(v) ? c : ` class="${v} ym-disable-keys"`))
+    : `<${tag} class="ym-disable-keys"${attrs}>`)
+  .replace(/\sclass="([^"]*?(?<=["\s])(?:big__ghost|modal__doc)(?=[\s"])[^"]*)"/g, (c, v) => (/(^|\s)ym-hide-content(\s|$)/.test(v) ? c : ` class="${v} ym-hide-content"`));
 const out = (f, html, map = true) => {
-  if (f.endsWith(".html")) { pages.push((html = cleanHref(typo(noDash(html))))); if (map) urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
+  if (f.endsWith(".html")) { pages.push((html = ymMask(cleanHref(typo(noDash(html)))))); if (map) urls.set("/" + f.replace(/(^|\/)index\.html$/, "$1").replace(/\.html$/, ""), html); }
   writeFileSync(path.join(dist, f), html);
 };
 out("index.html", pageHome());

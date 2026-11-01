@@ -509,7 +509,7 @@
   }
 
   // ловушка для ботов: поле, которого человек не видит
-  $$("form").forEach((f) => { if (isLive(f)) f.insertAdjacentHTML("beforeend", '<input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">'); });
+  $$("form").forEach((f) => { if (isLive(f)) f.insertAdjacentHTML("beforeend", '<input class="hp ym-disable-keys" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">'); });
   // ---------- телефон и имя в формах (Ilya 01.11): маска +7 999 123-45-67, которая не мешает вводу ----------
   // Номер можно набрать, вставить или подставить автозаполнением в любом виде (8 964…, +7 (964)…, 964…): пробелы и чёрточки
   // встают сами, курсор остаётся после той же цифры, правка в середине номера работает. Стёрли пробел или чёрточку —
@@ -591,11 +591,10 @@
     Object.entries({ ...(window.umSource?.() || {}), ...extra }).forEach(([k, v]) => { if (v) fd.set(k, v); });
     const doc = fd.get("doctor");
     if (doc && docs[doc]) fd.set("doctor", docs[doc]);
-    // номер посетителя в Метрике, только если её разрешили в уведомлении о cookie: после «Отключить аналитику» cookie Метрики
-    // может остаться в браузере (её домен), а в заявку номер уходить не должен
-    let ymOn = false;
-    try { ymOn = localStorage.getItem("um2-cookie") === "all"; } catch (e) {}
-    const ym = ymOn && document.cookie.match(/(?:^|; )_ym_uid=(\d+)/);
+    // номер посетителя в Метрике, если аналитика у него работает (Ilya 01.11: Метрика сразу; cookie.js, umAnalytics): у того,
+    // кто нажал «Отключить аналитику» или отказался на плашке 22–23.10, cookie Метрики может остаться в браузере (её домен),
+    // а в заявку номер уходить не должен
+    const ym = window.umAnalytics?.() && document.cookie.match(/(?:^|; )_ym_uid=(\d+)/);
     if (ym) fd.set("ym_uid", ym[1]);
     // визит Roistat (он подключён к amoCRM клиники), если его счётчик стоит на сайте
     const rs = document.cookie.match(/(?:^|; )roistat_visit=([^;]+)/);
