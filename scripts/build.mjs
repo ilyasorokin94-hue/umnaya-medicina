@@ -125,6 +125,7 @@ const icon = {
   phone: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg>',
   arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 5.3 19.9 12l-6.7 6.7-1.4-1.4 4.3-4.3H4v-2h12.1l-4.3-4.3z"/></svg>',
   menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v2H3zm0 8h18v2H3z"/></svg>',
+  eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5C6.5 5 2.4 9.3 1 12c1.4 2.7 5.5 7 11 7s9.6-4.3 11-7c-1.4-2.7-5.5-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-7.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg>',
   close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg>',
   check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 16.2-4.2-4.2-1.4 1.4 5.6 5.6 11-11-1.4-1.4z"/></svg>',
   star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>',
@@ -202,7 +203,7 @@ ${canonical ? `<meta property="og:url" content="${SITE}${canonical}">` : ""}
 ${fontPreload.map((f) => `<link rel="preload" href="${p}assets/fonts/${f}.woff2" as="font" type="font/woff2" crossorigin>`).join("\n")}
 <link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
-(function(d){d.classList.add("js");try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim")}}catch(e){}
+(function(d){d.classList.add("js");var a=null;try{a=JSON.parse(localStorage.getItem("um2-a11y")||"null")}catch(e){}if(a){d.classList.add("a11y","a11y-f"+(a.f||1),"a11y-c-"+(a.c||"bw"));if(a.img===0)d.classList.add("a11y-noimg")}try{if(!a&&!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim")}}catch(e){}
 setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
 (function(d){try{if(!matchMedia("(pointer: coarse)").matches)return;var w=-1;function m(u){var e=document.createElement("i");e.style.cssText="position:absolute;top:0;left:0;width:0;visibility:hidden;height:100"+u;d.appendChild(e);var h=e.getBoundingClientRect().height;d.removeChild(e);return h}function s(){if(innerWidth===w)return;w=innerWidth;var l=m("vh"),v=m("svh")||l;if(!l)return;d.style.setProperty("--vh",l/100+"px");d.style.setProperty("--svh",v/100+"px")}s();addEventListener("resize",s)}catch(e){}})(document.documentElement);
 window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.removeAttribute("srcset");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
@@ -285,6 +286,7 @@ function header(depth, home = false) {
     <ul class="nav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li class="nav__item"><a class="nav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="${navLine[t] || ""}"></span></span></li>`).join("")}</ul>
   </nav>
   <div class="header__cta">
+    <button class="a11y-btn" type="button" data-a11y aria-label="Версия для слабовидящих" title="Версия для слабовидящих">${icon.eye}</button>
     <a class="header__phone" href="${fallbackHref("call", p)}" data-modal="call"><b>Перезвоним за 5 минут</b><small>${esc(clinic.hours)}</small></a>
     ${act("Записаться", "book", p, { cls: "btn--sm header__book", magnet: true })}
     <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="menu">${icon.menu}</button>
@@ -296,7 +298,7 @@ function header(depth, home = false) {
     <details class="menu__svc"><summary>Услуги</summary><div class="menu__list">${homeOrder.map((k) => `<a href="${svcHref(k, p)}">${esc(svc[k].menu)}</a>`).join("")}<a href="${p}uslugi/">Все услуги и цены</a></div></details>
     ${items.map(([t, h]) => `<a href="${h}">${t}</a>`).join("")}
   </nav>
-  <div class="menu__foot"><span class="footer__phone">Перезвоним за 5 минут</span><span class="note">${esc(clinic.hours)}.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
+  <div class="menu__foot"><button class="menu__a11y" type="button" data-a11y>${icon.eye}<span>Версия для слабовидящих</span></button><span class="footer__phone">Перезвоним за 5 минут</span><span class="note">${esc(clinic.hours)}.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
   <nav class="mnav" aria-label="Разделы">
     <ul class="mnav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li><a class="mnav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a></li>`).join("")}</ul>
   </nav>
@@ -397,7 +399,7 @@ function offer(depth, consent, p) {
 const footerLegal = (p, cls = "footer__legal") => `  <div class="${cls}">
     <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. Лицензия на медицинскую деятельность.</span>
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
-    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a><a href="${legalHref("svedeniya", p)}">Сведения о медицинской организации</a><a href="${legalHref("gosgarantii", p)}">Информация о возможности получения медицинской помощи в рамках программы государственных гарантий</a></span>
+    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a><a href="#" data-a11y role="button">Версия для слабовидящих</a><a href="${legalHref("svedeniya", p)}">Сведения о медицинской организации</a><a href="${legalHref("gosgarantii", p)}">Информация о возможности получения медицинской помощи в рамках программы государственных гарантий</a></span>
   </div>`;
 // виджет ПроДокторов «Цитата из отзыва о клинике» (Ilya 28.10): внизу страницы перед подвалом, код из кабинета ПроДокторов.
 // Без скрипта видно название клиники ссылкой; скрипт подставляет рейтинг, число отзывов и цитату. defer: не держит первый экран

@@ -6,7 +6,8 @@
   // ссылка меню с data-dir="uslugi implantaciya": текущая, если адрес страницы лежит в одном из этих разделов
   const inDir = (d) => !!d && d.split(" ").some((x) => location.pathname.includes(`/${x}/`));
   const root = document.documentElement;
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // версия для слабовидящих (Ilya 01.11): без анимаций и плавной прокрутки, как при «уменьшить движение»
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches || root.classList.contains("a11y");
   const fine = matchMedia("(pointer: fine)").matches;
   const phoneMQ = matchMedia("(max-width: 760px)");
   const G = window.gsap, ST = window.ScrollTrigger;
@@ -1003,6 +1004,45 @@
   // с анимацией первая фраза приходит после заголовка (запасной запуск, если заставка не доиграла), без неё всё сразу на месте
   if (rot && anim) setTimeout(rotStart, 6000);
   else rotStart();
+
+  // ---------- версия для слабовидящих (Ilya 01.11, ГОСТ Р 52872-2019) ----------
+  // Кнопка с глазом в шапке, в меню телефона и ссылка в подвале. Настройки в localStorage «um2-a11y»: размер шрифта f (1–3),
+  // цвета c (bw — чёрным по белому, wb — белым по чёрному, blue — тёмно-синим по голубому), картинки img (1/0).
+  // Классы на <html> ставит скрипт в <head> до отрисовки; включение и выключение перезагружает страницу (анимации),
+  // шрифт, цвета и картинки меняются сразу
+  const A11Y = "um2-a11y";
+  const a11yGet = () => { try { return JSON.parse(localStorage.getItem(A11Y) || "null"); } catch (e) { return null; } };
+  const a11ySet = (v) => { try { if (v) localStorage.setItem(A11Y, JSON.stringify(v)); else localStorage.removeItem(A11Y); } catch (e) {} };
+  $$("[data-a11y]").forEach((b) => b.addEventListener("click", (e) => {
+    e.preventDefault();
+    a11ySet(a11yGet() ? null : { f: 2, c: "bw", img: 1 });
+    location.reload();
+  }));
+  const a11y = a11yGet();
+  if (a11y && root.classList.contains("a11y")) {
+    const bar = document.createElement("div");
+    bar.className = "a11y-bar"; bar.setAttribute("role", "region"); bar.setAttribute("aria-label", "Настройки версии для слабовидящих");
+    const grp = (name, key, opts) => `<div class="a11y-bar__g" role="group" aria-label="${name}"><span class="a11y-bar__l">${name}:</span>${opts.map(([v, t, cls, lbl]) => `<button type="button" class="a11y-bar__b${cls ? " " + cls : ""}" data-k="${key}" data-v="${v}" aria-pressed="false"${lbl ? ` aria-label="${lbl}"` : ""}>${t}</button>`).join("")}</div>`;
+    bar.innerHTML = `<div class="a11y-bar__in">${grp("Размер шрифта", "f", [[1, "А", "a11y-bar__f1", "Обычный"], [2, "А", "a11y-bar__f2", "Крупный"], [3, "А", "a11y-bar__f3", "Очень крупный"]])}`
+      + grp("Цвет", "c", [["bw", "Ц", "a11y-bar__bw", "Чёрным по белому"], ["wb", "Ц", "a11y-bar__wb", "Белым по чёрному"], ["blue", "Ц", "a11y-bar__blue", "Синим по голубому"]])
+      + grp("Изображения", "img", [[1, "Вкл"], [0, "Выкл"]])
+      + `<button type="button" class="a11y-bar__off" data-a11y-off>Обычная версия сайта</button></div>`;
+    document.body.prepend(bar);
+    const paint = () => {
+      const v = a11yGet() || a11y;
+      root.classList.remove("a11y-f1", "a11y-f2", "a11y-f3", "a11y-c-bw", "a11y-c-wb", "a11y-c-blue");
+      root.classList.add("a11y-f" + (v.f || 1), "a11y-c-" + (v.c || "bw"));
+      root.classList.toggle("a11y-noimg", v.img === 0);
+      $$(".a11y-bar__b", bar).forEach((b) => b.setAttribute("aria-pressed", String(String(v[b.dataset.k]) === b.dataset.v)));
+    };
+    $$(".a11y-bar__b", bar).forEach((b) => b.addEventListener("click", () => {
+      const v = { ...(a11yGet() || a11y) }; v[b.dataset.k] = b.dataset.k === "c" ? b.dataset.v : +b.dataset.v;
+      a11ySet(v); paint();
+    }));
+    $("[data-a11y-off]", bar).addEventListener("click", () => { a11ySet(null); location.reload(); });
+    $$("[data-a11y]").forEach((b) => { b.setAttribute("aria-label", "Обычная версия сайта"); if (!b.matches(".a11y-btn")) { const t = $("span", b) || b; t.textContent = "Обычная версия сайта"; } });
+    paint();
+  }
 
   // фото врачей грузим заранее, сразу после загрузки страницы, а не когда до них долистали: на компьютере и телефоне
   // при быстрой прокрутке они появлялись с задержкой (Ilya 01.11). Файлы лёгкие (16–70 КБ), первый экран к этому времени загружен

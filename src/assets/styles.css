@@ -2447,3 +2447,118 @@ label.consent input[type="checkbox"][name="consent"][required],
   label.consent input[type="checkbox"][name="consent"][required],
   .modal .form label.consent input[type="checkbox"][name="consent"][required], .bform .form label.consent input[type="checkbox"][name="consent"][required] { width: 26px; height: 26px; }
 }
+
+/* ---------- версия для слабовидящих (Ilya 01.11, ГОСТ Р 52872-2019) ----------
+   Кнопка с глазом в шапке и меню, ссылка в подвале; настройки в панели сверху (app.js). Цвета: чёрным по белому,
+   белым по чёрному, тёмно-синим по голубому; шрифт без засечек трёх размеров, меню кнопкой, фото над текстом;
+   картинки можно выключить. Анимаций и плавной прокрутки нет (app.js, как при «уменьшить движение») */
+.a11y-btn { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid rgba(255, 255, 255, .35); border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
+.a11y-btn svg { width: 24px; height: 24px; fill: currentColor; }
+@media (min-width: 1025px) { .header .a11y-btn { width: 30px; height: 30px; border: 0; margin: 0 -8px 0 -6px; } .header .a11y-btn svg { width: 26px; height: 26px; } }
+/* место под глаз: промежутки между разделами меню на 4 px меньше, чтобы логотип и меню не слипались */
+@media (min-width: 1181px) { .header .nav__list { --hgap: clamp(1.25rem, .8864rem + 1.6162vw, 2.25rem); } }
+@media (min-width: 1025px) and (max-width: 1180px) { .header .nav__list { --hgap: calc(1.125rem + (100vw - 1025px) * .0855); } }
+.menu__a11y { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 10px 0; border: 0; background: none; color: inherit; font: inherit; font-size: 17px; text-decoration: underline; cursor: pointer; }
+.menu__a11y svg { width: 26px; height: 26px; fill: currentColor; }
+.a11y-bar { display: none; }
+html.a11y { --a-bg: #fff; --a-fg: #000; }
+html.a11y-c-wb { --a-bg: #000; --a-fg: #fff; }
+html.a11y-c-blue { --a-bg: #9dd1ff; --a-fg: #063462; }
+html.a11y body, html.a11y body *:not(svg):not(svg *) { background-color: transparent !important; background-image: none !important; color: var(--a-fg) !important; -webkit-text-fill-color: currentColor !important; border-color: var(--a-fg) !important; text-shadow: none !important; box-shadow: none !important; font-family: Arial, Helvetica, sans-serif !important; filter: none !important; mix-blend-mode: normal !important; }
+/* сплошной фон только у страницы и слоёв поверх неё; остальное прозрачное, чтобы плашки не закрывали фото */
+html.a11y, html.a11y body, html.a11y body :is(.header, .menu, .modal__box, .mobilebar, .cookie, .a11y-bar, input, textarea, select, button, .btn, details, .toast) { background-color: var(--a-bg) !important; }
+/* без «липких» и наложенных блоков: всё идёт сверху вниз, фото над текстом, а не под ним */
+html.a11y body :is(.hero, .slogan__head, .fcard, .pr4-card, .fstage__pin, .sp-grid__aside) { position: relative !important; top: auto !important; }
+html.a11y .hero--v { min-height: 0 !important; padding-top: 32px !important; }
+html.a11y .hero--v .hero__text { display: block !important; }
+html.a11y .hero--v .hero__actions { justify-content: flex-start !important; align-items: flex-start !important; margin-top: 24px !important; }
+html.a11y .hv__rot > [aria-hidden] { display: none !important; }
+html.a11y .hv__rot .sr { position: static !important; width: auto !important; height: auto !important; margin: 16px 0 0 !important; clip: auto !important; clip-path: none !important; overflow: visible !important; white-space: normal !important; }
+html.a11y .svl-card { aspect-ratio: auto !important; }
+html.a11y .svl-card__img { position: static !important; display: block; height: auto !important; aspect-ratio: 4 / 3; transform: none !important; scale: none !important; }
+html.a11y .svl-card__in { position: static !important; display: block !important; padding: 12px 0 !important; }
+html.a11y :is(.burger, .modal__x)::before, html.a11y :is(.burger, .modal__x)::after { background-color: var(--a-fg) !important; }
+html.a11y .logo picture, html.a11y .logo .logo__unit { display: none !important; }
+html.a11y .logo .logo__text { display: block !important; }
+html.a11y .logo .logo__text, html.a11y .logo .logo__text small { font-size: 22px !important; line-height: 1.15 !important; font-weight: 700 !important; text-decoration: none; }
+html.a11y .logo .logo__text small { font-size: 16px !important; font-weight: 400 !important; }
+html.a11y .logo { text-decoration: none !important; }
+html.a11y body *::before, html.a11y body *::after { background-image: none !important; background-color: transparent !important; box-shadow: none !important; }
+html.a11y svg { color: var(--a-fg); }
+html.a11y body { letter-spacing: .02em; line-height: 1.5; }
+html.a11y a { text-decoration: underline !important; }
+html.a11y .btn, html.a11y button, html.a11y input, html.a11y textarea, html.a11y select { border: 2px solid var(--a-fg) !important; }
+html.a11y :focus-visible { outline: 3px solid var(--a-fg) !important; outline-offset: 3px !important; }
+html.a11y input::placeholder { color: var(--a-fg) !important; opacity: .7; }
+/* шрифт: один размер для текста и три для заголовков, без «дизайнерских» огромных и мелких надписей */
+html.a11y body :is(p, li, a, span, label, button, input, textarea, select, td, th, dd, dt, summary, small, b, strong, em, i, div, figcaption, blockquote, address, time) { font-size: 18px !important; line-height: 1.5 !important; letter-spacing: .02em !important; font-weight: 400; }
+html.a11y body h1 { font-size: 34px !important; } html.a11y body h2 { font-size: 28px !important; } html.a11y body :is(h3, h4) { font-size: 22px !important; }
+html.a11y body :is(h1, h2, h3, h4) { line-height: 1.25 !important; letter-spacing: 0 !important; font-weight: 700 !important; }
+html.a11y-f2 body :is(p, li, a, span, label, button, input, textarea, select, td, th, dd, dt, summary, small, b, strong, em, i, div, figcaption, blockquote, address, time) { font-size: 22px !important; }
+html.a11y-f2 body h1 { font-size: 42px !important; } html.a11y-f2 body h2 { font-size: 34px !important; } html.a11y-f2 body :is(h3, h4) { font-size: 26px !important; }
+html.a11y-f3 body :is(p, li, a, span, label, button, input, textarea, select, td, th, dd, dt, summary, small, b, strong, em, i, div, figcaption, blockquote, address, time) { font-size: 26px !important; }
+html.a11y-f3 body h1 { font-size: 50px !important; } html.a11y-f3 body h2 { font-size: 40px !important; } html.a11y-f3 body :is(h3, h4) { font-size: 30px !important; }
+@media (max-width: 760px) {
+  html.a11y-f3 body h1 { font-size: 40px !important; } html.a11y-f3 body h2 { font-size: 34px !important; }
+}
+/* шапка: меню кнопкой на всех экранах (крупные пункты в строку не помещаются), логотип одним цветом текста */
+html.a11y .header .nav { display: none !important; }
+html.a11y .header .burger { display: grid !important; }
+html.a11y .header .header__cta { margin-left: auto; }
+html.a11y-c-bw .logo img, html.a11y-c-blue .logo img, html.a11y-c-bw .footer__big img, html.a11y-c-blue .footer__big img { filter: brightness(0); }
+html.a11y-c-wb .logo img, html.a11y-c-wb .footer__big img { filter: brightness(0) invert(1); }
+html.a11y .menu { clip-path: none !important; }
+html.a11y-noimg img:not(.a11y-keep), html.a11y-noimg picture, html.a11y-noimg video, html.a11y-noimg iframe, html.a11y-noimg .doc__initials { display: none !important; }
+html.a11y .header { position: relative !important; transform: none !important; }
+html.a11y .a11y-bar { display: block; position: relative; z-index: 1; border-bottom: 2px solid var(--a-fg) !important; }
+.a11y-bar__in { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: center; max-width: 1440px; margin: 0 auto; padding: 12px 16px; font-size: 18px; }
+.a11y-bar__g { display: flex; gap: 6px; align-items: center; }
+.a11y-bar__l { margin-right: 4px; }
+.a11y-bar__b, .a11y-bar__off { min-width: 44px; min-height: 44px; padding: 6px 12px; border-radius: 6px; font: inherit; font-weight: 700; cursor: pointer; }
+.a11y-bar__b[aria-pressed="true"] { outline: 3px solid var(--a-fg) !important; outline-offset: 2px; text-decoration: underline; }
+html.a11y .a11y-bar .a11y-bar__f1 { font-size: 16px !important; } html.a11y .a11y-bar .a11y-bar__f2 { font-size: 21px !important; } html.a11y .a11y-bar .a11y-bar__f3 { font-size: 26px !important; }
+html.a11y .a11y-bar :is(.a11y-bar__b, .a11y-bar__off) { font-weight: 700 !important; }
+html.a11y .a11y-bar .a11y-bar__bw { background-color: #fff !important; color: #000 !important; border-color: #000 !important; }
+html.a11y .a11y-bar .a11y-bar__wb { background-color: #000 !important; color: #fff !important; border-color: #fff !important; }
+html.a11y .a11y-bar .a11y-bar__blue { background-color: #9dd1ff !important; color: #063462 !important; border-color: #063462 !important; }
+.a11y-bar__off { margin-left: auto; text-decoration: underline; }
+/* блоки с фото: картинка отдельно, текст под ней; ленты и стопки превращаются в обычный список */
+html.a11y .tour__pin { height: auto !important; min-height: 0 !important; overflow: visible !important; }
+html.a11y .tour__frame { position: relative !important; inset: auto !important; aspect-ratio: 16 / 9; clip-path: none !important; }
+html.a11y .tour__frame img { transform: none !important; }
+html.a11y .tour__frame::after, html.a11y .ptour__shade { display: none !important; }
+html.a11y .tour__title { position: static !important; padding-top: 24px; }
+html.a11y .tour__row { width: auto !important; flex-wrap: wrap; transform: none !important; }
+html.a11y .ptour__car { position: relative !important; height: auto !important; }
+html.a11y .ptour__items { width: auto !important; height: auto !important; margin: 0 !important; transform: none !important; }
+html.a11y .ptour__item--main { display: block !important; height: auto !important; margin: 0 !important; padding: 0 !important; }
+html.a11y .ptour__item--main .ptour__img { position: static !important; display: block; height: auto !important; aspect-ratio: 4 / 3; transform: none !important; clip-path: none !important; }
+html.a11y .ptour__slogan { padding: 20px var(--gutter) 0 !important; text-align: left !important; }
+html.a11y .ptour__grid { grid-template-columns: 1fr 1fr !important; gap: 16px !important; padding: 0 var(--gutter) !important; }
+html.a11y .ptour__fig { grid-column: auto !important; grid-row: auto !important; padding: 0 !important; align-self: start !important; transform: none !important; }
+html.a11y .ptour__pic img { scale: none !important; transform: none !important; }
+html.a11y .ptour__text { margin-top: 24px !important; }
+html.a11y .rv__row { width: auto !important; flex-wrap: wrap; padding: 0 var(--gutter); transform: none !important; }
+html.a11y .rv { flex: 1 1 320px !important; width: auto !important; border: 2px solid var(--a-fg) !important; }
+html.a11y :is(.rv, .tfig)[aria-hidden="true"] { display: none !important; }
+html.a11y .rvs { display: grid !important; gap: 14px !important; height: auto !important; }
+html.a11y .rvs__card { position: static !important; inset: auto !important; width: auto !important; height: auto !important; transform: none !important; translate: none !important; rotate: none !important; scale: none !important; visibility: visible !important; opacity: 1 !important; border: 2px solid var(--a-fg) !important; }
+html.a11y .rvs__bar { display: none !important; }
+html.a11y .team__grid--lava .doc > *, html.a11y .team__grid--lava .doc__photo img { translate: none !important; }
+@media (max-width: 760px) {
+  html.a11y .team__grid.team__grid--lava { grid-template-columns: minmax(0, 1fr) !important; row-gap: 32px !important; }
+  html.a11y .team__grid.team__grid--lava .doc { grid-column: 1 !important; padding-top: 0 !important; margin: 0 !important; }
+  html.a11y .team__grid--lava .doc__photo { max-width: 260px; }
+}
+html.a11y .logo .logo__img { display: none !important; }
+html.a11y .booking__top { flex-wrap: wrap; gap: 12px; }
+html.a11y .slogan__head { min-height: 0 !important; padding: 24px var(--gutter) !important; }
+html.a11y .big__ghost { display: none !important; }
+html.a11y .big__field { display: block !important; }
+html.a11y .big__field .sr { position: static !important; width: auto !important; height: auto !important; clip: auto !important; overflow: visible !important; white-space: normal !important; display: block; margin-bottom: 8px; }
+html.a11y .big__in { position: static !important; display: block !important; width: 100% !important; max-width: 520px; height: auto !important; min-height: 56px !important; margin: 0 auto !important; padding: 8px 14px !important; border-radius: 10px !important; color: var(--a-fg) !important; caret-color: var(--a-fg) !important; text-align: left !important; }
+@media (max-width: 760px) { html.a11y .svl-grid { grid-template-columns: minmax(0, 1fr) !important; } }
+html.a11y:not(#a11y) body :is(h1, h2, h3, h4) * { font-size: inherit !important; line-height: inherit !important; font-weight: inherit !important; }
+html.a11y:not(#a11y) body :is(input, textarea, select) { font-size: 22px !important; }
+html.a11y-f1:not(#a11y) body :is(input, textarea, select) { font-size: 18px !important; }
+html.a11y-f3:not(#a11y) body :is(input, textarea, select) { font-size: 26px !important; }
