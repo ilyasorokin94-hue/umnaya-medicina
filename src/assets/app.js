@@ -591,8 +591,11 @@
     Object.entries({ ...(window.umSource?.() || {}), ...extra }).forEach(([k, v]) => { if (v) fd.set(k, v); });
     const doc = fd.get("doctor");
     if (doc && docs[doc]) fd.set("doctor", docs[doc]);
-    // номер посетителя в Метрике, только если её разрешили в уведомлении о cookie (без согласия её cookie нет)
-    const ym = document.cookie.match(/(?:^|; )_ym_uid=(\d+)/);
+    // номер посетителя в Метрике, только если её разрешили в уведомлении о cookie: после «Отключить аналитику» cookie Метрики
+    // может остаться в браузере (её домен), а в заявку номер уходить не должен
+    let ymOn = false;
+    try { ymOn = localStorage.getItem("um2-cookie") === "all"; } catch (e) {}
+    const ym = ymOn && document.cookie.match(/(?:^|; )_ym_uid=(\d+)/);
     if (ym) fd.set("ym_uid", ym[1]);
     // визит Roistat (он подключён к amoCRM клиники), если его счётчик стоит на сайте
     const rs = document.cookie.match(/(?:^|; )roistat_visit=([^;]+)/);

@@ -146,6 +146,27 @@ const navLine = {
 // «Услуги» на главной ведут к блоку услуг, на остальных страницах на страницу всех услуг /uslugi/ (Ilya 25.10)
 const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services").startsWith("#") ? "#services" : `${p}uslugi/`, "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi/`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
+// Код счётчика Яндекс Метрики в <head> каждой страницы, как его выдаёт Метрика, но неактивный. Яндекс Бизнес 01.11: «Мы не нашли
+// счётчик Метрики на сайте»: его проверка «Принять» не нажимает, а код счётчика был только внутри cookie.js.
+// type="text/plain" браузер не исполняет (так менеджеры согласия держат счётчики до согласия): до «Принять» tag.js не грузится,
+// cookie Метрики нет, к Яндексу запросов нет (Ilya 23.10), а в HTML страницы виден номер счётчика.
+// После «Принять» cookie.js запускает копию этого блока; defer (window.umYmDefer) он ставит, когда согласие дано не на странице
+// входа: тогда визит с исходным referrer и метками он отправляет сам.
+// Параметры init те же, что в запасном пути cookie.js (var opt): меняете здесь, поменяйте и там.
+// noscript-пикселя нет: у посетителя без скриптов согласие не спросить, а пиксель считал бы визит без него
+const ymCode = `<!-- Yandex.Metrika counter -->
+<script type="text/plain" id="um-ym" data-consent="analytics">
+    (function(m,e,t,r,i,k,a){
+        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+        m[i].l=1*new Date();
+        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=${METRIKA_ID}', 'ym');
+
+    ym(${METRIKA_ID}, 'init', {webvisor:true, clickmap:true, accurateTrackBounce:true, trackLinks:true, defer:!!window.umYmDefer});
+</script>
+<!-- /Yandex.Metrika counter -->`;
+
 // В <head> каждой страницы: телефоны и планшеты замеряют высоту экрана один раз (--vh, --svh) и меняют её только при повороте.
 // Во встроенных браузерах (Telegram, VK, Instagram) окно меняет высоту, когда прячется панель, и всё, что в styles.css задано
 // в vh и svh, вместе со страницей прыгало на сотни пикселей. Поэтому в styles.css высоты экрана пишем через var(--vh)/var(--svh)
@@ -188,6 +209,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <script src="${p}assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="${p}assets/vendor/lenis.min.js" defer></script>
 <script src="${p}assets/app.js?v=${V.app}" defer></script>
+${ymCode}
 <script src="${p}assets/cookie.js?v=${V.cookie}" data-privacy="${p}privacy/" data-ym="${METRIKA_ID}" defer></script>
 ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</script>`).join("\n")}
 </head>

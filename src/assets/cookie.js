@@ -5,7 +5,8 @@
 // Плашка внизу, страницу не закрывает (фид «Врачи» не принимает модальные окна) и не закрывает кнопки записи.
 // До согласия источник визита и важные цели лежат только в браузере. После «Принять» Метрика получает визит с начала,
 // поэтому заход из Яндекс Карт, Бизнеса или Директа не теряется, даже если человек согласился на третьей странице.
-// Номер счётчика и адрес политики приходят из тега скрипта: data-ym, data-privacy.
+// Номер счётчика и адрес политики приходят из тега скрипта: data-ym, data-privacy. Сам код счётчика стоит в <head> неактивным
+// (script type="text/plain" id="um-ym", чтобы проверка Яндекс Бизнеса, если она читает HTML, видела счётчик), запускает его load() после «Принять».
 (function () {
   var me = document.currentScript, ID = +(me && me.dataset.ym) || 0, privacy = (me && me.dataset.privacy) || "privacy/";
   var KEY = "um2-cookie";
@@ -56,11 +57,27 @@
     document.querySelectorAll(".big__ghost, .modal__doc").forEach(function (el) { el.classList.add("ym-hide-content"); });
   };
   var loaded = false;
+  // Код счётчика стоит в <head> каждой страницы неактивным: <script type="text/plain" id="um-ym"> (scripts/build.mjs, Яндекс Бизнес 01.11).
+  // Браузер такой блок не исполняет: до «Принять» tag.js не грузится и cookie Метрики нет, а проверка, которая читает HTML, видит код счётчика.
+  // После согласия запускаем копию блока; defer для init передаём через window.umYmDefer. Если блока нет на странице
+  // или он не выполнился (CSP без 'unsafe-inline'), грузим tag.js отсюда, как раньше, с теми же параметрами
+  var run = function (opt) {
+    var code = document.getElementById("um-ym");
+    window.umYmDefer = !!opt.defer;
+    if (code && !window.ym) {
+      var s = document.createElement("script");
+      s.text = code.text;
+      code.parentNode.insertBefore(s, code.nextSibling);
+      if (window.ym) return;
+    }
+    (function (m, e, t, r, i, k, a) { m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); }; m[i].l = 1 * new Date(); k = e.createElement(t); a = e.getElementsByTagName(t)[0]; k.async = 1; k.src = r; a.parentNode.insertBefore(k, a); })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=" + ID, "ym");
+    window.ym(ID, "init", opt);
+  };
   var load = function () {
     if (loaded || !ID) return;
     loaded = true;
     mask();
-    (function (m, e, t, r, i, k, a) { m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments); }; m[i].l = 1 * new Date(); k = e.createElement(t); a = e.getElementsByTagName(t)[0]; k.async = 1; k.src = r; a.parentNode.insertBefore(k, a); })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+    // параметры те же, что в блоке um-ym (scripts/build.mjs, ymCode): нужны запасному пути и для defer
     var opt = { clickmap: true, trackLinks: true, accurateTrackBounce: true, webvisor: true };
     var here = location.pathname + location.search;
     if (!visit.ym && visit.landing && visit.landing !== here) {
@@ -68,10 +85,10 @@
       // иначе Метрика запишет его как переход внутри сайта и не свяжет с Яндекс Картами, Бизнесом или Директом
       var first = location.origin + visit.landing;
       opt.defer = true;
-      window.ym(ID, "init", opt);
+      run(opt);
       window.ym(ID, "hit", first, { referer: visit.ref || "", title: visit.lt || "" });
       window.ym(ID, "hit", location.href, { referer: first, title: document.title });
-    } else window.ym(ID, "init", opt);
+    } else run(opt);
     // со следующих страниц визита Метрика ведёт его сама, по своим cookie
     if (!visit.ym) { visit.ym = 1; write("sessionStorage", "um2-src", visit); }
     if (/\/ceny(\/|\.html)?$/.test(location.pathname)) goal("prices");
@@ -114,13 +131,18 @@
     else if (/reviews/.test(h)) goal("reviews_out");
     else if (/yandex\.ru\/maps|2gis\.ru/.test(h)) goal("route");
   });
-  // отказ после согласия: убираем cookie и записи Метрики
+  // отказ после согласия: убираем cookie и записи Метрики. Метрика ставит cookie на домен сайта (.smartmed.clinic),
+  // такую cookie удаляет только запись с тем же domain, поэтому стираем и без domain, и на каждый родительский домен
   var forget = function () {
+    var h = location.hostname.split("."), doms = [""];
+    for (var i = 0; i < h.length - 1; i++) doms.push("; domain=." + h.slice(i).join("."));
     document.cookie.split(";").forEach(function (c) {
       var n = c.split("=")[0].trim();
-      if (/^_ym|^yandexuid|^yuidss|^ymex|^i$/.test(n)) document.cookie = n + "=; Max-Age=0; path=/";
+      if (/^_ym|^yandexuid|^yuidss|^ymex|^i$/.test(n)) doms.forEach(function (d) { document.cookie = n + "=; Max-Age=0; path=/" + d; });
     });
-    try { Object.keys(localStorage).forEach(function (k) { if (/^_ym/.test(k)) localStorage.removeItem(k); }); } catch (e) {}
+    // записи Метрики в хранилищах браузера (список в справке Метрики: _ym*, ytm_*, zz)
+    try { Object.keys(localStorage).forEach(function (k) { if (/^_ym|^ytm_|^zz$/.test(k)) localStorage.removeItem(k); }); } catch (e) {}
+    try { Object.keys(sessionStorage).forEach(function (k) { if (/^_ym/.test(k)) sessionStorage.removeItem(k); }); } catch (e) {}
   };
 
   // плашка: пока она видна, низ подвала можно докрутить из-под неё (--ck-h), на телефоне она стоит над нижней панелью
@@ -165,9 +187,11 @@
   });
 
   var start = function () {
-    if (get() === "all") load();
+    if (get() === "all") return load();
+    // без согласия cookie Метрики быть не должно: подчищаем то, что осталось после отзыва прежней версией сайта
+    forget();
     // плашка после заставки главной, чтобы не появляться поверх неё
-    else setTimeout(show, root.classList.contains("js-intro") ? 2600 : 900);
+    setTimeout(show, root.classList.contains("js-intro") ? 2600 : 900);
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
