@@ -487,6 +487,27 @@
   // Откуда пришёл человек (страница входа, сайт-источник, метки) запоминает cookie.js, заявка берёт это из window.umSource
   const t0 = Date.now(), FILE_MB = 20;
   const isLive = (f) => /lead\.php$/.test(f.getAttribute("action") || "");
+  // открылась клавиатура в форме заявки (Ilya 01.11): докручиваем страницу или окно так, чтобы над клавиатурой была видна
+  // кнопка отправки, а поле осталось на экране. Большой номер в подвале не трогаем: там кнопка сразу под полем
+  {
+    const vv = window.visualViewport;
+    let kt = 0;
+    const keepBtn = () => {
+      const f = document.activeElement, form = f?.form;
+      if (!vv || !phoneMQ.matches || !form || !f.matches("input") || form.classList.contains("cb")) return;
+      const btn = form.querySelector("button:not([type=button])");
+      if (!btn) return;
+      const top = vv.offsetTop, bottom = top + vv.height, b = btn.getBoundingClientRect(), fr = f.getBoundingClientRect();
+      const dy = Math.min(b.bottom + 12 - bottom, fr.top - top - 12);
+      if (dy <= 4) return;
+      const box = form.closest(".modal__box");
+      if (box) box.scrollTop += dy; else scrollBy({ top: dy, behavior: "instant" });
+    };
+    const later = () => { clearTimeout(kt); kt = setTimeout(keepBtn, 320); };
+    document.addEventListener("focusin", (e) => { if (e.target.form) later(); });
+    vv?.addEventListener("resize", later);
+  }
+
   // ловушка для ботов: поле, которого человек не видит
   $$("form").forEach((f) => { if (isLive(f)) f.insertAdjacentHTML("beforeend", '<input class="hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">'); });
   // ---------- телефон и имя в формах (Ilya 01.11): маска +7 999 123-45-67, которая не мешает вводу ----------
@@ -696,18 +717,36 @@
     allon: ["Спасибо!", "Администратор перезвонит за 5 минут и запишет к имплантологу на консультацию с КТ. Расчёт бесплатный."],
   };
   const defDone = $("#m-done [data-done-text]")?.textContent;
+  // «Спасибо» (Ilya 01.11): номер, на который перезвонят, и «Ошиблись в номере? Исправить» — назад в то же окно с номером
+  let fixFrom = null;
+  $("#m-done [data-fix-tel]")?.addEventListener("click", () => {
+    const fx = fixFrom; if (!fx) return;
+    showModal(fx.id, fx.opener);
+    const t = $('input[type="tel"]', fx.form), n = $('input[name="name"]', fx.form);
+    if (n) n.value = fx.name;
+    if (t) { t.value = fx.tel; t.dispatchEvent(new Event("input")); setTimeout(() => { t.focus(); t.select?.(); }, 60); }
+  });
   $$("form[data-lead]").forEach((f) => {
     if (f.hasAttribute("data-quiz") || f.classList.contains("cb")) return;
     f.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (f.dataset.sending) return;
-      const kind = f.dataset.lead, d = doneText[kind];
+      const kind = f.dataset.lead, d = doneText[kind], opener = lastFocus;
       f.dataset.sending = "1"; busy(f, true); if (f._err) f._err.hidden = true;
       try { await sendLead(f, kind); }
       catch (err) { leadError(f, err.message); return; }
       finally { delete f.dataset.sending; busy(f, false); }
       const dm = $("#m-done");
-      if (dm) { $("h2", dm).textContent = d ? d[0] : "Спасибо!"; $("[data-done-text]", dm).textContent = d ? d[1] : defDone; }
+      const tel = $('input[type="tel"]', f)?.value || "", mid = f.closest(".modal")?.id?.replace(/^m-/, "");
+      if (dm) {
+        $("h2", dm).textContent = d ? d[0] : "Спасибо!";
+        // ночью честно: перезвоним утром (как в форме подвала)
+        $("[data-done-text]", dm).textContent = d ? d[1] : isOpen() ? defDone : defDone.replace("Администратор перезвонит за 5 минут.", "Сейчас клиника закрыта. Администратор перезвонит утром, после 9:00.");
+        const dt = $("[data-done-tel]", dm), fb = $("[data-fix-tel]", dm);
+        if (dt) { $("b", dt).textContent = tel; dt.hidden = !tel; }
+        fixFrom = tel && mid && mid !== "done" ? { id: mid, form: f, opener, tel, name: $('input[name="name"]', f)?.value || "" } : null;
+        if (fb) fb.hidden = !fixFrom;
+      }
       f.reset();
       $$(".file input", f).forEach((i) => i.dispatchEvent(new Event("change")));
       document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: kind } })); // цель Метрики (cookie.js), без имени и телефона
@@ -1387,19 +1426,6 @@
     // форма для старшего возраста (Ilya 01.11): телефон первым, имя последним, поэтому с имени клавиатура сразу отправляет
     const tel = $("[name=phone]", bf), btn = $("button", bf);
     $("[name=name]", bf)?.setAttribute("enterkeyhint", "send");
-    // открылась клавиатура: докручиваем так, чтобы над ней была видна кнопка «Записаться», а поле осталось на экране
-    const vv = window.visualViewport;
-    const keepBtn = () => {
-      const f = document.activeElement;
-      if (!vv || !phoneMQ.matches || !f || !bf.contains(f) || !f.matches("input")) return;
-      const top = vv.offsetTop, bottom = top + vv.height, b = btn.getBoundingClientRect(), fr = f.getBoundingClientRect();
-      const dy = Math.min(b.bottom + 12 - bottom, fr.top - top - 12);
-      if (dy > 4) scrollBy({ top: dy, behavior: "instant" });
-    };
-    let kt = 0;
-    const later = () => { clearTimeout(kt); kt = setTimeout(keepBtn, 320); };
-    bf.addEventListener("focusin", later);
-    vv?.addEventListener("resize", later);
     // плашка cookie ждёт, пока она закрыла бы кнопку «Записаться» (маленький экран): появляется, когда кнопку пролистали
     // или заявку отправили. Высоту плашки даёт cookie.js (--ck-h = высота + 16 px), класс has-ck пока она на экране
     let cq = 0;

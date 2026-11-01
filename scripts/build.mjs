@@ -292,7 +292,8 @@ function modals(depth) {
   const agree = consentField(p);
   const phone = `<label>Телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>`;
   // имя необязательное (Ilya 01.11): заявку можно оставить одним номером, в amoCRM контакт «Без имени»
-  const name = `<label>Имя (необязательно)<input name="name" autocomplete="given-name"></label>`;
+  // телефон первым, имя вторым (Ilya 01.11, как на /zapis/): обязательное поле сверху, заявку можно отправить сразу с номера
+  const name = `<label><span>Имя <span class="form__opt">(можно не указывать)</span></span><input name="name" autocomplete="given-name"></label>`;
   // строка «Акция: …», если окно открыли кнопкой из блока акций; уходит в заявку скрытым полем promo
   const promoLine = `<p class="modal__promo" hidden></p>`;
   const msgr = msgrLinks().length ? `<div class="modal__msgr">${msgrLinks().map(([n, u]) => `<a class="btn btn--ghost" href="${u}"${ext}>Отправить в ${n}</a>`).join("")}</div>` : "";
@@ -306,7 +307,7 @@ function modals(depth) {
 ${box("book", "Запишитесь на консультацию", `<p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
   <p class="modal__doc" hidden></p>${promoLine}
   <form class="form lead" data-lead="book" method="post" action="${leadAction(p)}">
-    <input type="hidden" name="doctor"><input type="hidden" name="promo"><input type="hidden" name="reason">${name}${phone}
+    <input type="hidden" name="doctor"><input type="hidden" name="promo"><input type="hidden" name="reason">${phone}${name}
     ${agree}
     <button class="btn btn--lg btn--wide">Жду звонка</button>
     <p class="modal__note">Заявки после 21:00 перезваниваем с 9:00 утра.</p>${consent}
@@ -317,7 +318,7 @@ ${box("call", "Перезвоним за 5 минут", `<p class="modal__sub">�
     <button class="btn btn--lg btn--wide">Жду звонка</button>${consent}
   </form>`)}
 ${box("xray", "Пришлите снимок, и врач скажет, можно ли сохранить зуб", `<p class="modal__sub">Подойдёт КТ, панорама, прицельный снимок или фото плана лечения из другой клиники. Врач посмотрит и ответит в течение рабочего дня. Это бесплатно.</p>
-  <form class="form lead" data-lead="xray" method="post" action="${leadAction(p)}">${name}${phone}
+  <form class="form lead" data-lead="xray" method="post" action="${leadAction(p)}">${phone}${name}
     <label class="file">Снимок или план<input name="file" type="file" accept="image/*,.pdf,.zip,.dcm"><span>Выбрать файл</span></label>
     ${msgr}
     ${agree}
@@ -326,15 +327,18 @@ ${box("xray", "Пришлите снимок, и врач скажет, можн
   </form>`)}
 ${box("allon", "Консультация по All-on-4", `<p class="modal__sub">Хирург, ортопед и терапевт осмотрят вас вместе, сделаем КТ. Консультация бесплатная. Стоимость лечения врач назовёт после осмотра.</p>
   ${promoLine}
-  <form class="form lead" data-lead="allon" method="post" action="${leadAction(p)}"><input type="hidden" name="promo">${name}${phone}
+  <form class="form lead" data-lead="allon" method="post" action="${leadAction(p)}"><input type="hidden" name="promo">${phone}${name}
     ${agree}
     <button class="btn btn--lg btn--wide">Записаться на консультацию</button>
     <p class="modal__note">Перезвоним за 5 минут.</p>${consent}
   </form>`)}
 ${offer(depth, consent, p)}
 ${box("done", "Спасибо!", `<p class="modal__sub" data-done-text>Администратор перезвонит за 5 минут.${msgrLinks().length ? ` Пока ждёте, можете прислать снимок в ${msgrSay()}, врач посмотрит его до визита.` : ""}</p>
+  <p class="modal__tel" data-done-tel hidden>Номер для звонка: <b class="nobr"></b></p>
+  <p class="modal__hours">Звонит администратор ${esc(clinic.hours.toLowerCase())}.</p>
   ${msgrLinks().length ? `<div class="modal__msgr">${msgrLinks().map(([n, u], i) => `<a class="btn${i ? " btn--ghost" : ""}" href="${u}"${ext}>${n}</a>`).join("")}</div>` : ""}
   <button class="btn btn--lg btn--wide modal__ok" type="button" data-close>Хорошо</button>
+  <button class="link modal__fix" type="button" data-fix-tel hidden>Ошиблись в номере? Исправить</button>
 ${LEADS ? "" : `
   <p class="modal__note">Это демонстрация: на рабочем сайте заявка уйдёт в amoCRM с названием формы, поводом, страницей и UTM-метками.</p>`}`)}
 </div>`;
@@ -1623,7 +1627,7 @@ function pageBooking() {
         <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. Консультация с планом лечения бесплатная.</p>
         <form class="form" id="b-form" method="post" action="${leadAction("")}">
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
-          <label><span>Имя <span class="bform__opt">(можно не указывать)</span></span><input name="name" autocomplete="given-name"></label>
+          <label><span>Имя <span class="form__opt">(можно не указывать)</span></span><input name="name" autocomplete="given-name"></label>
           <input type="hidden" name="service" value="">
           <input type="hidden" name="doctor" value="">
           <p class="bform__doc" data-doc hidden></p>
