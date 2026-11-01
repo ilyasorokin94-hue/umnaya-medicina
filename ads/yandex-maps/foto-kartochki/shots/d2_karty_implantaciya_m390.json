@@ -1,0 +1,40 @@
+[
+ {
+  "i": 1,
+  "t": "Умная Медицина",
+  "imgs": [
+   "https://avatars.mds.yandex.net/get-altay/10488540/2a0000018a63ad767d2abc2fbbb78a96b089/S_height"
+  ],
+  "bg": []
+ },
+ {
+  "i": 2,
+  "t": "Без боли",
+  "imgs": [
+   "https://avatars.mds.yandex.net/get-altay/10488540/2a0000018b28b85639c0197f383445ff970a/S_height"
+  ],
+  "bg": []
+ },
+ {
+  "i": 3,
+  "t": "Доктор Дент",
+  "imgs": [
+   "https://avatars.mds.yandex.net/get-altay/16390227/2a00000198afa76980c6fef1115d0d8ddf57/S_height"
+  ],
+  "bg": []
+ },
+ {
+  "i": 4,
+  "t": "Умная Медицина",
+  "imgs": [],
+  "bg": []
+ },
+ {
+  "i": 5,
+  "t": "Идеальная Улыбка",
+  "imgs": [
+   "https://avatars.mds.yandex.net/get-altay/4667561/2a0000017816e5a01a71d837bb50e02cb58e/S_height"
+  ],
+  "bg": []
+ }
+]
