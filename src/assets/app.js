@@ -1051,7 +1051,7 @@
       a11ySet(v); paint();
     }));
     $("[data-a11y-off]", bar).addEventListener("click", () => { a11ySet(null); location.reload(); });
-    $$("[data-a11y]").forEach((b) => { b.setAttribute("aria-label", "Обычная версия сайта"); if (!b.matches(".a11y-btn")) { const t = $("span", b) || b; t.textContent = "Обычная версия сайта"; } });
+    $$("[data-a11y]").forEach((b) => { b.setAttribute("aria-label", "Обычная версия сайта"); { const t = $("span", b) || b; t.textContent = "Обычная версия сайта"; } });
     paint();
   }
 

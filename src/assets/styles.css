@@ -1085,12 +1085,20 @@ html:not(.js-intro) .intro { display: none; }
   .invite__form .btn { width: 100%; }
 }
 
-/* поля в окнах записи ниже и плотнее: на компьютере имя и телефон в одну строку */
+/* поля в окнах записи: на компьютере как на телефоне (Ilya 02.11): телефон, под ним имя, подписи 18 px, поля и кнопка 64 px */
 .modal .form input:not([type="radio"]):not([type="file"]) { min-height: 48px; padding: 11px 16px; border-radius: 12px; }
 .modal .form label { gap: 5px; font-size: 13.5px; }
 @media (min-width: 761px) {
-  .modal--book .form, .modal--xray .form, .modal--allon .form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .modal--book .form > :not(label), .modal--xray .form > :not(label), .modal--allon .form > :not(label) { grid-column: 1 / -1; }
+  .modal .form { gap: 16px; }
+  .modal .form label, .modal .file { gap: 8px; font-size: 18px; font-weight: 500; color: var(--text); }
+  .modal .form input:not([type="radio"]):not([type="file"]):not([type="checkbox"]):not([type="hidden"]):not(.hp) { min-height: 64px; padding: 14px 18px; border: 2px solid #7a887d; background: var(--white); box-shadow: none; font: 400 21px/1.2 var(--body); color: var(--text); }
+  .modal .form input::placeholder { color: #6b7a6e; opacity: 1; }
+  .modal .form input:focus { outline: 0; border-color: var(--green-btn); box-shadow: 0 0 0 4px rgba(36, 135, 33, .2); }
+  .modal .form input[aria-invalid="true"] { border-color: #b3261e; box-shadow: 0 0 0 1px #b3261e; }
+  .modal .form .btn--lg { min-height: 64px; font-size: 20px; font-weight: 600; }
+  .modal .form__hint, .modal .form__err { font-size: 16px; }
+  .modal .modal__box .form label.consent { font-size: 16px; line-height: 1.45; color: var(--text); }
+  .modal .modal__box .form label.consent input[type="checkbox"][name="consent"][required] { width: 24px; height: 24px; }
 }
 
 /* кнопка «Все врачи» под карточками на главной */
@@ -2449,17 +2457,9 @@ label.consent input[type="checkbox"][name="consent"][required],
 }
 
 /* ---------- версия для слабовидящих (Ilya 01.11, ГОСТ Р 52872-2019) ----------
-   Кнопка с глазом в шапке и меню, ссылка в подвале; настройки в панели сверху (app.js). Цвета: чёрным по белому,
+   Включается ссылкой в подвале (Ilya 02.11: значок в шапке не нужен); настройки в панели сверху (app.js). Цвета: чёрным по белому,
    белым по чёрному, тёмно-синим по голубому; шрифт без засечек трёх размеров, меню кнопкой, фото над текстом;
    картинки можно выключить. Анимаций и плавной прокрутки нет (app.js, как при «уменьшить движение») */
-.a11y-btn { display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid rgba(255, 255, 255, .35); border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
-.a11y-btn svg { width: 24px; height: 24px; fill: currentColor; }
-@media (min-width: 1025px) { .header .a11y-btn { width: 30px; height: 30px; border: 0; margin: 0 -8px 0 -6px; } .header .a11y-btn svg { width: 26px; height: 26px; } }
-/* место под глаз: промежутки между разделами меню на 4 px меньше, чтобы логотип и меню не слипались */
-@media (min-width: 1181px) { .header .nav__list { --hgap: clamp(1.25rem, .8864rem + 1.6162vw, 2.25rem); } }
-@media (min-width: 1025px) and (max-width: 1180px) { .header .nav__list { --hgap: calc(1.125rem + (100vw - 1025px) * .0855); } }
-.menu__a11y { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 10px 0; border: 0; background: none; color: inherit; font: inherit; font-size: 17px; text-decoration: underline; cursor: pointer; }
-.menu__a11y svg { width: 26px; height: 26px; fill: currentColor; }
 .a11y-bar { display: none; }
 html.a11y { --a-bg: #fff; --a-fg: #000; }
 html.a11y-c-wb { --a-bg: #000; --a-fg: #fff; }
