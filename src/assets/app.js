@@ -607,8 +607,8 @@
     fieldHint(inp, inp.type === "tel" ? telMsg(inp.value) || inp.validationMessage : "Как к вам обращаться?");
     if (Date.now() - invalidAt > 300) { invalidAt = Date.now(); inp.focus(); }
   }, true);
-  const sendLead = async (form, kind, extra = {}) => {
-    if (!isLive(form)) return new Promise((r) => setTimeout(r, 300));
+  // данные заявки из формы (без отправки); ошибка размера файла сразу, до «Спасибо»
+  const leadData = (form, kind, extra = {}) => {
     const fd = new FormData(form);
     const file = fd.get("file");
     if (file && file.size > FILE_MB * 1048576) throw new Error(`Файл больше ${FILE_MB} МБ. Пришлите снимок в Telegram или MAX.`);
@@ -625,16 +625,66 @@
     // визит Roistat (он подключён к amoCRM клиники), если его счётчик стоит на сайте
     const rs = document.cookie.match(/(?:^|; )roistat_visit=([^;]+)/);
     if (rs) fd.set("roistat", decodeURIComponent(rs[1]).slice(0, 64));
-    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 45000);
-    try {
-      const r = await fetch(form.action, { method: "POST", body: fd, headers: { Accept: "application/json" }, signal: ctl.signal, credentials: "same-origin" });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || !j.ok) throw new Error(j.error || "");
-      return j;
-    } catch (err) {
-      throw new Error(err.name === "AbortError" || !err.message ? "" : err.message);
-    } finally { clearTimeout(tm); }
+    return fd;
   };
+  // один запрос в lead.php. err.fatal: сервер ответил и отказал (номер, согласие, лимит), повтор не поможет;
+  // без fatal (нет сети, сбой сервера, долго нет ответа) заявку можно отправить ещё раз
+  const postLead = async (url, fd, keep) => {
+    const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 45000);
+    let r;
+    try { r = await fetch(url, { method: "POST", body: fd, headers: { Accept: "application/json" }, signal: ctl.signal, credentials: "same-origin", keepalive: !!keep }); }
+    catch (err) { throw new Error(""); }
+    finally { clearTimeout(tm); }
+    const j = await r.json().catch(() => ({}));
+    if (r.ok && j.ok) return j;
+    const e = new Error(j.error || ""); e.fatal = r.status >= 400 && r.status < 500; throw e;
+  };
+  // ждать ответа сервера (окно со снимком: файл в очередь не положить)
+  const sendLead = async (form, kind, extra = {}) => {
+    if (!isLive(form)) return new Promise((r) => setTimeout(r, 300));
+    return postLead(form.action, leadData(form, kind, extra));
+  };
+  // «Спасибо» сразу (Ilya 02.11: окно появлялось с задержкой, пока шла заявка). Заявка без файла сначала ложится в очередь
+  // этого браузера (localStorage, только до отправки, не дольше суток), потом уходит в фоне: при сбое сети или сервера
+  // ещё 3 попытки за 20 секунд, а если человек ушёл со страницы, то при следующем открытии любой страницы сайта.
+  // Двойную сделку не создаёт lead.php: ту же заявку с тем же номером за 2 минуты он не дублирует. Цель Метрики (um:lead)
+  // уходит, когда сервер заявку принял. Если сервер отказал или заявка так и не ушла, пока страница открыта, onFail
+  // показывает человеку, что делать (позвонить), вместо тихой потери
+  const LQ = "um2-leadq";
+  const lqGet = () => { try { return JSON.parse(localStorage.getItem(LQ) || "[]").filter((q) => q && q.id && Date.now() - q.at < 864e5); } catch (e) { return []; } };
+  const lqPut = (fn) => { try { const a = fn(lqGet()); a.length ? localStorage.setItem(LQ, JSON.stringify(a)) : localStorage.removeItem(LQ); } catch (e) {} };
+  const lqFd = (q) => { const fd = new FormData(); q.e.forEach(([k, v]) => fd.append(k, v)); return fd; };
+  // chk: повтор из очереди при открытии страницы — сначала убедиться, что заявку ещё не отправила другая вкладка.
+  // Новую заявку отправляем всегда, даже если браузер не дал записать очередь (хранилище запрещено или переполнено)
+  const lqRun = async (q, waits, chk) => {
+    let last = null;
+    for (const w of waits) {
+      if (w) await new Promise((r) => setTimeout(r, w));
+      if (chk && !lqGet().some((x) => x.id === q.id)) return { ok: true };
+      try {
+        await postLead(q.url, lqFd(q), true);
+        lqPut((a) => a.filter((x) => x.id !== q.id));
+        document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: q.kind } })); // цель Метрики (cookie.js), без имени и телефона
+        return { ok: true };
+      } catch (err) {
+        last = err;
+        if (err.fatal) { lqPut((a) => a.filter((x) => x.id !== q.id)); break; }
+      }
+    }
+    return { ok: false, msg: last?.message || "", fatal: !!last?.fatal };
+  };
+  const quickLead = (form, kind, onFail) => {
+    const fd = leadData(form, kind);
+    if (!isLive(form)) { document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: kind } })); return; }
+    const e = []; let file = false;
+    fd.forEach((v, k) => { if (typeof v === "string") e.push([k, v]); else file = true; });
+    if (file) return false;
+    const q = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), at: Date.now(), url: form.action, kind, e };
+    lqPut((a) => a.concat(q));
+    lqRun(q, [0, 2000, 5000, 13000]).then((r) => { if (!r.ok) onFail?.(r); });
+  };
+  // заявки, которые не ушли в прошлый раз (сеть пропала, закрыли вкладку): отправить при открытии страницы
+  setTimeout(() => lqGet().filter((q) => Date.now() - q.at > 30000).forEach((q) => lqRun(q, [0, 5000], true)), 1500);
   // ошибка под формой: что случилось и номер клиники, чтобы заявка не потерялась
   // (у окна «Три врача» поле и кнопка в одной капсуле, там строка встаёт под формой)
   const leadError = (form, msg) => {
@@ -762,17 +812,37 @@
     if (ok) ok.checked = true;
     if (t) { t.value = fx.tel; t.dispatchEvent(new Event("input")); setTimeout(() => { t.focus(); t.select?.(); }, 60); }
   });
+  // заявка так и не ушла (сервер отказал или нет связи после всех попыток), а «Спасибо» уже на экране: говорим честно и даём номер
+  const leadFail = (r, box) => {
+    if (!box) return;
+    const t = $("[data-done-text]", box), h = $("h2", box);
+    const tel = $('a[href^="tel:"]')?.getAttribute("href") || "tel:+74951503615";
+    const num = tel.replace(/^tel:\+7(\d{3})(\d{3})(\d{2})(\d{2})$/, "+7 $1 $2-$3-$4");
+    if (h) h.textContent = "Заявка не отправилась";
+    if (t) t.innerHTML = `${r.fatal && r.msg ? r.msg + " " : "Нет связи с сайтом. "}Позвоните нам: <a href="${tel}">${num}</a>, ежедневно с 9:00 до 21:00.`;
+    const dt = $("[data-done-tel]", box); if (dt) dt.hidden = true;
+    const fb = $("[data-fix-tel]", box); if (fb) fb.hidden = true;
+    if (box.id === "m-done" && box.hidden) showModal("done");
+  };
   $$("form[data-lead]").forEach((f) => {
     if (f.hasAttribute("data-quiz") || f.classList.contains("cb")) return;
     f.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (f.dataset.sending) return;
       const kind = f.dataset.lead, d = doneText[kind], opener = lastFocus;
-      f.dataset.sending = "1"; busy(f, true); if (f._err) f._err.hidden = true;
-      try { await sendLead(f, kind); }
-      catch (err) { leadError(f, err.message); return; }
-      finally { delete f.dataset.sending; busy(f, false); }
+      if (f._err) f._err.hidden = true;
       const dm = $("#m-done");
+      // «Спасибо» сразу, заявка уходит в фоне (quickLead); со снимком ждём ответа сервера: файл в очередь не положить
+      let fast;
+      try { fast = quickLead(f, kind, (r) => leadFail(r, dm)); }
+      catch (err) { leadError(f, err.message); return; }
+      if (fast === false) {
+        f.dataset.sending = "1"; busy(f, true);
+        try { await sendLead(f, kind); }
+        catch (err) { leadError(f, err.message); return; }
+        finally { delete f.dataset.sending; busy(f, false); }
+        document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: kind } })); // цель Метрики (cookie.js), без имени и телефона
+      }
       const tel = $('input[type="tel"]', f)?.value || "", mid = f.closest(".modal")?.id?.replace(/^m-/, "");
       if (dm) {
         $("h2", dm).textContent = d ? d[0] : "Спасибо!";
@@ -785,7 +855,6 @@
       }
       f.reset();
       $$(".file input", f).forEach((i) => i.dispatchEvent(new Event("change")));
-      document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: kind } })); // цель Метрики (cookie.js), без имени и телефона
       showModal("done");
     });
   });
@@ -943,21 +1012,25 @@
         if (anim) G.fromTo($(".big__field", cb), { x: -8 }, { x: 0, duration: 0.5, ease: "elastic.out(1, .35)" });
         return;
       }
-      btn.disabled = true; btn.textContent = "Отправляем";
-      sendLead(cb, "final").then(() => {
-        $("[data-done-s]", cbDone).textContent = isOpen()
-          ? "Администратор перезвонит за 5 минут."
-          : "Сейчас клиника закрыта. Перезвоним утром, после 9:00.";
-        const h0 = cb.offsetHeight;
-        cb.hidden = true; cbDone.hidden = false; cbDone.focus({ preventScroll: true });
-        document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "final" } }));
-        if (anim) { G.from(cbDone, { height: h0, duration: 0.6, ease: "power3.out", clearProps: "height" }); G.from(cbDone.children, { y: 16, autoAlpha: 0, duration: 0.6, stagger: 0.06, ease: "power3.out" }); }
-        btn.disabled = false; btn.textContent = "Жду звонка"; cbIn.value = ""; draw(); clearErr();
-      }, (err) => {
-        btn.disabled = false; btn.textContent = "Жду звонка";
+      // «Спасибо» сразу, заявка уходит в фоне (quickLead, Ilya 02.11)
+      try {
+        quickLead(cb, "final", (r) => {
+          cbDone.hidden = true; cb.hidden = false;
+          cb.classList.add("is-error");
+          cbHint.textContent = (r.fatal && r.msg ? r.msg : "Заявка не отправилась: нет связи с сайтом.") + " Позвоните: +7 495 150-36-15";
+        });
+      } catch (err) {
         cb.classList.add("is-error");
         cbHint.textContent = (err.message || "Не получилось отправить.") + " Позвоните: +7 495 150-36-15";
-      });
+        return;
+      }
+      $("[data-done-s]", cbDone).textContent = isOpen()
+        ? "Администратор перезвонит за 5 минут."
+        : "Сейчас клиника закрыта. Перезвоним утром, после 9:00.";
+      const h0 = cb.offsetHeight;
+      cb.hidden = true; cbDone.hidden = false; cbDone.focus({ preventScroll: true });
+      if (anim) { G.from(cbDone, { height: h0, duration: 0.6, ease: "power3.out", clearProps: "height" }); G.from(cbDone.children, { y: 16, autoAlpha: 0, duration: 0.6, stagger: 0.06, ease: "power3.out" }); }
+      cbIn.value = ""; draw(); clearErr();
     });
     $("[data-again]", cbDone)?.addEventListener("click", () => { cbDone.hidden = true; cb.hidden = false; cbIn.focus(); });
   }
@@ -1537,11 +1610,15 @@
     bf.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (bf.dataset.sending) return;
-      bf.dataset.sending = "1"; busy(bf, true); if (bf._err) bf._err.hidden = true;
-      try { await sendLead(bf, "zapis"); }
-      catch (err) { leadError(bf, err.message); return; }
-      finally { delete bf.dataset.sending; busy(bf, false); }
-      document.dispatchEvent(new CustomEvent("um:lead", { detail: { form: "zapis" } }));
+      if (bf._err) bf._err.hidden = true;
+      // «Спасибо» сразу, заявка уходит в фоне (quickLead, Ilya 02.11); не ушла — назад к форме с номером клиники
+      try {
+        quickLead(bf, "zapis", (r) => {
+          steps.forEach((s, i) => (s.hidden = i !== 0)); ckLater();
+          leadError(bf, r.fatal && r.msg ? r.msg : "Заявка не отправилась: нет связи с сайтом.");
+          scrollTo({ top: 0, behavior: "auto" });
+        });
+      } catch (err) { leadError(bf, err.message); return; }
       // на экране «Спасибо» номер, на который перезвонят: человек видит, что не ошибся
       const dt = $("[data-done-tel]", box);
       if (dt) { $("b", dt).textContent = tel.value; dt.hidden = !tel.value; }
