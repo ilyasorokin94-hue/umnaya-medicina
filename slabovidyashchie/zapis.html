@@ -26,7 +26,7 @@
 <link rel="preload" href="assets/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="assets/styles.css?v=fc007137">
+<link rel="stylesheet" href="assets/styles.css?v=0b968668">
 <script>
 (function(d){d.classList.add("js");var a=null;try{a=JSON.parse(localStorage.getItem("um2-a11y")||"null")}catch(e){}if(a){d.classList.add("a11y","a11y-f"+(a.f||1),"a11y-c-"+(a.c||"bw"));if(a.img===0)d.classList.add("a11y-noimg")}try{if(!a&&!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim")}}catch(e){}
 setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
@@ -37,7 +37,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
 <script src="assets/vendor/gsap.min.js" defer></script>
 <script src="assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="assets/vendor/lenis.min.js" defer></script>
-<script src="assets/app.js?v=fc9d75c4" defer></script>
+<script src="assets/app.js?v=8acb45de" defer></script>
 <!-- Yandex.Metrika counter -->
 <script type="text/javascript" id="um-ym">
     (function(m,e,t,r,i,k,a){
@@ -68,7 +68,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
       <section class="bstep" data-step="0">
         <span class="label">Онлайн-запись</span>
         <h1 tabindex="-1">Записаться на приём</h1>
-        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. Консультация с планом лечения бесплатная.</p>
+        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. <span data-consult>Бесплатная консультация терапевта, ортопеда и хирурга с планом лечения, 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽.</span></p>
         <form class="form" id="b-form" method="post" action="spasibo/">
           <label>Телефон<input class="ym-disable-keys" name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
           <label><span>Имя <span class="form__opt">(можно не указывать)</span></span><input class="ym-disable-keys" name="name" autocomplete="given-name"></label>
@@ -104,6 +104,7 @@ window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribut
   </aside>
 </div>
 <script type="application/json" id="um-docs">{"solodukhin":"Евгений Солодухин","hludnevskiy":"Михаил Хлудневский","radzhabov":"Азамат Раджабов","chitaykin":"Артём Читайкин","kashtanova":"Екатерина Каштанова","alikhanova":"Светлана Алиханова","troitskiy":"Даниил Троицкий"}</script>
+<script type="application/json" id="um-consult">{"solodukhin":"Бесплатная первичная консультация с планом лечения, 0 ₽","hludnevskiy":"Бесплатная первичная консультация с планом лечения, 0 ₽","radzhabov":"Бесплатная первичная консультация с планом лечения, 0 ₽","chitaykin":"Бесплатная первичная консультация с планом лечения, 0 ₽","kashtanova":"Первичная консультация ортодонта: 1 700 ₽","alikhanova":"Бесплатная первичная консультация с планом лечения, 0 ₽","troitskiy":"Консультация детского стоматолога с планом лечения: 2 500 ₽"}</script>
 <script type="application/json" id="um-svc">{"diagnostika":"КТ и снимки","gigiena":"Профгигиена Air-Flow","lechenie-zubov":"Лечение зубов","implantaciya":"Имплантация зубов","all-on-4":"All-on-4 и All-on-6","mikroskop":"Лечение под микроскопом","protezirovanie":"Протезирование","hirurgiya":"Удаление зубов","ortodontiya":"Брекеты и элайнеры","detskaya":"Детская стоматология"}</script>
 </body>
 </html>
