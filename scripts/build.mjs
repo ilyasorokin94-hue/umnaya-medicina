@@ -325,8 +325,6 @@ const consultLine = (pg) => {
   return nb(v === "0 ₽" ? `Бесплатная ${n[0].toLowerCase()}${n.slice(1)}, 0 ₽` : `${n}: ${v}`).replace(/(?<=^|[\s(«])([А-Яа-яЁё]{1,2}) (?=\S|$)/g, "$1\u00a0");
 };
 const consultJson = () => `<script type="application/json" id="um-consult">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, consultLine(doctorPages[d.id])]).filter(([, t]) => t)))}</script>`;
-// /zapis без выбранного врача и без скриптов: правило для всех врачей словами страницы /ceny/ (первый экран и вопрос о консультации)
-const zapisConsult = "Бесплатная консультация терапевта, ортопеда и хирурга с планом лечения, 0 ₽. Консультация ортодонта стоит 1 700 ₽, детского стоматолога 2 500 ₽.";
 
 // окна: запись, перезвон, снимок на второе мнение, расчёт All-on-4, мессенджеры, при уходе, «спасибо»
 function modals(depth) {
@@ -1670,9 +1668,9 @@ function pageBooking() {
     </div>
     <div class="bform">
       <section class="bstep" data-step="0">
-        <span class="label">Онлайн-запись</span>
+        <span class="label">Запись в клинику</span>
         <h1 tabindex="-1">Записаться на приём</h1>
-        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача. <span data-consult>${esc(zapisConsult)}</span></p>
+        <p class="bform__lead">Оставьте телефон, администратор перезвонит и подберёт время у врача.<span data-consult hidden></span></p>
         <form class="form" id="b-form" method="post" action="${leadAction("")}">
           <label>Телефон<input name="phone" type="tel" required autocomplete="tel" placeholder="+7 ___ ___-__-__"></label>
           <label><span>Имя <span class="form__opt">(можно не указывать)</span></span><input name="name" autocomplete="given-name"></label>
@@ -1682,6 +1680,7 @@ function pageBooking() {
           ${consentField("")}
           <button class="btn btn--lg" data-magnet>Записаться</button>${CONSENT_CHECKBOX ? "" : `
           <p class="modal__note">${consentNote("")}</p>`}
+          <p class="bform__warn">${warnText}</p>
         </form>
       </section>
       <section class="bstep bdone" data-step="1" hidden>

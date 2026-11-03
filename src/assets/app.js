@@ -1583,7 +1583,7 @@
     if (pd && docs[pd]) { $("[name=doctor]", bf).value = pd; const n = $("[data-doc]", box); n.textContent = "Врач: " + docs[pd]; n.hidden = false; }
     // врач из ссылки: вместо общего правила о консультациях его консультация с ценой (условие Яндекса для фида «Врачи»)
     const pc = pd && docs[pd] && consults[pd], pl = $("[data-consult]", box);
-    if (pc && pl) pl.textContent = pc + ".";
+    if (pc && pl) { pl.textContent = " " + pc + "."; pl.hidden = false; }
     // форма для старшего возраста (Ilya 01.11): телефон первым, имя последним, поэтому с имени клавиатура сразу отправляет
     const tel = $("[name=phone]", bf), btn = $("button", bf);
     $("[name=name]", bf)?.setAttribute("enterkeyhint", "send");

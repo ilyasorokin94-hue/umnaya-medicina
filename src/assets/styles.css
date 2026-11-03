@@ -333,10 +333,19 @@ html:not(.js-intro) .intro { display: none; }
 .slot { min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--white); font-variant-numeric: tabular-nums; }
 .slot:disabled { opacity: .35; text-decoration: line-through; cursor: not-allowed; }
 .slot[aria-pressed="true"] { background: var(--green-btn); color: #fff; border-color: var(--green-btn); }
-.bform { align-self: center; justify-self: center; width: 100%; max-width: 560px; text-align: center; }
-.bform h1 { font-size: clamp(36px, 4.4vw, 64px); letter-spacing: -.04em; line-height: 1; margin: 14px 0 16px; }
-.bform__lead { font-size: 17px; color: var(--muted); max-width: 46ch; margin: 0 auto 28px; }
-.bform .form { margin-inline: auto; text-align: left; }
+/* /zapis по образцу Ilya 03.11: всё по левому краю в одну колонку, надпись, заголовок, одна строка, поля, кнопка, примечание */
+.bform { align-self: center; justify-self: center; width: 100%; max-width: 720px; text-align: left; }
+.bform h1 { font-size: clamp(38px, 4.4vw, 64px); letter-spacing: -.04em; line-height: 1.02; margin: 18px 0 18px; }
+.bform__lead { font-size: 19px; line-height: 1.5; color: var(--text); opacity: .82; max-width: 34em; margin: 0 0 32px; text-wrap: pretty; }
+.bform .form { margin-inline: 0; max-width: none; }
+.bform .form label { gap: 8px; font-size: 18px; font-weight: 500; color: var(--text); }
+.bform .form input:not([type="hidden"]):not(.hp) { min-height: 64px; padding: 14px 18px; border: 2px solid #7a887d; border-radius: 14px; font-size: 21px; }
+.bform .form input::placeholder { color: #6b7a6e; opacity: 1; }
+.bform .form input:focus { outline: 0; border-color: var(--green-btn); box-shadow: 0 0 0 4px rgba(36, 135, 33, .2); }
+.bform .form input[aria-invalid="true"] { border-color: #b3261e; box-shadow: 0 0 0 1px #b3261e; }
+.bform .form .btn--lg { width: 100%; min-height: 64px; font-size: 20px; font-weight: 600; }
+.bform__warn { margin: 4px 0 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.bform .bdone { text-align: center; }
 .form select { min-height: 56px; padding: 14px 18px; border-radius: 14px; border: 1px solid var(--line); background: var(--white); font: inherit; color: var(--text); }
 .bform__doc { font-weight: 500; }
 .bform__when { border: 0; padding: 0; margin: 4px 0 0; display: grid; gap: 8px; }
@@ -2387,8 +2396,7 @@ html:not(.menu-open) .header.is-hidden { transform: translate3d(0, calc(-100% - 
 @media (max-width: 760px) {
   .booking__main { padding-top: 14px; gap: 18px; }
   .booking__home { min-height: 44px; padding: 0 16px; font-size: 15px; }
-  .bform .label { display: none; }
-  .bform h1 { font-size: 34px; margin: 4px 0 10px; }
+  .bform h1 { font-size: 34px; margin: 10px 0 10px; }
   .bform__lead { font-size: 17px; line-height: 1.45; color: var(--text); opacity: .82; margin-bottom: 20px; }
   .bform .form { gap: 16px; }
   .bform .form label { gap: 8px; font-size: 18px; font-weight: 500; color: var(--text); }
