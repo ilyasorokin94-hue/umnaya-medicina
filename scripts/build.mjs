@@ -208,16 +208,16 @@ ${canonical ? `<meta property="og:url" content="${SITE}${canonical}">` : ""}
 ${fontPreload.map((f) => `<link rel="preload" href="${p}assets/fonts/${f}.woff2" as="font" type="font/woff2" crossorigin>`).join("\n")}
 <link rel="stylesheet" href="${p}assets/styles.css?v=${V.css}">
 <script>
-(function(d){d.classList.add("js");var a=null;try{a=JSON.parse(localStorage.getItem("um2-a11y")||"null")}catch(e){}if(a){d.classList.add("a11y","a11y-f"+(a.f||1),"a11y-c-"+(a.c||"bw"));if(a.img===0)d.classList.add("a11y-noimg")}try{if(!a&&!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim")}}catch(e){}
+(function(d){d.classList.add("js");var a=null;try{a=JSON.parse(localStorage.getItem("um2-a11y")||"null")}catch(e){}if(a){d.classList.add("a11y","a11y-f"+(a.f||1),"a11y-c-"+(a.c||"bw"));if(a.img===0)d.classList.add("a11y-noimg")}${page === "booking" ? "" : 'try{if(!a&&!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("js-anim")}}catch(e){}'}
 setTimeout(function(){if(!window.__umReady){d.classList.remove("js-anim","js-intro");d.classList.add("mb-ready")}},4000)})(document.documentElement);
 (function(d){try{if(!matchMedia("(pointer: coarse)").matches)return;var w=-1;function m(u){var e=document.createElement("i");e.style.cssText="position:absolute;top:0;left:0;width:0;visibility:hidden;height:100"+u;d.appendChild(e);var h=e.getBoundingClientRect().height;d.removeChild(e);return h}function s(){if(innerWidth===w)return;w=innerWidth;var l=m("vh"),v=m("svh")||l;if(!l)return;d.style.setProperty("--vh",l/100+"px");d.style.setProperty("--svh",v/100+"px")}s();addEventListener("resize",s)}catch(e){}})(document.documentElement);
 window.umImg=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.removeAttribute("srcset");i.src=f;return}var p=i.closest("[data-ph]");if(p)p.classList.add("ph-on");i.style.opacity="0"};
 window.umLogo=function(i){var f=i.getAttribute("data-fb");if(f){i.removeAttribute("data-fb");i.src=f;return}var p=i.closest(".logo,.footer__big");if(p)p.classList.add("is-fallback");i.style.display="none"};
 </script>
-<script src="${p}assets/vendor/gsap.min.js" defer></script>
+${page === "booking" ? "" : `<script src="${p}assets/vendor/gsap.min.js" defer></script>
 <script src="${p}assets/vendor/ScrollTrigger.min.js" defer></script>
 <script src="${p}assets/vendor/lenis.min.js" defer></script>
-<script src="${p}assets/app.js?v=${V.app}" defer></script>
+`}<script src="${p}assets/app.js?v=${V.app}" defer></script>
 ${ymCode}
 <script src="${p}assets/cookie.js?v=${V.cookie}" data-privacy="${p}privacy/" data-ym="${METRIKA_ID}" defer></script>
 ${jsonld.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</script>`).join("\n")}
@@ -1854,6 +1854,45 @@ writeFileSync(path.join(dist, "ceny.html"), `<!doctype html>
 out("uslugi/index.html", pageCatalog());
 out("vrachi/index.html", pageDoctors());
 out("zapis.html", pageBooking());
+// /zapis открывается сразу (Ilya 03.11: «форма записи должна открываться максимально быстро»): сюда приходят с кнопки
+// «Запись онлайн» в Яндекс Картах, часто с телефона и впервые. Поэтому на этой странице нет GSAP, ScrollTrigger и Lenis
+// (анимаций на ней нет, head выше), а из styles.css в саму страницу встроены только правила, которые могут сработать
+// на /zapis (классы и id из её HTML, app.js и cookie.js; :not/:is/:has и т. п. не сужают, состояния is-/has-/a11y-
+// и др. оставлены): первый кадр рисуется без второго запроса за 160 КБ стилей. Остальные страницы берут общий styles.css
+const zapisCss = (() => {
+  const html = readFileSync(path.join(dist, "zapis.html"), "utf8");
+  // классы, которые app.js ставит сам (classList, className, class="…" в разметке из скрипта)
+  const jsCls = [...assets["app.js"].matchAll(/classList\.(?:add|remove|toggle|replace)\(([^)]*)\)|className\s*[+]?=\s*([^;]+)|class=\\?"([^"\\]*)/g)].map((m) => m.slice(1).join(" ")).join(" ");
+  const words = new Set([html, assets["cookie.js"], jsCls].join(" ").match(/[A-Za-z_][\w-]*/g));
+  const safe = /^(a11y|is-|has-|ck-|js|mb-|no-|lenis|cookie|form|consent|modal|b[a-z]*__|booking|logo|header|footer|skip|sr)/;
+  const okSel = (sel) => {
+    let t = sel, prev;
+    do { prev = t; t = t.replace(/\([^()]*\)/g, ""); } while (t !== prev);
+    t = t.replace(/\[[^\]]*\]/g, "");
+    return (t.match(/[.#]-?[_a-zA-Z][\w-]*/g) || []).every((x) => words.has(x.slice(1)) || safe.test(x.slice(1)));
+  };
+  const split = (str) => { const r = []; let d = 0, st = 0; for (let i = 0; i < str.length; i++) { const c = str[i]; if (c === "(" || c === "[") d++; else if (c === ")" || c === "]") d--; else if (c === "," && !d) { r.push(str.slice(st, i)); st = i + 1; } } r.push(str.slice(st)); return r; };
+  const skipStr = (str, i) => { const q = str[i]; for (i++; i < str.length && str[i] !== q; i++) if (str[i] === "\\") i++; return i; };
+  const purge = (str) => {
+    let o = "", i = 0;
+    while (i < str.length) {
+      let j = i; while (j < str.length && str[j] !== "{" && str[j] !== ";") { if (str[j] === '"' || str[j] === "'") j = skipStr(str, j); j++; }
+      if (j >= str.length) break;
+      const pre = str.slice(i, j).trim();
+      if (str[j] === ";") { if (pre) o += pre + ";"; i = j + 1; continue; }
+      let k = j + 1, d = 1; for (; k < str.length && d; k++) { const c = str[k]; if (c === '"' || c === "'") k = skipStr(str, k); else if (c === "{") d++; else if (c === "}") d--; }
+      const body = str.slice(j + 1, k - 1);
+      if (/^@(media|supports|container|layer)\b/.test(pre)) { const inner = purge(body); if (inner) o += pre + "{" + inner + "}"; }
+      else if (pre.startsWith("@")) o += pre + "{" + body + "}";
+      else { const kept = split(pre).filter(okSel); if (kept.length) o += kept.join(",") + "{" + body + "}"; }
+      i = k;
+    }
+    return o;
+  };
+  const css = transformSync(purge(assets["styles.css"]).replace(/url\((?!data:|https?:|\/)(["']?)(?:\.\.\/)?/g, (m, q) => `url(${q}assets/`), { loader: "css", minify: true }).code.trim();
+  writeFileSync(path.join(dist, "zapis.html"), html.replace(`<link rel="stylesheet" href="assets/styles.css?v=${V.css}">`, () => `<style>${css}</style>`));
+  return css;
+})();
 for (const page of legal) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}/index.html`, pageLegal(page)); }
 mkdirSync(path.join(dist, "spasibo"), { recursive: true });
 out("spasibo/index.html", pageThanks(), false);
