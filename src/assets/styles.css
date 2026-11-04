@@ -1839,6 +1839,8 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
   .pr4-card__text { flex-shrink: 0; }
   /* запас прокрутки, пока кнопка застрявшей карточки видна и следующая ещё не наплыла */
   .pr4:not(.pr4--flat) { gap: 72px; }
+  /* пока видна плашка cookie, карточка короче на её высоту (--ck-h из cookie.js), кнопка «Записаться» стоит над плашкой (Ilya 04.11) */
+  html.has-ck .pr4-card { max-height: calc(calc(var(--svh, 1svh) * 100) - var(--header-h) - 30px - var(--i) * 10px - 70px - env(safe-area-inset-bottom) - var(--ck-h, 0px)); }
 }
 /* на низком экране (телефон боком) карточки не складываются в стопку: иначе кнопка уходит под следующую */
 @media (max-height: 600px) {
