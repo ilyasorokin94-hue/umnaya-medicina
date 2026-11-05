@@ -346,12 +346,12 @@ function modals(depth) {
 <script type="application/json" id="um-docs">${JSON.stringify(Object.fromEntries(doctors.map((d) => [d.id, d.short])))}</script>
 ${consultJson()}
 <div class="modals">
-${box("book", "Запишитесь на консультацию", `<p class="modal__sub">Перезвоним за 5 минут, подберём врача и удобное время.</p>
+${box("book", "Записаться на приём", `<p class="modal__sub">Оставьте телефон, администратор перезвонит и подберёт время у врача.</p>
   <p class="modal__doc" hidden></p>${promoLine}
   <form class="form lead" data-lead="book" method="post" action="${leadAction(p)}">
     <input type="hidden" name="doctor"><input type="hidden" name="promo"><input type="hidden" name="reason">${phone}${name}
     ${agree}
-    <button class="btn btn--lg btn--wide">Жду звонка</button>
+    <button class="btn btn--lg btn--wide">Записаться</button>
     <p class="modal__note">Заявки после 21:00 перезваниваем с 9:00 утра.</p>${consent}
   </form>`)}
 ${box("call", "Перезвоним за 5 минут", `<p class="modal__sub">Оставьте номер, администратор перезвонит и ответит на вопросы.</p>
@@ -360,8 +360,8 @@ ${box("call", "Перезвоним за 5 минут", `<p class="modal__sub">�
     <button class="btn btn--lg btn--wide">Жду звонка</button>${consent}
   </form>`)}
 ${box("xray", "Пришлите снимок, и врач скажет, можно ли сохранить зуб", `<p class="modal__sub">Подойдёт КТ, панорама, прицельный снимок или фото плана лечения из другой клиники. Врач посмотрит и ответит в течение рабочего дня. Это бесплатно.</p>
-  <form class="form lead" data-lead="xray" method="post" action="${leadAction(p)}">${phone}${name}
-    <label class="file">Снимок или план<input name="file" type="file" accept="image/*,.pdf,.zip,.dcm"><span>Выбрать файл</span></label>
+  <form class="form lead" data-lead="xray" method="post" action="${leadAction(p)}">
+    <label class="file">Снимок или план<input name="file" type="file" accept="image/*,.pdf,.zip,.dcm"><span>Выбрать файл</span></label>${phone}${name}
     ${msgr}
     ${agree}
     <button class="btn btn--lg btn--wide">Отправить снимок</button>

@@ -2572,3 +2572,24 @@ html.a11y:not(#a11y) body :is(h1, h2, h3, h4) * { font-size: inherit !important;
 html.a11y:not(#a11y) body :is(input, textarea, select) { font-size: 22px !important; }
 html.a11y-f1:not(#a11y) body :is(input, textarea, select) { font-size: 18px !important; }
 html.a11y-f3:not(#a11y) body :is(input, textarea, select) { font-size: 26px !important; }
+
+/* клавиатура открыта в форме заявки на телефоне (Ilya 05.11, app.js kb-open): у окна снизу запас на высоту клавиатуры,
+   чтобы окно можно было прокрутить и кнопка отправки встала над клавиатурой и панелью автозаполнения;
+   согласие компактнее, чтобы поле и кнопка помещались вместе в видимую часть экрана */
+@media (max-width: 760px) {
+  html.kb-open .modal__box { padding-bottom: calc(52svh + env(safe-area-inset-bottom)); }
+  .form label.consent, .modal .form label.consent, .bform .form label.consent { font-size: 15px; line-height: 1.4; }
+  .modal .form, .bform .form { gap: 14px; }
+}
+/* пока набирают текст, форма плотнее: поле, согласие и кнопка помещаются над клавиатурой (Safari, Яндекс Карты, Яндекс Браузер, Android) */
+@media (max-width: 760px) {
+  html.kb-open .modal .form, html.kb-open .bform .form { gap: 8px; }
+  html.kb-open .modal .form label:not(.consent), html.kb-open .bform .form label:not(.consent) { gap: 4px; font-size: 16px; }
+  html.kb-open .modal .form input:not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="checkbox"]):not(.hp):not(:focus),
+  html.kb-open .bform .form input:not([type="hidden"]):not([type="checkbox"]):not(.hp):not(:focus) { min-height: 46px; padding-top: 6px; padding-bottom: 6px; }
+  html.kb-open .form label.consent, html.kb-open .modal .form label.consent, html.kb-open .bform .form label.consent { font-size: 14px; line-height: 1.35; }
+  html.kb-open .modal .file span { min-height: 46px; }
+  html.kb-open .modal .form .btn--lg, html.kb-open .bform .btn--lg { margin-top: 0; }
+}
+/* страница записи как окна записи (Ilya 05.11): поля и кнопки с прямыми углами */
+.bform .form input:not([type="hidden"]):not([type="checkbox"]):not(.hp), .bform .form .btn, .bform .btn, .bdone .btn { border-radius: 0; }

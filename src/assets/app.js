@@ -490,24 +490,33 @@
   // Откуда пришёл человек (страница входа, сайт-источник, метки) запоминает cookie.js, заявка берёт это из window.umSource
   const t0 = Date.now(), FILE_MB = 20;
   const isLive = (f) => /lead\.php$/.test(f.getAttribute("action") || "");
-  // открылась клавиатура в форме заявки (Ilya 01.11): докручиваем страницу или окно так, чтобы над клавиатурой была видна
-  // кнопка отправки, а поле осталось на экране. Большой номер в подвале не трогаем: там кнопка сразу под полем
+  // открылась клавиатура в форме заявки (Ilya 01.11, 05.11): докручиваем страницу или окно так, чтобы над клавиатурой
+  // и панелью автозаполнения была видна кнопка отправки, а поле осталось на экране. Safari сообщает высоту клавиатуры
+  // (visualViewport), а встроенные браузеры (окно Яндекс Карт, Яндекс Браузер) иногда нет: тогда считаем, что клавиатура
+  // с панелью закрывает нижнюю половину экрана. Проверяем несколько раз, пока клавиатура выезжает и браузер сам двигает поле.
+  // В окне снизу добавляется запас (kb-open), чтобы окно было куда прокрутить. Большой номер в подвале не трогаем.
   {
-    const vv = window.visualViewport;
-    let kt = 0;
+    const vv = window.visualViewport, coarse = matchMedia("(pointer: coarse)");
+    const typing = (el) => !!el?.form && el.matches("input:not([type=checkbox]):not([type=hidden]), textarea") && !el.form.classList.contains("cb");
+    let H0 = innerHeight, kt = [];
+    addEventListener("resize", () => { if (!typing(document.activeElement)) H0 = innerHeight; });
     const keepBtn = () => {
-      const f = document.activeElement, form = f?.form;
-      if (!vv || !phoneMQ.matches || !form || !f.matches("input") || form.classList.contains("cb")) return;
-      const btn = form.querySelector("button:not([type=button])");
+      const f = document.activeElement;
+      if (!phoneMQ.matches || !typing(f)) return;
+      const btn = f.form.querySelector("button:not([type=button])");
       if (!btn) return;
-      const top = vv.offsetTop, bottom = top + vv.height, b = btn.getBoundingClientRect(), fr = f.getBoundingClientRect();
-      const dy = Math.min(b.bottom + 12 - bottom, fr.top - top - 12);
-      if (dy <= 4) return;
-      const box = form.closest(".modal__box");
+      const top = vv ? vv.offsetTop : 0;
+      let h = vv ? vv.height : innerHeight;
+      if (coarse.matches && h > H0 * 0.7) h = H0 * 0.48;
+      const b = btn.getBoundingClientRect(), fr = f.getBoundingClientRect();
+      const dy = Math.min(b.bottom + 14 - (top + h), fr.top - top - 10);
+      if (dy <= 3) return;
+      const box = f.form.closest(".modal__box");
       if (box) box.scrollTop += dy; else scrollBy({ top: dy, behavior: "instant" });
     };
-    const later = () => { clearTimeout(kt); kt = setTimeout(keepBtn, 320); };
-    document.addEventListener("focusin", (e) => { if (e.target.form) later(); });
+    const later = () => { kt.forEach(clearTimeout); kt = [60, 350, 700, 1200].map((t) => setTimeout(keepBtn, t)); };
+    document.addEventListener("focusin", (e) => { if (typing(e.target) && phoneMQ.matches) { root.classList.add("kb-open"); later(); } });
+    document.addEventListener("focusout", () => setTimeout(() => { if (!typing(document.activeElement)) root.classList.remove("kb-open"); }, 200));
     vv?.addEventListener("resize", later);
   }
 
@@ -574,7 +583,7 @@
     check();
   });
   // имя: с заглавной буквы на телефоне, поле «далее» на клавиатуре
-  $$('form input[name="name"]').forEach((inp) => { inp.setAttribute("autocapitalize", "words"); inp.setAttribute("enterkeyhint", "next"); inp.addEventListener("input", () => { if (inp.value.trim()) fieldHint(inp, ""); }); });
+  $$('form input[name="name"]').forEach((inp) => { inp.setAttribute("autocapitalize", "words"); inp.setAttribute("enterkeyhint", "send"); inp.addEventListener("input", () => { if (inp.value.trim()) fieldHint(inp, ""); }); });
   // галочка согласия (Ilya 01.11: «галочка нужна обязательно»): без отметки строка под ней, а не подсказка браузера
   const consentHint = (c, on) => {
     const lab = c.closest(".consent");
