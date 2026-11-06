@@ -2582,3 +2582,21 @@ html.a11y-f3:not(#a11y) body :is(input, textarea, select) { font-size: 26px !imp
 html:has(form input:focus, form textarea:focus) { scroll-behavior: auto; }
 /* страница записи как окна записи (Ilya 05.11): поля и кнопки с прямыми углами */
 .bform .form input:not([type="hidden"]):not([type="checkbox"]):not(.hp), .bform .form .btn, .bform .btn, .bdone .btn { border-radius: 0; }
+
+/* формы компактнее (Ilya 06.11 «уменьшим рамки»): поля 56 px вместо 64, рамка 1 px того же цвета (контраст 3,6:1 сохраняется),
+   кнопки 58 px, шрифт в поле 19 px (больше 16 px, iPhone не увеличивает страницу), подписи 17 px */
+.bform .form input:not([type="hidden"]):not(.hp),
+.modal .form input:not([type="radio"]):not([type="file"]):not([type="checkbox"]):not([type="hidden"]):not(.hp),
+.invite__form .invite__field input[type="tel"]:not([type="hidden"]) { min-height: 56px; padding: 11px 16px; border-width: 1px; font-size: 19px; }
+.bform .form input:focus,
+.modal .form input:not([type="radio"]):not([type="file"]):not([type="checkbox"]):not([type="hidden"]):not(.hp):focus,
+.invite__form .invite__field input[type="tel"]:focus { box-shadow: 0 0 0 1px var(--green-btn), 0 0 0 4px rgba(36, 135, 33, .18); }
+.bform .form .btn--lg, .bform .btn--lg, .bdone .bnav .btn,
+.modal .form .btn--lg, .modal .modal__ok, .invite__form .btn, .big__btn { min-height: 58px; font-size: 18px; }
+@media (max-width: 760px) {
+  .bform .form label, .modal .form label:not(.consent), .modal .file { gap: 6px; font-size: 17px; }
+  .modal .file span { min-height: 54px; font-size: 16px; }
+}
+@media (min-width: 761px) {
+  .bform .form label:not(.consent), .modal .form label:not(.consent), .modal .file { gap: 6px; font-size: 17px; }
+}
