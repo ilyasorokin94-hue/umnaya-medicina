@@ -2600,3 +2600,75 @@ html:has(form input:focus, form textarea:focus) { scroll-behavior: auto; }
 @media (min-width: 761px) {
   .bform .form label:not(.consent), .modal .form label:not(.consent), .modal .file { gap: 6px; font-size: 17px; }
 }
+
+/* варианты листания фото клиники на телефоне (Ilya 06.11, сборка FOTO=1..5, превью foto-1..foto-5).
+   Сверху кабинет на весь экран с заголовком, ниже фото с подписью под фото, в конце текст и маршрут.
+   Без закрепления блока: страница листается как обычно, фото листают пальцем. Компьютер и планшет не меняются. */
+.pft, .pfv, .tfig__cap { display: none; }
+@media (max-width: 760px) {
+  .tour[class*="tour--f"] .pft { display: block; }
+  .pft figcaption, .pf2__cap, .pf3__cap, .pf4__cap { font: 400 var(--fs--1)/1.35 var(--body); color: var(--muted-on-dark); }
+  .pft img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .pft__frame { position: relative; display: flex; height: calc(var(--svh, 1svh) * 82); align-items: center; justify-content: center; overflow: clip; }
+  .pft__frame img { position: absolute; inset: 0; }
+  .pft__shade { position: absolute; inset: 0; background: rgba(12, 36, 16, .5); pointer-events: none; }
+  .pft__slogan { position: relative; z-index: 1; width: 100%; padding: 0 var(--gutter); text-align: center; color: #dfe8dc; }
+  .pft__slogan .label { justify-content: center; color: rgba(223, 232, 220, .82); }
+  .pft__title { margin: 16px 0 0; font: 500 var(--fs-4)/1.1 var(--display); letter-spacing: -.03em; color: #dfe8dc; text-wrap: balance; }
+  .js-anim .pft__slogan .w { opacity: 0; transition: opacity 2.5s cubic-bezier(.33, 0, .11, 1) calc(var(--i) * .2s); }
+  .js-anim .pft--head.is-on .pft__slogan .w { opacity: 1; }
+  .pft.pft--foot { padding: 40px var(--gutter) 56px; }
+  .pft--foot p { margin: 0 0 24px; color: rgba(255, 255, 255, .82); font-size: var(--fs-0); line-height: 1.5; text-wrap: pretty; }
+
+  /* 1. лента пальцем: карточка на 82% ширины, следующая выглядывает справа, встают по одной */
+  .pft--car { padding-top: 40px; }
+  .pf1 { display: flex; gap: 12px; padding: 0 var(--gutter); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 var(--gutter); overscroll-behavior-x: contain; scrollbar-width: none; }
+  .pf1::-webkit-scrollbar { display: none; }
+  .pf1__card { flex: 0 0 82vw; margin: 0; display: grid; gap: 10px; align-content: start; scroll-snap-align: start; scroll-snap-stop: always; }
+  .pf1__card-pic { display: block; aspect-ratio: 1 / 1; overflow: clip; background: var(--ink-2); }
+
+  /* 2. стопка: верхнюю карточку смахивают в любую сторону, она уходит под низ; нажатие тоже листает */
+  .pft--stack { padding: 44px var(--gutter) 0; }
+  .pf2 { position: relative; width: min(100%, 360px); margin: 0 auto 30px; aspect-ratio: 4 / 5; touch-action: pan-y pinch-zoom; cursor: grab; -webkit-tap-highlight-color: transparent; outline: 0; }
+  .pf2__card { position: absolute; inset: 0; margin: 0; transform-origin: 50% 100%; transition: transform .5s cubic-bezier(.2, .75, .2, 1), opacity .4s; }
+  .pf2__card.is-drag { transition: none; }
+  .pf2__pic { display: block; width: 100%; height: 100%; overflow: clip; background: var(--ink-2); box-shadow: 0 18px 40px -18px rgba(0, 0, 0, .7); }
+  .pf2__cap { margin: 0; text-align: center; min-height: 1.35em; }
+  .pf2__hint { margin: 6px 0 0; text-align: center; font-size: 13px; color: rgba(169, 187, 169, .7); transition: opacity .4s; }
+  .pf2__hint.is-off { opacity: 0; }
+
+  /* 3. большое фото во всю ширину листается пальцем, под ним подпись и полоска миниатюр: нажали — открылось это фото */
+  .pft--main { padding-top: 40px; }
+  .pf3__big { display: flex; aspect-ratio: 4 / 3; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; background: var(--ink-2); }
+  .pf3__big::-webkit-scrollbar, .pf3__thumbs::-webkit-scrollbar { display: none; }
+  .pf3__slide { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; }
+  .pf3__cap { margin: 0; padding: 12px var(--gutter) 0; }
+  .pf3__thumbs { display: flex; gap: 8px; padding: 16px var(--gutter) 4px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .pf3__thumb { flex: 0 0 64px; height: 64px; padding: 0; border: 0; background: var(--ink-2); opacity: .4; cursor: pointer; transition: opacity .25s; -webkit-tap-highlight-color: transparent; }
+  .pf3__thumb.is-on { opacity: 1; outline: 2px solid #dfe8dc; outline-offset: 2px; }
+
+  /* 4. мозаика: всё видно сразу, нажатие открывает фото на весь экран, там листают вбок, закрыть — кнопкой, смахнуть вниз или «назад» */
+  .pft--grid { padding: 40px var(--gutter) 0; }
+  .pf4 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 10px; }
+  .pf4__tile { display: grid; gap: 8px; align-content: start; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: zoom-in; -webkit-tap-highlight-color: transparent; }
+  .pf4__tile:first-child, .pf4__tile:last-child { grid-column: 1 / -1; }
+  .pf4__pic { display: block; aspect-ratio: 1 / 1; overflow: clip; background: var(--ink-2); }
+  .pf4__tile:first-child .pf4__pic, .pf4__tile:last-child .pf4__pic { aspect-ratio: 16 / 10; }
+  .pf4__hint { margin: 18px 0 0; font-size: 13px; color: rgba(169, 187, 169, .7); }
+  .pfv:not([hidden]) { display: flex; position: fixed; z-index: 1000; inset: 0; flex-direction: column; background: #07160a; overscroll-behavior: contain; animation: pfv-in .25s ease-out; }
+  .pfv__track { display: flex; flex: 1; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior: contain; scrollbar-width: none; touch-action: pan-x pinch-zoom; transition: transform .3s, opacity .3s; }
+  .pfv__track::-webkit-scrollbar { display: none; }
+  .pfv__slide { flex: 0 0 100%; min-width: 0; display: grid; grid-template-columns: 100%; align-content: center; gap: 14px; margin: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+  .pfv__img { display: block; width: 100%; height: auto; max-height: calc(var(--svh, 1svh) * 72); object-fit: contain; }
+  .pfv__slide figcaption { padding: 0 var(--gutter); font: 400 var(--fs-0)/1.4 var(--body); color: rgba(223, 232, 220, .86); }
+  .pfv__close { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); right: 14px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px; background: rgba(223, 232, 220, .14); color: #fff; font: 500 15px/1 var(--body); cursor: pointer; }
+
+  /* 5. две ленты плывут навстречу сами, любую можно листать пальцем (механика уже есть в app.js), подпись под фото */
+  .tour.tour--f5 { display: flex; flex-direction: column; }
+  .tour.tour--f5 > .tour__rows { display: grid; order: 0; padding: 36px 0 8px; }
+  .tour--f5 .pft--head { order: -1; }
+  .tour--f5 .pft--foot { order: 1; }
+  .tour--f5 .tfig__cap { display: block; }
+}
+@keyframes pfv-in { from { opacity: 0; } }
+html.pfv-open, html.pfv-open body { overflow: hidden; }

@@ -276,6 +276,34 @@ function phoneTour(depth) {
   </div>`;
 }
 
+// варианты листания фото клиники на телефоне (Ilya 06.11, превью foto-1..foto-5): FOTO=1..5 при сборке, без него тур как был.
+// Во всех вариантах сверху кабинет на весь экран с заголовком (как было), ниже фото с подписью под фото, в конце текст и маршрут.
+// 1 — лента пальцем вбок, карточки встают по месту; 2 — стопка: верхнюю карточку смахивают, она уходит под низ;
+// 3 — большое фото и полоска миниатюр под ним; 4 — мозаика, нажатие открывает фото на весь экран, там листают вбок;
+// 5 — две ленты плывут навстречу и листаются пальцем (механика лент, уже была в app.js)
+const FOTO = /^[1-5]$/.test(process.env.FOTO || "") ? +process.env.FOTO : 0;
+function phoneFoto(depth) {
+  const L = v2.clinic.phone.photos, n = FOTO;
+  const words = (t, from) => t.split(" ").map((w, i) => `<span class="w" style="--i:${from + i}">${esc(w)}</span>`).join(" ");
+  const pic = ([f, cap, x], sizes = "auto, 100vw", extra = "") => img([f], cap, depth, ` style="object-position:${x}"${extra}`, sizes);
+  const head = `<div class="pft pft--head"><div class="pft__frame">${img(v2.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»", depth)}<span class="pft__shade"></span>
+    <div class="pft__slogan"><span class="label label--light"><span class="w" style="--i:0">${esc(v2.clinic.label)}</span></span><h2 class="pft__title">${words(v2.clinic.title, 1)}</h2></div></div></div>`;
+  const foot = `<div class="pft pft--foot"><p>${esc(v2.clinic.text)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>`;
+  const fig = (p, cls, sizes, i) => `<figure class="${cls}" data-i="${i}"><span class="${cls}-pic">${pic(p, sizes)}</span><figcaption>${esc(p[1])}</figcaption></figure>`;
+  let body = "";
+  if (n === 1) body = `<div class="pft pft--car" aria-label="Фото клиники"><div class="pf1">${L.map((p, i) => fig(p, "pf1__card", "auto, 82vw", i)).join("")}</div></div>`;
+  if (n === 2) body = `<div class="pft pft--stack" aria-label="Фото клиники"><div class="pf2" tabindex="0">${L.map((p, i) => `<figure class="pf2__card" data-i="${i}"><span class="pf2__pic">${pic(p, "auto, 84vw")}</span></figure>`).join("")}</div>
+    <p class="pf2__cap" aria-live="polite">${esc(L[0][1])}</p><p class="pf2__hint">Смахните фото в сторону</p></div>`;
+  if (n === 3) body = `<div class="pft pft--main" aria-label="Фото клиники"><div class="pf3"><div class="pf3__big">${L.map((p, i) => `<span class="pf3__slide${i ? "" : " is-on"}" data-i="${i}">${pic(p)}</span>`).join("")}</div>
+    <p class="pf3__cap" aria-live="polite">${esc(L[0][1])}</p>
+    <div class="pf3__thumbs">${L.map((p, i) => `<button type="button" class="pf3__thumb${i ? "" : " is-on"}" data-i="${i}" aria-label="${esc(p[1])}">${pic(p, "auto, 72px")}</button>`).join("")}</div></div></div>`;
+  if (n === 4) body = `<div class="pft pft--grid" aria-label="Фото клиники"><div class="pf4">${L.map((p, i) => `<button type="button" class="pf4__tile" data-i="${i}" aria-label="${esc(p[1])}, открыть на весь экран"><span class="pf4__pic">${pic(p, i % 3 ? "auto, 50vw" : "auto, 100vw")}</span><span class="pf4__cap">${esc(p[1])}</span></button>`).join("")}</div>
+    <p class="pf4__hint">Нажмите на фото, чтобы открыть крупно</p></div>
+    <div class="pfv" hidden data-lenis-prevent role="dialog" aria-modal="true" aria-label="Фото клиники"><div class="pfv__track">${L.map((p, i) => `<figure class="pfv__slide" data-i="${i}">${img([p[0]], p[1], depth, ' class="pfv__img"', "100vw")}<figcaption>${esc(p[1])}</figcaption></figure>`).join("")}</div>
+    <button type="button" class="pfv__close">Закрыть</button></div>`;
+  return head + body + foot;
+}
+
 // единый хвост блока: оффер, кнопка (и ссылка), строка под кнопкой
 const ctaBox = (offer, btn, link, note) => `<div class="cta-box" data-reveal>${offer ? `<p class="cta-box__offer">${esc(offer)}</p>` : ""}<div class="cta-box__row">${btn}${link || ""}</div>${note ? `<p class="cta-box__note">${esc(note)}</p>` : ""}</div>`;
 const ext = ' target="_blank" rel="noopener"';
@@ -714,16 +742,16 @@ function pageHome() {
 </section>
 </div>
 
-<section class="tour on-dark" id="clinic" aria-labelledby="tr-title">
+<section class="tour on-dark${FOTO ? ` tour--f${FOTO}` : ""}" id="clinic" aria-labelledby="tr-title">
   <div class="tour__pin">
     <div class="tour__frame">${img(D.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»", depth)}</div>
     <div class="tour__title wrap"><span class="label label--light">${esc(D.clinic.label)}</span><h2 id="tr-title" data-split>${esc(D.clinic.title)}</h2><p>${esc(D.clinic.text)}</p><a class="btn btn--light" href="https://yandex.ru/maps/?rtext=~${clinic.geo.lat},${clinic.geo.lon}"${ext}>Построить маршрут</a></div>
   </div>
   <p class="tour__lead wrap">${esc(D.clinic.text)}</p>
   <div class="tour__rows" aria-label="Фото клиники">
-    ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span></figure>`).join("")}</div>`).join("")}
+    ${D.clinic.rows.map((row, r) => `<div class="tour__row" data-dir="${r ? 1 : -1}">${[...row, ...row].map(([f, cap, tall], j) => `<figure class="tfig${tall ? " tfig--tall" : ""}"${j >= row.length ? ' aria-hidden="true"' : ""}><span class="tfig__img">${img([f], cap, depth)}</span>${FOTO === 5 ? `<figcaption class="tfig__cap">${esc(cap)}</figcaption>` : ""}</figure>`).join("")}</div>`).join("")}
   </div>
-  ${phoneTour(depth)}
+  ${FOTO ? phoneFoto(depth) : phoneTour(depth)}
 </section>
 
 <section class="foil on-dark" id="path" aria-labelledby="ph-title">

@@ -1040,6 +1040,124 @@
     if (grid) new IntersectionObserver(([en]) => pt.classList.toggle("is-on", en.isIntersecting), { rootMargin: "0px 0px 25% 0px" }).observe(grid);
   }
 
+  // ---------- варианты листания фото клиники на телефоне (сборка FOTO=1..5) ----------
+  const pftHead = $(".pft--head");
+  if (pftHead) new IntersectionObserver(([en]) => pftHead.classList.toggle("is-on", en.isIntersecting), { threshold: 0.35 }).observe(pftHead);
+  // жест вбок по правилам стабильности: направление после 12 px, вбок только при |dx| > 1,6·|dy|, вертикаль отдаём странице
+  const swipe = (el, h) => {
+    let sx = 0, sy = 0, lock = 0, t0 = 0, dx = 0;
+    el.addEventListener("touchstart", (e) => { if (e.touches.length > 1) { lock = -1; return; } sx = e.touches[0].clientX; sy = e.touches[0].clientY; lock = 0; dx = 0; t0 = e.timeStamp; }, { passive: true });
+    el.addEventListener("touchmove", (e) => {
+      if (lock === -1 || e.touches.length > 1) return;
+      const t = e.touches[0], x = t.clientX - sx, y = t.clientY - sy;
+      if (!lock && Math.hypot(x, y) > 12) { lock = Math.abs(x) > Math.abs(y) * 1.6 ? 1 : -1; if (lock === 1) h.start?.(); }
+      if (lock === 1) { dx = x; h.move?.(dx); }
+    }, { passive: true });
+    const end = (e) => { if (lock === 1) h.end?.(dx, dx / Math.max(1, e.timeStamp - t0)); else if (!lock && e.type === "touchend") h.tap?.(e); lock = 0; };
+    el.addEventListener("touchend", end, { passive: true });
+    el.addEventListener("touchcancel", () => { if (lock === 1) h.end?.(0, 0); lock = 0; }, { passive: true });
+  };
+  // индекс карточки ленты по прокрутке вбок
+  const snapIndex = (box) => Math.round(box.scrollLeft / Math.max(1, box.firstElementChild.offsetWidth));
+
+  // 2. стопка: верхнюю карточку смахивают в любую сторону, она уходит под низ стопки; нажатие листает дальше
+  const pf2 = $(".pf2");
+  if (pf2) {
+    const cards = $$(".pf2__card", pf2), cap = $(".pf2__cap"), hint = $(".pf2__hint");
+    const caps = cards.map((c) => $("img", c)?.alt || "");
+    const order = cards.map((_, i) => i);
+    let busy = false, touched = 0;
+    const place = (list) => list.forEach((ci, d) => {
+      const c = cards[ci], k = Math.min(d, 2);
+      c.style.zIndex = String(cards.length - d);
+      c.style.opacity = d > 2 ? "0" : "1";
+      c.style.transform = `translateY(${k * 14}px) scale(${1 - k * 0.05})`;
+      c.setAttribute("aria-hidden", d ? "true" : "false");
+    });
+    const show = () => { if (cap) cap.textContent = caps[order[0]]; };
+    const next = (dir = -1) => {
+      if (busy) return;
+      busy = true; hint?.classList.add("is-off");
+      const top = cards[order[0]];
+      top.classList.remove("is-drag");
+      top.style.transform = `translateX(${dir * 120}vw) rotate(${dir * 14}deg)`;
+      top.style.opacity = "0";
+      order.push(order.shift()); show();
+      // новая верхняя карточка встаёт сразу, ушедшая уходит под низ после вылета
+      place(order.slice(0, -1));
+      setTimeout(() => { busy = false; place(order); }, 340);
+    };
+    swipe(pf2, {
+      start: () => { if (!busy) cards[order[0]].classList.add("is-drag"); },
+      move: (dx) => { if (!busy) cards[order[0]].style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`; },
+      end: (dx, v) => { touched = Date.now(); if (busy) return; if (Math.abs(dx) > 70 || Math.abs(v) > 0.45) next(Math.sign(dx) || -1); else { cards[order[0]].classList.remove("is-drag"); place(order); } },
+      tap: () => { touched = Date.now(); next(-1); },
+    });
+    // мышь и клавиатура (после касания браузер шлёт ещё и click — его пропускаем)
+    pf2.addEventListener("click", () => { if (Date.now() - touched > 600) next(-1); });
+    pf2.addEventListener("keydown", (e) => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); next(e.key === "ArrowRight" ? -1 : 1); } });
+    place(order); show();
+  }
+
+  // 3. большое фото и миниатюры: большое фото листается само (scroll-snap), миниатюра и подпись следуют за ним
+  const pf3 = $(".pf3");
+  if (pf3) {
+    const big = $(".pf3__big", pf3), thumbs = $$(".pf3__thumb", pf3), strip = $(".pf3__thumbs", pf3), cap = $(".pf3__cap", pf3);
+    let cur = 0;
+    const mark = (i) => {
+      if (i === cur) return;
+      cur = i;
+      thumbs.forEach((t, k) => t.classList.toggle("is-on", k === i));
+      if (cap) cap.textContent = thumbs[i].getAttribute("aria-label");
+      // миниатюру в середину полоски, только вбок (scrollIntoView потянул бы и страницу)
+      const t = thumbs[i];
+      strip.scrollTo({ left: t.offsetLeft - (strip.clientWidth - t.offsetWidth) / 2, behavior: "smooth" });
+    };
+    big.addEventListener("scroll", () => mark(Math.min(thumbs.length - 1, snapIndex(big))), { passive: true });
+    thumbs.forEach((t, i) => t.addEventListener("click", () => { big.scrollTo({ left: i * big.clientWidth, behavior: "smooth" }); mark(i); }));
+  }
+
+  // 4. мозаика и просмотр на весь экран: окно переносим в body (fixed внутри секции с transform поехал бы вместе с ней)
+  const pf4 = $(".pf4"), pfv = $(".pfv");
+  if (pf4 && pfv) {
+    document.body.append(pfv);
+    const track = $(".pfv__track", pfv), close = $(".pfv__close", pfv);
+    let open = false, from = null;
+    const shut = () => {
+      if (!open) return;
+      open = false; pfv.hidden = true; root.classList.remove("pfv-open");
+      track.style.transform = ""; track.style.opacity = "";
+      from?.focus({ preventScroll: true });
+    };
+    $$(".pf4__tile", pf4).forEach((b) => b.addEventListener("click", () => {
+      from = b; open = true; pfv.hidden = false; root.classList.add("pfv-open");
+      $$("img", pfv).forEach((im) => (im.loading = "eager"));
+      track.scrollLeft = +b.dataset.i * track.clientWidth;
+      // «назад» на телефоне закрывает фото, а не уходит со страницы
+      history.pushState({ pfv: 1 }, "");
+      close.focus({ preventScroll: true });
+    }));
+    const back = () => { if (open) history.back(); };
+    addEventListener("popstate", shut);
+    close.addEventListener("click", back);
+    pfv.addEventListener("keydown", (e) => { if (e.key === "Escape") back(); });
+    // смахнуть вниз — закрыть
+    let sy = 0, sx = 0, lock = 0, dy = 0;
+    track.addEventListener("touchstart", (e) => { sy = e.touches[0].clientY; sx = e.touches[0].clientX; lock = e.touches.length > 1 ? -1 : 0; dy = 0; }, { passive: true });
+    track.addEventListener("touchmove", (e) => {
+      if (lock === -1 || e.touches.length > 1) return;
+      const t = e.touches[0], x = t.clientX - sx, y = t.clientY - sy;
+      if (!lock && Math.hypot(x, y) > 12) lock = Math.abs(y) > Math.abs(x) * 1.6 ? 1 : -1;
+      if (lock === 1) { dy = Math.max(0, y); track.style.transition = "none"; track.style.transform = `translateY(${dy}px)`; track.style.opacity = String(1 - Math.min(0.6, dy / 400)); }
+    }, { passive: true });
+    const tEnd = () => {
+      if (lock === 1) { track.style.transition = ""; if (dy > 110) back(); else { track.style.transform = ""; track.style.opacity = ""; } }
+      lock = 0;
+    };
+    track.addEventListener("touchend", tEnd, { passive: true });
+    track.addEventListener("touchcancel", tEnd, { passive: true });
+  }
+
   // ---------- анимации ----------
   // Правило: прокрутку сглаживает только Lenis, поэтому все scrub = true (без второго сглаживания),
   // одно свойство одного элемента ведёт одна анимация, CSS-переходы на этих свойствах выключены.
