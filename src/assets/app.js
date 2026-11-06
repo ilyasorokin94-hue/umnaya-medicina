@@ -1088,7 +1088,11 @@
           // барабан: лента та же, но шагами, боковые карточки повёрнуты к центру и ближе к нему
           const c = clamp(d, -1, 1);
           set(k, (3 - T) * 75 * W - c * 28 * W, 0, ` perspective(${1.4 * H}px) rotateY(${c * 42}deg) scale(${1 - 0.16 * Math.abs(c)})`, 1 - clamp(Math.abs(d) - 1.2), 10 - Math.round(Math.abs(d) * 2), 1 - Math.abs(d) * 2.5);
-        } else if (v === 4) {
+        } else if (v === 7) {
+          // пролёт вниз (крупные фото): верхнее фото падает вниз за экран, под ним следующее подрастает до полного размера
+          const l = clamp(-d), q = Math.min(Math.max(d, 0), 1.5);
+          set(k, home, l * l * H * 1.05, ` rotate(${4 * l}deg) scale(${1 - 0.08 * q})`, d > 1.5 ? 0 : 1 - clamp(l - 0.85) / 0.15, l >= 1 ? 1 : 10 - k, d >= 0 ? 1 - d / 0.3 : 1 - l / 0.2);
+        } else if (v === 4 || v === 6) {
           // наплыв снизу: следующая выезжает снизу поверх, прежняя уходит вглубь и гаснет
           const b = come(k), a = leave(k);
           set(k, home, (1 - b) * H * 0.85, ` scale(${1 - 0.12 * a})`, b <= 0 ? 0 : 1 - a, k + 1, (b - 0.75) / 0.25 - a * 4);
@@ -1100,7 +1104,8 @@
       }
       // рентген справа: в барабане он часть ленты, в остальных подъезжает к кабинету на последнем шаге
       if (v === 3) { const d = 4 - T, c = clamp(d, -1, 1); set(4, (3 - T) * 75 * W - c * 28 * W, 0, ` perspective(${1.4 * H}px) rotateY(${c * 42}deg) scale(${1 - 0.16 * Math.abs(c)})`, 1 - clamp(Math.abs(d) - 1.2), 10 - Math.round(Math.abs(d) * 2), 1 - Math.abs(d) * 2.5); }
-      else set(4, (1 - rIn) * 60 * W, 0, "", rIn, 20, rIn);
+      // у крупных фото (6, 7) рентген стоит дальше вправо, иначе заходит на кабинет
+      else set(4, ((v >= 6 ? 14 : 0) + (1 - rIn) * 60) * W, 0, "", rIn, 20, rIn);
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(draw); };
     addEventListener("scroll", ask, { passive: true });
@@ -1536,7 +1541,7 @@
       const ro = new ResizeObserver(() => { if (spacer.offsetHeight !== spH) { spH = spacer.offsetHeight; ST.refresh(); } });
       ro.observe(spacer);
       const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
-      zoom.fromTo(img, { clipPath: card, scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
+      zoom.fromTo(img, { clipPath: card, scale: +pt.dataset.v >= 6 ? 0.88 : 0.725 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
         .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
       sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
       pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));

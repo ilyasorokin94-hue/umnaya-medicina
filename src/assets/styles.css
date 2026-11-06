@@ -2684,3 +2684,8 @@ html.pfv-open, html.pfv-open body { overflow: hidden; }
   .js-anim .ptour[data-v="2"] .ptour__in { transform-origin: 13.75% calc(var(--pt-s) / 2); }
   .js-anim .ptour[data-v] .ptour__cap { transition: none; }
 }
+/* 6 и 7: фото крупнее — карточка 88% ширины вместо 72,5%, подпись под ней; кабинет раскрывается из этого же размера */
+@media (max-width: 760px) {
+  .js-anim .ptour:is([data-v="6"], [data-v="7"]) .ptour__img { transform: scale(.88); }
+  .js-anim .ptour:is([data-v="6"], [data-v="7"]) .ptour__cap { left: 6%; right: 6%; top: calc(var(--pt-s) * .852 + 10px); }
+}
