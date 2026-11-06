@@ -490,40 +490,9 @@
   // Откуда пришёл человек (страница входа, сайт-источник, метки) запоминает cookie.js, заявка берёт это из window.umSource
   const t0 = Date.now(), FILE_MB = 20;
   const isLive = (f) => /lead\.php$/.test(f.getAttribute("action") || "");
-  // открылась клавиатура в форме заявки (Ilya 01.11, 05.11): докручиваем страницу или окно так, чтобы над клавиатурой
-  // и панелью автозаполнения была видна кнопка отправки, а поле осталось на экране. Safari сообщает высоту клавиатуры
-  // (visualViewport), а встроенные браузеры (окно Яндекс Карт, Яндекс Браузер) иногда нет: тогда считаем, что клавиатура
-  // с панелью закрывает нижнюю половину экрана. Проверяем несколько раз, пока клавиатура выезжает и браузер сам двигает поле.
-  // В окне снизу добавляется запас (kb-open), чтобы окно было куда прокрутить. Большой номер в подвале не трогаем.
-  {
-    const vv = window.visualViewport, coarse = matchMedia("(pointer: coarse)");
-    const typing = (el) => !!el?.form && el.matches("input:not([type=checkbox]):not([type=hidden]), textarea") && !el.form.classList.contains("cb");
-    let H0 = innerHeight, kt = [];
-    addEventListener("resize", () => { if (!typing(document.activeElement)) H0 = innerHeight; });
-    // Поле в приоритете (Ilya 06.11): оно не уходит выше «безопасной» полосы сверху, под которой у новых iOS и встроенных
-    // браузеров плавает панель с адресом; если браузер сам задвинул поле туда, возвращаем его. Пока клавиатура выезжает,
-    // ничего не двигаем; запасная оценка «клавиатура на полэкрана» только на последней проверке, если браузер так и не сообщил.
-    const keepBtn = (last) => {
-      const f = document.activeElement;
-      if (!phoneMQ.matches || !typing(f)) return;
-      const btn = f.form.querySelector("button:not([type=button])");
-      if (!btn) return;
-      const top = vv ? vv.offsetTop : 0;
-      let h = vv ? vv.height : innerHeight;
-      if (coarse.matches && h > H0 * 0.7) { if (!last) return; h = H0 * 0.5; }
-      const safe = Math.min(150, h * 0.3);
-      const b = btn.getBoundingClientRect(), fr = f.getBoundingClientRect();
-      let dy = Math.min(b.bottom + 14 - (top + h), fr.top - top - safe);
-      if (fr.top < top + safe - 4) dy = fr.top - top - safe;
-      else if (dy <= 3) return;
-      const box = f.form.closest(".modal__box");
-      if (box) box.scrollTop += dy; else scrollBy({ top: dy, behavior: "instant" });
-    };
-    const later = () => { kt.forEach(clearTimeout); kt = [450, 1000].map((t, i) => setTimeout(() => keepBtn(i === 1), t)); };
-    document.addEventListener("focusin", (e) => { if (typing(e.target) && phoneMQ.matches) { root.classList.add("kb-open"); later(); } });
-    document.addEventListener("focusout", () => setTimeout(() => { if (!typing(document.activeElement)) root.classList.remove("kb-open"); }, 200));
-    vv?.addEventListener("resize", () => { if (typing(document.activeElement)) later(); });
-  }
+  // Автопрокрутки при открытой клавиатуре нет (Ilya 06.11: «без прокрутки, тупняк при заполнении»): страница ведёт себя
+  // как обычный сайт, поле на экран выводит сам браузер. Кнопку видно иначе: когда номер набран полностью, клавиатура
+  // на телефоне закрывается сама (ниже, в маске телефона), и форма с кнопкой целиком на экране.
 
   // ловушка для ботов: поле, которого человек не видит
   $$("form").forEach((f) => { if (isLive(f)) f.insertAdjacentHTML("beforeend", '<input class="hp ym-disable-keys" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">'); });
@@ -581,6 +550,10 @@
       if (document.activeElement === inp) { const c = telCaret(t, Math.max(1, Math.min(n, d.length))); inp.setSelectionRange(c, c); }
       const m = check();
       if (!m) fieldHint(inp, ""); else if (inp.getAttribute("aria-invalid")) fieldHint(inp, m);
+      // номер набран или подставлен целиком: на телефоне закрываем клавиатуру, чтобы стала видна кнопка отправки (Ilya 06.11)
+      const full = !m && d.length === 11;
+      if (full && !inp._full && !type.startsWith("delete") && phoneMQ.matches && matchMedia("(pointer: coarse)").matches && document.activeElement === inp) setTimeout(() => { if (document.activeElement === inp) inp.blur(); }, 250);
+      inp._full = full;
     });
     inp.addEventListener("blur", () => { const m = check(); const d = inp.value.replace(/\D/g, "").length; if (d > 1 && m) fieldHint(inp, m); });
     inp.form?.addEventListener("reset", () => setTimeout(() => { prev = inp.value = ""; inp.setCustomValidity(""); fieldHint(inp, ""); }));
