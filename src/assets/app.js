@@ -500,24 +500,29 @@
     const typing = (el) => !!el?.form && el.matches("input:not([type=checkbox]):not([type=hidden]), textarea") && !el.form.classList.contains("cb");
     let H0 = innerHeight, kt = [];
     addEventListener("resize", () => { if (!typing(document.activeElement)) H0 = innerHeight; });
-    const keepBtn = () => {
+    // Поле в приоритете (Ilya 06.11): оно не уходит выше «безопасной» полосы сверху, под которой у новых iOS и встроенных
+    // браузеров плавает панель с адресом; если браузер сам задвинул поле туда, возвращаем его. Пока клавиатура выезжает,
+    // ничего не двигаем; запасная оценка «клавиатура на полэкрана» только на последней проверке, если браузер так и не сообщил.
+    const keepBtn = (last) => {
       const f = document.activeElement;
       if (!phoneMQ.matches || !typing(f)) return;
       const btn = f.form.querySelector("button:not([type=button])");
       if (!btn) return;
       const top = vv ? vv.offsetTop : 0;
       let h = vv ? vv.height : innerHeight;
-      if (coarse.matches && h > H0 * 0.7) h = H0 * 0.48;
+      if (coarse.matches && h > H0 * 0.7) { if (!last) return; h = H0 * 0.5; }
+      const safe = Math.min(150, h * 0.3);
       const b = btn.getBoundingClientRect(), fr = f.getBoundingClientRect();
-      const dy = Math.min(b.bottom + 14 - (top + h), fr.top - top - 10);
-      if (dy <= 3) return;
+      let dy = Math.min(b.bottom + 14 - (top + h), fr.top - top - safe);
+      if (fr.top < top + safe - 4) dy = fr.top - top - safe;
+      else if (dy <= 3) return;
       const box = f.form.closest(".modal__box");
       if (box) box.scrollTop += dy; else scrollBy({ top: dy, behavior: "instant" });
     };
-    const later = () => { kt.forEach(clearTimeout); kt = [60, 350, 700, 1200].map((t) => setTimeout(keepBtn, t)); };
+    const later = () => { kt.forEach(clearTimeout); kt = [450, 1000].map((t, i) => setTimeout(() => keepBtn(i === 1), t)); };
     document.addEventListener("focusin", (e) => { if (typing(e.target) && phoneMQ.matches) { root.classList.add("kb-open"); later(); } });
     document.addEventListener("focusout", () => setTimeout(() => { if (!typing(document.activeElement)) root.classList.remove("kb-open"); }, 200));
-    vv?.addEventListener("resize", later);
+    vv?.addEventListener("resize", () => { if (typing(document.activeElement)) later(); });
   }
 
   // ловушка для ботов: поле, которого человек не видит
