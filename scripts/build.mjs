@@ -249,6 +249,10 @@ const bookSlug = (slug) => {
 const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""}" href="${fallbackHref(kind, p, o)}" data-modal="${kind}"${o.reason ? ` data-reason="${esc(o.reason)}"` : ""}${o.promo ? ` data-promo="${esc(o.promo)}"` : ""}${o.doctor ? ` data-doctor="${o.doctor}"` : ""}${o.magnet ? " data-magnet" : ""}>${esc(label)}</a>`;
 // тур на телефоне как вторая секция Лава Дент: лента карточек стоит на месте и едет вбок от прокрутки,
 // кабинет раскрывается на весь экран, заголовок проявляется по словам, поверх проходят остальные фото, потом текст
+// варианты первых пяти фото тура (Ilya 06.11, превью lenta-1..lenta-5): PT=1..5 при сборке, без него лента едет вбок как была.
+// Порядок, раскрытие кабинета и «кубики» не меняются, меняется только то, как сменяют друг друга вход, ресепшен, врачи и кабинет:
+// 1 — стопка, 2 — книга, 3 — барабан, 4 — наплыв снизу, 5 — пролёт вперёд
+const PT = /^[1-5]$/.test(process.env.PT || "") ? +process.env.PT : 0;
 function phoneTour(depth) {
   const P = v2.clinic.phone;
   // фото ленты и галереи: в Chromium app.js переключает их на синхронное декодирование (иначе пустые карточки), в Safari остаётся фоновое
@@ -257,15 +261,15 @@ function phoneTour(depth) {
   // Ilya 30.10: без окна, которое ехало по широкому фото внутри карточки (второе движение против ленты выглядело рывком), фото стоит по середине того пути
   const card = ([f, cap, o], cls = "") => {
     const body = o && o.pan ? pic([f], cap, `${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}%`, o.y) : pic([f], cap, o);
-    return `<div class="ptour__item${cls}">${body}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
+    return `<div class="ptour__item${cls}">${PT ? '<div class="ptour__in">' : ""}${body}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p>${PT ? "</div>" : ""}</div>`;
   };
   const words = (t, from) => t.split(" ").map((w, i) => `<span class="w" style="--i:${from + i}">${esc(w)}</span>`).join(" ");
-  return `<div class="ptour">
+  return `<div class="ptour"${PT ? ` data-v="${PT}"` : ""}>
     <div class="ptour__car"><div class="ptour__items">
       <div class="ptour__item ptour__item--empty"></div>
       ${P.car.map((c, i) => card(c, i === P.car.length - 1 ? " ptour__item--left" : "")).join("")}
-      <div class="ptour__item ptour__item--main">${pic(v2.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»")}<span class="ptour__shade"></span>
-        <div class="ptour__slogan"><span class="label label--light"><span class="w" style="--i:0">${esc(v2.clinic.label)}</span></span><h2 class="ptour__title">${words(v2.clinic.title, 1)}</h2></div></div>
+      <div class="ptour__item ptour__item--main">${PT ? '<div class="ptour__in">' : ""}${pic(v2.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»")}<span class="ptour__shade"></span>
+        <div class="ptour__slogan"><span class="label label--light"><span class="w" style="--i:0">${esc(v2.clinic.label)}</span></span><h2 class="ptour__title">${words(v2.clinic.title, 1)}</h2></div>${PT ? "</div>" : ""}</div>
       ${card(P.right, " ptour__item--right")}
     </div></div>
     <div class="ptour__spacer"></div>

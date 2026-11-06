@@ -2672,3 +2672,15 @@ html:has(form input:focus, form textarea:focus) { scroll-behavior: auto; }
 }
 @keyframes pfv-in { from { opacity: 0; } }
 html.pfv-open, html.pfv-open body { overflow: hidden; }
+
+/* варианты первых пяти фото тура на телефоне (Ilya 06.11, сборка PT=1..5, превью lenta-1..lenta-5):
+   лента стоит на своём последнем месте, карточки внутри (.ptour__in) двигает app.js от прокрутки;
+   раскрытие кабинета и «кубики» дальше те же */
+.ptour__in { display: contents; }
+@media (max-width: 760px) {
+  .js-anim .ptour[data-v] .ptour__items { animation: none !important; transform: translateX(-225vw); }
+  .js-anim .ptour[data-v] .ptour__item { overflow: visible; }
+  .js-anim .ptour[data-v] .ptour__in { display: flex; position: absolute; inset: 0; box-sizing: border-box; padding-bottom: calc(calc(var(--vh, 1vh) * 100) - var(--pt-s)); align-items: center; justify-content: center; transform-origin: 50% calc(var(--pt-s) / 2); will-change: transform, opacity; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .js-anim .ptour[data-v="2"] .ptour__in { transform-origin: 13.75% calc(var(--pt-s) / 2); }
+  .js-anim .ptour[data-v] .ptour__cap { transition: none; }
+}

@@ -1040,6 +1040,74 @@
     if (grid) new IntersectionObserver(([en]) => pt.classList.toggle("is-on", en.isIntersecting), { rootMargin: "0px 0px 25% 0px" }).observe(grid);
   }
 
+  // ---------- варианты первых пяти фото тура (сборка PT=1..5, data-v у .ptour) ----------
+  // Лента стоит на своём последнем месте (кабинет в центре, врачи слева, рентген справа), а карточки внутри (.ptour__in)
+  // двигает прокрутка: пока страница проходит закреплённую ленту, вход, ресепшен и врачи по очереди уступают место кабинету.
+  // На последнем шаге всё приходит туда, откуда кабинет раскрывается на весь экран как раньше (это по-прежнему CSS)
+  if (pt && pt.dataset.v && anim) {
+    const v = +pt.dataset.v;
+    const spacer = $(".ptour__spacer", pt);
+    const items = $$(".ptour__items > .ptour__item", pt).slice(1, 6);
+    const ins = items.map((it) => $(".ptour__in", it));
+    const caps = ins.map((el) => el && $(".ptour__cap", el));
+    const F = [-225, -150, -75, 0, 75];   // где карточка стоит в конце, vw
+    const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+    const ease = (y) => (y < 0.5 ? 4 * y * y * y : 1 - Math.pow(-2 * y + 2, 3) / 2);
+    // шаг i (0 — вход уходит, 1 — ресепшен, 2 — врачи): в начале и в конце шага карточка немного стоит
+    const seg = (t, i) => ease(clamp((clamp(t - i) - 0.12) / 0.76));
+    const set = (k, x, y, tf, op, z, cap) => {
+      const el = ins[k];
+      if (!el) return;
+      el.style.transform = `translate3d(${x}px, ${y}px, 0)${tf}`;
+      el.style.opacity = op >= 0.999 ? "" : String(clamp(op));
+      el.style.visibility = op <= 0.001 ? "hidden" : "";
+      items[k].style.zIndex = String(z);   // у самих карточек ленты: у врачей и рентгена свой слой из-за анимации ухода в стороны
+      if (caps[k]) caps[k].style.opacity = String(clamp(cap));
+    };
+    let raf = 0;
+    const draw = () => {
+      raf = 0;
+      if (!spacer.offsetParent) return;
+      const r = spacer.getBoundingClientRect(), W = innerWidth / 100, H = innerHeight;
+      const p = clamp(-r.top / Math.max(1, r.height - H));
+      const t = p * 3, s = [seg(t, 0), seg(t, 1), seg(t, 2)], T = s[0] + s[1] + s[2];
+      const rIn = s[2];   // рентген подъезжает справа вместе с кабинетом
+      const leave = (k) => (k < 3 ? s[k] : 0), come = (k) => (k ? s[k - 1] : 1);
+      for (let k = 0; k < 4; k++) {
+        const home = -F[k] * W, d = k - T;   // d: 0 — карточка сверху, больше — ниже в стопке, меньше — уходит
+        if (v === 1) {
+          // стопка: верхняя карточка с наклоном уезжает влево на своё место, нижние приподнимаются
+          if (d >= 0) { const q = Math.min(d, 2.5); set(k, home, -q * 26, ` scale(${1 - 0.07 * q})`, clamp(3 - d), 10 - k, 1 - d / 0.3); }
+          // ушедшая карточка уходит под кабинет, иначе при раскрытии кабинета врачи слева легли бы поверх него
+          else { const l = -d; set(k, home * (1 - l), -Math.sin(Math.PI * l) * 30, ` rotate(${-9 * Math.sin(Math.PI * l)}deg)`, 1, l >= 1 ? 1 : 10 - k, 1 - l / 0.3); }
+        } else if (v === 2) {
+          // книга: страница переворачивается вокруг левого края карточки, под ней следующая
+          const l = clamp(-d);
+          set(k, home, 0, ` perspective(${1.6 * H}px) rotateY(${-180 * l}deg)`, d > 2 ? 0 : 1, 10 - k, d >= 0 ? 1 - d / 0.3 : 1 - l / 0.25);
+        } else if (v === 3) {
+          // барабан: лента та же, но шагами, боковые карточки повёрнуты к центру и ближе к нему
+          const c = clamp(d, -1, 1);
+          set(k, (3 - T) * 75 * W - c * 28 * W, 0, ` perspective(${1.4 * H}px) rotateY(${c * 42}deg) scale(${1 - 0.16 * Math.abs(c)})`, 1 - clamp(Math.abs(d) - 1.2), 10 - Math.round(Math.abs(d) * 2), 1 - Math.abs(d) * 2.5);
+        } else if (v === 4) {
+          // наплыв снизу: следующая выезжает снизу поверх, прежняя уходит вглубь и гаснет
+          const b = come(k), a = leave(k);
+          set(k, home, (1 - b) * H * 0.85, ` scale(${1 - 0.12 * a})`, b <= 0 ? 0 : 1 - a, k + 1, (b - 0.75) / 0.25 - a * 4);
+        } else {
+          // пролёт вперёд: следующая растёт из глубины в центре, прежняя пролетает мимо и гаснет
+          const b = come(k), a = leave(k);
+          set(k, home, 0, ` scale(${(0.45 + 0.55 * b) * (1 + 0.7 * a)})`, Math.min(clamp(b * 2.2), 1 - a * 1.3), k + 1, Math.min((b - 0.8) / 0.2, 1 - a * 4));
+        }
+      }
+      // рентген справа: в барабане он часть ленты, в остальных подъезжает к кабинету на последнем шаге
+      if (v === 3) { const d = 4 - T, c = clamp(d, -1, 1); set(4, (3 - T) * 75 * W - c * 28 * W, 0, ` perspective(${1.4 * H}px) rotateY(${c * 42}deg) scale(${1 - 0.16 * Math.abs(c)})`, 1 - clamp(Math.abs(d) - 1.2), 10 - Math.round(Math.abs(d) * 2), 1 - Math.abs(d) * 2.5); }
+      else set(4, (1 - rIn) * 60 * W, 0, "", rIn, 20, rIn);
+    };
+    const ask = () => { if (!raf) raf = requestAnimationFrame(draw); };
+    addEventListener("scroll", ask, { passive: true });
+    addEventListener("resize", ask);
+    draw();
+  }
+
   // ---------- варианты листания фото клиники на телефоне (сборка FOTO=1..5) ----------
   const pftHead = $(".pft--head");
   if (pftHead) new IntersectionObserver(([en]) => pftHead.classList.toggle("is-on", en.isIntersecting), { threshold: 0.35 }).observe(pftHead);
@@ -1461,7 +1529,8 @@
         // в процентах от кадра, как в CSS: при смене высоты окна без пересчёта ScrollTrigger окно не устаревает
         return `inset(${10 * k}% 0% ${100 - 90 * k}% 0%)`;
       };
-      G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
+      // в вариантах первых фото (data-v) лента стоит на месте, карточки двигает свой код выше
+      if (!pt.dataset.v) G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
       // на телефоне ScrollTrigger не пересчитывается при смене высоты окна; шаг ленты 400vh, поэтому пересчитываем сами, когда он меняется
       let spH = spacer.offsetHeight;
       const ro = new ResizeObserver(() => { if (spacer.offsetHeight !== spH) { spH = spacer.offsetHeight; ST.refresh(); } });
