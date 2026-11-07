@@ -1192,9 +1192,12 @@
     const h = $(".hero, .page-hero");
     if (!h) return;
     // главная на компьютере: «Один план лечения.» собирается из разлетевшихся букв, остальные слова поднимаются из-под строки
-    const conv = !phoneMQ.matches && h.classList.contains("hero--v1") && $(".hv__l2", h);
+    // Ilya 07.11: «Три врача. Один план лечения.» на главной стоит статично, без анимации букв и слов;
+    // остаются сменяющаяся фраза под ним и появление кнопки
+    const still = h.classList.contains("hero--v1");
+    const conv = !still && !phoneMQ.matches && $(".hv__l2", h);
     const page = h.classList.contains("page-hero");
-    const words = page ? [] : $$("[data-split] .sw > span", h).filter((w) => !conv || !conv.contains(w));
+    const words = page || still ? [] : $$("[data-split] .sw > span", h).filter((w) => !conv || !conv.contains(w));
     // на главной первым идёт баннер акций (07.11): первый экран ниже него собирается, когда до него долистали,
     // а не при открытии, пока его не видно
     const wait = !page && !!$(".pb") && "IntersectionObserver" in window && h.getBoundingClientRect().top > innerHeight * 0.75;
