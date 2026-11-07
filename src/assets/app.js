@@ -1280,6 +1280,11 @@
       G.to(o, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => (el.textContent = fmt(o.v)) });
     });
 
+    // премия ПроДокторов: блик по «ТОП-10» один раз, когда блок показался; диплом немного поднимается вслед за прокруткой
+    const awNum = $(".award__num");
+    if (awNum) ST.create({ trigger: awNum, start: "top 85%", once: true, onEnter: () => awNum.classList.add("is-in") });
+    if ($(".award__doc")) mm.add("(min-width: 1025px)", () => { G.fromTo(".award__doc", { y: 70 }, { y: -10, ease: "none", scrollTrigger: { trigger: ".award", start: "top bottom", end: "bottom top", scrub: true } }); });
+
     const ring = $(".rt-seal__fill");
     if (ring) {
       mm.add("(max-width: 760px)", () => { G.fromTo(ring, { strokeDashoffset: 100 }, { strokeDashoffset: 2, ease: "none", scrollTrigger: { trigger: ".rt-seal", start: "top 85%", end: "center 50%", scrub: true } }); });
