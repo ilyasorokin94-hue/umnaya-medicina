@@ -420,7 +420,7 @@ const licLine = `Лицензия на медицинскую деятельно
 // блок «Лицензия на медицинскую деятельность» в подвале над строкой документов (Ilya 07.11, как на образце):
 // номер, кем выдана, юрлицо, юридический адрес, ссылки на «Документы и лицензия» и реестр Росздравнадзора
 const footerLic = (p) => `  <div class="flic">
-    <a class="flic__pic" href="${p}dokumenty/#licenziya-i-sez" aria-label="Лицензия и документы">${icon.doc}<span>Лицензия</span></a>
+    <a class="flic__pic" href="${p}dokumenty/#licenziya" aria-label="Лицензия и документы">${icon.doc}<span>Лицензия</span></a>
     <div class="flic__body">
       <h3 class="flic__t">Лицензия на медицинскую деятельность</h3>
       <p class="flic__num">№ ${license.number} от ${license.date}</p>
