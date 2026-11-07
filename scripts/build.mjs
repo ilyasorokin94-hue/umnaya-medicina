@@ -250,8 +250,9 @@ const bookSlug = (slug) => {
   return slug;
 };
 const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""}" href="${fallbackHref(kind, p, o)}" data-modal="${kind}"${o.reason ? ` data-reason="${esc(o.reason)}"` : ""}${o.promo ? ` data-promo="${esc(o.promo)}"` : ""}${o.doctor ? ` data-doctor="${o.doctor}"` : ""}${o.magnet ? " data-magnet" : ""}>${esc(label)}</a>`;
-// тур на телефоне как вторая секция Лава Дент: лента карточек стоит на месте и едет вбок от прокрутки,
-// кабинет раскрывается на весь экран, заголовок проявляется по словам, поверх проходят остальные фото, потом текст
+// тур на телефоне как вторая секция Лава Дент: сначала стопка фото (Ilya 07.11: вход, ресепшен, врачи, рентген, кабинет;
+// листают только пальцем, app.js), потом кабинет раскрывается на весь экран, заголовок проявляется по словам,
+// поверх проходят остальные фото, потом текст. Карточка в .ptour__in: её двигает стопка, а раскрытие — сама карточка и фото
 function phoneTour(depth) {
   const P = v2.clinic.phone;
   // фото ленты и галереи: в Chromium app.js переключает их на синхронное декодирование (иначе пустые карточки), в Safari остаётся фоновое
@@ -260,17 +261,17 @@ function phoneTour(depth) {
   // Ilya 30.10: без окна, которое ехало по широкому фото внутри карточки (второе движение против ленты выглядело рывком), фото стоит по середине того пути
   const card = ([f, cap, o], cls = "") => {
     const body = o && o.pan ? pic([f], cap, `${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}%`, o.y) : pic([f], cap, o);
-    return `<div class="ptour__item${cls}">${body}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div>`;
+    return `<div class="ptour__item${cls}"><div class="ptour__in">${body}<p class="ptour__cap" aria-hidden="true">${esc(cap)}</p></div></div>`;
   };
   const words = (t, from) => t.split(" ").map((w, i) => `<span class="w" style="--i:${from + i}">${esc(w)}</span>`).join(" ");
   return `<div class="ptour">
     <div class="ptour__car"><div class="ptour__items">
       <div class="ptour__item ptour__item--empty"></div>
       ${P.car.map((c, i) => card(c, i === P.car.length - 1 ? " ptour__item--left" : "")).join("")}
-      <div class="ptour__item ptour__item--main">${pic(v2.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»")}<span class="ptour__shade"></span>
-        <div class="ptour__slogan"><span class="label label--light"><span class="w" style="--i:0">${esc(v2.clinic.label)}</span></span><h2 class="ptour__title">${words(v2.clinic.title, 1)}</h2></div></div>
+      <div class="ptour__item ptour__item--main"><div class="ptour__in">${pic(v2.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»")}<span class="ptour__shade"></span><p class="ptour__cap" aria-hidden="true">Лечебный кабинет</p>
+        <div class="ptour__slogan"><span class="label label--light"><span class="w" style="--i:0">${esc(v2.clinic.label)}</span></span><h2 class="ptour__title">${words(v2.clinic.title, 1)}</h2></div></div></div>
       ${card(P.right, " ptour__item--right")}
-    </div></div>
+    </div><p class="ptour__hint" aria-hidden="true">Листайте пальцем</p></div>
     <div class="ptour__spacer"></div>
     <div class="ptour__after">
       <div class="ptour__grid">${P.gallery.map(([f, cap, r, x], i) => `<figure class="ptour__fig" style="--r:${r}"><span class="ptour__pic">${img([f], cap, depth, x ? ` style="object-position:${x} 50%"` : "")}</span></figure>`).join("")}</div>
