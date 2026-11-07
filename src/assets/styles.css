@@ -2625,6 +2625,8 @@ html:has(form input:focus, form textarea:focus) { scroll-behavior: auto; }
   .header .header__cta .header__lic:hover { background: rgba(76, 193, 72, .32); }
   .header .header__cta .header__lic svg { width: 15px; height: 15px; }
 }
+/* 1440–1519 px: без отступа справа от плашки, иначе разделы прижимаются к логотипу (замер: 7 px вместо 32) */
+@media (min-width: 1440px) and (max-width: 1519px) { .header .header__cta .header__duo { margin-right: 0; } }
 .menu__lic { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 14px; color: #fff; text-decoration: none; }
 .menu__lic svg { width: 28px; height: 28px; flex: none; fill: var(--green-hi); }
 .menu__lic span { display: grid; gap: 3px; }
