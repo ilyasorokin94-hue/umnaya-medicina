@@ -2649,6 +2649,8 @@ a.dcard__in:hover { border-color: rgba(41, 153, 38, .5); box-shadow: 0 14px 30px
 .dcard__pic { display: grid; place-items: center; align-content: center; gap: 4px; aspect-ratio: 3 / 4; border-radius: 8px; background: var(--paper-2); color: var(--green-deep); }
 .dcard__pic svg { width: 26px; height: 26px; fill: currentColor; }
 .dcard__pic i { font: 600 9px/1 var(--body); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.dcard__pic--thumb { overflow: hidden; padding: 0; background: #fff; border: 1px solid var(--line); box-shadow: 0 6px 14px -10px rgba(12, 36, 16, .5); }
+.dcard__pic--thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .dcard__pic--lic { background: var(--ink); color: var(--green-hi); }
 .dcard__pic--lic i { color: rgba(255, 255, 255, .7); }
 .dcard__body { display: grid; align-content: start; gap: 6px; }

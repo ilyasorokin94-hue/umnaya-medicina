@@ -1780,7 +1780,10 @@ function docCard(it, page, p) {
   const type = file ? "pdf" : it.type || (it.to ? "page" : null);
   const href = file ? `${p}${file}` : it.to ? legalLink(it.to, p) : it.href;
   const meta = file ? `Открыть PDF${it.pages ? `, ${it.pages}` : ""}, ${kb(statSync(path.join(root, "src", file)).size)}` : it.more || (it.to ? "Открыть" : "");
-  const pic = `<span class="dcard__pic dcard__pic--${type || "ask"}" aria-hidden="true">${type === "web" ? icon.arrow : type === "lic" ? icon.shield : icon.doc}<i>${docsTypeName[type] || "Документ"}</i></span>`;
+  // у PDF первая страница картинкой (scripts/clinic-docs.mjs кладёт её в src/images/docs/<имя>.webp)
+  const thumb = file && existsSync(path.join(root, "src/images/docs", path.basename(file, ".pdf") + ".webp")) ? `images/docs/${path.basename(file, ".pdf")}.webp` : null;
+  const pic = thumb ? `<span class="dcard__pic dcard__pic--thumb" aria-hidden="true"><img src="${p}${thumb}" alt="" width="64" height="90" loading="lazy" decoding="async"></span>`
+    : `<span class="dcard__pic dcard__pic--${type || "ask"}" aria-hidden="true">${type === "web" ? icon.arrow : type === "lic" ? icon.shield : icon.doc}<i>${docsTypeName[type] || "Документ"}</i></span>`;
   const body = `${pic}<span class="dcard__body"><b class="dcard__t">${esc(it.t)}</b><span class="dcard__d">${legalText(it.d, page, p).replace(/<a [^>]*>|<\/a>/g, "")}</span>`;
   if (!href) {
     docsAsk.push(it.ask);
@@ -1962,6 +1965,7 @@ const zapisCss = (() => {
 for (const page of legal) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}/index.html`, page.kind === "docs" ? pageDocs(page) : pageLegal(page)); }
 // PDF документов клиники (src/docs/) рядом со страницей «Документы и лицензия»
 if (existsSync(path.join(root, "src", "docs"))) cpSync(path.join(root, "src", "docs"), path.join(dist, "docs"), { recursive: true });
+if (existsSync(path.join(root, "src", "images", "docs"))) cpSync(path.join(root, "src", "images", "docs"), path.join(dist, "images", "docs"), { recursive: true });
 if (docsAsk.length) console.log(`«Документы и лицензия»: ждём от клиники ${docsAsk.length} док.${PUBLISH ? " (на сайте скрыты)" : ""}:\n  ${[...new Set(docsAsk)].join("\n  ")}`);
 mkdirSync(path.join(dist, "spasibo"), { recursive: true });
 out("spasibo/index.html", pageThanks(), false);
