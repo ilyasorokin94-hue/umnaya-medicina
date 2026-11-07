@@ -684,7 +684,7 @@ function promoBlock(p, depth) {
   </article>`;
   }).join("");
   return `<section class="section pb on-dark" id="akcii" aria-labelledby="pr-title" aria-roledescription="карусель"><div data-ps>
-  <div class="wrap pb__head"><h2 id="pr-title" data-split>${esc(A.label)}</h2><p>${esc(A.text)}</p></div>
+  <h2 id="pr-title" class="sr">${esc(A.label)}</h2>
   <div class="pb__track" aria-live="off">${slides}
   <div class="wrap pb__foot"><div class="pb__dots" role="tablist" aria-label="Акции">${A.deals.map((d, i) => `<button type="button" role="tab" data-ps-dot="${i}" aria-label="${esc(d.title)}" aria-selected="${!i}"><i></i></button>`).join("")}</div></div></div>
 </div></section>`;

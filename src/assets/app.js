@@ -1199,7 +1199,7 @@
     if (words.length) tl.from(words, { yPercent: 110, duration: 1.2, stagger: 0.06, ease: "power4.out" }, 0.1);
     const rise = $$(".kicker, .label, .crumbs, .page-hero__lead, .hero__facts > *, .hero__actions > *, .page-hero__aside > *, .doc-hero__facts > *, .doc-hero__cta > *, .sp-hero__act > *, .sp-facts > *, .sp-nav", h).filter((el) => !conv || !el.closest(".hero__actions"));
     if (rise.length && !page) tl.fromTo(rise, { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0, duration: 1, stagger: 0.07 }, 0.4);
-    if (bar && !matchMedia("(min-width: 1025px)").matches) tl.from(".header__bar", { autoAlpha: 0, duration: 0.9 }, 0.2);
+    if (bar && !matchMedia("(min-width: 1025px)").matches) G.from(".header__bar", { autoAlpha: 0, duration: 0.9, delay: 0.2 });  // шапка появляется сразу, даже если первый экран ждёт прокрутки
     if (conv) {
       // буквы съезжаются сдвигом, а не letter-spacing: тот же рисунок (разрядка 0.5em → −0.055em), но раскладка
       // не меняется и заголовок не даёт сдвига макета (CLS главной на компьютере был 0,14). После сборки слова как были
