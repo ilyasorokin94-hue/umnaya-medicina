@@ -1040,94 +1040,57 @@
     if (grid) new IntersectionObserver(([en]) => pt.classList.toggle("is-on", en.isIntersecting), { rootMargin: "0px 0px 25% 0px" }).observe(grid);
   }
 
-  // ---------- стопка фото перед кабинетом на телефоне (Ilya 07.11) ----------
-  // Вход, ресепшен, врачи, рентген лежат стопкой. Листают только пальцем или мышью, строго по одному фото:
-  // вбок влево — верхнее уходит, вправо — предыдущее возвращается, нажатие — следующее. На последнем фото дальше не листается, назад — свайпом вправо, тоже по одному.
-  // Один жест — не больше одного шага, пока фото улетает (0,45 с), новые касания не листают. Прокрутка страницы стопку не трогает.
-  // Касания — touch events (на iPhone надёжнее pointer events), мышь — mouse events. Жест вбок по правилам стабильности:
-  // направление после 10 px, вбок только при |dx| > 1,6·|dy|; вертикаль отдаём странице (touch-action: pan-y)
-  const stack = $(".pstack");
-  if (stack) {
-    const cards = $$(".pstack__card", stack), last = cards.length - 1;
-    const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
-    const STEP = 450;
-    let cur = 0, dx = 0, raf = 0, scrolledAt = 0, stepAt = -1e9, dir = 0;
-    addEventListener("scroll", () => { scrolledAt = performance.now(); }, { passive: true });
-    const draw = () => {
-      raf = 0;
-      const W = stack.offsetWidth || innerWidth;
-      cards.forEach((c, j) => {
-        const d = j - cur;
-        let x = 0, y = 0, r = 0, s = 1, o = 1;
-        if (d < 0) { x = -1.4 * W; r = -8; o = d < -1 ? 0 : 1; }
-        else { const q = Math.min(d, 2); s = 1 - 0.04 * q; y = -22 * q; o = d > 2 ? 0 : 1; }
-        if (dx && d === 0) { const k = dx < 0 && cur < last ? 1 : 0.25; x += dx * k; r = dx * k * 0.012; }
-        if (dx > 0 && d === -1 && cur > 0) { x += dx * 1.4; r = -8 * (1 - clamp(dx / W, 0, 1)); }
-        // шаг вперёд: сначала уходит верхнее фото, следующие поднимаются чуть позже, чтобы было видно, что ушло одно
-        c.style.transitionDelay = dir > 0 && d >= 0 ? `${0.08 + 0.05 * Math.min(d, 2)}s` : "";
-        c.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${r.toFixed(2)}deg) scale(${s.toFixed(4)})`;
-        c.style.opacity = o ? "" : "0";
-        c.style.visibility = o ? "" : "hidden";
-        c.style.zIndex = String(d < 0 ? (d === -1 ? 12 : 1) : 10 - d);
-        c.setAttribute("aria-hidden", d === 0 ? "false" : "true");
-      });
-    };
-    const ask = () => { if (!raf) raf = requestAnimationFrame(draw); };
-    const busy = () => performance.now() - stepAt < STEP;
-    const step = (n) => {
-      if (busy()) return;
-      const to = cur + (n > 0 ? 1 : -1);
-      if (to < 0 || to > last) return;
-      dir = to > cur ? 1 : -1;
-      cur = to; stepAt = performance.now(); ask();
-    };
-    // общий жест для пальца и мыши
-    let on = false, sx = 0, sy = 0, t0 = 0, lock = 0, moved = false;
-    const start = (x, y) => { on = true; sx = x; sy = y; t0 = performance.now(); lock = 0; moved = false; dx = 0; };
-    const move = (x, y) => {
-      if (!on || lock === -1) return;
-      const mx = x - sx, my = y - sy;
-      if (Math.hypot(mx, my) > 6) moved = true;
-      if (!lock && Math.hypot(mx, my) > 10) { lock = Math.abs(mx) > Math.abs(my) * 1.6 && !busy() ? 1 : -1; if (lock === 1) { dir = 0; stack.classList.add("is-drag"); } }
-      if (lock === 1) { dx = mx; ask(); }
-    };
-    const end = (ok) => {
-      if (!on) return;
-      on = false;
-      const was = lock, d = dx, dt = performance.now() - t0;
-      lock = 0; dx = 0;
-      stack.classList.remove("is-drag");
-      if (was === 1) {
-        const far = ok && (Math.abs(d) > Math.min(80, stack.offsetWidth * 0.22) || (Math.abs(d) > 30 && Math.abs(d) / Math.max(1, dt) > 0.5));
-        if (far && d < 0 && cur < last) step(1); else if (far && d > 0 && cur > 0) step(-1); else { dir = 0; ask(); }
-        return;
-      }
-      // нажатие: короткое, без сдвига, не сразу после шага и не когда страница ещё едет по инерции
-      if (ok && !was && !moved && dt < 400 && performance.now() - scrolledAt > 150) step(1);
-    };
-    stack.addEventListener("touchstart", (e) => { if (e.touches.length > 1) { on = false; lock = -1; dx = 0; ask(); return; } start(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-    stack.addEventListener("touchmove", (e) => { if (e.touches.length === 1) move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
-    stack.addEventListener("touchend", (e) => { if (!e.touches.length) end(true); }, { passive: true });
-    stack.addEventListener("touchcancel", () => end(false), { passive: true });
-    // мышь (узкое окно на компьютере); после касания браузер шлёт ещё и мышиные события — их пропускаем
-    let touchedAt = -1e9;
-    stack.addEventListener("touchstart", () => { touchedAt = performance.now(); }, { passive: true });
-    const fromTouch = () => performance.now() - touchedAt < 800;
-    stack.addEventListener("mousedown", (e) => {
-      if (e.button !== 0 || fromTouch()) return;
-      e.preventDefault(); start(e.clientX, e.clientY);
-      const mm2 = (ev) => move(ev.clientX, ev.clientY);
-      const mu = () => { removeEventListener("mousemove", mm2); removeEventListener("mouseup", mu); end(true); };
-      addEventListener("mousemove", mm2); addEventListener("mouseup", mu);
-    });
-    stack.addEventListener("dragstart", (e) => e.preventDefault());
-    stack.tabIndex = 0;
-    stack.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
-      if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
-    });
-    addEventListener("resize", ask);
-    draw();
+  // ---------- стопка первых фото тура на телефоне (Ilya 07.11, как превью lenta-1) ----------
+  // Лента стоит на своём последнем месте (кабинет в центре, врачи слева, рентген справа), карточки внутри (.ptour__in)
+  // сводим в стопку и двигаем от прокрутки, пока лента закреплена: вход, ресепшен и врачи по очереди с наклоном уходят
+  // влево на свои места, нижние приподнимаются; на последнем шаге справа подъезжает рентген. В конце всё стоит там,
+  // откуда кабинет раскрывается на весь экран (это по-прежнему CSS). Двигает только прокрутка: сама стопка не едет
+  if (pt && anim) {
+    const spacer = $(".ptour__spacer", pt);
+    const items = $$(".ptour__items > .ptour__item", pt).slice(1, 6);   // вход, ресепшен, врачи, кабинет, рентген
+    const ins = items.map((it) => $(".ptour__in", it));
+    if (spacer && ins.length === 5 && ins.every(Boolean)) {
+      const F = [-225, -150, -75, 0, 75];   // где карточка стоит на ленте, vw
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+      // мягкое начало и конец шага, середина почти вровень с пальцем (с резкой кривой фото «улетало само»)
+      const ease = (y) => 0.5 - Math.cos(Math.PI * y) / 2;
+      // шаг i (0 — уходит вход, 1 — ресепшен, 2 — врачи): между шагами фото чуть стоит
+      const seg = (t, i) => ease(clamp((clamp(t - i) - 0.06) / 0.88));
+      const set = (k, x, y, tf, op, z) => {
+        const el = ins[k];
+        el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)${tf}`;
+        el.style.opacity = op >= 0.999 ? "" : String(clamp(op));
+        el.style.visibility = op <= 0.001 ? "hidden" : "";
+        // слой у самой карточки ленты: у врачей и рентгена свой слой из-за анимации ухода в стороны при раскрытии кабинета
+        items[k].style.zIndex = String(z);
+      };
+      let raf = 0, last = -1;
+      const draw = () => {
+        raf = 0;
+        if (!spacer.offsetParent) return;
+        const r = spacer.getBoundingClientRect(), W = innerWidth / 100, H = innerHeight;
+        const p = clamp(-r.top / Math.max(1, r.height - H));
+        if (p === last && W === draw.w) return;
+        last = p; draw.w = W;
+        const t = p * 3, s = [seg(t, 0), seg(t, 1), seg(t, 2)], T = s[0] + s[1] + s[2];
+        for (let k = 0; k < 4; k++) {
+          const home = -F[k] * W, d = k - T;   // d: 0 — фото сверху, больше — ниже в стопке, меньше — уходит
+          if (d >= 0) { const q = Math.min(d, 2.5); set(k, home, -q * 26, ` scale(${(1 - 0.07 * q).toFixed(4)})`, clamp(3 - d), 10 - k); }
+          else {
+            // уходит только за левый край экрана (вход и ресепшен) или на своё место слева от кабинета (врачи),
+            // а не через всю ленту: так фото не проносится быстрее пальца
+            const l = Math.min(-d, 1), to = k < 2 ? -95 * W : -75 * W;
+            set(k, home + to * l, -Math.sin(Math.PI * l) * 30, ` rotate(${(-9 * Math.sin(Math.PI * l)).toFixed(2)}deg)`, k < 2 && l >= 1 ? 0 : 1, l >= 1 ? 1 : 10 - k);
+          }
+        }
+        // ушедшее фото уходит под кабинет, иначе при раскрытии кабинета врачи слева легли бы поверх него
+        set(4, (1 - s[2]) * 60 * W, 0, "", s[2], 20);
+      };
+      const ask = () => { if (!raf) raf = requestAnimationFrame(draw); };
+      addEventListener("scroll", ask, { passive: true });
+      addEventListener("resize", () => { last = -1; ask(); });
+      draw();
+    }
   }
 
   // ---------- анимации ----------
@@ -1421,6 +1384,7 @@
     if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
       const spacer = $(".ptour__spacer", pt), after = $(".ptour__after", pt);
       const img = $(".ptour__item--main .ptour__img", pt), shade = $(".ptour__item--main .ptour__shade", pt);
+      const sides = [[$(".ptour__item--left", pt), -0.2], [$(".ptour__item--right", pt), 0.2]];
       const pars = $$(".ptour__fig[data-par]", pt);
       // карточка как в CSS: окно 80% видимой высоты (--pt-s) от её 10%
       const card = () => {
@@ -1432,15 +1396,17 @@
         // в процентах от кадра, как в CSS: при смене высоты окна без пересчёта ScrollTrigger окно не устаревает
         return `inset(${10 * k}% 0% ${100 - 90 * k}% 0%)`;
       };
+      // лента стоит на месте, фото стопки двигает свой код выше
       // на телефоне ScrollTrigger не пересчитывается при смене высоты окна; шаг ленты 400vh, поэтому пересчитываем сами, когда он меняется
       let spH = spacer.offsetHeight;
       const ro = new ResizeObserver(() => { if (spacer.offsetHeight !== spH) { spH = spacer.offsetHeight; ST.refresh(); } });
       ro.observe(spacer);
       const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
-      zoom.fromTo(img, { clipPath: card, scale: 0.84 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
+      zoom.fromTo(img, { clipPath: card, scale: 0.725 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
         .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
+      sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
       pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
-      return () => { ro.disconnect(); G.set([img, shade, ...pars], { clearProps: "transform,clipPath,opacity" }); };
+      return () => { ro.disconnect(); G.set([img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" }); };
     });
     // то же для старых браузеров: окно ведёт по широким фото ленты (вход, ресепшен, врачи) в тех же отрезках прокрутки, что в CSS
     if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px) and (max-aspect-ratio: 4 / 5)", () => {

@@ -247,22 +247,28 @@ const bookSlug = (slug) => {
   return slug;
 };
 const act = (label, kind, p, o = {}) => `<a class="btn${o.cls ? " " + o.cls : ""}" href="${fallbackHref(kind, p, o)}" data-modal="${kind}"${o.reason ? ` data-reason="${esc(o.reason)}"` : ""}${o.promo ? ` data-promo="${esc(o.promo)}"` : ""}${o.doctor ? ` data-doctor="${o.doctor}"` : ""}${o.magnet ? " data-magnet" : ""}>${esc(label)}</a>`;
-// тур на телефоне как вторая секция Лава Дент. Сначала стопка фото (Ilya 07.11): вход, ресепшен, врачи, рентген;
-// её листают только пальцем или мышью (app.js), прокрутка страницы стопку не трогает. Ниже кабинет: встаёт на месте
-// экрана и раскрывается на весь экран, заголовок проявляется по словам, поверх проходят остальные фото, потом текст.
-// Подписей у фото в этой секции нет (Ilya 07.11), названия только в alt
+// тур на телефоне как вторая секция Лава Дент: лента стоит на месте экрана, а фото на ней лежат стопкой (Ilya 07.11, превью lenta-1):
+// пока страницу листают, верхнее фото с наклоном уходит влево, под ним следующее; потом кабинет раскрывается на весь экран,
+// заголовок проявляется по словам, поверх проходят остальные фото, потом текст. Подписей у фото нет (Ilya 07.11), названия в alt.
+// Карточка в .ptour__in: её двигает стопка (app.js), раскрытие — сама карточка и фото (CSS)
 function phoneTour(depth) {
   const P = v2.clinic.phone;
   // фото ленты и галереи: в Chromium app.js переключает их на синхронное декодирование (иначе пустые карточки), в Safari остаётся фоновое
   const pic = (entry, alt, x, y = "50%") => img(entry, alt, depth, ` class="ptour__img"${x ? ` style="object-position:${x} ${y}"` : ""}`);
-  // карточка стопки; у широких фото (pan) фото стоит по середине того пути, что раньше проходило окно ленты
-  const card = ([f, cap, o]) => `<figure class="pstack__card">${img([f], cap, depth, o && o.pan ? ` style="object-position:${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}% ${o.y || "50%"}"` : "", "auto, 84vw")}</figure>`;
+  // карточка ленты; у широких фото (pan) окно карточки ведёт по фото слева направо, пока лента едет: доля p0..p1 от того, что не влезло
+  // Ilya 30.10: без окна, которое ехало по широкому фото внутри карточки (второе движение против ленты выглядело рывком), фото стоит по середине того пути
+  const card = ([f, cap, o], cls = "") => {
+    const body = o && o.pan ? pic([f], cap, `${Math.round(((o.pan[0] + o.pan[1]) / 2) * 100)}%`, o.y) : pic([f], cap, o);
+    return `<div class="ptour__item${cls}"><div class="ptour__in">${body}</div></div>`;
+  };
   const words = (t, from) => t.split(" ").map((w, i) => `<span class="w" style="--i:${from + i}">${esc(w)}</span>`).join(" ");
   return `<div class="ptour">
-    <div class="pstack" role="group" aria-label="Фото клиники: вход, ресепшен, врачи, рентген">${[...P.car, P.right].map(card).join("")}</div>
     <div class="ptour__car"><div class="ptour__items">
-      <div class="ptour__item ptour__item--main">${pic(v2.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»")}<span class="ptour__shade"></span>
-        <div class="ptour__slogan"><span class="label label--light"><span class="w" style="--i:0">${esc(v2.clinic.label)}</span></span><h2 class="ptour__title">${words(v2.clinic.title, 1)}</h2></div></div>
+      <div class="ptour__item ptour__item--empty"></div>
+      ${P.car.map((c, i) => card(c, i === P.car.length - 1 ? " ptour__item--left" : "")).join("")}
+      <div class="ptour__item ptour__item--main"><div class="ptour__in">${pic(v2.clinic.frame, "Лечебный кабинет стоматологии «Умная Медицина»")}<span class="ptour__shade"></span>
+        <div class="ptour__slogan"><span class="label label--light"><span class="w" style="--i:0">${esc(v2.clinic.label)}</span></span><h2 class="ptour__title">${words(v2.clinic.title, 1)}</h2></div></div></div>
+      ${card(P.right, " ptour__item--right")}
     </div></div>
     <div class="ptour__spacer"></div>
     <div class="ptour__after">
