@@ -1526,14 +1526,21 @@ html:not(.js-intro) .intro { display: none; }
 }
 
 /* тур на телефоне как вторая секция Лава Дент (Ilya 16.10, их .about-process-carousel и .about-process-gallery):
-   лента стоит на месте экрана, на ней стопка фото (Ilya 07.11), их листают пальцем; карточка это фото
+   над лентой стопка фото (Ilya 07.11), ниже лента с одним кабинетом встаёт на месте экрана; карточка это фото
    на весь экран, уменьшенное до 84% и обрезанное сверху и снизу. Затем кабинет раскрывается на весь экран
-   под тёмной дымкой, оставшиеся сверху фото уходят влево, заголовок проявляется по словам; поверх проходят остальные фото
+   под тёмной дымкой, заголовок проявляется по словам; поверх проходят остальные фото
    с подписями под ними (половина с параллаксом), в конце текст и маршрут. Без JS и при «уменьшить движение»
    просто кабинет с заголовком, фото и текст. Компьютер и планшет не меняются. */
-.ptour { display: none; }
-.ptour__in { display: contents; }
-.ptour__hint { display: none; }
+.ptour, .pstack { display: none; }
+/* стопка фото перед кабинетом (Ilya 07.11): карточка как кабинет (84% ширины, 67% высоты экрана), под ней видны края
+   двух следующих; листают пальцем или мышью вбок, прокрутка страницы её не трогает. Без подписей */
+@media (max-width: 760px) {
+  .pstack { display: block; position: relative; width: 84vw; height: calc(var(--svh, 1svh) * 67.2); margin: calc(var(--svh, 1svh) * 12) auto calc(var(--svh, 1svh) * 2); touch-action: pan-y pinch-zoom; cursor: grab; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+  .pstack.is-drag { cursor: grabbing; }
+  .pstack__card { position: absolute; inset: 0; margin: 0; overflow: clip; background: var(--ink-2); box-shadow: 0 18px 40px -20px rgba(0, 0, 0, .7); transition: transform .5s cubic-bezier(.2, .75, .25, 1), opacity .35s; }
+  .pstack__card img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+  .pstack.is-drag .pstack__card, .no-anim .pstack__card { transition: none; }
+}
 @media (max-width: 760px) {
   .tour { overflow: clip; }
   .tour > .tour__pin, .tour > .tour__lead, .tour > .tour__rows { display: none; }
@@ -1570,35 +1577,29 @@ html:not(.js-intro) .intro { display: none; }
   .js-anim .ptour { --pt-s: calc(var(--vh, 1vh) * 100); }
   .js-anim .tour { scroll-margin-top: calc(-1 * (var(--header-h) + 12px)); }
   .js-anim .ptour__car { position: sticky; top: 0; height: calc(var(--vh, 1vh) * 100); width: 100vw; }
-  .js-anim .ptour__items { display: flex; width: 500vw; margin-left: -50vw; will-change: transform; }
-  .js-anim .ptour__item { display: flex; position: relative; flex: 0 0 100vw; width: 100vw; height: calc(var(--vh, 1vh) * 100); margin-left: -25vw; padding-bottom: calc(calc(var(--vh, 1vh) * 100) - var(--pt-s)); align-items: center; justify-content: center; overflow: visible; }
-  /* стопка (Ilya 07.11): лента стоит на своём последнем месте (кабинет в центре), карточки сводит в стопку и листает app.js по свайпу и нажатию.
-     Карточка крупнее прежней: 84% ширины вместо 72,5%. Касание вбок забирает стопка, вверх-вниз — страница */
-  .js-anim .ptour__items { transform: translateX(-225vw); }
-  .js-anim .ptour__car { touch-action: pan-y pinch-zoom; -webkit-tap-highlight-color: transparent; }
-  .js-anim .ptour__in { display: flex; position: absolute; inset: 0; box-sizing: border-box; padding-bottom: calc(calc(var(--vh, 1vh) * 100) - var(--pt-s)); align-items: center; justify-content: center; transform-origin: 50% calc(var(--pt-s) / 2); transition: transform .5s cubic-bezier(.2, .75, .25, 1), opacity .4s; will-change: transform; }
-  .js-anim .ptour.is-drag .ptour__in, .js-anim .ptour.is-zoom .ptour__in { transition: none; }
-  .js-anim .ptour__hint { display: block; position: absolute; z-index: 30; right: 8%; top: calc(var(--pt-s) * .836 + 10px); margin: 0; font: 400 13px/1.35 var(--body); color: rgba(169, 187, 169, .7); pointer-events: none; transition: opacity .4s; }
-  .js-anim .ptour.is-used .ptour__hint { opacity: 0; }
+  /* на ленте один кабинет: стопка фото стоит над лентой отдельно (Ilya 07.11), лента не едет */
+  .js-anim .ptour__items { display: block; width: 100vw; }
+  .js-anim .ptour__item.ptour__item--main { margin-left: 0; }
+  .js-anim .ptour__item { display: flex; position: relative; flex: 0 0 100vw; width: 100vw; height: calc(var(--vh, 1vh) * 100); margin-left: -25vw; padding-bottom: calc(calc(var(--vh, 1vh) * 100) - var(--pt-s)); align-items: center; justify-content: center; overflow: clip; }
   /* у фото тура углы прямые, как у Лава Дент (Ilya 17.10: скругление не нравится) */
   .js-anim .ptour__img { transform: scale(.84); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(calc(var(--vh, 1vh) * 100) - var(--pt-s) * .9)); }
   /* широкие фото (вход с надписью, ресепшен, врачи): масштаб и обрезку карточки несёт окно .ptour__win, а фото внутри едет на .ptour__rail */
-  .js-anim .ptour__win { position: absolute; inset: 0; transform: scale(.84); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(calc(var(--vh, 1vh) * 100) - var(--pt-s) * .9)); }
+  .js-anim .ptour__win { position: absolute; inset: 0; transform: scale(.725); transform-origin: 50% calc(var(--pt-s) / 2); clip-path: inset(calc(var(--pt-s) * .1) 0 calc(calc(var(--vh, 1vh) * 100) - var(--pt-s) * .9)); }
   .ptour__rail { position: absolute; inset: 0; }
   .js-anim .ptour__win .ptour__img { transform: none; clip-path: none; }
   .js-anim .ptour__shade { opacity: 0; }
-  .js-anim .ptour__cap { display: block; position: absolute; left: 8%; right: 8%; top: calc(var(--pt-s) * .836 + 10px); margin: 0; transition: opacity .3s; font: 400 var(--fs--1)/1.35 var(--body); color: var(--muted-on-dark); }
+  .js-anim .ptour__cap { display: block; position: absolute; left: 13.75%; right: 13.75%; top: calc(var(--pt-s) * .79 + 12px); margin: 0; font: 400 var(--fs--1)/1.35 var(--body); color: var(--muted-on-dark); }
   /* отступ шапки (scroll-padding) не должен сдвигать шкалы: лента едет ровно с момента, как встала */
   /* Ilya 30.10: лента идёт почти вровень с пальцем (было 300vh прокрутки на 225vw ленты, фото ползли втрое медленнее пальца) */
-  /* Ilya 07.11: фото листают пальцем, прокрутка их не двигает; стопка стоит на месте 60% экрана прокрутки, потом раскрывается кабинет */
-  .js-anim .ptour__spacer { display: block; height: calc(var(--vh, 1vh) * 160); margin-top: calc(var(--vh, 1vh) * -100); view-timeline: --pt-car block; view-timeline-inset: 0px; }
+  /* кабинет постоит на месте 20% экрана прокрутки и начинает раскрываться (лента вбок больше не едет, Ilya 07.11) */
+  .js-anim .ptour__spacer { display: block; height: calc(var(--vh, 1vh) * 120); margin-top: calc(var(--vh, 1vh) * -100); view-timeline: --pt-car block; view-timeline-inset: 0px; }
   /* после раскрытия кабинета пауза, как у Лава Дент (их отступ 3xl), потом поднимаются фото и проявляется заголовок */
   .js-anim .ptour__after { padding-top: calc(calc(var(--vh, 1vh) * 50) + min(clamp(96px, 87.27px + 2.4242vw, 120px), calc(var(--vh, 1vh) * 11.5))); view-timeline: --pt-end block; view-timeline-inset: 0px; }
   .js-anim .ptour__text { margin-top: calc(var(--svh, 1svh) * 40); }
   .js-anim .ptour__slogan .w { opacity: 0; transition: opacity 2.5s cubic-bezier(.33, 0, .11, 1) calc(var(--i) * .2s); }
   .js-anim .ptour.is-on .ptour__slogan .w { opacity: 1; }
   /* телефон боком: под карточкой нет места до нижней панели сайта, подписи ленты прячем (они дублируют alt) */
-  @media (max-height: 540px) { .js-anim :is(.ptour__cap, .ptour__hint) { display: none; } }
+  @media (max-height: 540px) { .js-anim .ptour__cap { display: none; } }
 }
 @supports (height: 1svh) {
   @media (max-width: 760px) { .js-anim .ptour { --pt-s: calc(var(--svh, 1svh) * 100); } }
