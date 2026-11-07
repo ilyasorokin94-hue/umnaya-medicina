@@ -1041,15 +1041,17 @@
   }
 
   // ---------- стопка фото перед кабинетом на телефоне (Ilya 07.11) ----------
-  // Вход, ресепшен, врачи, рентген лежат стопкой. Листают только пальцем или мышью: вбок влево — следующее фото,
-  // вправо — предыдущее возвращается, нажатие — следующее (на последнем стопка собирается заново).
-  // Прокрутка страницы стопку не трогает. Жест вбок по правилам стабильности: направление после 10 px,
-  // вбок только при |dx| > 1,6·|dy|; вертикаль отдаём странице (touch-action: pan-y, браузер присылает pointercancel)
+  // Вход, ресепшен, врачи, рентген лежат стопкой. Листают только пальцем или мышью, строго по одному фото:
+  // вбок влево — верхнее уходит, вправо — предыдущее возвращается, нажатие — следующее. На последнем фото дальше не листается, назад — свайпом вправо, тоже по одному.
+  // Один жест — не больше одного шага, пока фото улетает (0,45 с), новые касания не листают. Прокрутка страницы стопку не трогает.
+  // Касания — touch events (на iPhone надёжнее pointer events), мышь — mouse events. Жест вбок по правилам стабильности:
+  // направление после 10 px, вбок только при |dx| > 1,6·|dy|; вертикаль отдаём странице (touch-action: pan-y)
   const stack = $(".pstack");
   if (stack) {
     const cards = $$(".pstack__card", stack), last = cards.length - 1;
     const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
-    let cur = 0, dx = 0, raf = 0, scrolledAt = 0;
+    const STEP = 450;
+    let cur = 0, dx = 0, raf = 0, scrolledAt = 0, stepAt = -1e9, dir = 0;
     addEventListener("scroll", () => { scrolledAt = performance.now(); }, { passive: true });
     const draw = () => {
       raf = 0;
@@ -1059,8 +1061,10 @@
         let x = 0, y = 0, r = 0, s = 1, o = 1;
         if (d < 0) { x = -1.4 * W; r = -8; o = d < -1 ? 0 : 1; }
         else { const q = Math.min(d, 2); s = 1 - 0.04 * q; y = -22 * q; o = d > 2 ? 0 : 1; }
-        if (dx && d === 0) { const k = (dx < 0 && cur < last) || (dx > 0 && cur === 0) ? (dx < 0 ? 1 : 0.25) : dx < 0 ? 0.25 : 0; x += dx * k; r = dx * k * 0.04 / (W / 330); }
-        if (dx > 0 && d === -1) { x += dx * 1.4; r = -8 * (1 - clamp(dx / W, 0, 1)); }
+        if (dx && d === 0) { const k = dx < 0 && cur < last ? 1 : 0.25; x += dx * k; r = dx * k * 0.012; }
+        if (dx > 0 && d === -1 && cur > 0) { x += dx * 1.4; r = -8 * (1 - clamp(dx / W, 0, 1)); }
+        // шаг вперёд: сначала уходит верхнее фото, следующие поднимаются чуть позже, чтобы было видно, что ушло одно
+        c.style.transitionDelay = dir > 0 && d >= 0 ? `${0.08 + 0.05 * Math.min(d, 2)}s` : "";
         c.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${r.toFixed(2)}deg) scale(${s.toFixed(4)})`;
         c.style.opacity = o ? "" : "0";
         c.style.visibility = o ? "" : "hidden";
@@ -1069,46 +1073,58 @@
       });
     };
     const ask = () => { if (!raf) raf = requestAnimationFrame(draw); };
-    const go = (to) => { cur = clamp(to, 0, last); ask(); };
-    let id = null, sx = 0, sy = 0, t0 = 0, lock = 0;
-    stack.addEventListener("pointerdown", (e) => {
-      if (id !== null || (e.pointerType === "mouse" && e.button !== 0)) return;
-      id = e.pointerId; sx = e.clientX; sy = e.clientY; t0 = e.timeStamp; lock = 0; dx = 0;
-      if (e.pointerType === "mouse") { e.preventDefault(); stack.setPointerCapture(id); }
-    });
-    stack.addEventListener("pointermove", (e) => {
-      if (e.pointerId !== id || lock === -1) return;
-      const x = e.clientX - sx, y = e.clientY - sy;
-      if (!lock && Math.hypot(x, y) > 10) {
-        lock = Math.abs(x) > Math.abs(y) * 1.6 ? 1 : -1;
-        if (lock === 1) { stack.classList.add("is-drag"); if (!stack.hasPointerCapture(id)) try { stack.setPointerCapture(id); } catch (_) {} }
-      }
-      if (lock === 1) { dx = x; ask(); }
-    });
-    const up = (e) => {
-      if (e.pointerId !== id) return;
-      id = null;
-      const was = lock; lock = 0;
+    const busy = () => performance.now() - stepAt < STEP;
+    const step = (n) => {
+      if (busy()) return;
+      const to = cur + (n > 0 ? 1 : -1);
+      if (to < 0 || to > last) return;
+      dir = to > cur ? 1 : -1;
+      cur = to; stepAt = performance.now(); ask();
+    };
+    // общий жест для пальца и мыши
+    let on = false, sx = 0, sy = 0, t0 = 0, lock = 0, moved = false;
+    const start = (x, y) => { on = true; sx = x; sy = y; t0 = performance.now(); lock = 0; moved = false; dx = 0; };
+    const move = (x, y) => {
+      if (!on || lock === -1) return;
+      const mx = x - sx, my = y - sy;
+      if (Math.hypot(mx, my) > 6) moved = true;
+      if (!lock && Math.hypot(mx, my) > 10) { lock = Math.abs(mx) > Math.abs(my) * 1.6 && !busy() ? 1 : -1; if (lock === 1) { dir = 0; stack.classList.add("is-drag"); } }
+      if (lock === 1) { dx = mx; ask(); }
+    };
+    const end = (ok) => {
+      if (!on) return;
+      on = false;
+      const was = lock, d = dx, dt = performance.now() - t0;
+      lock = 0; dx = 0;
+      stack.classList.remove("is-drag");
       if (was === 1) {
-        stack.classList.remove("is-drag");
-        const v = dx / Math.max(1, e.timeStamp - t0), far = e.type === "pointerup" && (Math.abs(dx) > Math.min(90, stack.offsetWidth * 0.25) || Math.abs(v) > 0.45);
-        const d = dx; dx = 0;
-        if (far && d < 0 && cur < last) go(cur + 1); else if (far && d > 0 && cur > 0) go(cur - 1); else ask();
+        const far = ok && (Math.abs(d) > Math.min(80, stack.offsetWidth * 0.22) || (Math.abs(d) > 30 && Math.abs(d) / Math.max(1, dt) > 0.5));
+        if (far && d < 0 && cur < last) step(1); else if (far && d > 0 && cur > 0) step(-1); else { dir = 0; ask(); }
         return;
       }
-      // нажатие: короткое, без сдвига и не в момент, когда страница ещё едет по инерции
-      if (was || e.type !== "pointerup" || e.timeStamp - t0 > 400 || performance.now() - scrolledAt < 150) return;
-      go(cur < last ? cur + 1 : 0);
+      // нажатие: короткое, без сдвига, не сразу после шага и не когда страница ещё едет по инерции
+      if (ok && !was && !moved && dt < 400 && performance.now() - scrolledAt > 150) step(1);
     };
-    stack.addEventListener("pointerup", up);
-    stack.addEventListener("pointercancel", up);
-    // захват, снятый с самой стопки, — как отмена; снятие неявного захвата с карточки, когда стопка забрала его себе, не в счёт
-    stack.addEventListener("lostpointercapture", (e) => { if (e.target === stack && e.pointerId === id) up(e); });
+    stack.addEventListener("touchstart", (e) => { if (e.touches.length > 1) { on = false; lock = -1; dx = 0; ask(); return; } start(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+    stack.addEventListener("touchmove", (e) => { if (e.touches.length === 1) move(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+    stack.addEventListener("touchend", (e) => { if (!e.touches.length) end(true); }, { passive: true });
+    stack.addEventListener("touchcancel", () => end(false), { passive: true });
+    // мышь (узкое окно на компьютере); после касания браузер шлёт ещё и мышиные события — их пропускаем
+    let touchedAt = -1e9;
+    stack.addEventListener("touchstart", () => { touchedAt = performance.now(); }, { passive: true });
+    const fromTouch = () => performance.now() - touchedAt < 800;
+    stack.addEventListener("mousedown", (e) => {
+      if (e.button !== 0 || fromTouch()) return;
+      e.preventDefault(); start(e.clientX, e.clientY);
+      const mm2 = (ev) => move(ev.clientX, ev.clientY);
+      const mu = () => { removeEventListener("mousemove", mm2); removeEventListener("mouseup", mu); end(true); };
+      addEventListener("mousemove", mm2); addEventListener("mouseup", mu);
+    });
     stack.addEventListener("dragstart", (e) => e.preventDefault());
     stack.tabIndex = 0;
     stack.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight") { e.preventDefault(); go(cur < last ? cur + 1 : 0); }
-      if (e.key === "ArrowLeft") { e.preventDefault(); go(cur - 1); }
+      if (e.key === "ArrowRight") { e.preventDefault(); step(1); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); step(-1); }
     });
     addEventListener("resize", ask);
     draw();
