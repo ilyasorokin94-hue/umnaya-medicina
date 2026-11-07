@@ -1040,195 +1040,91 @@
     if (grid) new IntersectionObserver(([en]) => pt.classList.toggle("is-on", en.isIntersecting), { rootMargin: "0px 0px 25% 0px" }).observe(grid);
   }
 
-  // ---------- варианты первых пяти фото тура (сборка PT=1..5, data-v у .ptour) ----------
-  // Лента стоит на своём последнем месте (кабинет в центре, врачи слева, рентген справа), а карточки внутри (.ptour__in)
-  // двигает прокрутка: пока страница проходит закреплённую ленту, вход, ресепшен и врачи по очереди уступают место кабинету.
-  // На последнем шаге всё приходит туда, откуда кабинет раскрывается на весь экран как раньше (это по-прежнему CSS)
-  if (pt && pt.dataset.v && anim) {
-    const v = +pt.dataset.v;
-    const spacer = $(".ptour__spacer", pt);
+  // ---------- стопка первых фото тура на телефоне (Ilya 07.11) ----------
+  // Сверху вниз: вход, ресепшен, врачи, рентген, кабинет. Листают только пальцем: свайп влево — следующее фото,
+  // вправо — предыдущее возвращается, нажатие на фото — следующее (на кабинете — стопка собирается заново).
+  // Прокрутка страницы стопку не листает. Когда начинается раскрытие кабинета (CSS от прокрутки), всё, что лежит
+  // над ним, уходит влево, а сам кабинет встаёт на своё место. Лента стоит на последнем месте (CSS), карточку внутри
+  // (.ptour__in) двигаем здесь; жест вбок по правилам стабильности: направление после 12 px, вбок при |dx| > 1,6·|dy|
+  if (pt && anim) {
     const items = $$(".ptour__items > .ptour__item", pt).slice(1, 6);
-    const ins = items.map((it) => $(".ptour__in", it));
-    const caps = ins.map((el) => el && $(".ptour__cap", el));
-    const F = [-225, -150, -75, 0, 75];   // где карточка стоит в конце, vw
-    const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
-    const ease = (y) => (y < 0.5 ? 4 * y * y * y : 1 - Math.pow(-2 * y + 2, 3) / 2);
-    // шаг i (0 — вход уходит, 1 — ресепшен, 2 — врачи): в начале и в конце шага карточка немного стоит
-    const seg = (t, i) => ease(clamp((clamp(t - i) - 0.12) / 0.76));
-    const set = (k, x, y, tf, op, z, cap) => {
-      const el = ins[k];
-      if (!el) return;
-      el.style.transform = `translate3d(${x}px, ${y}px, 0)${tf}`;
-      el.style.opacity = op >= 0.999 ? "" : String(clamp(op));
-      el.style.visibility = op <= 0.001 ? "hidden" : "";
-      items[k].style.zIndex = String(z);   // у самих карточек ленты: у врачей и рентгена свой слой из-за анимации ухода в стороны
-      if (caps[k]) caps[k].style.opacity = String(clamp(cap));
-    };
-    let raf = 0;
-    const draw = () => {
-      raf = 0;
-      if (!spacer.offsetParent) return;
-      const r = spacer.getBoundingClientRect(), W = innerWidth / 100, H = innerHeight;
-      const p = clamp(-r.top / Math.max(1, r.height - H));
-      const t = p * 3, s = [seg(t, 0), seg(t, 1), seg(t, 2)], T = s[0] + s[1] + s[2];
-      const rIn = s[2];   // рентген подъезжает справа вместе с кабинетом
-      const leave = (k) => (k < 3 ? s[k] : 0), come = (k) => (k ? s[k - 1] : 1);
-      for (let k = 0; k < 4; k++) {
-        const home = -F[k] * W, d = k - T;   // d: 0 — карточка сверху, больше — ниже в стопке, меньше — уходит
-        if (v === 1) {
-          // стопка: верхняя карточка с наклоном уезжает влево на своё место, нижние приподнимаются
-          if (d >= 0) { const q = Math.min(d, 2.5); set(k, home, -q * 26, ` scale(${1 - 0.07 * q})`, clamp(3 - d), 10 - k, 1 - d / 0.3); }
-          // ушедшая карточка уходит под кабинет, иначе при раскрытии кабинета врачи слева легли бы поверх него
-          else { const l = -d; set(k, home * (1 - l), -Math.sin(Math.PI * l) * 30, ` rotate(${-9 * Math.sin(Math.PI * l)}deg)`, 1, l >= 1 ? 1 : 10 - k, 1 - l / 0.3); }
-        } else if (v === 2) {
-          // книга: страница переворачивается вокруг левого края карточки, под ней следующая
-          const l = clamp(-d);
-          set(k, home, 0, ` perspective(${1.6 * H}px) rotateY(${-180 * l}deg)`, d > 2 ? 0 : 1, 10 - k, d >= 0 ? 1 - d / 0.3 : 1 - l / 0.25);
-        } else if (v === 3) {
-          // барабан: лента та же, но шагами, боковые карточки повёрнуты к центру и ближе к нему
-          const c = clamp(d, -1, 1);
-          set(k, (3 - T) * 75 * W - c * 28 * W, 0, ` perspective(${1.4 * H}px) rotateY(${c * 42}deg) scale(${1 - 0.16 * Math.abs(c)})`, 1 - clamp(Math.abs(d) - 1.2), 10 - Math.round(Math.abs(d) * 2), 1 - Math.abs(d) * 2.5);
-        } else if (v === 7) {
-          // пролёт вниз (крупные фото): верхнее фото падает вниз за экран, под ним следующее подрастает до полного размера
-          const l = clamp(-d), q = Math.min(Math.max(d, 0), 1.5);
-          set(k, home, l * l * H * 1.05, ` rotate(${4 * l}deg) scale(${1 - 0.08 * q})`, d > 1.5 ? 0 : 1 - clamp(l - 0.85) / 0.15, l >= 1 ? 1 : 10 - k, d >= 0 ? 1 - d / 0.3 : 1 - l / 0.2);
-        } else if (v === 4 || v === 6) {
-          // наплыв снизу: следующая выезжает снизу поверх, прежняя уходит вглубь и гаснет
-          const b = come(k), a = leave(k);
-          set(k, home, (1 - b) * H * 0.85, ` scale(${1 - 0.12 * a})`, b <= 0 ? 0 : 1 - a, k + 1, (b - 0.75) / 0.25 - a * 4);
-        } else {
-          // пролёт вперёд: следующая растёт из глубины в центре, прежняя пролетает мимо и гаснет
-          const b = come(k), a = leave(k);
-          set(k, home, 0, ` scale(${(0.45 + 0.55 * b) * (1 + 0.7 * a)})`, Math.min(clamp(b * 2.2), 1 - a * 1.3), k + 1, Math.min((b - 0.8) / 0.2, 1 - a * 4));
+    const ins = items.map((it) => $(".ptour__in", it)), caps = ins.map((el) => el && $(".ptour__cap", el));
+    const car = $(".ptour__car", pt), after = $(".ptour__after", pt);
+    if (ins.every(Boolean) && car && after) {
+      const F = [-225, -150, -75, 0, 75];   // где карточка стоит на ленте, vw
+      const order = [0, 1, 2, 4, 3], last = order.length - 1, MAIN = 3;
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+      let cur = 0, dx = 0, zoom = 0, raf = 0, scrolledAt = 0;
+      const draw = () => {
+        raf = 0;
+        if (!pt.offsetParent) return;
+        const W = innerWidth / 100;
+        order.forEach((idx, j) => {
+          const d = j - cur, home = -F[idx] * W;
+          let x = home, y = 0, r = 0, s = 1, o = 1, z;
+          if (d < 0) { x = home - 115 * W; r = -8; o = d < -1 ? 0 : 1; z = d === -1 ? 12 : 1; }
+          else { const q = Math.min(d, 2); s = 1 - 0.04 * q; y = -22 * q; o = d > 2 ? 0 : 1; z = 10 - d; }
+          if (dx && d === 0) {
+            // верхнее фото идёт за пальцем; влево с последнего и вправо с первого — только чуть, с сопротивлением
+            const k = (dx < 0 && cur < last) ? 1 : (dx > 0 && cur === 0) ? 0.25 : dx < 0 ? 0.25 : 0;
+            x += dx * k; r = dx * k * 0.04;
+          }
+          if (dx > 0 && d === -1) { x += dx * 1.15; r = -8 * (1 - clamp(dx / (60 * W))); }
+          if (zoom) {
+            if (idx === MAIN) { const k = 1 - zoom; x *= k; y *= k; r *= k; s = 1 - (1 - s) * k; o = 1; }
+            else if (d >= 0) x -= zoom * 115 * W;
+          }
+          const el = ins[idx];
+          el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${r.toFixed(2)}deg) scale(${s.toFixed(4)})`;
+          el.style.opacity = o ? "" : "0";
+          el.style.visibility = o ? "" : "hidden";
+          items[idx].style.zIndex = String(z);
+          if (caps[idx]) caps[idx].style.opacity = String(d === 0 ? clamp(1 - zoom * 3) : 0);
+        });
+      };
+      const ask = () => { if (!raf) raf = requestAnimationFrame(draw); };
+      const go = (to) => { cur = clamp(to, 0, last); pt.classList.add("is-used"); ask(); };
+      // раскрытие кабинета: те же 50% экрана прокрутки, что у CSS (--pt-end, 0 → 50vh)
+      const onScroll = () => {
+        scrolledAt = performance.now();
+        if (!pt.offsetParent) return;
+        const z = clamp((innerHeight - after.getBoundingClientRect().top) / (innerHeight * 0.5));
+        if (z !== zoom) { zoom = z; pt.classList.toggle("is-zoom", z > 0); if (z > 0) dx = 0; ask(); }
+      };
+      addEventListener("scroll", onScroll, { passive: true });
+      addEventListener("resize", () => { onScroll(); ask(); });
+      let sx = 0, sy = 0, t0 = 0, lock = 0;
+      car.addEventListener("touchstart", (e) => {
+        if (e.touches.length > 1 || zoom > 0) { lock = -1; return; }
+        sx = e.touches[0].clientX; sy = e.touches[0].clientY; t0 = e.timeStamp; lock = 0;
+      }, { passive: true });
+      car.addEventListener("touchmove", (e) => {
+        if (lock === -1 || e.touches.length > 1) { if (lock === 1) { dx = 0; pt.classList.remove("is-drag"); ask(); } lock = -1; return; }
+        const t = e.touches[0], x = t.clientX - sx, y = t.clientY - sy;
+        if (!lock && Math.hypot(x, y) > 12) { lock = Math.abs(x) > Math.abs(y) * 1.6 ? 1 : -1; if (lock === 1) pt.classList.add("is-drag"); }
+        if (lock === 1) { dx = x; ask(); }
+      }, { passive: true });
+      const end = (e) => {
+        const was = lock; lock = 0;
+        if (was === 1) {
+          pt.classList.remove("is-drag");
+          const v = dx / Math.max(1, e.timeStamp - t0), far = Math.abs(dx) > Math.min(90, innerWidth * 0.2) || Math.abs(v) > 0.4;
+          const d = dx; dx = 0;
+          if (e.type === "touchend" && far && d < 0 && cur < last) go(cur + 1);
+          else if (e.type === "touchend" && far && d > 0 && cur > 0) go(cur - 1);
+          else ask();
+          return;
         }
-      }
-      // рентген справа: в барабане он часть ленты, в остальных подъезжает к кабинету на последнем шаге
-      if (v === 3) { const d = 4 - T, c = clamp(d, -1, 1); set(4, (3 - T) * 75 * W - c * 28 * W, 0, ` perspective(${1.4 * H}px) rotateY(${c * 42}deg) scale(${1 - 0.16 * Math.abs(c)})`, 1 - clamp(Math.abs(d) - 1.2), 10 - Math.round(Math.abs(d) * 2), 1 - Math.abs(d) * 2.5); }
-      // у крупных фото (6, 7) рентген стоит дальше вправо, иначе заходит на кабинет
-      else set(4, ((v >= 6 ? 14 : 0) + (1 - rIn) * 60) * W, 0, "", rIn, 20, rIn);
-    };
-    const ask = () => { if (!raf) raf = requestAnimationFrame(draw); };
-    addEventListener("scroll", ask, { passive: true });
-    addEventListener("resize", ask);
-    draw();
-  }
-
-  // ---------- варианты листания фото клиники на телефоне (сборка FOTO=1..5) ----------
-  const pftHead = $(".pft--head");
-  if (pftHead) new IntersectionObserver(([en]) => pftHead.classList.toggle("is-on", en.isIntersecting), { threshold: 0.35 }).observe(pftHead);
-  // жест вбок по правилам стабильности: направление после 12 px, вбок только при |dx| > 1,6·|dy|, вертикаль отдаём странице
-  const swipe = (el, h) => {
-    let sx = 0, sy = 0, lock = 0, t0 = 0, dx = 0;
-    el.addEventListener("touchstart", (e) => { if (e.touches.length > 1) { lock = -1; return; } sx = e.touches[0].clientX; sy = e.touches[0].clientY; lock = 0; dx = 0; t0 = e.timeStamp; }, { passive: true });
-    el.addEventListener("touchmove", (e) => {
-      if (lock === -1 || e.touches.length > 1) return;
-      const t = e.touches[0], x = t.clientX - sx, y = t.clientY - sy;
-      if (!lock && Math.hypot(x, y) > 12) { lock = Math.abs(x) > Math.abs(y) * 1.6 ? 1 : -1; if (lock === 1) h.start?.(); }
-      if (lock === 1) { dx = x; h.move?.(dx); }
-    }, { passive: true });
-    const end = (e) => { if (lock === 1) h.end?.(dx, dx / Math.max(1, e.timeStamp - t0)); else if (!lock && e.type === "touchend") h.tap?.(e); lock = 0; };
-    el.addEventListener("touchend", end, { passive: true });
-    el.addEventListener("touchcancel", () => { if (lock === 1) h.end?.(0, 0); lock = 0; }, { passive: true });
-  };
-  // индекс карточки ленты по прокрутке вбок
-  const snapIndex = (box) => Math.round(box.scrollLeft / Math.max(1, box.firstElementChild.offsetWidth));
-
-  // 2. стопка: верхнюю карточку смахивают в любую сторону, она уходит под низ стопки; нажатие листает дальше
-  const pf2 = $(".pf2");
-  if (pf2) {
-    const cards = $$(".pf2__card", pf2), cap = $(".pf2__cap"), hint = $(".pf2__hint");
-    const caps = cards.map((c) => $("img", c)?.alt || "");
-    const order = cards.map((_, i) => i);
-    let busy = false, touched = 0;
-    const place = (list) => list.forEach((ci, d) => {
-      const c = cards[ci], k = Math.min(d, 2);
-      c.style.zIndex = String(cards.length - d);
-      c.style.opacity = d > 2 ? "0" : "1";
-      c.style.transform = `translateY(${k * 14}px) scale(${1 - k * 0.05})`;
-      c.setAttribute("aria-hidden", d ? "true" : "false");
-    });
-    const show = () => { if (cap) cap.textContent = caps[order[0]]; };
-    const next = (dir = -1) => {
-      if (busy) return;
-      busy = true; hint?.classList.add("is-off");
-      const top = cards[order[0]];
-      top.classList.remove("is-drag");
-      top.style.transform = `translateX(${dir * 120}vw) rotate(${dir * 14}deg)`;
-      top.style.opacity = "0";
-      order.push(order.shift()); show();
-      // новая верхняя карточка встаёт сразу, ушедшая уходит под низ после вылета
-      place(order.slice(0, -1));
-      setTimeout(() => { busy = false; place(order); }, 340);
-    };
-    swipe(pf2, {
-      start: () => { if (!busy) cards[order[0]].classList.add("is-drag"); },
-      move: (dx) => { if (!busy) cards[order[0]].style.transform = `translateX(${dx}px) rotate(${dx * 0.05}deg)`; },
-      end: (dx, v) => { touched = Date.now(); if (busy) return; if (Math.abs(dx) > 70 || Math.abs(v) > 0.45) next(Math.sign(dx) || -1); else { cards[order[0]].classList.remove("is-drag"); place(order); } },
-      tap: () => { touched = Date.now(); next(-1); },
-    });
-    // мышь и клавиатура (после касания браузер шлёт ещё и click — его пропускаем)
-    pf2.addEventListener("click", () => { if (Date.now() - touched > 600) next(-1); });
-    pf2.addEventListener("keydown", (e) => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); next(e.key === "ArrowRight" ? -1 : 1); } });
-    place(order); show();
-  }
-
-  // 3. большое фото и миниатюры: большое фото листается само (scroll-snap), миниатюра и подпись следуют за ним
-  const pf3 = $(".pf3");
-  if (pf3) {
-    const big = $(".pf3__big", pf3), thumbs = $$(".pf3__thumb", pf3), strip = $(".pf3__thumbs", pf3), cap = $(".pf3__cap", pf3);
-    let cur = 0;
-    const mark = (i) => {
-      if (i === cur) return;
-      cur = i;
-      thumbs.forEach((t, k) => t.classList.toggle("is-on", k === i));
-      if (cap) cap.textContent = thumbs[i].getAttribute("aria-label");
-      // миниатюру в середину полоски, только вбок (scrollIntoView потянул бы и страницу)
-      const t = thumbs[i];
-      strip.scrollTo({ left: t.offsetLeft - (strip.clientWidth - t.offsetWidth) / 2, behavior: "smooth" });
-    };
-    big.addEventListener("scroll", () => mark(Math.min(thumbs.length - 1, snapIndex(big))), { passive: true });
-    thumbs.forEach((t, i) => t.addEventListener("click", () => { big.scrollTo({ left: i * big.clientWidth, behavior: "smooth" }); mark(i); }));
-  }
-
-  // 4. мозаика и просмотр на весь экран: окно переносим в body (fixed внутри секции с transform поехал бы вместе с ней)
-  const pf4 = $(".pf4"), pfv = $(".pfv");
-  if (pf4 && pfv) {
-    document.body.append(pfv);
-    const track = $(".pfv__track", pfv), close = $(".pfv__close", pfv);
-    let open = false, from = null;
-    const shut = () => {
-      if (!open) return;
-      open = false; pfv.hidden = true; root.classList.remove("pfv-open");
-      track.style.transform = ""; track.style.opacity = "";
-      from?.focus({ preventScroll: true });
-    };
-    $$(".pf4__tile", pf4).forEach((b) => b.addEventListener("click", () => {
-      from = b; open = true; pfv.hidden = false; root.classList.add("pfv-open");
-      $$("img", pfv).forEach((im) => (im.loading = "eager"));
-      track.scrollLeft = +b.dataset.i * track.clientWidth;
-      // «назад» на телефоне закрывает фото, а не уходит со страницы
-      history.pushState({ pfv: 1 }, "");
-      close.focus({ preventScroll: true });
-    }));
-    const back = () => { if (open) history.back(); };
-    addEventListener("popstate", shut);
-    close.addEventListener("click", back);
-    pfv.addEventListener("keydown", (e) => { if (e.key === "Escape") back(); });
-    // смахнуть вниз — закрыть
-    let sy = 0, sx = 0, lock = 0, dy = 0;
-    track.addEventListener("touchstart", (e) => { sy = e.touches[0].clientY; sx = e.touches[0].clientX; lock = e.touches.length > 1 ? -1 : 0; dy = 0; }, { passive: true });
-    track.addEventListener("touchmove", (e) => {
-      if (lock === -1 || e.touches.length > 1) return;
-      const t = e.touches[0], x = t.clientX - sx, y = t.clientY - sy;
-      if (!lock && Math.hypot(x, y) > 12) lock = Math.abs(y) > Math.abs(x) * 1.6 ? 1 : -1;
-      if (lock === 1) { dy = Math.max(0, y); track.style.transition = "none"; track.style.transform = `translateY(${dy}px)`; track.style.opacity = String(1 - Math.min(0.6, dy / 400)); }
-    }, { passive: true });
-    const tEnd = () => {
-      if (lock === 1) { track.style.transition = ""; if (dy > 110) back(); else { track.style.transform = ""; track.style.opacity = ""; } }
-      lock = 0;
-    };
-    track.addEventListener("touchend", tEnd, { passive: true });
-    track.addEventListener("touchcancel", tEnd, { passive: true });
+        // нажатие: короткое, без движения, по самому фото и не в момент, когда страница ещё едет
+        if (was || e.type !== "touchend" || zoom > 0 || e.timeStamp - t0 > 350 || performance.now() - scrolledAt < 180) return;
+        const p = e.changedTouches[0], top = car.getBoundingClientRect().top, H = innerHeight;
+        if (p.clientX < innerWidth * 0.08 || p.clientX > innerWidth * 0.92 || p.clientY < top + H * 0.15 || p.clientY > top + H * 0.84) return;
+        go(cur < last ? cur + 1 : 0);
+      };
+      car.addEventListener("touchend", end, { passive: true });
+      car.addEventListener("touchcancel", end, { passive: true });
+      onScroll(); draw();
+    }
   }
 
   // ---------- анимации ----------
@@ -1520,9 +1416,8 @@
     });
     // тур на телефоне как у Лава Дент: всё делает CSS от прокрутки (animation-timeline), ниже то же самое для браузеров без неё
     if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px)", () => {
-      const items = $(".ptour__items", pt), spacer = $(".ptour__spacer", pt), after = $(".ptour__after", pt);
+      const spacer = $(".ptour__spacer", pt), after = $(".ptour__after", pt);
       const img = $(".ptour__item--main .ptour__img", pt), shade = $(".ptour__item--main .ptour__shade", pt);
-      const sides = [[$(".ptour__item--left", pt), -0.2], [$(".ptour__item--right", pt), 0.2]];
       const pars = $$(".ptour__fig[data-par]", pt);
       // карточка как в CSS: окно 80% видимой высоты (--pt-s) от её 10%
       const card = () => {
@@ -1534,18 +1429,16 @@
         // в процентах от кадра, как в CSS: при смене высоты окна без пересчёта ScrollTrigger окно не устаревает
         return `inset(${10 * k}% 0% ${100 - 90 * k}% 0%)`;
       };
-      // в вариантах первых фото (data-v) лента стоит на месте, карточки двигает свой код выше
-      if (!pt.dataset.v) G.fromTo(items, { x: 0 }, { x: () => -2.25 * innerWidth, ease: "none", scrollTrigger: { trigger: spacer, start: "top top", end: "bottom bottom", scrub: true, invalidateOnRefresh: true } });
+      // лента стоит на месте (стопка, Ilya 07.11), её не двигаем
       // на телефоне ScrollTrigger не пересчитывается при смене высоты окна; шаг ленты 400vh, поэтому пересчитываем сами, когда он меняется
       let spH = spacer.offsetHeight;
       const ro = new ResizeObserver(() => { if (spacer.offsetHeight !== spH) { spH = spacer.offsetHeight; ST.refresh(); } });
       ro.observe(spacer);
       const zoom = G.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: after, start: "top bottom", end: () => "+=" + innerHeight * 0.5, scrub: true, invalidateOnRefresh: true } });
-      zoom.fromTo(img, { clipPath: card, scale: +pt.dataset.v >= 6 ? 0.88 : 0.725 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
+      zoom.fromTo(img, { clipPath: card, scale: 0.84 }, { clipPath: "inset(0% 0% 0% 0%)", scale: 1.1 }, 0)
         .fromTo(shade, { opacity: 0 }, { opacity: 1, ease: "power1.inOut" }, 0);
-      sides.forEach(([el, k]) => el && zoom.fromTo(el, { x: 0 }, { x: () => k * innerWidth }, 0));
       pars.forEach((f) => G.fromTo(f, { y: () => innerHeight * 0.25 }, { y: () => -innerHeight * 0.25, ease: "none", scrollTrigger: { trigger: f, start: "top bottom", end: "bottom top", scrub: true, invalidateOnRefresh: true } }));
-      return () => { ro.disconnect(); G.set([items, img, shade, ...sides.map(([el]) => el).filter(Boolean), ...pars], { clearProps: "transform,clipPath,opacity" }); };
+      return () => { ro.disconnect(); G.set([img, shade, ...pars], { clearProps: "transform,clipPath,opacity" }); };
     });
     // то же для старых браузеров: окно ведёт по широким фото ленты (вход, ресепшен, врачи) в тех же отрезках прокрутки, что в CSS
     if (pt && !(window.CSS && CSS.supports("animation-timeline: view()") && CSS.supports("timeline-scope: --a"))) mm.add("(max-width: 760px) and (max-aspect-ratio: 4 / 5)", () => {
