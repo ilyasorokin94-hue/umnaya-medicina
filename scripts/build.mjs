@@ -13,7 +13,8 @@ import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { catalogGroups, catalogInside } from "../src/uslugi-catalog.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
-import { legalPages, legalDate, CONSENT_CHECKBOX, METRIKA_ID } from "../src/legal-pages.mjs";
+import { legalPages, legalDate, CONSENT_CHECKBOX, METRIKA_ID, CLINIC_DOCS_LIVE, license, org } from "../src/legal-pages.mjs";
+import { statSync } from "node:fs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.join(root, "dist");
@@ -127,6 +128,8 @@ const icon = {
   menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v2H3zm0 8h18v2H3z"/></svg>',
   eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5C6.5 5 2.4 9.3 1 12c1.4 2.7 5.5 7 11 7s9.6-4.3 11-7c-1.4-2.7-5.5-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-7.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg>',
   close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 5.7 12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7l-1.4-1.4L9.2 12 2.9 5.7l1.4-1.4 6.3 6.3 6.3-6.3z"/></svg>',
+  doc: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8.4L20 7.6V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.8V9h5.2zM8 13h8v1.6H8zm0 3.4h8V18H8zm0-6.8h3.4v1.6H8z"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.8 20.5 5v6.4c0 5.1-3.6 9.6-8.5 10.8-4.9-1.2-8.5-5.7-8.5-10.8V5zm-1.2 13.3 6.1-6.1-1.4-1.4-4.7 4.7-2.3-2.3-1.4 1.4z"/></svg>',
   check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 16.2-4.2-4.2-1.4 1.4 5.6 5.6 11-11-1.4-1.4z"/></svg>',
   star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.5 2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>',
   tooth: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 9c3-1.3 5.6 0 9 0s6-1.3 9 0c4.3 1.9 4.4 8.4 2.9 12.8-1 3.2-1.9 5.9-2.3 9.2-.4 3.1-1.7 4.8-3.3 4.8-2 0-2.4-2.5-2.9-5.3-.4-2.1-1.1-3.9-3.4-3.9s-3 1.8-3.4 3.9c-.5 2.8-.9 5.3-2.9 5.3-1.6 0-2.9-1.7-3.3-4.8-.4-3.3-1.3-6-2.3-9.2C10.6 17.4 10.7 10.9 15 9z"/></svg>',
@@ -291,7 +294,8 @@ function header(depth, home = false) {
     <ul class="nav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li class="nav__item"><a class="nav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="${navLine[t] || ""}"></span></span></li>`).join("")}</ul>
   </nav>
   <div class="header__cta">
-    <a class="header__phone" href="${fallbackHref("call", p)}" data-modal="call"><b>Перезвоним за 5 минут</b><small>${esc(clinic.hours)}</small></a>
+    <div class="header__duo"><a class="header__phone" href="${fallbackHref("call", p)}" data-modal="call"><b>Перезвоним за 5 минут</b><small>${esc(clinic.hours)}</small></a>
+    <a class="header__lic" href="${p}dokumenty/" title="${esc(licLine)}. Все документы клиники" aria-label="Юридические документы и лицензия">${icon.shield}<span>Юридические документы</span></a></div>
     ${act("Записаться", "book", p, { cls: "btn--sm header__book", magnet: true })}
     <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="menu">${icon.menu}</button>
   </div>
@@ -306,6 +310,7 @@ function header(depth, home = false) {
   <nav class="mnav" aria-label="Разделы">
     <ul class="mnav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li><a class="mnav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a></li>`).join("")}</ul>
   </nav>
+  <a class="menu__lic" href="${p}dokumenty/">${icon.shield}<span><b>Лицензия и документы</b><small>${esc(clinic.legal)}, лицензия № ${license.number} от ${license.date}</small></span></a>
 </div>`;
 }
 
@@ -410,11 +415,26 @@ function offer(depth, consent, p) {
 </div></div>`;
 }
 
+// лицензия одной строкой: подсказка у «Лицензия и документы» в шапке
+const licLine = `Лицензия на медицинскую деятельность № ${license.number} от ${license.date}`;
+// блок «Лицензия на медицинскую деятельность» в подвале над строкой документов (Ilya 07.11, как на образце):
+// номер, кем выдана, юрлицо, юридический адрес, ссылки на «Документы и лицензия» и реестр Росздравнадзора
+const footerLic = (p) => `  <div class="flic">
+    <a class="flic__pic" href="${p}dokumenty/#licenziya-i-sez" aria-label="Лицензия и документы">${icon.doc}<span>Лицензия</span></a>
+    <div class="flic__body">
+      <h3 class="flic__t">Лицензия на медицинскую деятельность</h3>
+      <p class="flic__num">№ ${license.number} от ${license.date}</p>
+      <p>Выдана ${license.issuerShort}. Лицензия действует, её можно проверить по номеру в реестре Росздравнадзора.</p>
+      <p>${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}</p>
+      <p>${esc(org.address)}</p>
+      <p class="flic__links"><a href="${p}dokumenty/">Документы и лицензия</a><a href="${license.registry}"${ext}>Проверить в реестре Росздравнадзора</a></p>
+    </div>
+  </div>`;
 // строка с реквизитами и документами: в подвале и на странице записи, у которой своего подвала нет
 const footerLegal = (p, cls = "footer__legal") => `  <div class="${cls}">
-    <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. Лицензия на медицинскую деятельность.</span>
+    <span>© 2026 ${esc(clinic.legal)}, ИНН ${clinic.inn}, ОГРН ${clinic.ogrn}. <a href="${p}dokumenty/">Лицензия № ${license.number} от ${license.date}</a>.</span>
     <span>Имеются противопоказания, необходима консультация специалиста.</span>
-    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a><a href="#" data-a11y role="button">Версия для слабовидящих</a><a href="${legalHref("svedeniya", p)}">Сведения о медицинской организации</a><a href="${legalHref("gosgarantii", p)}">Информация о возможности получения медицинской помощи в рамках программы государственных гарантий</a></span>
+    <span class="footer__docs"><a href="${legalHref("privacy", p)}">Политика конфиденциальности</a><a href="${legalHref("consent", p)}">Согласие на обработку персональных данных</a><a href="${legalHref("agreement", p)}">Пользовательское соглашение</a><a href="${legalHref("privacy", p)}#p9" data-cookie-settings>Настройки cookie</a><a href="#" data-a11y role="button">Версия для слабовидящих</a><a href="${legalHref("dokumenty", p)}">Документы и лицензия</a><a href="${legalHref("svedeniya", p)}">Сведения о медицинской организации</a><a href="${legalHref("gosgarantii", p)}">Информация о возможности получения медицинской помощи в рамках программы государственных гарантий</a></span>
   </div>`;
 // виджет ПроДокторов «Цитата из отзыва о клинике» (Ilya 28.10): внизу страницы перед подвалом, код из кабинета ПроДокторов.
 // Без скрипта видно название клиники ссылкой; скрипт подставляет рейтинг, число отзывов и цитату. defer: не держит первый экран
@@ -477,11 +497,14 @@ function footer(depth, { pd = true } = {}) {
           <a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a>
           <a href="${clinic.vk}"${ext}>ВКонтакте</a>
           <a href="${legalHref("privacy", p)}">Политика конфиденциальности</a>
+          <a href="${legalHref("dokumenty", p)}">Документы и лицензия</a>
+          <a href="${legalHref("svedeniya", p)}">Сведения о клинике</a>
         </p>
       </div>
       <meta itemprop="name" content="Умная Медицина. Стоматология"><link itemprop="url" href="${SITE}/">
     </div>
   </div>
+${footerLic(p)}
 ${footerLegal(p)}
 </div></footer>
 <div class="mobilebar"><a href="${fallbackHref("book", p)}" data-modal="book">Записаться</a></div>
@@ -1763,7 +1786,7 @@ const legalLink = (to, p) => (to === "ceny" ? `${p}ceny/` : to === "vrachi" ? `$
 const legalText = (t, page, p) => esc(t)
   .replace(/(?:8|\+7) \(\d{3}\) \d{3}-\d{2}-\d{2}/g, (m) => `<span class="nobr">${m}</span>`)
   .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (m, txt, url) => `<a href="${url}"${ext}>${txt}</a>`)
-  .replace(/\[([^\]]+)\]\((privacy|consent|agreement|gosgarantii|svedeniya|ceny|vrachi)\)/g, (m, txt, to) => `<a href="${legalLink(to, p)}">${txt}</a>`)
+  .replace(/\[([^\]]+)\]\((privacy|consent|agreement|gosgarantii|svedeniya|dokumenty|ceny|vrachi)\)/g, (m, txt, to) => `<a href="${legalLink(to, p)}">${txt}</a>`)
   .replace(/\{\{([^}]+)\}\}/g, (m, note) => spTag("уточняем у клиники", note, page));
 const legalBlock = (b, page, p) => typeof b === "string" ? `<p>${legalText(b, page, p)}</p>`
   : b.payments ? payLine()
@@ -1775,6 +1798,7 @@ const legalPic = {
   agreement: { name: "soglashenie", alt: "Планшет с пустым экраном, документы со скрепкой, ручка и модель зуба" },
   gosgarantii: { name: "gosgarantii", alt: "Карта полиса без надписей на папке с документами, печать и модель зуба" },
   svedeniya: { name: "svedeniya", alt: "Папка с документами клиники, печать, перьевая ручка и модель зуба" },
+  dokumenty: { name: "svedeniya", alt: "Папка с документами клиники, печать, перьевая ручка и модель зуба" },
 };
 function pageLegal(page) {
   const depth = 1, p = "../";
@@ -1787,6 +1811,54 @@ ${picHero({ cls: " legal-hero", depth, ...legalPic[page.slug], text: `<nav class
   <dl class="legal__meta">${meta.map(([k, v]) => `<div><dt>${k}</dt><dd>${legalText(v, page, p)}</dd></div>`).join("")}</dl>
   <ol class="legal__list">${page.sections.map(([h, blocks], i) => `<li class="legal__sec" id="p${i + 1}"><span class="legal__n" aria-hidden="true">${i + 1}</span><div class="legal__body"><h2>${esc(h)}</h2>${blocks.map((b) => legalBlock(b, page, p)).join("")}</div></li>`).join("")}</ol>
   <nav class="legal__docs" aria-label="Документы">${legal.filter((d) => d !== page).map((d) => `<a href="${legalHref(d.slug, p)}">${esc(d.h1)}</a>`).join("")}</nav>
+</div></section>
+</main>` + footer(depth, { pd: false }) + end;
+}
+
+// «Документы и лицензия»: разделы карточками, у PDF размер считаем по файлу из src/docs/.
+// Документ, которого ещё нет (ask), на демо с плашкой, на боевой сборке скрыт, вместо пустого раздела строка away
+const docsAsk = [];
+const kb = (n) => (n >= 1048576 ? `${(n / 1048576).toFixed(1).replace(".", ",")} МБ` : `${Math.round(n / 1024)} КБ`);
+const docsTypeName = { lic: "Лицензия", web: "Сайт", page: "Страница", pdf: "PDF" };
+function docCard(it, page, p) {
+  if (it.file && !existsSync(path.join(root, "src", it.file))) throw new Error(`«Документы»: нет файла src/${it.file}`);
+  // документ клиники ещё не подтверждён: на боевой сборке как отсутствующий (скрыт), на демо открывается
+  const file = it.file && (CLINIC_DOCS_LIVE || !PUBLISH) ? it.file : null;
+  if (it.file && !file) it = { ...it, ask: `${it.t}: ждёт подтверждения клиники (CLINIC_DOCS_LIVE)` };
+  const type = file ? "pdf" : it.type || (it.to ? "page" : null);
+  const href = file ? `${p}${file}` : it.to ? legalLink(it.to, p) : it.href;
+  const meta = file ? `Открыть PDF${it.pages ? `, ${it.pages}` : ""}, ${kb(statSync(path.join(root, "src", file)).size)}` : it.more || (it.to ? "Открыть" : "");
+  // у PDF первая страница картинкой (scripts/clinic-docs.mjs кладёт её в src/images/docs/<имя>.webp)
+  const thumb = file && existsSync(path.join(root, "src/images/docs", path.basename(file, ".pdf") + ".webp")) ? `images/docs/${path.basename(file, ".pdf")}.webp` : null;
+  const pic = thumb ? `<span class="dcard__pic dcard__pic--thumb" aria-hidden="true"><img src="${p}${thumb}" alt="" width="64" height="90" loading="lazy" decoding="async"></span>`
+    : `<span class="dcard__pic dcard__pic--${type || "ask"}" aria-hidden="true">${type === "web" ? icon.arrow : type === "lic" ? icon.shield : icon.doc}<i>${docsTypeName[type] || "Документ"}</i></span>`;
+  const body = `${pic}<span class="dcard__body"><b class="dcard__t">${esc(it.t)}</b><span class="dcard__d">${legalText(it.d, page, p).replace(/<a [^>]*>|<\/a>/g, "")}</span>`;
+  if (!href) {
+    docsAsk.push(it.ask);
+    return `<li class="dcard dcard--ask"><div class="dcard__in">${body}<mark class="todo-tag" title="${esc(it.ask)}">ждём от клиники</mark></span></div></li>`;
+  }
+  const outer = /^https?:/.test(href) ? ext : "";
+  return `<li class="dcard"><a class="dcard__in" href="${href}"${outer}>${body}${meta ? `<span class="dcard__more">${esc(meta)}</span>` : ""}</span></a></li>`;
+}
+function pageDocs(page) {
+  const depth = 1, p = "../";
+  const groups = page.groups.map((g) => {
+    const cards = g.items.map((it) => ({ it, html: docCard(it, page, p) }));
+    const shown = cards.filter((c) => !(PUBLISH && c.html.includes("dcard--ask")));
+    const lacks = cards.some((c) => c.html.includes("dcard--ask"));
+    return `<section class="docs__grp" id="${g.id}" aria-labelledby="${g.id}-h">
+    <h2 id="${g.id}-h">${esc(g.h)}</h2>${g.lead ? `<p class="docs__lead">${legalText(g.lead, page, p)}</p>` : ""}${lacks && g.away ? `<p class="docs__lead">${legalText(g.away, page, p)}</p>` : ""}
+    ${shown.length ? `<ul class="docs__list">${shown.map((c) => c.html).join("")}</ul>` : ""}
+  </section>`;
+  }).join("\n  ");
+  return head({ title: page.title, desc: page.desc, canonical: `/${page.path}/`, depth, jsonld: [crumbsLd([[`${page.path}/`, page.crumb]])] })
+  + header(depth) + `
+<main id="main">
+${picHero({ cls: " legal-hero", depth, ...legalPic[page.slug], text: `<nav class="crumbs" aria-label="Хлебные крошки"><a href="${p}index.html">Главная</a><span aria-current="page">${esc(page.crumb)}</span></nav><h1 id="h1">${esc(page.h1)}</h1><p class="page-hero__lead">${esc(page.lead)}</p>` })}
+<section class="section legal docs"><div class="wrap">
+  <dl class="legal__meta">${[["Организация", clinic.legal], ["ИНН / ОГРН", `${clinic.inn} / ${clinic.ogrn}`], ["Лицензия", `№ ${license.number} от ${license.date}`], ["Кем выдана", license.issuer]].map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
+  ${groups}
+  <p class="docs__note">Имеются противопоказания, необходима консультация специалиста.</p>
 </div></section>
 </main>` + footer(depth, { pd: false }) + end;
 }
@@ -1938,7 +2010,11 @@ const zapisCss = (() => {
   writeFileSync(path.join(dist, "zapis.html"), html.replace(`<link rel="stylesheet" href="assets/styles.css?v=${V.css}">`, () => `<style>${css}</style>`));
   return css;
 })();
-for (const page of legal) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}/index.html`, pageLegal(page)); }
+for (const page of legal) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}/index.html`, page.kind === "docs" ? pageDocs(page) : pageLegal(page)); }
+// PDF документов клиники (src/docs/) рядом со страницей «Документы и лицензия»
+if ((CLINIC_DOCS_LIVE || !PUBLISH) && existsSync(path.join(root, "src", "docs"))) cpSync(path.join(root, "src", "docs"), path.join(dist, "docs"), { recursive: true });
+if ((CLINIC_DOCS_LIVE || !PUBLISH) && existsSync(path.join(root, "src", "images", "docs"))) cpSync(path.join(root, "src", "images", "docs"), path.join(dist, "images", "docs"), { recursive: true });
+if (docsAsk.length) console.log(`«Документы и лицензия»: ждём от клиники ${docsAsk.length} док.${PUBLISH ? " (на сайте скрыты)" : ""}:\n  ${[...new Set(docsAsk)].join("\n  ")}`);
 mkdirSync(path.join(dist, "spasibo"), { recursive: true });
 out("spasibo/index.html", pageThanks(), false);
 out("404.html", page404(), false);

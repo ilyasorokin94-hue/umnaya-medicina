@@ -2709,3 +2709,78 @@ html:has(form input:focus, form textarea:focus) { scroll-behavior: auto; }
 @media (min-width: 761px) {
   .bform .form label:not(.consent), .modal .form label:not(.consent), .modal .file { gap: 6px; font-size: 17px; }
 }
+
+/* ---------- юридические данные (Ilya 07.11, по образцу): «Лицензия и документы» в шапке и меню, блок лицензии в подвале, страница /dokumenty/ ---------- */
+.header__lic { display: none; align-items: center; gap: 8px; color: inherit; text-decoration: none; font-size: 12px; line-height: 1.15; white-space: nowrap; opacity: .9; transition: opacity .2s, color .2s; }
+.header__lic svg { width: 22px; height: 22px; flex: none; fill: currentColor; color: var(--green-hi); }
+.header__lic:hover { opacity: 1; }
+/* в шапке компьютера значок щита с подсказкой там, где разделы не наезжают на логотип (замер 07.11: 1300–1439 и от 1520 px);
+   от 1600 px под значком подпись «Лицензия». Полная подпись — в меню телефона и в подвале */
+/* Ilya 07.11: видно, что это юридические документы и на них можно нажать: зелёная плашка-кнопка со щитом, как на образце.
+   От 1440 px плашка «Юридические документы» стоит под «Перезвоним за 5 минут» и ширины не занимает;
+   на 1300–1439 px места мало: круглая кнопка со щитом и подсказкой */
+.header__duo { display: contents; }
+.header__lic svg { color: var(--green-hi); }
+@media (min-width: 1300px) and (max-width: 1439px) {
+  .header .header__cta .header__lic { display: inline-grid; place-items: center; width: 40px; height: 40px; margin-right: 12px; border-radius: 50%; background: rgba(76, 193, 72, .16); opacity: 1; transition: background .2s; }
+  .header .header__cta .header__lic:hover { background: rgba(76, 193, 72, .3); }
+  .header .header__cta .header__lic svg { width: 20px; height: 20px; }
+  .header .header__cta .header__lic span { display: none; }
+}
+@media (min-width: 1440px) {
+  .header .header__cta .header__duo { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-right: 24px; }
+  .header .header__cta .header__duo .header__phone { padding: 0; }
+  .header .header__cta .header__lic { display: inline-flex; gap: 6px; padding: 5px 11px 5px 8px; border-radius: 999px; background: rgba(76, 193, 72, .16); color: rgb(var(--hc, 255 255 255)); font-size: 12px; font-weight: 500; opacity: 1; transition: background .2s; }
+  .header .header__cta .header__lic:hover { background: rgba(76, 193, 72, .32); }
+  .header .header__cta .header__lic svg { width: 15px; height: 15px; }
+}
+/* 1440–1519 px: без отступа справа от плашки, иначе разделы прижимаются к логотипу (замер: 7 px вместо 32) */
+@media (min-width: 1440px) and (max-width: 1519px) { .header .header__cta .header__duo { margin-right: 0; } }
+.menu__lic { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 14px; color: #fff; text-decoration: none; }
+.menu__lic svg { width: 28px; height: 28px; flex: none; fill: var(--green-hi); }
+.menu__lic span { display: grid; gap: 3px; }
+.menu__lic b { font-weight: 500; font-size: 16px; }
+.menu__lic small { font-size: 12.5px; line-height: 1.35; color: var(--muted-on-dark); }
+/* меню компьютера и планшета: над «Перезвоним за 5 минут»; меню телефона (светлое): под разделами, тёмным текстом */
+@media (min-width: 761px) { .menu__lic { order: 5; margin: 0 0 18px; } .menu__foot { order: 6; } .menu .mnav { order: 7; } }
+@media (max-width: 760px) {
+  .menu__lic { margin: -40px calc(var(--mn-pad) - var(--gutter)) calc(28px + env(safe-area-inset-bottom)) calc(var(--mn-pad) + clamp(32px, 29.091px + .8081vw, 40px) - var(--gutter)); border-color: rgba(3, 28, 20, .22); color: var(--mn-ink); opacity: 0; transition: opacity .5s var(--mn-ease); }
+  .menu.is-open .menu__lic { opacity: 1; }
+  .menu__lic svg { fill: var(--mn-ink); }
+  .menu__lic small { color: rgba(3, 28, 20, .7); }
+}
+
+.flic { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 24px; align-items: start; margin-top: clamp(36px, 4vw, 56px); padding: 26px 0; border-top: 1px solid var(--line-on-dark); color: var(--muted-on-dark); font-size: 14px; line-height: 1.5; }
+.flic__pic { display: grid; place-items: center; align-content: center; gap: 8px; aspect-ratio: 3 / 4; border-radius: 10px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .14); color: #fff; text-decoration: none; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; transition: background .2s; }
+.flic__pic svg { width: 40px; height: 40px; fill: var(--green-hi); }
+.flic__pic:hover { background: rgba(255, 255, 255, .1); }
+.flic__body { display: grid; gap: 4px; max-width: 720px; }
+.flic__body p { margin: 0; }
+.flic__t { margin: 0 0 4px; font: 500 18px/1.25 var(--display); letter-spacing: -.01em; color: #fff; text-transform: none; }
+.flic__num { color: #fff; font-variant-numeric: tabular-nums; }
+.flic__links { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 8px !important; }
+.flic__links a { color: #fff; }
+@media (max-width: 760px) { .flic { grid-template-columns: 76px minmax(0, 1fr); gap: 16px; font-size: 13.5px; } .flic__pic svg { width: 30px; height: 30px; } .flic__pic { font-size: 9.5px; } }
+
+.docs__grp { max-width: 1100px; padding: clamp(28px, 3.4vw, 48px) 0; border-top: 1px solid var(--line); scroll-margin-top: calc(var(--hdr-stick, var(--header-h)) + 20px); }
+.docs__grp h2 { margin: 0 0 12px; font: 500 clamp(24px, 2.2vw, 34px)/1.15 var(--display); letter-spacing: -.02em; }
+.docs__lead { max-width: 760px; margin: 0 0 10px; font-size: 17px; line-height: 1.55; color: var(--muted); }
+.docs__lead a { color: var(--green-deep); }
+.docs__list { list-style: none; margin: 22px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 16px; }
+.dcard__in { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 16px; height: 100%; padding: 18px; border: 1px solid var(--line); border-radius: 16px; background: #fff; color: var(--text); text-decoration: none; transition: border-color .2s, box-shadow .2s, transform .2s; }
+a.dcard__in:hover { border-color: rgba(41, 153, 38, .5); box-shadow: 0 14px 30px -20px rgba(12, 36, 16, .45); transform: translateY(-2px); }
+.dcard__pic { display: grid; place-items: center; align-content: center; gap: 4px; aspect-ratio: 3 / 4; border-radius: 8px; background: var(--paper-2); color: var(--green-deep); }
+.dcard__pic svg { width: 26px; height: 26px; fill: currentColor; }
+.dcard__pic i { font: 600 9px/1 var(--body); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.dcard__pic--thumb { overflow: hidden; padding: 0; background: #fff; border: 1px solid var(--line); box-shadow: 0 6px 14px -10px rgba(12, 36, 16, .5); }
+.dcard__pic--thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.dcard__pic--lic { background: var(--ink); color: var(--green-hi); }
+.dcard__pic--lic i { color: rgba(255, 255, 255, .7); }
+.dcard__body { display: grid; align-content: start; gap: 6px; }
+.dcard__t { font: 500 17px/1.3 var(--display); letter-spacing: -.01em; }
+.dcard__d { font-size: 14px; line-height: 1.45; color: var(--muted); }
+.dcard__more { margin-top: 4px; font-size: 14px; font-weight: 500; color: var(--green-deep); text-decoration: underline; text-underline-offset: 3px; }
+.dcard--ask .dcard__in { border-style: dashed; background: transparent; }
+.dcard--ask .dcard__pic { opacity: .55; }
+.dcard--ask .todo-tag { justify-self: start; margin-top: 4px; }
+.docs__note { margin: 28px 0 0; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
