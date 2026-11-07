@@ -13,7 +13,7 @@ import { parseServiceMd } from "./service-md.mjs";
 import { doctorPages } from "../src/doctor-pages.mjs";
 import { catalogGroups, catalogInside } from "../src/uslugi-catalog.mjs";
 import { doctorReviews } from "../src/doctor-reviews.mjs";
-import { legalPages, legalDate, CONSENT_CHECKBOX, METRIKA_ID, license, org } from "../src/legal-pages.mjs";
+import { legalPages, legalDate, CONSENT_CHECKBOX, METRIKA_ID, CLINIC_DOCS_LIVE, license, org } from "../src/legal-pages.mjs";
 import { statSync } from "node:fs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -1775,8 +1775,10 @@ const docsAsk = [];
 const kb = (n) => (n >= 1048576 ? `${(n / 1048576).toFixed(1).replace(".", ",")} МБ` : `${Math.round(n / 1024)} КБ`);
 const docsTypeName = { lic: "Лицензия", web: "Сайт", page: "Страница", pdf: "PDF" };
 function docCard(it, page, p) {
-  const file = it.file && existsSync(path.join(root, "src", it.file)) ? it.file : null;
-  if (it.file && !file) throw new Error(`«Документы»: нет файла src/${it.file}`);
+  if (it.file && !existsSync(path.join(root, "src", it.file))) throw new Error(`«Документы»: нет файла src/${it.file}`);
+  // документ клиники ещё не подтверждён: на боевой сборке как отсутствующий (скрыт), на демо открывается
+  const file = it.file && (CLINIC_DOCS_LIVE || !PUBLISH) ? it.file : null;
+  if (it.file && !file) it = { ...it, ask: `${it.t}: ждёт подтверждения клиники (CLINIC_DOCS_LIVE)` };
   const type = file ? "pdf" : it.type || (it.to ? "page" : null);
   const href = file ? `${p}${file}` : it.to ? legalLink(it.to, p) : it.href;
   const meta = file ? `Открыть PDF${it.pages ? `, ${it.pages}` : ""}, ${kb(statSync(path.join(root, "src", file)).size)}` : it.more || (it.to ? "Открыть" : "");
@@ -1964,8 +1966,8 @@ const zapisCss = (() => {
 })();
 for (const page of legal) { mkdirSync(path.join(dist, page.path), { recursive: true }); out(`${page.path}/index.html`, page.kind === "docs" ? pageDocs(page) : pageLegal(page)); }
 // PDF документов клиники (src/docs/) рядом со страницей «Документы и лицензия»
-if (existsSync(path.join(root, "src", "docs"))) cpSync(path.join(root, "src", "docs"), path.join(dist, "docs"), { recursive: true });
-if (existsSync(path.join(root, "src", "images", "docs"))) cpSync(path.join(root, "src", "images", "docs"), path.join(dist, "images", "docs"), { recursive: true });
+if ((CLINIC_DOCS_LIVE || !PUBLISH) && existsSync(path.join(root, "src", "docs"))) cpSync(path.join(root, "src", "docs"), path.join(dist, "docs"), { recursive: true });
+if ((CLINIC_DOCS_LIVE || !PUBLISH) && existsSync(path.join(root, "src", "images", "docs"))) cpSync(path.join(root, "src", "images", "docs"), path.join(dist, "images", "docs"), { recursive: true });
 if (docsAsk.length) console.log(`«Документы и лицензия»: ждём от клиники ${docsAsk.length} док.${PUBLISH ? " (на сайте скрыты)" : ""}:\n  ${[...new Set(docsAsk)].join("\n  ")}`);
 mkdirSync(path.join(dist, "spasibo"), { recursive: true });
 out("spasibo/index.html", pageThanks(), false);
