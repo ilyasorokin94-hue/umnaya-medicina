@@ -657,28 +657,44 @@ function svlBlock(p, depth) {
 }
 
 // ---------- акции и выгодные условия: «Стопка» (Ilya 17.10) ----------
-// Блок после услуг, перед врачами. Светлые карточки акций наплывают друг на друга при прокрутке, ниже «Выгодно всегда».
-// Кнопка открывает окно записи с поводом и строкой «Акция: …», акция уходит в заявку скрытым полем promo.
+// Кнопка акции открывает окно записи с поводом и строкой «Акция: …», акция уходит в заявку скрытым полем promo.
 // Если у акции нет картинки, вместо неё тёмная плитка с крупной ценой
 // слова через дефис (Air-Flow, 3D-снимок, All-on-4) не рвутся по строкам
 const prNw = (t) => esc(t).replace(/\S+-\S+/g, (w) => `<span class="nobr">${w}</span>`);
 const prBtn = (d, p) => act(d.btn, d.modal, p, { reason: d.reason, cls: "btn--lg", promo: d.promo });
 const prPrice = (d) => `<p class="pr-price"><b>${esc(d.price)}</b>${d.old ? `<s aria-label="вместо ${esc(d.old)}">${esc(d.old)}</s>` : ""}${d.sub ? `<span>${esc(d.sub)}</span>` : ""}</p>`;
+// Акции баннером в самом начале главной, по образцу Ilya 07.11: широкая картинка справа, слева на тёмном фоне метка,
+// название, цена, условие и кнопка; акции сами сменяются каждые 3 секунды (Ilya 07.11), пауза под курсором на тексте,
+// при фокусе с клавиатуры и пока палец на баннере, свайп листает. Переключение в app.js ([data-ps]), вид в styles.css (.pb)
 function promoBlock(p, depth) {
   const A = v2.akcii;
-  return `<section class="section pr on-dark" id="akcii" aria-labelledby="pr-title"><div class="wrap">
-  <div class="section__head"><div><span class="label label--light">${esc(A.label)}</span><h2 id="pr-title" data-split>${esc(A.title)}</h2></div><p>${esc(A.text)}</p></div>
-  <div class="pr4">${A.deals.map((d, i) => `<article class="pr4-card" style="--i:${i}">
-    ${d.img ? `<span class="pr4-card__pic">${img(d.img, d.alt, depth)}</span>` : `<span class="pr4-card__pic pr4-card__pic--type" aria-hidden="true"><b>${esc(d.price)}</b></span>`}
-    <div class="pr4-card__text">
+  const slides = A.deals.map((d, i) => {
+    const pic = d.img ? img(d.img, d.alt, depth, "", "(max-width: 760px) 100vw, 62vw") : "";
+    // первая картинка видна сразу при открытии: грузим без очереди
+    const picHtml = i ? pic : pic.replace(' loading="lazy"', ' fetchpriority="high"');
+    return `<article class="pb__slide${i ? "" : " is-on"}" data-ps-slide${i ? ' aria-hidden="true"' : ""} aria-roledescription="слайд" aria-label="${i + 1} из ${A.deals.length}: ${esc(d.title)}"${d.pos ? ` style="--pb-pos:${d.pos}"` : ""}>
+    <span class="pb__pic">${picHtml}</span>
+    <div class="wrap pb__over"><div class="pb__text">
       <span class="label pr-tag">${esc(d.tag)}</span>
-      <h3 class="pr-title">${prNw(d.title)}</h3>
+      <h3 class="pb__title">${prNw(d.title)}</h3>
       ${prPrice(d)}
       <p class="pr-gift">${prNw(d.gift)}</p>
       ${prBtn(d, p)}
-    </div>
-  </article>`).join("")}</div>
-  <div class="pr-al pr-al--acc"><h3 class="pr-al__title">${esc(A.alwaysTitle)}</h3><ul class="pr-al__list">${A.always.map(([t, d]) => `<li data-reveal><b>${prNw(t)}</b><span>${prNw(d)}</span></li>`).join("")}</ul></div>
+    </div></div>
+  </article>`;
+  }).join("");
+  return `<section class="section pb on-dark" id="akcii" aria-labelledby="pr-title" aria-roledescription="карусель"><div data-ps>
+  <div class="wrap pb__head"><h2 id="pr-title" data-split>${esc(A.label)}</h2><p>${esc(A.text)}</p></div>
+  <div class="pb__track" aria-live="off">${slides}
+  <div class="wrap pb__foot"><div class="pb__dots" role="tablist" aria-label="Акции">${A.deals.map((d, i) => `<button type="button" role="tab" data-ps-dot="${i}" aria-label="${esc(d.title)}" aria-selected="${!i}"><i></i></button>`).join("")}</div></div></div>
+</div></section>`;
+}
+
+// «Выгодно всегда» остаётся на прежнем месте акций, после услуг, отдельным блоком
+function alwaysBlock() {
+  const A = v2.akcii;
+  return `<section class="section pr pr--always on-dark" id="vygodno" aria-labelledby="al-title"><div class="wrap">
+  <div class="pr-al pr-al--acc"><h2 class="pr-al__title" id="al-title" data-split>${esc(A.alwaysTitle)}</h2><ul class="pr-al__list">${A.always.map(([t, d]) => `<li data-reveal><b>${prNw(t)}</b><span>${prNw(d)}</span></li>`).join("")}</ul></div>
 </div></section>`;
 }
 
@@ -697,6 +713,8 @@ function pageHome() {
   return head({ title: D.seoTitle, desc: D.seoDesc, canonical: "/", depth, page: "home", jsonld: [dentistLd, faqLd(D.faq.flatMap(([, qs]) => qs).map(([q, a]) => [q, a.replace(/\[([^\]]+)\]\((\w+)\)/g, "$1")]))] })
   + header(depth, true) + `
 <main id="main">
+
+${promoBlock(p, depth)}
 
 <div class="opening">
 <section class="hero hero--v hero--v1 on-dark" aria-labelledby="h1"><div class="wrap hero__in">
@@ -740,7 +758,7 @@ function pageHome() {
 ${svlBlock(p, depth)}
 </section>
 
-${promoBlock(p, depth)}
+${alwaysBlock()}
 
 <section class="section section--sage" id="team" aria-labelledby="tm-title"><div class="wrap">
   <div class="section__head"><div><span class="label">${esc(D.team.label)}</span><h2 id="tm-title" data-split>${esc(D.team.title)}</h2></div><p>${esc(D.team.text)}</p></div>

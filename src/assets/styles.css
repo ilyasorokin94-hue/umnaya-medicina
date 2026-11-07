@@ -1848,6 +1848,72 @@ html:not(.js-anim) .hv__rot:not(.is-live) > [aria-hidden]:nth-child(2) .sw > spa
 }
 .pr4--flat .pr4-card { position: relative; top: auto; max-height: none; transform: none !important; }
 
+/* ---------- акции баннером в начале главной (Ilya 07.11, по образцу) ----------
+   Акции лежат друг на друге в одной клетке сетки, видна одна, смена плавным растворением раз в 3 секунды (app.js, [data-ps]).
+   Компьютер: картинка справа на 62% ширины тает к тексту (маска, как у первого экрана услуг), текст слева на тёмном фоне,
+   на картинке не лежит. Телефон: картинка сверху во всю ширину, текст под ней. Высота блока по самой длинной акции, не прыгает */
+.pb { padding: calc(var(--hdr-d, var(--header-h)) + clamp(18px, 2vw, 32px)) 0 clamp(28px, 3vw, 48px); background: var(--ink); color: #fff; overflow: clip; }
+.pb__head { display: flex; align-items: flex-end; gap: 16px 32px; margin-bottom: clamp(18px, 2vw, 28px); }
+.pb__head h2 { font-size: var(--fs-4); line-height: 1; letter-spacing: -.035em; }
+.pb__head p { margin-left: auto; max-width: 24em; color: var(--muted-on-dark); font-size: var(--fs--1); line-height: 1.45; }
+.pb__track { position: relative; display: grid; }
+.pb__slide { grid-area: 1 / 1; position: relative; display: grid; min-width: 0; min-height: clamp(420px, 36vw, 560px); }
+/* текст уходящей акции гаснет быстрее, новый проявляется следом: два текста не накладываются */
+[data-ps] .pb__slide .pb__over { transition: opacity .45s var(--ease) .2s; }
+[data-ps] .pb__slide:not(.is-on) .pb__over { opacity: 0; transition: opacity .2s; }
+[data-ps] .pb__slide { transition: opacity .6s var(--ease), visibility 0s .6s; }
+[data-ps] .pb__slide.is-on { transition: opacity .6s var(--ease), visibility 0s; }
+[data-ps] .pb__slide:not(.is-on) { opacity: 0; visibility: hidden; pointer-events: none; }
+.pb__pic { position: absolute; inset: 0 0 0 auto; width: 62%; overflow: hidden; background: var(--ink);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 34%); mask-image: linear-gradient(90deg, transparent 0, #000 34%); }
+.pb__pic img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: var(--pb-pos, 50% 50%); transition: transform 4s linear; }
+.pb__slide:not(.is-on) .pb__pic img { transform: scale(1.06); }
+.pb__over { position: relative; z-index: 1; display: flex; align-items: center; padding: clamp(32px, 4vw, 64px) 0 calc(clamp(32px, 4vw, 64px) + 24px); }
+.pb__text { display: flex; flex-direction: column; align-items: flex-start; max-width: min(560px, 44%); min-width: 0; }
+.pb .pr-tag { margin-bottom: 14px; }
+.pb__title { font-size: var(--fs-3); line-height: 1.08; letter-spacing: -.03em; text-wrap: balance; }
+.pb .pr-price { margin-top: 14px; }
+.pb .pr-price b { font-size: var(--fs-5); color: var(--green-hi); }
+.pb .pr-price s, .pb .pr-price > span { color: var(--muted-on-dark); }
+.pb .pr-gift { max-width: 30em; font-size: var(--fs-0); line-height: 1.45; color: rgba(255, 255, 255, .86); }
+.pb .btn { margin-top: 28px; }
+.pb__track > .pb__foot { position: absolute; z-index: 2; left: 0; right: 0; bottom: clamp(18px, 2vw, 28px); margin-inline: auto; pointer-events: none; }
+.pb__foot > * { pointer-events: auto; }
+.pb__dots { display: flex; gap: 8px; }
+.pb__dots button { position: relative; width: 10px; height: 10px; padding: 0; border: 0; border-radius: 99px; background: rgba(255, 255, 255, .22); overflow: hidden; cursor: pointer; transition: width .4s var(--ease); }
+.pb__dots button::before { content: ""; position: absolute; inset: -12px -4px; }
+.pb__dots button[aria-selected="true"] { width: 44px; }
+.pb__dots i { position: absolute; inset: 0; transform: scaleX(0); transform-origin: 0 50%; background: var(--green-hi); }
+.pb__dots .is-run i { animation: pbRun var(--ps-dur, 3s) linear forwards; }
+[data-ps].is-paused .is-run i { animation-play-state: paused; }
+.pb__dots [aria-selected="true"]:not(.is-run) i { transform: none; }
+@keyframes pbRun { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .pb__dots i { animation: none !important; transform: none; } [data-ps] .pb__slide, [data-ps] .pb__slide.is-on, [data-ps] .pb__slide .pb__over, .pb__pic img { transition: none; } }
+@media (max-width: 1100px) and (min-width: 761px) { .pb__pic { width: 58%; } .pb__text { max-width: 50%; } }
+@media (max-width: 760px) {
+  .pb { padding: calc(var(--header-h) + 16px) 0 24px; }
+  .pb__head { align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
+  .pb__head h2 { font-size: 34px; }
+  .pb__head p { max-width: 15em; font-size: 13px; line-height: 1.35; text-align: right; }
+  .pb__slide { min-height: 0; align-content: start; }
+  .pb__pic { position: relative; width: auto; aspect-ratio: 16 / 10; -webkit-mask-image: linear-gradient(0deg, transparent 0, #000 30%); mask-image: linear-gradient(0deg, transparent 0, #000 30%); }
+  .pb__over { margin-top: -30px; padding: 0 0 4px; align-items: flex-start; }
+  .pb__text { max-width: none; width: 100%; }
+  .pb .pr-tag { margin-bottom: 10px; }
+  .pb__title { font-size: var(--fs-2); }
+  .pb .pr-price { margin-top: 10px; }
+  .pb .pr-price b { font-size: 44px; }
+  .pb .pr-gift { margin-top: 10px; font-size: 15px; }
+  .pb .btn { width: 100%; margin-top: 18px; }
+  .pb__track > .pb__foot { position: static; grid-row: 2; display: flex; justify-content: center; margin-top: 16px; }
+}
+html.a11y .pb__pic { -webkit-mask-image: none; mask-image: none; }
+/* первый экран главной теперь под баннером акций: на компьютере ниже и без запаса под шапку */
+@media (min-width: 761px) { .pb + .opening .hero--v { min-height: min(calc(var(--svh, 1svh) * 80), 720px); padding-top: clamp(48px, 5vw, 88px); } }
+.pr--always { padding-top: clamp(64px, 8vw, 120px); }
+.pr--always .pr-al { margin-top: 0; }
+.pr--always .pr-al__title { font-size: var(--fs-4); letter-spacing: -.035em; }
+
 /* ---------- страницы услуг нового формата (Ilya 17.10): первый экран с картинкой справа, блоки по ТЗ ----------
    Картинка первого экрана (ChatGPT) на тёмно-зелёном фоне, предмет справа: стоит во всю высоту справа и тает к тексту,
    текст на ней не лежит. Ниже экрана крупные цифры, как «5 минут, 0 ₽, 3 врача» на главной. */

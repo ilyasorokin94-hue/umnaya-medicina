@@ -377,6 +377,56 @@
   };
   if (pr4) { addEventListener("resize", pr4Fit); document.fonts?.ready.then(pr4Fit); pr4Fit(); }
 
+  // акции баннером (Ilya 07.11): смена каждые 3 секунды (Ilya 07.11; для проверки ?speed=2…10 секунд), только пока
+  // баннер на экране. Пауза, пока курсор над текстом или точками, пока палец на баннере и при фокусе с клавиатуры.
+  // Свайп вбок листает (вертикальный жест листает страницу), точки переключают. Скрытые акции недоступны для Tab
+  $$("[data-ps]").forEach((box) => {
+    const slides = $$("[data-ps-slide]", box), n = slides.length;
+    if (n < 2) return;
+    const sp = +new URLSearchParams(location.search).get("speed");
+    const dur = sp >= 2 && sp <= 10 ? sp * 1000 : 3000;
+    let cur = 0, timer = 0, seen = false, hover = false, touch = false, focus = false;
+    const tick = () => {
+      clearTimeout(timer);
+      const run = seen && !hover && !touch && !focus && !document.hidden;
+      box.classList.toggle("is-paused", !run);
+      if (run) timer = setTimeout(() => go(cur + 1), dur);
+    };
+    const go = (to) => {
+      cur = (to + n) % n;
+      slides.forEach((s, i) => { const on = i === cur; s.classList.toggle("is-on", on); s.setAttribute("aria-hidden", String(!on)); s.inert = !on; });
+      $$("[data-ps-dot]", box).forEach((d) => {
+        const on = +d.dataset.psDot === cur;
+        d.setAttribute("aria-selected", String(on));
+        d.classList.remove("is-run");
+        if (on) { void d.offsetWidth; d.classList.add("is-run"); }  // полоска на точке заново бежит 3 секунды
+      });
+      tick();
+    };
+    box.style.setProperty("--ps-dur", dur + "ms");
+    $$("[data-ps-dot]", box).forEach((d) => d.addEventListener("click", () => go(+d.dataset.psDot)));
+    const ctl = ".pb__text, .pb__dots";
+    box.addEventListener("pointerover", (e) => { if (e.pointerType !== "mouse") return; const on = !!e.target.closest?.(ctl); if (on !== hover) { hover = on; tick(); } });
+    box.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") { hover = false; tick(); } });
+    box.addEventListener("focusin", (e) => { focus = e.target.matches?.(":focus-visible") ?? false; tick(); });
+    box.addEventListener("focusout", () => { focus = false; tick(); });
+    const track = $(".pb__track", box) || box;
+    let x0 = null, y0 = 0;
+    track.addEventListener("touchstart", (e) => { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; touch = true; tick(); }, { passive: true });
+    track.addEventListener("touchcancel", () => { x0 = null; touch = false; tick(); }, { passive: true });
+    track.addEventListener("touchend", (e) => {
+      touch = false;
+      if (x0 == null) return tick();
+      const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) go(cur + (dx < 0 ? 1 : -1)); else tick();
+    }, { passive: true });
+    document.addEventListener("visibilitychange", tick);
+    if ("IntersectionObserver" in window) new IntersectionObserver(([en]) => { seen = en.isIntersecting; tick(); }, { threshold: 0.3 }).observe(box);
+    else seen = true;
+    go(0);
+  });
+
   // нажатый заголовок раскрытия остаётся под пальцем (правило стабильности, 18.10): пока пункт выше сворачивается,
   // страница каждый кадр прокручивается ровно на столько, на сколько заголовок ушёл с места на экране. Вызывать до смены классов.
   // Держим место на экране, а не на странице: если браузер уже сам поправил прокрутку (привязка прокрутки в Chrome,
@@ -1136,7 +1186,11 @@
     const conv = !phoneMQ.matches && h.classList.contains("hero--v1") && $(".hv__l2", h);
     const page = h.classList.contains("page-hero");
     const words = page ? [] : $$("[data-split] .sw > span", h).filter((w) => !conv || !conv.contains(w));
-    const tl = G.timeline();
+    // на главной первым идёт баннер акций (07.11): первый экран ниже него собирается, когда до него долистали,
+    // а не при открытии, пока его не видно
+    const wait = !page && !!$(".pb") && "IntersectionObserver" in window && h.getBoundingClientRect().top > innerHeight * 0.75;
+    const tl = G.timeline({ paused: wait });
+    if (wait) { const io = new IntersectionObserver(([en]) => { if (en.isIntersecting) { io.disconnect(); tl.play(); } }, { threshold: 0.25 }); io.observe(h); }
     const media = h.classList.contains("hero") ? $(".hero__media", h) : $(".sp-hero__media", h);
     const small = phoneMQ.matches;
     if (media) tl.fromTo(media, { clipPath: small ? "inset(0% 0% 100% 0%)" : "inset(10% 6% 10% 6%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: small ? 1.4 : 1.6, ease: "power3.inOut" }, small ? 0.35 : 0);
