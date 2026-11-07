@@ -663,6 +663,32 @@ function svlBlock(p, depth) {
 const prNw = (t) => esc(t).replace(/\S+-\S+/g, (w) => `<span class="nobr">${w}</span>`);
 const prBtn = (d, p) => act(d.btn, d.modal, p, { reason: d.reason, cls: "btn--lg", promo: d.promo });
 const prPrice = (d) => `<p class="pr-price"><b>${esc(d.price)}</b>${d.old ? `<s aria-label="вместо ${esc(d.old)}">${esc(d.old)}</s>` : ""}${d.sub ? `<span>${esc(d.sub)}</span>` : ""}</p>`;
+// премия ПроДокторов (Ilya 07.11): тёмный блок между врачами и отзывами, крупное золотое «ТОП-10» с бликом при появлении,
+// справа диплом как есть (прямые углы, подпись под ним, ничего поверх); нажатие открывает диплом крупно в окне #m-diploma
+function awardBlock(a, p, depth) {
+  if (!a || !local(a.img)) return "";
+  return `<section class="section award on-dark" id="award" aria-labelledby="aw-title"><div class="wrap award__in">
+  <div class="award__text">
+    <span class="label">${esc(a.label)}</span>
+    <p class="award__big"><span class="award__num">${esc(a.big)}</span></p>
+    <h2 id="aw-title" class="award__title" data-split>${esc(a.title)}</h2>
+    <p class="award__lead">${nobr(esc(a.text))}</p>
+    <p class="award__note">${nobr(esc(a.note))}</p>
+    <div class="award__actions">${act("Записаться на консультацию", "book", p, { cls: "btn--light btn--lg" })}</div>
+  </div>
+  <figure class="award__doc"><div data-reveal>
+    <button class="award__open" type="button" data-modal="diploma" aria-label="Открыть диплом крупно">${img([a.img], a.alt, depth, ' width="1280" height="910"', "auto, (max-width: 760px) 92vw, 50vw")}</button>
+    <figcaption>${esc(a.cap)}<button type="button" data-modal="diploma">Открыть крупно</button></figcaption>
+  </div></figure>
+</div></section>`;
+}
+const awardModal = (a, depth) => (a && local(a.img) ? `
+<div class="modal modal--diploma" id="m-diploma" role="dialog" aria-modal="true" aria-labelledby="m-diploma-t" hidden><div class="modal__box modal__box--diploma" data-lenis-prevent>
+  <h2 id="m-diploma-t" class="sr" tabindex="-1">${esc(a.cap)} 2026</h2>
+  <button class="modal__x" type="button" aria-label="Закрыть" data-close>${icon.close}</button>
+  ${img([a.img], a.alt, depth, ' width="1280" height="910"', "auto, 100vw")}
+</div></div>` : "");
+
 // Акции баннером в самом начале главной, по образцу Ilya 07.11: широкая картинка справа, слева на тёмном фоне метка,
 // название, цена, условие и кнопка; акции сами сменяются каждые 3 секунды (Ilya 07.11), пауза под курсором на тексте,
 // при фокусе с клавиатуры и пока палец на баннере, свайп листает. Переключение в app.js ([data-ps]), вид в styles.css (.pb)
@@ -766,6 +792,8 @@ ${alwaysBlock()}
   <div class="team__more"><a class="btn btn--ghost" href="vrachi/">Все врачи: опыт, образование, курсы</a></div>
 </div></section>
 
+${awardBlock(D.award, p, depth)}
+
 <section class="section reviews" id="reviews" aria-labelledby="rv-title">
   <div class="wrap section__head"><div><span class="label">Отзывы</span><h2 id="rv-title" data-split>Что пишут пациенты</h2></div></div>
   <div class="wrap"><div class="rt" aria-label="Оценки клиники на площадках" data-reveal>
@@ -803,7 +831,7 @@ ${alwaysBlock()}
 </div></section>
 
 ${place()}
-</main>` + footer(depth) + `
+</main>` + footer(depth) + awardModal(D.award, depth) + `
 <script src="assets/rvm.js?v=${V.rvm}" async></script>` + end;
 }
 

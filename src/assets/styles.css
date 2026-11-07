@@ -665,6 +665,50 @@ html:not(.js-intro) .intro { display: none; }
 
 .tour__title .btn { margin-top: 22px; }
 
+/* ---------- премия ПроДокторов 2026 (Ilya 07.11): тёмный блок перед отзывами ----------
+   крупное «ТОП-10» золотом, по нему один раз проходит блик, когда блок появляется (app.js ставит .is-in);
+   диплом справа с прямыми углами и подписью под ним, нажатие открывает его крупно (#m-diploma) */
+.award { background: var(--ink); color: var(--paper); overflow: hidden; }
+.award__in { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: center; gap: clamp(40px, 6vw, 110px); }
+.award__big { margin: clamp(20px, 2.2vw, 32px) 0 clamp(10px, 1.4vw, 20px); font: 500 clamp(5.25rem, 2.2rem + 9vw, 12.5rem)/.84 var(--display); letter-spacing: -.055em; white-space: nowrap; color: var(--gold); }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .award__num { background: linear-gradient(105deg, var(--gold) 0 42%, #fff7df 50%, var(--gold) 58% 100%) 100% 0 / 300% 100% no-repeat; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .award__num.is-in { animation: award-sheen 1.8s var(--ease) .3s both; }
+}
+@keyframes award-sheen { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .award__num.is-in { animation: none; } }
+.award__title { font: 500 var(--fs-4)/1.04 var(--display); letter-spacing: -.035em; }
+.award__lead { margin-top: clamp(18px, 2vw, 26px); max-width: 27em; font-size: var(--fs-1); line-height: 1.35; }
+.award__note { margin-top: 14px; max-width: 34em; font-size: var(--fs--1); color: var(--muted-on-dark); }
+.award__actions { margin-top: clamp(28px, 3vw, 44px); }
+.award__doc { margin: 0; }
+.award__open { display: block; width: 100%; padding: 0; border: 0; background: #fff; cursor: zoom-in; box-shadow: 0 60px 100px -50px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 255, 255, .06); }
+.award__open:focus-visible { outline: 2px solid var(--gold); outline-offset: 6px; border-radius: 0; }
+.award__open img { width: 100%; height: auto; aspect-ratio: 1280 / 910; }
+.award__doc figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-top: 18px; font-size: var(--fs--1); color: var(--muted-on-dark); }
+.award__doc figcaption button { flex: none; padding: 0; border: 0; background: none; color: var(--sage); text-decoration: underline; text-decoration-color: var(--line-on-dark); text-underline-offset: 5px; }
+.award__doc figcaption button:hover { color: var(--paper); text-decoration-color: var(--paper); }
+/* окно с дипломом: светлая плашка, крестик над дипломом, а не поверх него; на телефоне по центру, а не снизу */
+.modal.modal--diploma { place-items: center; }
+.modal .modal__box--diploma { width: min(1120px, 100vw - 32px, (100svh - 130px) * 1.4); padding: 68px clamp(14px, 2vw, 26px) clamp(14px, 2vw, 26px); }
+.modal__box--diploma img { width: 100%; height: auto; aspect-ratio: 1280 / 910; }
+/* на планшете и телефоне диплом сразу после главной фразы, кнопка записи последней */
+@media (max-width: 1024px) {
+  .award__in { grid-template-columns: 1fr; gap: 0; }
+  .award__text { display: contents; }
+  .award__text > * { justify-self: start; }
+  .award__doc { order: 1; max-width: 760px; margin-top: clamp(28px, 5vw, 44px); }
+  .award__note { order: 2; margin-top: clamp(24px, 4vw, 32px); }
+  .award__actions { order: 3; justify-self: stretch; }
+}
+@media (max-width: 760px) {
+  .award__big { font-size: clamp(4.5rem, 24vw, 6.5rem); }
+  .award__lead { font-size: var(--fs-0); }
+  .award__actions .btn { width: 100%; }
+  .modal.modal--diploma { align-items: center; padding: 12px; }
+  .modal .modal__box--diploma { width: calc(100vw - 24px); border-radius: var(--radius); padding: 64px 10px 10px; }
+}
+
 @media (max-width: 1024px) {
   .rt { grid-template-columns: 1fr; }
   .rt-pd { grid-column: auto; }
@@ -2320,7 +2364,7 @@ html.has-ck .footer__in { padding-bottom: calc(28px + var(--ck-h, 0px)); }
 .modal__logo { display: block; height: 36px; width: auto; }
 .modal__head .modal__x { position: static; flex: none; }
 .modal__box .modal__head + h2 { padding-right: 0; }
-@media (min-width: 761px) { .modal__box:not(.invite) { width: min(620px, 100%); } }
+@media (min-width: 761px) { .modal__box:not(.invite):not(.modal__box--diploma) { width: min(620px, 100%); } }
 @media (max-width: 760px) {
   .modal__box { border-radius: 0; }
   .modal__logo { height: 26px; }
