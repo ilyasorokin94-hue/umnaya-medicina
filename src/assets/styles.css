@@ -2607,12 +2607,24 @@ html:has(form input:focus, form textarea:focus) { scroll-behavior: auto; }
 .header__lic:hover { opacity: 1; }
 /* в шапке компьютера значок щита с подсказкой там, где разделы не наезжают на логотип (замер 07.11: 1300–1439 и от 1520 px);
    от 1600 px под значком подпись «Лицензия». Полная подпись — в меню телефона и в подвале */
-@media (min-width: 1300px) and (max-width: 1439px), (min-width: 1520px) {
-  .header .header__cta .header__lic { display: inline-flex; flex-direction: column; gap: 3px; }
-  .header .header__cta .header__lic svg { width: 26px; height: 26px; }
+/* Ilya 07.11: видно, что это юридические документы и на них можно нажать: зелёная плашка-кнопка со щитом, как на образце.
+   От 1440 px плашка «Юридические документы» стоит под «Перезвоним за 5 минут» и ширины не занимает;
+   на 1300–1439 px места мало: круглая кнопка со щитом и подсказкой */
+.header__duo { display: contents; }
+.header__lic svg { color: var(--green-hi); }
+@media (min-width: 1300px) and (max-width: 1439px) {
+  .header .header__cta .header__lic { display: inline-grid; place-items: center; width: 40px; height: 40px; margin-right: 12px; border-radius: 50%; background: rgba(76, 193, 72, .16); opacity: 1; transition: background .2s; }
+  .header .header__cta .header__lic:hover { background: rgba(76, 193, 72, .3); }
+  .header .header__cta .header__lic svg { width: 20px; height: 20px; }
   .header .header__cta .header__lic span { display: none; }
 }
-@media (min-width: 1600px) { .header .header__cta .header__lic span { display: block; font-size: 10.5px; letter-spacing: .02em; } }
+@media (min-width: 1440px) {
+  .header .header__cta .header__duo { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-right: 24px; }
+  .header .header__cta .header__duo .header__phone { padding: 0; }
+  .header .header__cta .header__lic { display: inline-flex; gap: 6px; padding: 5px 11px 5px 8px; border-radius: 999px; background: rgba(76, 193, 72, .16); color: rgb(var(--hc, 255 255 255)); font-size: 12px; font-weight: 500; opacity: 1; transition: background .2s; }
+  .header .header__cta .header__lic:hover { background: rgba(76, 193, 72, .32); }
+  .header .header__cta .header__lic svg { width: 15px; height: 15px; }
+}
 .menu__lic { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 14px; color: #fff; text-decoration: none; }
 .menu__lic svg { width: 28px; height: 28px; flex: none; fill: var(--green-hi); }
 .menu__lic span { display: grid; gap: 3px; }

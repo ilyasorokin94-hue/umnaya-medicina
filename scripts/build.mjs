@@ -294,8 +294,8 @@ function header(depth, home = false) {
     <ul class="nav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li class="nav__item"><a class="nav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a><span class="nav__progress" aria-hidden="true"><span class="nav__fill" style="${navLine[t] || ""}"></span></span></li>`).join("")}</ul>
   </nav>
   <div class="header__cta">
-    <a class="header__phone" href="${fallbackHref("call", p)}" data-modal="call"><b>Перезвоним за 5 минут</b><small>${esc(clinic.hours)}</small></a>
-    <a class="header__lic" href="${p}dokumenty/" title="${esc(licLine)}. Все документы клиники" aria-label="Лицензия и документы">${icon.shield}<span>Лицензия</span></a>
+    <div class="header__duo"><a class="header__phone" href="${fallbackHref("call", p)}" data-modal="call"><b>Перезвоним за 5 минут</b><small>${esc(clinic.hours)}</small></a>
+    <a class="header__lic" href="${p}dokumenty/" title="${esc(licLine)}. Все документы клиники" aria-label="Юридические документы и лицензия">${icon.shield}<span>Юридические документы</span></a></div>
     ${act("Записаться", "book", p, { cls: "btn--sm header__book", magnet: true })}
     <button class="burger" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="menu">${icon.menu}</button>
   </div>
