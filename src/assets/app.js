@@ -378,34 +378,43 @@
   if (pr4) { addEventListener("resize", pr4Fit); document.fonts?.ready.then(pr4Fit); pr4Fit(); }
 
   // акции баннером (Ilya 07.11): смена каждые 3 секунды (Ilya 07.11; для проверки ?speed=2…10 секунд), только пока
-  // баннер на экране. Пауза, пока курсор над текстом или точками, пока палец на баннере и при фокусе с клавиатуры.
-  // Свайп вбок листает (вертикальный жест листает страницу), точки переключают. Скрытые акции недоступны для Tab
+  // баннер на экране. Смену задаёт полоска на точке: кончилась полоска — следующая акция, поэтому после паузы полоска
+  // и смена не расходятся (раньше таймер после паузы начинал 3 секунды заново, полоска стояла полной — «зависало»).
+  // Пауза только пока курсор на кнопке или точках, пока палец на баннере и при фокусе с клавиатуры.
+  // Все картинки грузятся сразу и раскодируются заранее, чтобы смена не ждала картинку. Свайп вбок листает
   $$("[data-ps]").forEach((box) => {
     const slides = $$("[data-ps-slide]", box), n = slides.length;
     if (n < 2) return;
+    const dots = $$("[data-ps-dot]", box);
     const sp = +new URLSearchParams(location.search).get("speed");
     const dur = sp >= 2 && sp <= 10 ? sp * 1000 : 3000;
+    // без анимации (уменьшить движение, версия для слабовидящих) полоски нет, смену ведёт таймер
+    const byBar = !reduce && dots.length === n && "onanimationend" in window;
     let cur = 0, timer = 0, seen = false, hover = false, touch = false, focus = false;
     const tick = () => {
       clearTimeout(timer);
       const run = seen && !hover && !touch && !focus && !document.hidden;
       box.classList.toggle("is-paused", !run);
-      if (run) timer = setTimeout(() => go(cur + 1), dur);
+      if (run && !byBar) timer = setTimeout(() => go(cur + 1), dur);
     };
+    const ready = (s) => { const im = $(".pb__pic img", s); return im && im.decode ? im.decode().catch(() => {}) : Promise.resolve(); };
     const go = (to) => {
       cur = (to + n) % n;
       slides.forEach((s, i) => { const on = i === cur; s.classList.toggle("is-on", on); s.setAttribute("aria-hidden", String(!on)); s.inert = !on; });
-      $$("[data-ps-dot]", box).forEach((d) => {
+      dots.forEach((d) => {
         const on = +d.dataset.psDot === cur;
         d.setAttribute("aria-selected", String(on));
         d.classList.remove("is-run");
         if (on) { void d.offsetWidth; d.classList.add("is-run"); }  // полоска на точке заново бежит 3 секунды
       });
+      ready(slides[(cur + 1) % n]);  // следующая картинка готова заранее
       tick();
     };
     box.style.setProperty("--ps-dur", dur + "ms");
-    $$("[data-ps-dot]", box).forEach((d) => d.addEventListener("click", () => go(+d.dataset.psDot)));
-    const ctl = ".pb__text, .pb__dots";
+    if (byBar) box.addEventListener("animationend", (e) => { if (e.animationName === "pbRun" && e.target.parentElement?.classList.contains("is-run")) go(cur + 1); });
+    slides.forEach((s) => { const im = $(".pb__pic img", s); if (im) { im.loading = "eager"; ready(s); } });
+    dots.forEach((d) => d.addEventListener("click", () => go(+d.dataset.psDot)));
+    const ctl = ".pb__text .btn, .pb__dots";
     box.addEventListener("pointerover", (e) => { if (e.pointerType !== "mouse") return; const on = !!e.target.closest?.(ctl); if (on !== hover) { hover = on; tick(); } });
     box.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") { hover = false; tick(); } });
     box.addEventListener("focusin", (e) => { focus = e.target.matches?.(":focus-visible") ?? false; tick(); });

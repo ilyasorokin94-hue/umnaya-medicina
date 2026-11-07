@@ -670,8 +670,8 @@ function promoBlock(p, depth) {
   const A = v2.akcii;
   const slides = A.deals.map((d, i) => {
     const pic = d.img ? img(d.img, d.alt, depth, "", "(max-width: 760px) 100vw, 62vw") : "";
-    // первая картинка видна сразу при открытии: грузим без очереди
-    const picHtml = i ? pic : pic.replace(' loading="lazy"', ' fetchpriority="high"');
+    // первая картинка видна сразу при открытии: грузим без очереди; остальные тоже сразу, чтобы смена не ждала картинку
+    const picHtml = pic.replace(' loading="lazy"', i ? "" : ' fetchpriority="high"');
     return `<article class="pb__slide${i ? "" : " is-on"}" data-ps-slide${i ? ' aria-hidden="true"' : ""} aria-roledescription="слайд" aria-label="${i + 1} из ${A.deals.length}: ${esc(d.title)}"${d.pos ? ` style="--pb-pos:${d.pos}"` : ""}>
     <span class="pb__pic">${picHtml}</span>
     <div class="wrap pb__over"><div class="pb__text">
