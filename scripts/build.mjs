@@ -149,6 +149,9 @@ const navLine = {
 // меню телефона и шапка компьютера как у Лава Дент: разделы в порядке страницы (Ilya 17.10: после слогана клиника и «5 минут, 0 ₽, 3 врача», потом услуги), «Цены» рядом с услугами
 // «Услуги» на главной ведут к блоку услуг, на остальных страницах на страницу всех услуг /uslugi/ (Ilya 25.10)
 const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services").startsWith("#") ? "#services" : `${p}uslugi/`, "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi/`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
+// бургер-меню телефона (Ilya 08.11): где у раздела есть своя страница, пункт ведёт на неё и с главной тоже
+// («Услуги» на /uslugi/, «Врачи» на /vrachi/, «Цены» на /ceny/); у остальных разделов своей страницы нет, они ведут к блоку главной
+const mnavItems = (p, href) => phoneMenuItems(p, href).map(([t, h, dir]) => [t, t === "Услуги" ? `${p}uslugi/` : t === "Врачи" ? `${p}vrachi/` : h, dir]);
 
 // Код счётчика Яндекс Метрики в <head> каждой страницы, как его выдаёт Метрика, и он работает сразу при открытии страницы.
 // Ilya 01.11 (карточка «Метрика без согласия»): Яндекс Бизнес находит для целей подписки 55923423 только счётчик, который пишет визит
@@ -310,7 +313,7 @@ function header(depth, home = false) {
   </nav>
   <div class="menu__foot"><span class="footer__phone">Перезвоним за 5 минут</span><span class="note">${esc(clinic.hours)}.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
   <nav class="mnav" aria-label="Разделы">
-    <ul class="mnav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li><a class="mnav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a></li>`).join("")}</ul>
+    <ul class="mnav__list">${mnavItems(p, href).map(([t, h, dir]) => `<li><a class="mnav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a></li>`).join("")}</ul>
   </nav>
   <a class="menu__lic" href="${p}dokumenty/">${icon.shield}<span><b>Лицензия и документы</b><small>${esc(clinic.legal)}, лицензия № ${license.number} от ${license.date}</small></span></a>
 </div>`;

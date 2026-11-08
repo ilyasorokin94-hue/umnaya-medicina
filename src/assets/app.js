@@ -102,6 +102,8 @@
     $(".menu__close", menu)?.focus();
   });
   $(".menu__close")?.addEventListener("click", () => { closeMenu(); burger?.focus(); });
+  // пункт меню увёл на другую страницу (Услуги, Врачи, Цены), а «Назад» на iPhone вернул главную из кэша вместе с открытым меню: закрываем
+  addEventListener("pageshow", (e) => { if (e.persisted) closeMenu(); });
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape" || !menu?.classList.contains("is-open")) return;
     const inside = menu.contains(document.activeElement);
