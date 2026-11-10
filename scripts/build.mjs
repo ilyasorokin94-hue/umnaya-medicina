@@ -137,7 +137,7 @@ const icon = {
 
 // ---------- общие куски ----------
 // меню сайта, как у Тридента: «Услуги» раскрываются списком направлений, остальное разделы и страницы
-const menuItems = (p, href) => [["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi/`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
+const menuItems = (p, href) => [["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", `${p}vrachi/`], ["О клинике", href("clinic")], ["Отзывы", href("reviews")], ["Контакты", href("contacts")]];
 // шапка компьютера как у Лава Дент: под каждым разделом отрезок линии, он заполняется, пока этот раздел проходит
 // по экрану (CSS view-timeline блока). «Цены» отдельной страницей, поэтому блок услуг с ценами «от» делят пополам «Услуги» и «Цены»
 const navLine = {
@@ -147,11 +147,9 @@ const navLine = {
   "Вопросы": "animation-timeline:--tl-faq", "Контакты": "animation-timeline:--tl-contacts",
 };
 // меню телефона и шапка компьютера как у Лава Дент: разделы в порядке страницы (Ilya 17.10: после слогана клиника и «5 минут, 0 ₽, 3 врача», потом услуги), «Цены» рядом с услугами
-// «Услуги» на главной ведут к блоку услуг, на остальных страницах на страницу всех услуг /uslugi/ (Ilya 25.10)
-const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", href("services").startsWith("#") ? "#services" : `${p}uslugi/`, "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", href("team").startsWith("#") ? "#team" : `${p}vrachi/`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
-// бургер-меню телефона (Ilya 08.11): где у раздела есть своя страница, пункт ведёт на неё и с главной тоже
-// («Услуги» на /uslugi/, «Врачи» на /vrachi/, «Цены» на /ceny/); у остальных разделов своей страницы нет, они ведут к блоку главной
-const mnavItems = (p, href) => phoneMenuItems(p, href).map(([t, h, dir]) => [t, t === "Услуги" ? `${p}uslugi/` : t === "Врачи" ? `${p}vrachi/` : h, dir]);
+// «Услуги», «Врачи» и «Цены» везде, и с главной тоже, ведут на свои страницы /uslugi/, /vrachi/, /ceny/: в бургер-меню телефона
+// с 08.11, в шапке компьютера и его меню с 10.11 (Ilya). У остальных разделов своей страницы нет, они ведут к блоку главной
+const phoneMenuItems = (p, href) => [["О клинике", href("clinic")], ["Услуги", `${p}uslugi/`, "uslugi implantaciya protezirovanie"], ["Цены", `${p}ceny/`], ["Акции", href("akcii")], ["Врачи", `${p}vrachi/`, "vrachi"], ["Отзывы", href("reviews")], ["Вопросы", href("faq")], ["Контакты", href("contacts")]];
 
 // Код счётчика Яндекс Метрики в <head> каждой страницы, как его выдаёт Метрика, и он работает сразу при открытии страницы.
 // Ilya 01.11 (карточка «Метрика без согласия»): Яндекс Бизнес находит для целей подписки 55923423 только счётчик, который пишет визит
@@ -313,7 +311,7 @@ function header(depth, home = false) {
   </nav>
   <div class="menu__foot"><span class="footer__phone">Перезвоним за 5 минут</span><span class="note">${esc(clinic.hours)}.</span>${act("Записаться", "book", p, { cls: "btn--wide btn--lg" })}</div>
   <nav class="mnav" aria-label="Разделы">
-    <ul class="mnav__list">${mnavItems(p, href).map(([t, h, dir]) => `<li><a class="mnav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a></li>`).join("")}</ul>
+    <ul class="mnav__list">${phoneMenuItems(p, href).map(([t, h, dir]) => `<li><a class="mnav__link" href="${h}"${dir ? ` data-dir="${dir}"` : ""}>${t}</a></li>`).join("")}</ul>
   </nav>
   <a class="menu__lic" href="${p}dokumenty/">${icon.shield}<span><b>Лицензия и документы</b><small>${esc(clinic.legal)}, лицензия № ${license.number} от ${license.date}</small></span></a>
 </div>`;
@@ -877,7 +875,7 @@ function pageService(s) {
   <div class="foil__bg"></div>
   <div class="wrap page-hero__in">
     <div>
-      <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../index.html#services">Услуги</a><span aria-current="page">${esc(s.title)}</span></nav>
+      <nav class="crumbs" aria-label="Хлебные крошки"><a href="../index.html">Главная</a><a href="../uslugi/">Услуги</a><span aria-current="page">${esc(s.title)}</span></nav>
       <h1 data-split>${esc(s.h1)}</h1>
       <p class="page-hero__lead">${esc(s.lead)}</p>
     </div>
@@ -1886,7 +1884,7 @@ const picHero = ({ cls = "", name, alt, depth, text, act = "", bottom = "" }) =>
 // обе закрыты от поиска и в карту сайта не идут. Тексты взяты из окон сайта и страницы цен
 const helpCard = (t, href, x) => `<article class="sp-card"><h2><a href="${href}">${esc(t)}</a></h2><p>${esc(x)}</p></article>`;
 const helpCards = (p) => [
-  helpCard("Услуги", `${p}index.html#services`, homeOrder.slice(0, 6).map((k, i) => (i && !/^[А-ЯA-Z]{2}/.test(svc[k].title) ? svc[k].title[0].toLowerCase() + svc[k].title.slice(1) : svc[k].title)).join(", ") + " и другие."),
+  helpCard("Услуги", `${p}uslugi/`, homeOrder.slice(0, 6).map((k, i) => (i && !/^[А-ЯA-Z]{2}/.test(svc[k].title) ? svc[k].title[0].toLowerCase() + svc[k].title.slice(1) : svc[k].title)).join(", ") + " и другие."),
   helpCard("Цены", `${p}ceny/`, "Стартовые цены на лечение. Консультация терапевта, ортопеда и хирурга с планом лечения 0 ₽."),
   helpCard("Врачи", `${p}vrachi/`, "Врачи клиники по направлениям, у каждого своя страница."),
   helpCard("Контакты", `${p}index.html#contacts`, `${clinic.addressShort}. ${clinic.hours}.`),
