@@ -491,7 +491,7 @@ function footer(depth, { pd = true } = {}) {
       </div>
       <nav class="fstage__group" aria-label="Услуги">
         <h3>Услуги</h3>
-        <p class="fstage__list fstage__list--2">${homeOrder.map((k) => `<a href="${svcHref(k, p)}">${esc(svc[k].menu)}</a>`).join("")}<a href="${p}uslugi/">Все услуги</a></p>
+        <p class="fstage__list fstage__list--2">${homeOrder.map((k) => `<a href="${svcHref(k, p)}">${esc(svc[k].menu)}</a>`).join("")}<a href="${p}goroda/zhukovskiy/implantaciya/">Имплантация, Жуковский</a><a href="${p}goroda/zhukovskiy/protezirovanie/">Протезирование, Жуковский</a><a href="${p}uslugi/">Все услуги</a></p>
       </nav>
       <div class="fstage__group">
         <h3>Пациентам</h3>
@@ -1731,7 +1731,7 @@ function pageBooking() {
   const bdata = {
     services: homeOrder.map((k) => ({ slug: k, title: svc[k].title, short: svc[k].short, from: svc[k].from })),
   };
-  return head({ title: "Записаться на приём | Умная Медицина. Стоматология", desc: "Онлайн-запись в стоматологию «Умная Медицина»: оставьте телефон, администратор перезвонит и подберёт удобное время.", canonical: "/zapis", depth, page: "booking", jsonld: [crumbsLd([["zapis", "Записаться на приём"]])] }) + `
+  return head({ title: "Записаться на приём | Умная Медицина. Стоматология", desc: "Онлайн-запись в стоматологию «Умная Медицина»: оставьте телефон, администратор перезвонит и подберёт удобное время.", canonical: "/zapis", depth, page: "booking", noindex: true, jsonld: [crumbsLd([["zapis", "Записаться на приём"]])] }) + `
 <div class="booking" id="booking">
   <main class="booking__main" id="main">
     <div class="booking__top">
@@ -1973,7 +1973,8 @@ writeFileSync(path.join(dist, "ceny.html"), `<!doctype html>
 `);
 out("uslugi/index.html", pageCatalog());
 out("vrachi/index.html", pageDoctors());
-out("zapis.html", pageBooking());
+// страница записи закрыта от индексации (noindex, follow) и в карту сайта не идёт: формат агентства для /zapis, SEO-аудит 11.11
+out("zapis.html", pageBooking(), false);
 // /zapis открывается сразу (Ilya 03.11: «форма записи должна открываться максимально быстро»): сюда приходят с кнопки
 // «Запись онлайн» в Яндекс Картах, часто с телефона и впервые. Поэтому на этой странице нет GSAP, ScrollTrigger и Lenis
 // (анимаций на ней нет, head выше), а из styles.css в саму страницу встроены только правила, которые могут сработать

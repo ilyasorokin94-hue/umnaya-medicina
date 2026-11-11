@@ -23,7 +23,7 @@ export const servicePages = [
     slug: "implantaciya", path: "implantaciya/", old: "implantaciya", crumb: "Имплантация зубов", procedure: "Имплантация зубов", hero: hero("implantaciya"),
     facts: [["от 19 300 ₽","установка импланта"], ["4 500 ₽","КТ двух челюстей"], ["4 системы","Osstem, Dentium, Straumann, Riellen's"], ["3 врача","хирург, ортопед и терапевт составляют план"]],
     factsNote: "Имплант Osstem по акции от 17 500 ₽ до 31\u00a0декабря, консультация хирурга и 3D-снимок в подарок.",
-    nav: [["All-on-4","implantaciya/all-on-4/"], ["All-on-6","implantaciya/all-on-6/"], ["Вся челюсть на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Синус-лифтинг","implantaciya/sinus-lifting/"], ["Костная пластика","implantaciya/kostnaya-plastika/"], ["Какие импланты","implantaciya/implanty/"]],
+    nav: [["All-on-4","implantaciya/all-on-4/"], ["All-on-6","implantaciya/all-on-6/"], ["Вся челюсть на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Синус-лифтинг","implantaciya/sinus-lifting/"], ["Костная пластика","implantaciya/kostnaya-plastika/"], ["Какие импланты","implantaciya/implanty/"], ["Для жителей Жуковского","goroda/zhukovskiy/implantaciya/"]],
   },
   {
     slug: "all-on-4", path: "implantaciya/all-on-4/", old: "all-on-4", parent: "implantaciya", crumb: "All-on-4", procedure: "All-on-4", hero: hero("all-on-4"),
@@ -53,7 +53,7 @@ export const servicePages = [
   {
     slug: "protezirovanie", path: "protezirovanie/", old: "protezirovanie", crumb: "Протезирование зубов", procedure: "Протезирование зубов", hero: hero("protezirovanie"),
     facts: [["от 26 400 ₽","металлокерамическая коронка"], ["от 31 900 ₽","съёмный протез"], ["от 58 300 ₽","бюгельный протез"], ["3 врача","хирург, ортопед и терапевт составляют план"]],
-    nav: [["Коронки","protezirovanie/koronki/"], ["Циркониевые коронки","protezirovanie/koronki/cirkoniy/"], ["Съёмные протезы","protezirovanie/semnye-protezy/"], ["Бюгельный протез","protezirovanie/byugelnyj-protez/"], ["Протез на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Мост","protezirovanie/most/"], ["Вкладки","protezirovanie/vkladki/"], ["Нейлоновый протез","protezirovanie/nejlonovyj-protez/"], ["Акриловый протез","protezirovanie/akrilovyj-protez/"]],
+    nav: [["Коронки","protezirovanie/koronki/"], ["Циркониевые коронки","protezirovanie/koronki/cirkoniy/"], ["Съёмные протезы","protezirovanie/semnye-protezy/"], ["Бюгельный протез","protezirovanie/byugelnyj-protez/"], ["Протез на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Мост","protezirovanie/most/"], ["Вкладки","protezirovanie/vkladki/"], ["Нейлоновый протез","protezirovanie/nejlonovyj-protez/"], ["Акриловый протез","protezirovanie/akrilovyj-protez/"], ["Для жителей Жуковского","goroda/zhukovskiy/protezirovanie/"]],
   },
   {
     slug: "semnye-protezy", path: "protezirovanie/semnye-protezy/", parent: "protezirovanie", crumb: "Съёмные протезы", procedure: "Съёмные зубные протезы", hero: hero("semnye-protezy"),
@@ -201,12 +201,12 @@ export const servicePages = [
     hero: hero("zhukovskiy-implantaciya"), photo: "images/clinic/yandex-08.jpg", photoPos: "38% 50%", photoCap: "Вход в стоматологию: Громова, 10/2, Удельная",
     facts: [["Рядом","с Жуковским, в соседней Удельной"], ["от 19 300 ₽","установка импланта"], ["4 500 ₽","КТ двух челюстей, томограф в клинике"], ["3 врача","хирург, ортопед и терапевт составляют план"]],
     factsNote: "Имплант Osstem по акции от 17 500 ₽ до 31\u00a0декабря, консультация хирурга и 3D-снимок в подарок.",
-    links: [["Имплантация зубов","implantaciya/"], ["All-on-4","implantaciya/all-on-4/"], ["All-on-6","implantaciya/all-on-6/"], ["Вся челюсть на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Синус-лифтинг","implantaciya/sinus-lifting/"], ["Костная пластика","implantaciya/kostnaya-plastika/"]],
+    links: [["Имплантация зубов","implantaciya/"], ["All-on-4","implantaciya/all-on-4/"], ["All-on-6","implantaciya/all-on-6/"], ["Вся челюсть на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Синус-лифтинг","implantaciya/sinus-lifting/"], ["Костная пластика","implantaciya/kostnaya-plastika/"], ["Протезирование для жителей Жуковского","goroda/zhukovskiy/protezirovanie/"]],
   },
   {
     slug: "zhukovskiy-protezirovanie", path: "goroda/zhukovskiy/protezirovanie/", geo: "Жуковский", crumb: "Протезирование для жителей Жуковского", procedure: "Протезирование зубов",
     hero: hero("zhukovskiy-protezirovanie"), photo: "images/clinic/2gis-14.jpg", photoPos: "30% 50%", photoCap: "Вход в стоматологию: Громова, 10/2, Удельная",
     facts: [["Рядом","с Жуковским, в соседней Удельной"], ["от 26 400 ₽","металлокерамическая коронка"], ["от 31 900 ₽","съёмный протез"], ["2 200 ₽","3D-сканирование челюстей"]],
-    links: [["Протезирование зубов","protezirovanie/"], ["Коронки","protezirovanie/koronki/"], ["Циркониевые коронки","protezirovanie/koronki/cirkoniy/"], ["Съёмные протезы","protezirovanie/semnye-protezy/"], ["Бюгельный протез","protezirovanie/byugelnyj-protez/"], ["Протез на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"]],
+    links: [["Протезирование зубов","protezirovanie/"], ["Коронки","protezirovanie/koronki/"], ["Циркониевые коронки","protezirovanie/koronki/cirkoniy/"], ["Съёмные протезы","protezirovanie/semnye-protezy/"], ["Бюгельный протез","protezirovanie/byugelnyj-protez/"], ["Протез на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Имплантация для жителей Жуковского","goroda/zhukovskiy/implantaciya/"]],
   },
 ];
