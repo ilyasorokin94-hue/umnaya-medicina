@@ -1599,6 +1599,29 @@ const priceFacts = [
   [String(priceTotal), `${plural(priceTotal, "позиция", "позиции", "позиций")} в ${priceOrder.length} разделах`],
 ];
 
+// заметная запись на бесплатный осмотр сразу под первым экраном /ceny/ (Ilya 20.11): с кнопки «Сайт» в карточке Карт за 4 недели
+// 69 визитов, каждый четвёртый открыл цены, заявок 0. Форма прямо на странице, без окна: телефон, галочка согласия, кнопка.
+// Заявка уходит как «Запись на консультацию» с поводом и акцией, как у первого слайда акций на главной (v2.akcii, osmotr)
+const priceOsmotr = (p, depth) => {
+  const d = v2.akcii.deals.find((x) => x.id === "osmotr");
+  return `
+<section class="posm" id="osmotr" aria-labelledby="posm-t"><div class="wrap posm__in">
+  <div class="posm__pic">${img(d.img, d.alt, depth, "", "(max-width: 760px) 0px, 30vw")}</div>
+  <div class="posm__text">
+    <p class="label">Бесплатно</p>
+    <h2 id="posm-t" class="posm__t">Бесплатный осмотр стоматолога</h2>
+    <p class="posm__sub">Терапевт, хирург или ортопед осмотрит зубы, объяснит, что нужно лечить, и составит план лечения с ценой каждого этапа.</p>
+  </div>
+  <form class="form lead posm__form" data-lead="book" method="post" action="${leadAction(p)}">
+    <input type="hidden" name="reason" value="${esc(d.reason)}"><input type="hidden" name="promo" value="${esc(d.promo)}">
+    <label>Ваш телефон<input name="phone" type="tel" required autocomplete="tel" inputmode="tel" placeholder="+7 ___ ___-__-__"></label>
+    ${consentField(p)}
+    <button class="btn btn--lg btn--wide">Записаться на осмотр</button>
+    <p class="posm__note">Администратор перезвонит за 5 минут и подберёт удобное время.${CONSENT_CHECKBOX ? "" : ` ${consentNote(p)}`}</p>
+  </form>
+</div></section>`;
+};
+
 function pagePrices() {
   const depth = 1, p = "../";
   const heroImg = pick(priceHero, depth).src, heroSet = srcset(priceHero[0], depth);
@@ -1613,12 +1636,12 @@ function pagePrices() {
       <h1 id="h1" data-split>Цены на стоматологию в Удельной</h1>
       <p class="page-hero__lead">Стартовые цены на лечение. Бесплатная консультация терапевта, ортопеда и хирурга с планом лечения, 0 ₽.</p>
     </div>
-    <div class="sp-hero__act">${act("Записаться на консультацию", "book", p, { cls: "btn--lg", magnet: true })}<a class="link" href="#prices">Все цены по разделам</a>${spWarn}</div>
+    <div class="sp-hero__act">${act("Записаться на бесплатный осмотр", "book", p, { cls: "btn--lg", magnet: true, reason: "Бесплатный осмотр", promo: v2.akcii.deals.find((x) => x.id === "osmotr").promo })}<a class="link" href="#prices">Все цены по разделам</a>${spWarn}</div>
   </div>
   <div class="wrap sp-hero__bottom">
     <ul class="sp-facts">${priceFacts.map(([big, t]) => `<li><b>${esc(big)}</b><span>${esc(t)}</span></li>`).join("")}</ul>
   </div>
-</section>
+</section>${priceOsmotr(p, depth)}
 <section class="section pv" id="prices"><div class="wrap pv-a__in">
   <div class="pv-a__side"><h2 class="section__title" data-split>Цены по разделам</h2><p class="note">${esc(priceNote)}</p><div class="pfilter"><label class="sr" for="p-search">Поиск услуги</label><input id="p-search" type="search" placeholder="Найти услугу: коронка, имплант, КТ…"></div></div>
   <div class="pv-a__main ptables" data-prices="acc">${priceOrder.map((k, i) => `<details class="faqt pacc ptable" data-cat="${k}"${i ? "" : " open"}><summary><span class="pacc__t"><h3>${esc(prices[k].title)}</h3><small>${priceCount(k)}</small></span><span class="pfrom"><b>${esc(priceSecs[k][0])}</b><small>${esc(priceSecs[k][1])}</small></span><i aria-hidden="true"></i></summary><div class="faqt__body"><div class="pacc__body">${plist([k], 99, p)}${priceMore(k, p)}</div></div></details>`).join("")}

@@ -2787,3 +2787,31 @@ a.dcard__in:hover { border-color: rgba(41, 153, 38, .5); box-shadow: 0 14px 30px
 .dcard--ask .dcard__pic { opacity: .55; }
 .dcard--ask .todo-tag { justify-self: start; margin-top: 4px; }
 .docs__note { margin: 28px 0 0; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+/* /ceny/: запись на бесплатный осмотр сразу под первым экраном (Ilya 20.11), форма на странице без окна */
+.posm { background: var(--sage-2); padding: clamp(40px, 5vw, 72px) 0; }
+.posm__in { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1fr) minmax(0, .9fr); gap: clamp(24px, 3.5vw, 56px); align-items: center; }
+.posm__pic { aspect-ratio: 4 / 3; overflow: hidden; background: var(--paper-2); }
+.posm__pic img { width: 100%; height: 100%; object-fit: cover; }
+.posm__t { margin: 14px 0 0; font: 600 var(--fs-3)/1.08 var(--display); letter-spacing: -.03em; color: var(--text); text-wrap: balance; }
+.posm__sub { margin: 16px 0 0; font-size: var(--fs-0); line-height: 1.5; color: var(--muted); max-width: 34em; }
+.posm .label { color: var(--green-deep); }
+.posm__form { max-width: none; gap: 14px; padding: clamp(20px, 2vw, 28px); background: var(--white); border-radius: var(--radius); box-shadow: 0 18px 40px -24px rgba(12, 36, 16, .35); }
+.posm__form label:not(.consent) { gap: 8px; font-size: 15px; font-weight: 500; color: var(--text); }
+/* .posm .posm__form.lead …[name]: сильнее общего правила полей заявок .lead input:not(…) */
+.posm .posm__form.lead input[type="tel"][name="phone"] { min-height: 60px; padding: 12px 18px; font-size: 20px; border: 2px solid #7a887d; border-radius: 14px; }
+.posm .posm__form.lead input[type="tel"][name="phone"]:focus { outline: 0; border-color: var(--green-btn); box-shadow: 0 0 0 4px rgba(36, 135, 33, .2); }
+.posm .posm__form.lead input[type="tel"][name="phone"][aria-invalid="true"] { border-color: #b3261e; box-shadow: 0 0 0 1px #b3261e; }
+.posm__form .btn { width: 100%; }
+.posm__note { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
+@media (max-width: 1024px) {
+  .posm__in { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .posm__pic { display: none; }
+}
+@media (max-width: 760px) {
+  .posm { padding: 36px 0 40px; }
+  .posm__in { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .posm__t { font-size: clamp(28px, 8vw, 36px); }
+  .posm__form { padding: 20px 18px; }
+  .posm__form .btn { white-space: normal; }
+  .posm .form__hint, .posm .form__err { font-size: 16px; }
+}
