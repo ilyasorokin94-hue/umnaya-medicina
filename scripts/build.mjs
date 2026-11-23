@@ -1346,6 +1346,8 @@ ${d.courses.length ? `<section class="section section--sage"><div class="wrap">
 function dpHref(target, p) {
   if (servicePages.some((x) => x.path === target)) return p + target;
   const m = /^([\w-]+)\/$/.exec(target);
+  // старый ключ услуги (lechenie-zubov/, mikroskop/, detskaya/) у которой уже есть своя страница: сразу на неё, без 301 (SEO 23.11)
+  if (m && spBySlug[m[1]] && !spBySlug[m[1]].hidden) return p + spBySlug[m[1]].path;
   return m && svc[m[1]] ? `${p}uslugi/${m[1]}.html` : null;
 }
 // текст поля: строка или пометка «Ждём: …» (на демо видна, с PUBLISH=1 сборка остановится)
@@ -1625,7 +1627,7 @@ const priceOsmotr = (p, depth) => {
 function pagePrices() {
   const depth = 1, p = "../";
   const heroImg = pick(priceHero, depth).src, heroSet = srcset(priceHero[0], depth);
-  return head({ title: "Цены на стоматологию в Удельной, рассрочка и вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Бесплатная консультация терапевта, ортопеда и хирурга с планом лечения, 0 ₽, рассрочка, налоговый вычет.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
+  return head({ title: "Цены на стоматологию в Удельной, рассрочка и вычет | Умная Медицина", desc: "Цены на лечение, имплантацию и протезирование зубов в Удельной. Бесплатная консультация терапевта, ортопеда и хирурга, план лечения, рассрочка, вычет.", canonical: "/ceny/", depth, jsonld: [crumbsLd([["ceny/", "Цены"]]), pricesLd(), faqLd(priceFaq.filter((x) => !x[2]))] })
   + header(depth) + `
 <main id="main" class="sp-page">
 <section class="page-hero sp-hero on-dark" aria-labelledby="h1">
