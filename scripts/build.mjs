@@ -1638,7 +1638,7 @@ function pagePrices() {
       <h1 id="h1" data-split>Цены на стоматологию в Удельной</h1>
       <p class="page-hero__lead">Стартовые цены на лечение. Бесплатная консультация терапевта, ортопеда и хирурга с планом лечения, 0 ₽.</p>
     </div>
-    <div class="sp-hero__act">${act("Записаться на бесплатный осмотр", "book", p, { cls: "btn--lg", magnet: true, reason: "Бесплатный осмотр", promo: v2.akcii.deals.find((x) => x.id === "osmotr").promo })}<a class="link" href="#prices">Все цены по разделам</a>${spWarn}</div>
+    <div class="sp-hero__act"><a class="btn btn--lg" href="#osmotr" data-magnet>Записаться на бесплатный осмотр</a><a class="link" href="#prices">Все цены по разделам</a>${spWarn}</div>
   </div>
   <div class="wrap sp-hero__bottom">
     <ul class="sp-facts">${priceFacts.map(([big, t]) => `<li><b>${esc(big)}</b><span>${esc(t)}</span></li>`).join("")}</ul>
