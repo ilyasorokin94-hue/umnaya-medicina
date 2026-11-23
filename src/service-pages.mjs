@@ -53,7 +53,7 @@ export const servicePages = [
   {
     slug: "protezirovanie", path: "protezirovanie/", old: "protezirovanie", crumb: "Протезирование зубов", procedure: "Протезирование зубов", hero: hero("protezirovanie"),
     facts: [["от 26 400 ₽","металлокерамическая коронка"], ["от 31 900 ₽","съёмный протез"], ["от 58 300 ₽","бюгельный протез"], ["3 врача","хирург, ортопед и терапевт составляют план"]],
-    nav: [["Коронки","protezirovanie/koronki/"], ["Циркониевые коронки","protezirovanie/koronki/cirkoniy/"], ["Съёмные протезы","protezirovanie/semnye-protezy/"], ["Бюгельный протез","protezirovanie/byugelnyj-protez/"], ["Протез на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Мост","protezirovanie/most/"], ["Вкладки","protezirovanie/vkladki/"], ["Нейлоновый протез","protezirovanie/nejlonovyj-protez/"], ["Акриловый протез","protezirovanie/akrilovyj-protez/"], ["Для жителей Жуковского","goroda/zhukovskiy/protezirovanie/"]],
+    nav: [["Коронки","protezirovanie/koronki/"], ["Циркониевые коронки","protezirovanie/koronki/cirkoniy/"], ["Съёмные протезы","protezirovanie/semnye-protezy/"], ["Бюгельный протез","protezirovanie/byugelnyj-protez/"], ["Протез на имплантах","implantaciya/vsya-chelyust/"], ["Коронка на имплант","implantaciya/koronka-na-implant/"], ["Мост","protezirovanie/most/"], ["Вкладки","protezirovanie/vkladki/"], ["Виниры","protezirovanie/viniry/"], ["Нейлоновый протез","protezirovanie/nejlonovyj-protez/"], ["Акриловый протез","protezirovanie/akrilovyj-protez/"], ["Для жителей Жуковского","goroda/zhukovskiy/protezirovanie/"]],
   },
   {
     slug: "semnye-protezy", path: "protezirovanie/semnye-protezy/", parent: "protezirovanie", crumb: "Съёмные протезы", procedure: "Съёмные зубные протезы", hero: hero("semnye-protezy"),
@@ -159,6 +159,11 @@ export const servicePages = [
   {
     slug: "vkladki", path: "protezirovanie/vkladki/", parent: "protezirovanie", crumb: "Вкладки", procedure: "Культевые и керамические вкладки", hero: hero("vkladki"),
     facts: [["от 5 500 ₽","культевая вкладка"], ["от 34 100 ₽","керамическая вкладка E.max"], ["2 200 ₽","3D-сканирование челюстей"], ["0 ₽","консультация ортопеда"]],
+  },
+  // виниры (Ilya 23.11): страница по общей концепции, цены с um-med.com; своей картинки пока нет, первый экран как у E.max
+  {
+    slug: "viniry", path: "protezirovanie/viniry/", parent: "protezirovanie", crumb: "Виниры", procedure: "Керамические виниры E.max", hero: hero("emax"),
+    facts: [["от 34 100 ₽","керамический винир E.max"], ["2 200 ₽","3D-сканирование челюстей"], ["от 15 000 ₽","отбеливание перед подбором цвета"], ["0 ₽","консультация ортопеда"]],
   },
   {
     slug: "nejlonovyj-protez", path: "protezirovanie/nejlonovyj-protez/", parent: "protezirovanie", crumb: "Нейлоновый протез", procedure: "Эластичный съёмный протез", hero: hero("nejlonovyj-protez"),

@@ -30,7 +30,7 @@ export const catalogGroups = [
   },
   {
     id: "protezirovanie", title: "Протезирование", chip: "Протезирование", hub: "protezirovanie", price: "от 26 400 ₽",
-    text: "Коронки из металлокерамики, циркония и E.max, мосты и вкладки, съёмные протезы: акриловые, нейлоновые и бюгельные.",
+    text: "Коронки из металлокерамики, циркония и E.max, виниры, мосты и вкладки, съёмные протезы: акриловые, нейлоновые и бюгельные.",
     rows: [
       ["koronki", "от 26 400 ₽"],
       ["metallokeramika", "от 26 400 ₽"],
@@ -38,6 +38,7 @@ export const catalogGroups = [
       ["emax", "от 34 100 ₽"],
       ["most", "от 26 400 ₽", "за единицу моста"],
       ["vkladki", "от 5 500 ₽"],
+      ["viniry", "от 34 100 ₽"],
       ["semnye-protezy", "от 22 550 ₽"],
       ["akrilovyj-protez", "от 22 550 ₽"],
       ["nejlonovyj-protez", "от 53 900 ₽"],
